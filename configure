@@ -11,6 +11,9 @@ getvalue() {
   echo $2 | sed -e "s/^--${1}=//"
 }
 
+# directories with Makefile.in that should be copied into the build directories.
+makes='.'
+
 # Get the absolute path to the distribution
 dist_top=`dirname "$0"`
 dist_top=`(cd $dist_top; pwd)`
@@ -130,8 +133,12 @@ else
    notangle=notangle
 fi
 
-# generate the Makefile
-cp $dist_top/Makefile.in Makefile
+# generate the Makefiles
+
+for d in $makes ; do
+  mkdir -p $d
+  cp $dist_top/$d/Makefile.in ./$d/Makefile
+done
 
 # Record the configuration
 cat > Make.config <<EOF
