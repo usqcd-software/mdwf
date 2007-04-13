@@ -83,14 +83,14 @@ fi
 
 # Run host specific setup
 [ ! -z "$host" ] \
- && [ -f $dist_top/config/host.$host ] \
- && . $dist_top/config/host.$host
+ && [ -f $dist_top/config.host/$host ] \
+ && . $dist_top/config.host/$host
 
 # Run target specific setup. The target flag must be present
-if [ -z "$target" -o ! -f $dist_top/config/target.$target ]; then
+if [ -z "$target" -o ! -f $dist_top/config.target/$target ]; then
    bugger 1 "Unknown or missing --target ($target)"
 else
-   . $dist_top/config/target.$target
+   . $dist_top/config.target/$target
 fi
 
 # Target should have specified $routines
