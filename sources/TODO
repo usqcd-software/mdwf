@@ -1,0 +1,36 @@
+Init:
+1. allocate one QMP aligned memory block for all sends and receives on
+   max(even, odd), assuming double.
+2. On even and odd:
+  2.1 Head of memory - receive buffer.
+  2.2 build pointers to send buffers.
+  2.3 Build all float & double sends
+  2.4 Build all float and double receive, convert to compounds.
+3. Check that global sum should be called -- ?
+
+Fini:
+1. For even and odd
+  1.1 Free receive handle
+  1.2 Free all send handles
+2. Free QMP memory
+
+Allocation:
+1. If error is not recordable return
+2. Allocate
+3. Increase state counter
+
+Freeing:
+1. If error is not recordable return
+2. Decrease state counter
+3. Free memory
+
+Setting parameters
+1. If error is not recordable return
+2. Allocate memory for generics
+3. Build generic parameters
+4. Call generics
+5. Free memory
+
+
+
+
