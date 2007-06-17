@@ -1523,7 +1523,6 @@ int
     <<[[init]] patch boundary>>
     <<[[init]] remove init temporaries>>
     <<[[init]] scale fermion indices>>
-    <<[[init]] communication>>
     return 0;
     <<[[init]] errors>>
 #undef CHECK
@@ -1571,16 +1570,10 @@ scale_fermions(&(*state_ptr)->even, (*state_ptr)->Ls);
 scale_fermions(&(*state_ptr)->odd, (*state_ptr)->Ls);
 @
 
-<<[[init]] communication>>=
-status = init_communication(*state_ptr, lattice, network, node, master_p);
-CHECK(status, status);
-@
-
 If an error happend during [[init()]], we free everything allocated inside
 [[State]] and set a fatal error explaining the problem:
 <<[[init]] errors>>=
 error:
- fini_communication(*state_ptr);
  state_finalize(*state_ptr);
  qop_mdwf_set_error(*state_ptr, status);
  (*state_ptr)->fatal = 1;
@@ -1620,7 +1613,6 @@ void
     *state_ptr = NULL;
     if (state->used != 0)
        return;
-    fini_communication(state);
     state_finalize(state);
     qop_mdwf_free(NULL, state, sizeof (struct QOP_MDWF_State));
     return;
@@ -2738,43 +2730,39 @@ prototypes:
 <<Implementation includes>>=
 #include <qmp.h>
 @
-The communication initialization is collected into a function:
-<<File [[finit.c]]>>=
-static char *
-`init_communication(struct QOP_MDWF_State *state,
-                   const int lattice[QOP_MDWF_DIM + 1],
-                   const int network[QOP_MDWF_DIM],
-                   const int node[QOP_MDWF_DIM],
-                   int master_p)
-{
-#ifndef DEBUG_INIT
-#define CHECK(cond,msg) do { if (cond) return msg; } while (0)
-   <<Communication initialization>>
-#undef CHECK
-#endif /* !defined (DEBUG_INIT) */
-   return 0;
-}
-@
-
-<<Init\&fini local prototypes>>=
-static char *`init_communication(struct QOP_MDWF_State *state,
-                                const int lattice[QOP_MDWF_DIM + 1],
-                                const int network[QOP_MDWF_DIM],
-                                const int node[QOP_MDWF_DIM],
-                                int master_p);
-@
-
-Let us start with determining if any networking is needed. We will use this
-field in deciding if a global sum needs to call [[QMP]] (because all to often
-a [[QMP]] single node implementation is broken.)
+Communication initialization is postponed until the communication is really
+needed. Here we only reset and free QMP resources if they were allocated.
 <<[[State]] components>>=
-int `has_net;
+int `prec;        /* last used precision, 0,4 or 8 */
 @
+
+<<[[State]] dump>>=
+printf("State.prec = %d\n", state->prec);
+@
+
+<<[[State]] reset>>=
+state->prec = 0;
+@
+
+<<[[State]] cleanup>>=
+if (state->prec != 0)
+   state_comm_cleanup(state);
+@
+
+This is needed to avoid calling [[QMP_sum_double]] on a single node machine
+<<[[State]] components>>=
+int `has_net;     /* 0 if only one node is present, 1 otherwise */
+@
+
+<<[[State]] dump>>=
+printf("State.has_net = %s\n", state->has_net ? "yes": "no");
+@
+
 <<[[State]] reset>>=
 state->has_net = 0;
 @
 
-<<Communication initialization>>=
+<<[[State]] initialize>>=
 {
   int i;
   for (i = 0; i < QOP_MDWF_DIM; i++) {
@@ -2783,8 +2771,6 @@ state->has_net = 0;
      state->has_net = 1;
      break;
   }
-  if (state->has_net == 0)
-    return 0;
 }
 @
 
@@ -2792,9 +2778,21 @@ Next, compute the amount of space needed for communication buffers. We fold
 even with odd and float with double to save space. [[QMP]] documents are not
 specific if this is an allowed approach, but on SciDAC software talks the issue
 had been raised and the concensus was that this is OK.
+<<[[State]] components>>=
+int `qmp_memsize; /* number of Ls half fermions in communication buffers */
+@
+
+<<[[State]] dump>>=
+printf("State.qmp_memsize = %d * Ls * HF\n", state->qmp_memsize);
+@
+
+<<[[State]] reset>>=
+state->qmp_memsize = 0;
+@
+
 <<Communication initialization>>=
 {
-  int i, es, os, size;
+  int i, es, os;
   struct eo_lattice *eo;
   int *xs;
   
@@ -2804,8 +2802,7 @@ had been raised and the concensus was that this is OK.
     eo = &state->odd; xs = &os;
     <<Collect I/O sizes for direction [[i]]>>
   }
-  size = es > os ? es: os;
-  <<Allocate QMP memory>>
+  state->qmp_memsize = es > os ? es: os;
 }
 @
 
@@ -2814,47 +2811,98 @@ had been raised and the concensus was that this is OK.
      + eo->up_face[i] + eo->down_face[i];
 @
 
-Time to allocate all QMP memory. We do it here is one chunk, once again it
-could be problematic with some implementations, but the specifications are mute
-on the subject.
+We do not allocate QMP memory here, but keep a handle and a memory pointer in
+the [[State]].
 <<[[State]] components>>=
-QMP_mem_t *mem_handle;
+QMP_mem_t *qmp_mem_handle;
+@
+
+<<[[State]] dump>>=
+printf("State.qmp_mem_handle = 0x%p\n", state->qmp_mem_handle);
 @
 
 <<[[State]] reset>>=
-state->mem_handle = NULL;
+state->qmp_mem_handle = NULL;
 @
 
-<<Allocate QMP memory>>=
-size *= state->Ls * sizeof (struct ProjectedFermion);
-state->mem_handle = QMP_allocate_aligned_memory(size, CACHE_LINE_SIZE, QMP_MEM_DEFAULT);
-CHECK(state->mem_handle == 0, "allocating QMP memory failed");
+The rest of communication state is in [[eo_lattice]]. Here we again 
+only maintain the clean state, the actual initialization is done only when
+needed.
+
+On the send side, there are send buffers and handles for each direction for up
+and down neighbors:
+<<E/O lattice pieces>>=
+void *`send_up_buffer[QOP_MDWF_DIM];
+QMP_msghandle_t `send_up_handle[QOP_MDWF_DIM];
+void *`send_down_buffer[QOP_MDWF_DIM];
+QMP_msghandle_t `send_down_handle[QOP_MDWF_DIM];
 @
 
-Once the memory is allocated, we can complete QMP initialization in E/O parts:
-<<Allocate QMP memory>>=
+<<E/O dump>>=
 {
-   char *status;
-   void *comm_mem = QMP_get_memory_pointer(state->mem_handle);
-   status = eo_comm_init(&state->even, state, comm_mem);
-   CHECK(status != NULL, status);
-   status = eo_comm_init(&state->odd, state, comm_mem);
-   CHECK(status != NULL, status);
+   int i;
+   printf(" %s send:\n", name);
+   for (i = 0; i < QOP_MDWF_DIM; i++) {
+     printf("  %s up buffer %p, up handle %p, down buffer %p, down handle %p\n",
+            name,
+            eo->send_up_buffer[i],
+	    eo->send_up_handle[i],
+	    eo->send_down_buffer[i],
+	    eo->send_down_buffer[i]);
+   }
 }
 @
 
-Clean up of the communication is done in the opposite order to initialization.
-First, E/O pieces:
-<<Communication cleanup>>=
-eo_comm_fini(&state->odd);
-eo_comm_fini(&state->even);
+Not obvious from the data type, but [[QMP_msghandle_t]] is a pointer, hence the
+[[NULL]]s.
+<<E/O reset>>=
+{
+   int i;
+   for (i = 0; i < QOP_MDWF_DIM; i++) {
+      eo->send_up_buffer[i] = NULL;
+      eo->send_up_handle[i] = NULL;
+      eo->send_down_buffer[i] = NULL;
+      eo->send_down_handle[i] = NULL;
+   }
+}
 @
 
-We only need to free the [[mem_handle]] in the [[State]]:
-<<Communication cleanup>>=
-if (state->mem_handle)
-   QMP_free_memory(state->mem_handle);
-state->mem_handle = NULL;
+When sending, each operation is started as soon as possible, but they are all
+waited for together. To make things clearer, we keep an array of started
+send operations, [[send_handle[]]], and a counter [[send_hused]] of used space
+it it.
+<<E/O lattice pieces>>=
+QMP_msghandle_t `send_handle[2 * QOP_MDWF_DIM];
+int `send_hused;
+@
+
+<<E/O dump>>=
+{
+  int i;
+  printf(" %s.send_hused=%d\n", name, eo->send_hused);
+  for (i = 0; i < eo->send_hused; i++) {
+    printf("  %s.send_handle[%d]=%p\n", name, i, eo->send_handle[i]);
+  }
+}
+@
+
+<<E/O reset>>=
+eo->send_hused = 0;
+@
+
+On the receive side, the communication is done through a aggregate handle. Since
+the communication initialization error handling cleans up all communication
+resources, we do not need to keep component handles around.
+<<E/O lattice pieces>>=
+QMP_msghandle_t `receive_handle;
+@
+
+<<E/O reset>>=
+eo->receive_handle = 0;
+@
+
+<<E/O dump>>=
+printf(" %s.receive_handle=%p\n", name, eo->receive_handle);
 @
 
 
