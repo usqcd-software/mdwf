@@ -1,3 +1,14 @@
+WRITE:
+-Operators
+-Solvers
+
+INTERFACE EXTENSIONS:
+-accessors (to make conversion float<->double simpler)
+-shifted solver fields
+
+
+
+
 Init:
 1. allocate one QMP aligned memory block for all sends and receives on
    max(even, odd), assuming double.
@@ -13,16 +24,6 @@ Fini:
   1.1 Free receive handle
   1.2 Free all send handles
 2. Free QMP memory
-
-Allocation:
-1. If error is not recordable return
-2. Allocate
-3. Increase state counter
-
-Freeing:
-1. If error is not recordable return
-2. Decrease state counter
-3. Free memory
 
 Setting parameters
 1. If error is not recordable return

@@ -21,8 +21,13 @@ q.sources = error.c \
             state-dump.c
 
 qx.sources = memory-g.c \
+             memory-f.c \
              memory-h.c \
-             memory-f.c
+             import-g.c \
+             import-f.c \
+             import-h.c \
+             export-f.c \
+             export-h.c
 
 qz.objects = $(q.sources:%.c=%.o) \
              $(qx.sources:%.c=%f.o) \
@@ -43,7 +48,7 @@ f.dvi = $(noweb:%.nw=%.dvi)
 f.pdf = $(noweb:%.nw=%.pdf)
 
 
-.PHONY: all clean realclean sources pdf test-lib
+.PHONY: all clean realclean sources pdf test-lib test-symbols
 
 all: pdf sources
 
@@ -60,6 +65,12 @@ sources: $(sources)
 pdf: $(f.pdf)
 
 test-lib: $(f.lib)
+
+test-symbols: test-lib
+	@nm -fP $(f.lib) | \
+        awk '/[^:]$$/{if (sym[$$1]!="T") sym[$$1]=$$2} \
+            END{for (s in sym) if (sym[s]=="U") printf "%s %s\n", sym[s], s;}'|\
+        sort
 
 ###
 $(f.pdf): %.pdf: %.dvi
@@ -98,3 +109,4 @@ $(qx.sources:%.c=%f.o): %f.o: %.c
 	$(CC) -DQOP_MDWF_DEFAULT_PRECISION=\'F\' $(CFLAGS) -c -o $@ $<
 
 $(qz.objects): $(h.sources)
+

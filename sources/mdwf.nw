@@ -864,19 +864,17 @@ be used. To keep the interface as general as possible, we use a query function
 approach for inport. There are two versions of [[QOP_MDWF_import_gauge]], one
 for double precision, another for single precision.
 <<Interface functions>>=
-int `QOP_F3_MDWF_import_gauge(struct QOP_MDWF_State *state,
-                             struct QOP_F3_MDWF_Gauge **gauge_ptr,
+int `QOP_F3_MDWF_import_gauge(struct QOP_F3_MDWF_Gauge **gauge_ptr,
+                             struct QOP_MDWF_State *state,
                              double (*reader)(int dir,
                                               const int pos[4],
                                               int a,
                                               int b,
                                               int re_im,
-                                              const void *outer_gauge,
                                               void *env),
-                             const void *outer_gauge_U,
                              void *env);
-int `QOP_D3_MDWF_import_gauge(struct QOP_MDWF_State *state,
-                             struct QOP_D3_MDWF_Gauge **gauge_ptr,
+int `QOP_D3_MDWF_import_gauge(struct QOP_D3_MDWF_Gauge **gauge_ptr,
+                             struct QOP_MDWF_State *state,
                              double (*reader)(int dir,
                                               const int pos[4],
                                               int a,
@@ -926,16 +924,16 @@ Here are macros defining default values for gauge field types and functions:
 Unlike the gauge field, fermions are provided with a richer set of functions.
 In addition to import and destruction, they could be created empty and exported.
 <<Interface functions>>=
-int `QOP_F3_MDWF_import_fermion(struct QOP_MDWF_State *state,
-                               struct QOP_F3_MDWF_Fermion **fermion_ptr,
+int `QOP_F3_MDWF_import_fermion(struct QOP_F3_MDWF_Fermion **fermion_ptr,
+                               struct QOP_MDWF_State *state,
                                double (*reader)(const int pos[5],
                                                 int color,
                                                 int dirac,
                                                 int re_im,
                                                 void *env),
                                void *env);
-int `QOP_D3_MDWF_import_fermion(struct QOP_MDWF_State *state,
-                               struct QOP_D3_MDWF_Fermion **fermion_ptr,
+int `QOP_D3_MDWF_import_fermion(struct QOP_D3_MDWF_Fermion **fermion_ptr,
+                               struct QOP_MDWF_State *state,
                                double (*reader)(const int pos[5],
                                                 int color,
                                                 int dirac,
@@ -966,17 +964,16 @@ struct `QOP_D3_MDWF_Fermion;
 One may also need to create a fermion field without any useful initial value.
 For convenience, we provide functions to do that
 <<Interface functions>>=
-int `QOP_F3_MDWF_allocate_fermion(struct QOP_MDWF_State *state,
-                                 struct QOP_F3_MDWF_Fermion **fermion_ptr);
-int `QOP_D3_MDWF_allocate_fermion(struct QOP_MDWF_State *state,
-                                 struct QOP_D3_MDWF_Fermion **fermion_ptr);
+int `QOP_F3_MDWF_allocate_fermion(struct QOP_F3_MDWF_Fermion **fermion_ptr,
+                                 struct QOP_MDWF_State *state);
+int `QOP_D3_MDWF_allocate_fermion(struct QOP_D3_MDWF_Fermion **fermion_ptr,
+                                 struct QOP_MDWF_State *state);
 @
 
 Unlike the gauge fields, fermions need a way to be exported back to the user.
 We also use a functional interface to provide indexing.
 <<Interface functions>>=
-int `QOP_F3_MDWF_export_fermion(struct QOP_MDWF_State *state,
-                               void (*writer)(const int pos[5],
+int `QOP_F3_MDWF_export_fermion(void (*writer)(const int pos[5],
                                               int color,
                                               int dirac,
                                               int re_im,
@@ -984,8 +981,7 @@ int `QOP_F3_MDWF_export_fermion(struct QOP_MDWF_State *state,
                                               void *env),
                                void *env,
                                const struct QOP_F3_MDWF_Fermion *fermion);
-int `QOP_D3_MDWF_export_fermion(struct QOP_MDWF_State *state,
-                               void (*writer)(const int pos[5],
+int `QOP_D3_MDWF_export_fermion(void (*writer)(const int pos[5],
                                               int color,
                                               int dirac,
                                               int re_im,
@@ -1024,16 +1020,16 @@ but the exact relation is not specified.
 Unlike the gauge field, fermions are provided with a richer set of functions.
 In addition to import and destruction, they could be created empty and exported.
 <<Interface functions>>=
-int `QOP_F3_MDWF_import_half_fermion(struct QOP_MDWF_State *state,
-                                    struct QOP_F3_MDWF_HalfFermion **hfermion_ptr,
+int `QOP_F3_MDWF_import_half_fermion(struct QOP_F3_MDWF_HalfFermion **hfermion_ptr,
+                                    struct QOP_MDWF_State *state,
                                     double (*reader)(const int pos[5],
                                                      int color,
                                                      int dirac,
                                                      int re_im,
                                                      void *env),
                                     void *env);
-int `QOP_D3_MDWF_import_half_fermion(struct QOP_MDWF_State *state,
-                                    struct QOP_D3_MDWF_HalfFermion **hfermion_ptr,
+int `QOP_D3_MDWF_import_half_fermion(struct QOP_D3_MDWF_HalfFermion **hfermion_ptr,
+                                    struct QOP_MDWF_State *state,
                                     double (*reader)(const int pos[5],
                                                      int color,
                                                      int dirac,
@@ -1064,17 +1060,16 @@ struct `QOP_D3_MDWF_HalfFermion;
 One may also need to create a fermion field without any useful initial value.
 For convenience, we provide functions to do that
 <<Interface functions>>=
-int `QOP_F3_MDWF_allocate_half_fermion(struct QOP_MDWF_State *state,
-                                      struct QOP_F3_MDWF_HalfFermion **hfermion_ptr);
-int `QOP_D3_MDWF_allocate_half_fermion(struct QOP_MDWF_State *state,
-                                      struct QOP_D3_MDWF_HalfFermion **hfermion_ptr);
+int `QOP_F3_MDWF_allocate_half_fermion(struct QOP_F3_MDWF_HalfFermion **hfermion_ptr,
+                                      struct QOP_MDWF_State *state);
+int `QOP_D3_MDWF_allocate_half_fermion(struct QOP_D3_MDWF_HalfFermion **hfermion_ptr,
+                                      struct QOP_MDWF_State *state);
 @
 
 Preconditioned fermions may be exported back to the user.
 We also use a functional interface to provide indexing.
 <<Interface functions>>=
-int `QOP_F3_MDWF_export_half_fermion(struct QOP_MDWF_State *state,
-                                    void (*writer)(const int pos[5],
+int `QOP_F3_MDWF_export_half_fermion(void (*writer)(const int pos[5],
                                                    int color,
                                                    int dirac,
                                                    int re_im,
@@ -1082,8 +1077,7 @@ int `QOP_F3_MDWF_export_half_fermion(struct QOP_MDWF_State *state,
                                                    void *env),
                                    void *env,
                                    const struct QOP_F3_MDWF_HalfFermion *hfermion);
-int `QOP_D3_MDWF_export_half_fermion(struct QOP_MDWF_State *state,
-                                    void (*writer)(const int pos[5],
+int `QOP_D3_MDWF_export_half_fermion(void (*writer)(const int pos[5],
                                                    int color,
                                                    int dirac,
                                                    int re_im,
@@ -1121,51 +1115,43 @@ We provide both normal and conjugated Dirac Operator for the full fermion as
 well as the precondition operator and its conjugate both in single and double
 precision.
 <<Interface functions>>=
-int `QOP_F3_MDWF_DDW_operator(struct QOP_MDWF_State *state,
-                             struct QOP_MDWF_Parameters *params,
-                             struct QOP_F3_MDWF_Fermion *result,
+int `QOP_F3_MDWF_DDW_operator(struct QOP_F3_MDWF_Fermion *result,
+                             const struct QOP_MDWF_Parameters *params,
 	 		     const struct QOP_F3_MDWF_Gauge *gauge,
 		 	     const struct QOP_F3_MDWF_Fermion *fermion);
-int `QOP_D3_MDWF_DDW_operator(struct QOP_MDWF_State *state,
-                             struct QOP_MDWF_Parameters *params,
-                             struct QOP_D3_MDWF_Fermion *result,
-			     const struct QOP_D3_MDWF_Gauge *gauge,
+int `QOP_D3_MDWF_DDW_operator(struct QOP_D3_MDWF_Fermion *result,
+			     const struct QOP_MDWF_Parameters *params,
+                             const struct QOP_D3_MDWF_Gauge *gauge,
 			     const struct QOP_D3_MDWF_Fermion *fermion);
 @
 <<Interface functions>>=
-int `QOP_F3_MDWF_DDW_operator_conjugated(struct QOP_MDWF_State *state,
-                                        struct QOP_MDWF_Parameters *params,
-                                        struct QOP_F3_MDWF_Fermion *result,
-	 	                        const struct QOP_F3_MDWF_Gauge *gauge,
+int `QOP_F3_MDWF_DDW_operator_conjugated(struct QOP_F3_MDWF_Fermion *result,
+	 	                        const struct QOP_MDWF_Parameters *params,
+                                        const struct QOP_F3_MDWF_Gauge *gauge,
 		 	                const struct QOP_F3_MDWF_Fermion *fermion);
-int `QOP_D3_MDWF_DDW_operator_conjugated(struct QOP_MDWF_State *state,
-                                        struct QOP_MDWF_Parameters *params,
-                                        struct QOP_D3_MDWF_Fermion *result,
-		    	                const struct QOP_D3_MDWF_Gauge *gauge,
+int `QOP_D3_MDWF_DDW_operator_conjugated(struct QOP_D3_MDWF_Fermion *result,
+                                        const struct QOP_MDWF_Parameters *params,
+                                        const struct QOP_D3_MDWF_Gauge *gauge,
 			                const struct QOP_D3_MDWF_Fermion *fermion);
 @
 <<Interface functions>>=
-int `QOP_F3_MDWF_M_operator(struct QOP_MDWF_State *state,
-                           struct QOP_MDWF_Parameters *params,
-                           struct QOP_F3_MDWF_HalfFermion *result,
-	  	           const struct QOP_F3_MDWF_Gauge *gauge,
+int `QOP_F3_MDWF_M_operator(struct QOP_F3_MDWF_HalfFermion *result,
+	  	           const struct QOP_MDWF_Parameters *params,
+                           const struct QOP_F3_MDWF_Gauge *gauge,
 		 	   const struct QOP_F3_MDWF_HalfFermion *fermion);
-int `QOP_D3_MDWF_M_operator(struct QOP_MDWF_State *state,
-                           struct QOP_MDWF_Parameters *params,
-                           struct QOP_D3_MDWF_HalfFermion *result,
-	 	           const struct QOP_D3_MDWF_Gauge *gauge,
+int `QOP_D3_MDWF_M_operator(struct QOP_D3_MDWF_HalfFermion *result,
+	 	           const struct QOP_MDWF_Parameters *params,
+                           const struct QOP_D3_MDWF_Gauge *gauge,
 			   const struct QOP_D3_MDWF_HalfFermion *fermion);
 @
 <<Interface functions>>=
-int `QOP_F3_MDWF_M_operator_conjugated(struct QOP_MDWF_State *state,
-                                      struct QOP_MDWF_Parameters *params,
-                                      struct QOP_F3_MDWF_HalfFermion *result,
-	  	                      const struct QOP_F3_MDWF_Gauge *gauge,
+int `QOP_F3_MDWF_M_operator_conjugated(struct QOP_F3_MDWF_HalfFermion *result,
+	  	                      const struct QOP_MDWF_Parameters *params,
+                                      const struct QOP_F3_MDWF_Gauge *gauge,
 			              const struct QOP_F3_MDWF_HalfFermion *fermion);
-int `QOP_D3_MDWF_M_operator_conjugated(struct QOP_MDWF_State *state,
-                                      struct QOP_MDWF_Parameters *params,
-                                      struct QOP_D3_MDWF_HalfFermion *result,
-	   	                      const struct QOP_D3_MDWF_Gauge *gauge,
+int `QOP_D3_MDWF_M_operator_conjugated(struct QOP_D3_MDWF_HalfFermion *result,
+	   	                      const struct QOP_MDWF_Parameters *params,
+                                      const struct QOP_D3_MDWF_Gauge *gauge,
 			              const struct QOP_D3_MDWF_HalfFermion *fermion);
 @
 
@@ -1192,21 +1178,19 @@ residue becomes $\epsilon$ or less. The initial guess $\chi_0$ is used as a
 starting point for the CG.
 
 <<Interface functions>>=
-int `QOP_F3_MDWF_DDW_CG(struct QOP_MDWF_State *state,
-                       struct QOP_MDWF_Parameters *params,
-                       struct QOP_F3_MDWF_Fermion *result,
+int `QOP_F3_MDWF_DDW_CG(struct QOP_F3_MDWF_Fermion *result,
                        int *out_iterations,
                        double *out_epsilon,
+                       const struct QOP_MDWF_Parameters *params,
                        const struct QOP_F3_MDWF_Fermion *chi_0,
                        const struct QOP_F3_MDWF_Gauge *gauge,
                        const struct QOP_F3_MDWF_Fermion *rhs,
                        int max_iteration,
                        double epsilon);
-int `QOP_D3_MDWF_DDW_CG(struct QOP_MDWF_State *state,
-                       struct QOP_MDWF_Parameters *params,
-                       struct QOP_D3_MDWF_Fermion *result,
+int `QOP_D3_MDWF_DDW_CG(struct QOP_D3_MDWF_Fermion *result,
                        int *out_iterations,
                        double *out_epsilon,
+                       const struct QOP_MDWF_Parameters *params,
                        const struct QOP_D3_MDWF_Fermion *x_0,
                        const struct QOP_D3_MDWF_Gauge *gauge,
                        const struct QOP_D3_MDWF_Fermion *rhs,
@@ -1217,20 +1201,18 @@ int `QOP_D3_MDWF_DDW_CG(struct QOP_MDWF_State *state,
 We also expose the preconditioned hermitian solver for
 $M^\dagger M\psi_o=\phi_o$. In this case the CG starts from $\psi_o=0$.
 <<Interface functions>>=
-int `QOP_F3_MDWF_MxM_CG(struct QOP_MDWF_State *state,
-                       struct QOP_MDWF_Parameters *params,
-                       struct QOP_F3_MDWF_HalfFermion *result,
+int `QOP_F3_MDWF_MxM_CG(struct QOP_F3_MDWF_HalfFermion *result,
                        int *out_iterations,
                        double *out_epsilon,
+                       const struct QOP_MDWF_Parameters *params,
                        const struct QOP_F3_MDWF_Gauge *gauge,
                        const struct QOP_F3_MDWF_HalfFermion *rhs,
                        int max_iteration,
                        double epsilon);
-int `QOP_D3_MDWF_MxM_CG(struct QOP_MDWF_State *state,
-                       struct QOP_MDWF_Parameters *params,
-                       struct QOP_D3_MDWF_HalfFermion *result,
+int `QOP_D3_MDWF_MxM_CG(struct QOP_D3_MDWF_HalfFermion *result,
                        int *out_iterations,
                        double *out_epsilon,
+                       const struct QOP_MDWF_Parameters *params,
                        const struct QOP_D3_MDWF_Gauge *gauge,
                        const struct QOP_D3_MDWF_HalfFermion *rhs,
                        int max_iteration,
@@ -1240,24 +1222,22 @@ int `QOP_D3_MDWF_MxM_CG(struct QOP_MDWF_State *state,
 The last solver is the SCG for multiple $\sigma_n$. We only need it to solve for
 $M^\dagger M$. Here [[m]] should be positive and all $\sigma_n >0$.
 <<Interface functions>>=
-int `QOP_F3_MDWF_MxM_SCG(struct QOP_MDWF_State *state,
-                        struct QOP_MDWF_Parameters *params,
-                        struct QOP_F3_MDWF_HalfFermion *result,
+int `QOP_F3_MDWF_MxM_SCG(struct QOP_F3_MDWF_HalfFermion *result,
                         struct QOP_F3_MDWF_HalfFermion *res_sigma[],
                         int *out_iterations,
                         double *out_epsilon,
+                        const struct QOP_MDWF_Parameters *params,
                         const struct QOP_F3_MDWF_Gauge *gauge,
                         int m,
 			const double sigma[],
                         const struct QOP_F3_MDWF_HalfFermion *rhs,
                         int max_iteration,
                         double epsilon);
-int `QOP_D3_MDWF_MxM_SCG(struct QOP_MDWF_State *state,
-                        struct QOP_MDWF_Parameters *params,
-                        struct QOP_D3_MDWF_HalfFermion *result,
+int `QOP_D3_MDWF_MxM_SCG(struct QOP_D3_MDWF_HalfFermion *result,
                         struct QOP_D3_MDWF_HalfFermion *res_sigma[],
                         int *out_iterations,
                         double *out_epsilon,
+                        const struct QOP_MDWF_Parameters *params,
                         const struct QOP_D3_MDWF_Gauge *gauge,
                         int m,
 			const double sigma[],
@@ -1285,23 +1265,19 @@ algebra on full and preconditioned fermions.
 r\leftarrow a + \alpha b
 \]
 <<Interface functions>>=
-int `QOP_F3_MDWF_madd_fermion(struct QOP_MDWF_State *state,
-                             struct QOP_F3_MDWF_Fermion *r,
+int `QOP_F3_MDWF_madd_fermion(struct QOP_F3_MDWF_Fermion *r,
                              const struct QOP_F3_MDWF_Fermion *a,
                              double alpha,
                              const struct QOP_F3_MDWF_Fermion *b);
-int `QOP_D3_MDWF_madd_fermion(struct QOP_MDWF_State *state,
-                             struct QOP_D3_MDWF_Fermion *r,
+int `QOP_D3_MDWF_madd_fermion(struct QOP_D3_MDWF_Fermion *r,
                              const struct QOP_D3_MDWF_Fermion *a,
                              double alpha,
                              const struct QOP_D3_MDWF_Fermion *b);
-int `QOP_F3_MDWF_madd_half_fermion(struct QOP_MDWF_State *state,
-                                  struct QOP_F3_MDWF_HalfFermion *r,
+int `QOP_F3_MDWF_madd_half_fermion(struct QOP_F3_MDWF_HalfFermion *r,
                                   const struct QOP_F3_MDWF_HalfFermion *a,
                                   double alpha,
                                   const struct QOP_F3_MDWF_HalfFermion *b);
-int `QOP_D3_MDWF_madd_half_fermion(struct QOP_MDWF_State *state,
-                                  struct QOP_D3_MDWF_HalfFermion *r,
+int `QOP_D3_MDWF_madd_half_fermion(struct QOP_D3_MDWF_HalfFermion *r,
                                   const struct QOP_D3_MDWF_HalfFermion *a,
                                   double alpha,
                                   const struct QOP_D3_MDWF_HalfFermion *b);
@@ -1310,23 +1286,19 @@ int `QOP_D3_MDWF_madd_half_fermion(struct QOP_MDWF_State *state,
   \alpha \leftarrow \langle a,b\rangle
 \]
 <<Interface functions>>=
-int `QOP_F3_MDWF_dot_fermion(struct QOP_MDWF_State *state,
-                            double *r_re,
+int `QOP_F3_MDWF_dot_fermion(double *r_re,
                             double *r_im,
                             const struct QOP_F3_MDWF_Fermion *a,
                             const struct QOP_F3_MDWF_Fermion *b);
-int `QOP_D3_MDWF_dot_fermion(struct QOP_MDWF_State *state,
-                            double *r_re,
+int `QOP_D3_MDWF_dot_fermion(double *r_re,
                             double *r_im,
                             const struct QOP_D3_MDWF_Fermion *a,
                             const struct QOP_D3_MDWF_Fermion *b);
-int `QOP_F3_MDWF_dot_half_fermion(struct QOP_MDWF_State *state,
-                                 double *r_re,
+int `QOP_F3_MDWF_dot_half_fermion(double *r_re,
                                  double *r_im,
                                  const struct QOP_F3_MDWF_HalfFermion *a,
                                  const struct QOP_F3_MDWF_HalfFermion *b);
-int `QOP_D3_MDWF_dot_half_fermion(struct QOP_MDWF_State *state,
-                                 double *r_re,
+int `QOP_D3_MDWF_dot_half_fermion(double *r_re,
                                  double *r_im,
                                  const struct QOP_D3_MDWF_HalfFermion *a,
                                  const struct QOP_D3_MDWF_HalfFermion *b);
@@ -1458,7 +1430,7 @@ the actual data.
 <<Implementation types>>=
 struct QX(`Gauge) {
   struct Q(State) *state;
-  ptrdiff_t size;
+  size_t size;
   struct SU3 *data;
 };
 @
@@ -1466,7 +1438,7 @@ struct QX(`Gauge) {
 <<Implementation types>>=
 struct QX(`Fermion) {
   struct Q(State) *state;
-  ptrdiff_t size;
+  size_t size;
   struct Fermion *even;
   struct Fermion *odd;
 };
@@ -1476,8 +1448,8 @@ The [[HalfFermion]] contains a full Dirac fermion on half the lattice.
 <<Implementation types>>=
 struct QX(`HalfFermion) {
   struct Q(State) *state;
-  ptrdiff_t size;
-  struct Fermion *data;
+  size_t size;
+  struct Fermion *even;
 };
 @
 
@@ -2992,53 +2964,301 @@ Handy chunks to start and stop the stopwatch.
    gettimeofday(&state->t1, NULL);
 @
 
-\section{Parameter setting}
-\subsection{Generic}
-% QOP_MDWF_set_generic
-\par XXX Generic
-\par XXX service routines
-\subsection{M\"obius}
-\par XXX M\"obius
-% QOP_MDWF_set_Moebius
-\subsection{Shamir}
-\par XXX Shamir
-% QOP_MDWF_set_Shamir
-\subsection{Bori\c ci}
-\par XXX Bori\c ci
-% QOP_MDWF_set_Borichi
-\subsection{Neff}
-\par XXX Neff
-% QOP_MDWF_set_Neff
+\section{XXX Parameter setting}
+\subsection{XXX Generic}
+% Q(set_generic)
+\subsection{XXX M\"obius}
+% Q(set_Moebius)
+\subsection{XXX Shamir}
+% Q(set_Shamir)
+\subsection{XXX Bori\c ci}
+% Q(set_Borichi)
+\subsection{XXX Neff}
+% Q(set_Neff)
 
-% QOP_MDWF_version
+\section{XXX Version}
+% Q(version)
 
-\par XXX d/f routines
-% QOP_MDWF_import_gauge
-% QOP_MDWF_free_gauge
-% QOP_MDWF_import_fermion
-% QOP_MDWF_export_fermion
-% QOP_MDWF_allocate_fermion
-% QOP_MDWF_free_fermion
-% QOP_MDWF_import_half_fermion
-% QOP_MDWF_export_half_fermion
-% QOP_MDWF_allocate_half_fermion
-% QOP_MDWF_free_half_fermion
-% QOP_MDWF_DDW_operator
-% QOP_MDWF_DDW_operator_conjugated
-% QOP_MDWF_M_operator
-% QOP_MDWF_M_operator_conjugated
-% QOP_MDWF_DDW_CG
-% QOP_MDWF_MxM_CG
-% QOP_MDWF_MxM_SCG
-% QOP_MDWF_madd_fermion
-% QOP_MDWF_madd_half_fermion
-% QOP_MDWF_dot_fermion
-% QOP_MDWF_dot_half_fermion
+\section{XXX Dirac Operators}
+In this section we compute varios forms of the domain wall operator. For various
+reasons we need to provide the full operator, its hermitian conjudate, the
+preconditioned operator and its conjugate. Notice that the solver proper
+works with $A=M^\dagger M$. Both single and double precision versions are
+provided.
+
+\subsection{Dirac Domain Wall Operator}
+<<File [[operator-ddw.c]]>>=
+#include <mdwf.h>
+int
+`QX(DDW_operator)(struct QOP_F3_MDWF_Fermion *result,
+                 const struct QOP_MDWF_Parameters *params,
+                 const struct QOP_F3_MDWF_Gauge *gauge,
+                 const struct QOP_F3_MDWF_Fermion *fermion)
+{
+#define CHECK_ARG0(a)  do if ((a) == 0) return 1; \
+                          else state = (a)->state; while (0)
+#define CHECK_ARG(a,z,msgZ,msgM) do { if (a==0) { \
+                                        Q(set_error)(state, (msgZ)); \
+                                        return 1; } \
+                                      if (a->state != state) { \
+                                        Q(set_error)(state, (msgM)); \
+                                        return  1; } } while (0)
+  struct Q(State) *state;
+
+  CHECK_ARG0(result);
+  CHECK_ARG(params, result,
+            "DDWF_operator(): NULL params",
+            "DDWF_operator(): params geometry mismatch");
+  CHECK_ARG(gauge, result,
+            "DDWF_operator(): NULL gauge",
+            "DDWF_operator(): gauge geometry mismatch");
+  CHECK_ARG(fermion, result,
+            "DDWF_operator(): NULL fermion",
+            "DDWF_operator(): fermion geometry mismatch");
+
+  if (qx(setup_comnuication)(state, sizeof (REAL)))
+    return 1;
+
+  qx(compute_)();
+  
+
+#undef CHECK_ARG
+#undef CHECK_ARG0
+}
+@
+d/f routine XXX [[Q(DDW_operator)]]
+\subsection{d/f routine XXX [[Q(DDW_operator_conjugated)]]}
+\subsection{d/f routine XXX [[Q(M_operator)]]}
+\subsection{d/f routine XXX [[Q(M_operator_conjugated)]]}
+\section{XXX Solvers}
+\subsection{d/f routine XXX [[Q(DDW_CG)]]}
+\subsection{d/f routine XXX [[Q(MxM_CG)]]}
+\subsection{d/f routine XXX [[Q(MxM_SCG)]]}
+\section{XXX Helpers}
+\subsection{d/f routine XXX [[Q(madd_fermion)]]}
+\subsection{d/f routine XXX [[Q(madd_half_fermion)]]}
+\subsection{d/f routine XXX [[Q(dot_fermion)]]}
+\subsection{d/f routine XXX [[Q(dot_half_fermion)]]}
+
+\section{Import}
+For import there is a pseudo-issue of efficiency. In MDWF we always walk through
+the inner represenation in the most efficient manner. The call-backs allow us
+to remain blissfully ignorant about the outside data layout.
+\subsection{Gauge field}
+This is the easiest import we have. The gauge field is stored in a natural way
+(four $SU_3$ matrices per lattice site) and require no special tricks.
+<<File [[import-g.c]]>>=
+#include <mdwf.h>
+int
+QX(`import_gauge)(struct QX(Gauge) **gauge_ptr,
+                 struct Q(State) *state,
+                 double (*reader)(int dir,
+                                  const int pos[Q(DIM)],
+                                  int a,
+                                  int b,
+                                  int re_im,
+                                  void *env),
+                 void *env)
+{
+   int a,b,p,i,d;
+   int x[Q(DIM)];
+   struct SU3 *u;
+   REAL ur, ui;
+   int *hi;
+   int *lo;
+
+   <<Start timer>>
+   if (qx(allocate_gauge)(state, gauge_ptr) != 0) {
+     <<Stop timer>>
+     return 1;
+   }
+
+   lo = state->sublattice.lo;
+   hi = state->sublattice.hi;
+   for (u = (*gauge_ptr)->data, p = 0; p < state->volume; p++) {
+     <<Linear [[p]] to vector [[x]]>>
+     for (d = 0; d < Q(DIM); d++, u++) {
+       for (a = 0; a < Q(COLORS); a++) {
+         for (b = 0; b < Q(COLORS); b++) {
+           ur = (*reader)(d, x, a, b, 0, env);
+           ui = (*reader)(d, x, a, b, 1, env);
+           u->u[a][b] = ur + I * ui; /* hail C99! */
+         }
+       }
+     }
+   }
+   <<Stop timer>>
+   return 0;
+}
+@
+
+\subsection{Fermion}
+For fermions we postpone the definition of the 5-d slice layout to the low level
+import routine. It will cost as an additional function call per 4-d lattice,
+which is small overhead compared to the call-back. Here we walk local 4-d only:
+<<File [[import-f.c]]>>=
+#include <mdwf.h>
+int
+QX(`import_fermion)(struct QX(Fermion) **fermion_ptr,
+                   struct Q(State) *state,
+                   double (*reader)(const int pos[Q(DIM)+1],
+                                    int color,
+                                    int dirac,
+                                    int re_im,
+                                    void *env),
+                   void *env)
+{
+#define ALLOCATOR QX(allocate_fermion)
+   <<Import (half)fermion prologue>>
+   <<Import even part of (half)fermion>>
+   <<Import odd part of fermion>>
+   <<Stop timer>>
+#undef ALLOCATOR
+   return 0;
+}
+@
+
+<<Import (half)fermion prologue>>=
+int p,i;
+int Ls;
+int x[Q(DIM)+1];
+struct Fermion *f;
+int *hi;
+int *lo;
+
+<<Start timer>>
+if (ALLOCATOR(fermion_ptr, state) != 0) {
+   <<Stop timer>>
+   return 1;
+}
+
+lo = state->sublattice.lo;
+hi = state->sublattice.hi;
+Ls = state->Ls;
+@
+
+<<Import even part of (half)fermion>>=
+for (f = (*fermion_ptr)->even, p = 0; p < state->even.full_size; p++, f += Ls) {
+  <<Linear [[p]] to vector [[x]]>>
+  qx(import_fermion_slice)(state, f, x, reader, env);
+}
+@
+
+<<Import odd part of fermion>>=
+for (f = (*fermion_ptr)->odd, p = 0; p < state->odd.full_size; p++, f += Ls) {
+  <<Linear [[p]] to vector [[x]]>>
+  qx(import_fermion_slice)(state, f, x, reader, env);
+}
+@
+
+\subsection{Half Fermion}
+For half-fermions, we only need to import even part:
+<<File [[import-h.c]]>>=
+#include <mdwf.h>
+int
+QX(`import_half_fermion)(struct QX(HalfFermion) **fermion_ptr,
+                        struct Q(State) *state,
+                        double (*reader)(const int pos[Q(DIM)+1],
+                                         int color,
+                                         int dirac,
+                                         int re_im,
+                                         void *env),
+                        void *env)
+{
+#define ALLOCATOR QX(allocate_half_fermion)
+   <<Import (half)fermion prologue>>
+   <<Import even part of (half)fermion>>
+   <<Stop timer>>
+#undef ALLOCATOR
+   return 0;
+}
+@
+
+\section{Export}
+We export only fermions. The code at this level is very similar to the
+corresponding import routines.
+<<File [[export-f.c]]>>=
+#include <mdwf.h>
+int
+Q(`export_fermion)(void (*writer)(const int pos[5],
+                                 int color,
+                                 int dirac,
+                                 int re_im,
+                                 double value,
+                                 void *env),
+                   void *env,
+                   const struct QX(Fermion) *fermion)
+{
+   <<Export (half)fermion prologue>>
+   <<Export even part of (half)fermion>>
+   <<Export odd part of fermion>>
+   <<Stop timer>>
+   return 0;
+}
+@
+
+<<Export (half)fermion prologue>>=
+struct Q(State) *state;
+int p, i;
+int x[Q(DIM)+1];
+const int *lo;
+const int *hi;
+const struct Fermion *f;
+int Ls;
+
+if (fermion == NULL)
+  return 1;
+
+state = fermion->state;
+lo = state->sublattice.lo;
+hi = state->sublattice.hi;
+Ls = state->Ls;
+<<Start timer>>
+@
+
+<<Export even part of (half)fermion>>=
+for (f = fermion->even, p = 0; p < state->even.full_size; p++, f += Ls) {
+  <<Linear [[p]] to vector [[x]]>>
+  qx(export_fermion_slice)(state, f, x, writer, env);
+}
+@
+
+<<Export odd part of fermion>>=
+for (f = fermion->odd, p = 0; p < state->odd.full_size; p++, f += Ls) {
+  <<Linear [[p]] to vector [[x]]>>
+  qx(export_fermion_slice)(state, f, x, writer, env);
+}
+@
+
+\subsection{Half Fermion}
+<<File [[export-h.c]]>>=
+#include <mdwf.h>
+int
+Q(`export_half_fermion)(void (*writer)(const int pos[5],
+                                      int color,
+                                      int dirac,
+                                      int re_im,
+                                      double value,
+                                      void *env),
+                       void *env,
+                       const struct QX(HalfFermion) *fermion)
+{
+   <<Export (half)fermion prologue>>
+   <<Export even part of (half)fermion>>
+   <<Stop timer>>
+   return 0;
+}
+@
+
+
 \section{Memory management}
 Though we use [[malloc()]] and [[free()]], it is convenient to abstract them.
 <<Implementation prototypes>>=
-void *q(`malloc)(struct Q(State) *state, int bytes);
-void q(`free)(struct Q(State) *state, void *ptr, ptrdiff_t bytes);
+void *q(`malloc)(struct Q(State) *state, size_t bytes);
+void q(`free)(struct Q(State) *state, void *ptr, size_t bytes);
+void *q(`allocate_aligned)(struct Q(State) *state,
+                          size_t *size, void **aligned_ptr,
+                          size_t hdr_size, size_t bulk_size);
 @
 
 The implementation is simple:
@@ -3052,7 +3272,7 @@ Each [[malloc]] records the current allocated size in its first argument if
 it is not [[NULL]]. We also keep track of maximal memory ever requested.
 <<Memory functions>>=
 void *
-q(`malloc)(struct Q(State) *state, int bytes)
+q(`malloc)(struct Q(State) *state, size_t bytes)
 {
    void *ptr = malloc(bytes);
    if (ptr == NULL)
@@ -3069,7 +3289,7 @@ Freeing memory also keeps track of memory use. We allow this function to be
 called with a [[NULL]] pointer.
 <<Memory functions>>=
 void
-q(`free)(struct Q(State) *state, void *ptr, int size)
+q(`free)(struct Q(State) *state, void *ptr, size_t size)
 {
    if (ptr == NULL)
      return;
@@ -3077,6 +3297,28 @@ q(`free)(struct Q(State) *state, void *ptr, int size)
      return;
    state->allocated -= size;
 }
+@
+
+\subsection{Aligned Allocator}
+We often need a memory block aligned at [[CACHE_LINE_SIZE]]. It all cases we also need a header which is normally aligned. Our strategy is to allocate one block of memory with sufficient slack. Here is a corresponding allocator.
+<<Memory functions>>=
+void
+*q(`allocate_aligned)(struct Q(State) *state,
+                     size_t *size, void **aligned_ptr,
+                     size_t hdr_size, size_t bulk_size)
+{
+   size_t total_size = hdr_size + bulk_size + 2 * (CACHE_LINE_SIZE - 1);
+   void *p = q(malloc)(state, total_size);
+   if (p == 0) {
+     *size = 0;
+     *aligned_ptr = NULL;
+   } else {
+     *size = total_size;
+     *aligned_ptr = ALIGN(p + hdr_size);
+   }
+   return p;
+}
+
 @
 
 Two extra fields are needed in the [[State]]:
@@ -3104,7 +3346,7 @@ qx(allocate_gauge)(struct Q(State) *state, struct QX(Gauge) **gauge_ptr)
 {
   struct QX(Gauge) *g;
   void *ptr;
-  ptrdiff_t size;
+  size_t size;
 
   <<Begin interface routine>>
   *gauge_ptr = NULL;
@@ -3136,7 +3378,7 @@ if ((state == NULL) || (state->record == 0))
 The deallocator is simple
 <<File [[memory-g.c]]>>=
 void
-qx(free_gauge)(struct QX(Gauge) **gauge_ptr)
+QX(free_gauge)(struct QX(Gauge) **gauge_ptr)
 {
    struct Q(State) *state;
    if ((gauge_ptr == NULL) || (*gauge_ptr == NULL))
@@ -3152,20 +3394,20 @@ qx(free_gauge)(struct QX(Gauge) **gauge_ptr)
 int qx(allocate_gauge)(struct Q(State) *state, struct QX(Gauge) **gauge_ptr);
 @
 
-\subsection{XXX Fermoon Allocator}
+\subsection{Fermoon Allocator}
 Full fermions are a bit tricky---we want both [[even]] and [[odd]] parts to be
 aligned, which costs an extra [[CACHE_LINE_SIZE]] in the allocation.
 <<File [[memory-f.c]]>>=
 #include <mdwf.h>
 int
-QX(`allocate_fermion)(struct Q(State) *state,
-                     struct QX(Fermion) **fermion_ptr)
+QX(`allocate_fermion)(struct QX(Fermion) **fermion_ptr,
+                     struct Q(State) *state)
 {
   struct QX(Fermion) *f;
   void *ptr;
   int e_size;
   int o_size;
-  ptrdiff_t size;
+  size_t size;
 
   <<Begin interface routine>>
   *fermion_ptr = NULL;
@@ -3208,12 +3450,12 @@ The half fermion allocator is the easiest:
 <<File [[memory-h.c]]>>=
 #include <mdwf.h>
 int
-QX(`allocate_half_fermion)(struct Q(State) *state,
-                          struct QX(HalfFermion) **hfermion_ptr)
+QX(`allocate_half_fermion)(struct QX(HalfFermion) **hfermion_ptr,
+                          struct Q(State) *state)
 {
   struct QX(HalfFermion) *h;
   void *ptr;
-  ptrdiff_t size;
+  size_t size;
 
   <<Begin interface routine>>
   *hfermion_ptr = NULL;
@@ -3223,7 +3465,7 @@ QX(`allocate_half_fermion)(struct Q(State) *state,
   state->used++;
   h->state = state;
   h->size = size;
-  h->data = ptr;
+  h->even = ptr;
   *hfermion_ptr = h;
   return 0;
   <<End interface routine>>
@@ -3245,10 +3487,38 @@ QX(free_half_fermion)(struct QX(HalfFermion) **hfermion_ptr)
 }
 @
 
-\subsection{XXX Aligned Allocator}
 
 
 \chapter{CODE GENERATION}
+This chapter contains back end specific routines. Here's what we need to define.
+
+Load one $s$-slice worth of the domain wall fermion.
+<<Implementation prototypes>>=
+void qx(`import_fermion_slice)(struct Q(State) *state,
+                              struct Fermion *fermion,
+                              int pos[Q(DIM)+1],
+                              double (*reader)(const int pos[Q(DIM)+1],
+                                               int color,
+                                               int dirac,
+                                               int re_im,
+                                               void *env),
+                              void *env);
+@
+
+Store one $s$-slice worth of the domain wall fermion.
+<<Implementation prototypes>>=
+void qx(`export_fermion_slice)(struct Q(State) *state,
+                              const struct Fermion *fermion,
+                              int pos[Q(DIM)+1],
+                              void (*writer)(const int pos[5],
+                                             int color,
+                                             int dirac,
+                                             int re_im,
+                                             double value,
+                                             void *env),
+                              void *env);
+@
+
 \section{C99}
 \par XXX gamma matrix descriptions -> complex code
 \section{Blue Gene}
