@@ -267,23 +267,23 @@ parity of $x_0+x_1+x_2+x_3$. Then we can rewrite $D_{DW}$ from Eq.~(\ref{D_DW})
 as follows:
 \begin{equation}\label{EO-form}
 D_{DW}=\left(\begin{array}{cc}
-A_{ee} & F_{eo}B_{oo}\\
-F_{oe}B_{ee} & A_{oo}
+A_{oo} & F_{oe}B_{ee}\\
+F_{eo}B_{oo} & A_{ee}
 \end{array}\right),
 \end{equation}
 where
 \begin{eqnarray}
-A_{ee}(x,x') & = &\left\{(c_5(s)(M_5+4)-1)\left[P_{+}\delta_{s,s'+1}
+A_{oo}(x,x') & = &\left\{(c_5(s)(M_5+4)-1)\left[P_{+}\delta_{s,s'+1}
        - mP_{+}\delta_{s,0}\delta_{s',L_s-1}
               +P_{-}\delta_{s,s'-1}
        -mP_{-}\delta_{s,L_s-1}\delta_{s',0}\right]\right.\nonumber\\
       && \left.+(b_5(s)(M_5+4)+1)\delta_{s,s'}\right\}\delta_{x,x'},\\
-B_{ee}(x,x') & = & -\left\{\frac{c_5(s)}{2}\left[P_{+}\delta_{s,s'+1}
+B_{oo}(x,x') & = & -\left\{\frac{c_5(s)}{2}\left[P_{+}\delta_{s,s'+1}
      - mP_{+}\delta_{s,0}\delta_{s',L_s-1}
                 +P_{-}\delta_{s,s'-1}
        -mP_{-}\delta_{s,L_s-1}\delta_{s',0}\right]+
        \frac{b_5(s)}{2}\delta_{s,s'}\right\}\delta_{x,x'},\\
-F_{eo}(x,x') &=&\delta_{s,s'}
+F_{oe}(x,x') &=&\delta_{s,s'}
             \sum_{\mu=0}^{3}\left[(1-\gamma_\mu)U_\mu(x)\delta_{x,x'-\hat\mu}
          +(1+\gamma_\mu)U_\mu^{\dagger}(x-\hat\mu)\delta_{x,x'+\hat\mu}\right],
 \end{eqnarray}
@@ -294,16 +294,16 @@ Let us rewrite Eq.~(\ref{EO-form}) as follows:
 \begin{equation}
 D_{DW}=
 \left(\begin{array}{cc}
-I_{ee} & 0\\
-F_{oe}B_{ee}A_{ee}^{-1} & A_{oo}B_{oo}^{-1}
+I_{oo} & 0\\
+F_{eo}B_{oo}A_{oo}^{-1} & A_{ee}B_{ee}^{-1}
 \end{array}\right)
 \left(\begin{array}{cc}
-A_{ee} & F_{eo}\\
-0 & I_{oo}-B_{oo}A_{oo}^{-1}F_{oe}B_{ee}A_{ee}^{-1}F_{eo}
+A_{oo} & F_{oe}\\
+0 & I_{ee}-B_{ee}A_{ee}^{-1}F_{eo}B_{oo}A_{oo}^{-1}F_{oe}
 \end{array}\right)
 \left(\begin{array}{cc}
-I_{ee} & 0\\
-0 & B_{oo}
+I_{oo} & 0\\
+0 & B_{ee}
 \end{array}\right).
 \end{equation}
 
@@ -311,8 +311,8 @@ To solve the equation
 \[
 D_{DW}\psi=
 \left(\begin{array}{cc}
-A_{ee} & F_{eo}B_{oo}\\
-F_{oe}B_{ee} & A_{oo}
+A_{oo} & F_{oe}B_{ee}\\
+F_{eo}B_{oo} & A_{ee}
 \end{array}\right)
 \left(\begin{array}{c}\psi_e\\\psi_o\end{array}\right) =
    \left(\begin{array}{c}\eta_e\\\eta_o\end{array}\right),
@@ -321,20 +321,20 @@ one performs the following steps:
 \begin{enumerate}
 \item Compute
 \[
-\phi_o = B_{oo}A_{oo}^{-1}\left(\eta_o - F_{oe}B_{ee}A_{ee}^{-1}\eta_e\right).
+\phi_o = B_{ee}A_{ee}^{-1}\left(\eta_o - F_{eo}B_{oo}A_{oo}^{-1}\eta_e\right).
 \]
-\item Use $M=I_{oo}-B_{oo}A_{oo}^{-1}F_{oe}B_{ee}A_{ee}^{-1}F_{eo}$ in the
+\item Use $M=I_{ee}-B_{ee}A_{ee}^{-1}F_{eo}B_{oo}A_{oo}^{-1}F_{oe}$ in the
 following.
 \item Compute
 \[
 \varphi_o = M^{\dagger}\phi_o.
 \]
-where $M^\dagger=I_{oo}-\left(F_{eo}\right)^\dagger
-\left(A_{ee}^{-1}\right)^\dagger
-\left(B_{ee}\right)^\dagger
-\left(F_{oe}\right)^\dagger
+where $M^\dagger=I_{ee}-\left(F_{oe}\right)^\dagger
 \left(A_{oo}^{-1}\right)^\dagger
-\left(B_{oo}\right)^\dagger$.
+\left(B_{oo}\right)^\dagger
+\left(F_{eo}\right)^\dagger
+\left(A_{ee}^{-1}\right)^\dagger
+\left(B_{ee}\right)^\dagger$.
 \item Solve
 \[
 M^{\dagger}M\xi_o = \varphi_o
@@ -342,8 +342,8 @@ M^{\dagger}M\xi_o = \varphi_o
 for $\xi_o$ using Alg.~\ref{real}.
 \item Compute
 \begin{eqnarray*}
-\psi_e &=& A_{ee}^{-1}\left(\eta_e-F_{eo}\xi_o\right),\\
-\psi_o &=& B_{oo}^{-1}\xi_o.
+\psi_e &=& A_{oo}^{-1}\left(\eta_e-F_{oe}\xi_o\right),\\
+\psi_o &=& B_{ee}^{-1}\xi_o.
 \end{eqnarray*}
 \end{enumerate}
 
@@ -1704,7 +1704,7 @@ struct `eo_lattice {
 
 There are two [[eo_lattice]] structure in the [[State]]. We use the 
 ``destination'' naming: [[even]] describes geometry required for computing
- $X_{eo}\psi_o$, [[odd]]---for computing $X_{oe}\psi_e$.
+ $X_{oe}\psi_o$, [[odd]]---for computing $X_{eo}\psi_e$.
 
 <<[[State]] components>>=
 struct eo_lattice `even;
@@ -2965,6 +2965,12 @@ Handy chunks to start and stop the stopwatch.
 @
 
 \section{XXX Parameter setting}
+<<Implementation types>>=
+struct Q(`Parameters) {
+  struct Q(State) *state;
+  /* XXX */
+};
+@
 \subsection{XXX Generic}
 % Q(set_generic)
 \subsection{XXX M\"obius}
@@ -2990,40 +2996,65 @@ provided.
 <<File [[operator-ddw.c]]>>=
 #include <mdwf.h>
 int
-`QX(DDW_operator)(struct QOP_F3_MDWF_Fermion *result,
+`QX(DDW_operator)(struct QX(Fermion) *result,
                  const struct QOP_MDWF_Parameters *params,
-                 const struct QOP_F3_MDWF_Gauge *gauge,
-                 const struct QOP_F3_MDWF_Fermion *fermion)
+                 const struct QX(Gauge) *gauge,
+                 const struct QX(Fermion) *fermion)
 {
-#define CHECK_ARG0(a)  do if ((a) == 0) return 1; \
-                          else state = (a)->state; while (0)
-#define CHECK_ARG(a,z,msgZ,msgM) do { if (a==0) { \
-                                        Q(set_error)(state, (msgZ)); \
-                                        return 1; } \
-                                      if (a->state != state) { \
-                                        Q(set_error)(state, (msgM)); \
-                                        return  1; } } while (0)
+#define PROC "DDW_Opearator"
+#define CHECK_ARG0(a) do { \
+    if ((a) == 0) return 1; else state = (a)->state; \
+    if (state->record == 0) return 1; } while (0)
+#define CHECK(cond,msg) do { \
+    if (cond) { q(set_error)(state, PROC "(): " msg); return 1; } } while (0)
+#define CHECK_ARG(a) do { \
+    CHECK((a)==0, "NULL" #a); \
+    CHECK((a)->state != state, #a "geometry mismatch"); } while (0)
+ 
   struct Q(State) *state;
+  void *tmp;
+  size_t size;
+  struct Fermion *Te;
+  struct Fermion *To;
 
   CHECK_ARG0(result);
-  CHECK_ARG(params, result,
-            "DDWF_operator(): NULL params",
-            "DDWF_operator(): params geometry mismatch");
-  CHECK_ARG(gauge, result,
-            "DDWF_operator(): NULL gauge",
-            "DDWF_operator(): gauge geometry mismatch");
-  CHECK_ARG(fermion, result,
-            "DDWF_operator(): NULL fermion",
-            "DDWF_operator(): fermion geometry mismatch");
+  CHECK_ARG(params);
+  CHECK_ARG(gauge);
+  CHECK_ARG(fermion);
+  CHECK(fermion == result, "input and output overlap");
 
-  if (qx(setup_comnuication)(state, sizeof (REAL)))
+  if (q(setup_comnuication)(state, sizeof (REAL)))
     return 1;
 
-  qx(compute_)();
-  
+  tmp = q(allocate_eo)(state, &Te, &size, 0, 1, 1, sizeof (REAL));
+  if (tmp == 0) {
+     q(setup_communication)(state, 0);
+     CHECK(tmp == 0, "not enough memory");
+  }
+  To = q(step_even_field)(state, Te, sizeof (REAL));
 
+  if (params->unit_B) {
+    qx(compute_F)(&state->even, Te, params, gauge, fermion->odd);
+    qx(compute_ApZ)(&state->even, result->even, params, fermion->even, Te);
+
+    qx(compute_F)(&state->odd, To, params, gauge, fermion->even);
+    qx(compute_ApZ)(&state->odd, result->odd, params, fermion->odd, To);
+  } else {
+    qx(compute_B)(&state->even, To, params, fermion->odd);
+    qx(compute_F)(&state->even, Te, params, gauge, To);
+    qx(compute_ApZ)(&state->even, result->even, params, fermion->even, Te);
+
+    qx(compute_B)(&state->odd, Te, params, fermion->even);
+    qx(compute_F)(&state->odd, To, params, gauge, Te);
+    qx(compute_ApZ)(&state->odd, result->odd, params, fermion->odd, To);
+  }
+
+  q(free)(state, tmp, size);
+  return 0;
 #undef CHECK_ARG
 #undef CHECK_ARG0
+#undef CHECK
+#undef PROC
 }
 @
 d/f routine XXX [[Q(DDW_operator)]]

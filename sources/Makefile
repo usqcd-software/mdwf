@@ -27,7 +27,8 @@ qx.sources = memory-g.c \
              import-f.c \
              import-h.c \
              export-f.c \
-             export-h.c
+             export-h.c \
+             operator-ddw.c
 
 qz.objects = $(q.sources:%.c=%.o) \
              $(qx.sources:%.c=%f.o) \
