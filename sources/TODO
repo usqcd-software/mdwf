@@ -10,20 +10,18 @@ INTERFACE EXTENSIONS:
 
 
 Init:
-1. allocate one QMP aligned memory block for all sends and receives on
-   max(even, odd), assuming double.
+1. allocate a QMP block for each send and one for all receives for a given
+   precision.
 2. On even and odd:
-  2.1 Head of memory - receive buffer.
-  2.2 build pointers to send buffers.
-  2.3 Build all float & double sends
-  2.4 Build all float and double receive, convert to compounds.
+  2.3 Build all REAL sends
+  2.4 Build all REAL receive, convert to compounds.
 3. Check that global sum should be called -- ?
 
 Fini:
 1. For even and odd
   1.1 Free receive handle
   1.2 Free all send handles
-2. Free QMP memory
+2. Free QMP memories
 
 Setting parameters
 1. If error is not recordable return
@@ -33,5 +31,21 @@ Setting parameters
 5. Free memory
 
 
+F-like operators:
+1. Start combined receive
+2. Start each down face:
+   2.1 Finish send if outstanding
+   2.2 Compute projection
+   2.3 Start send
+   2.4 Mark send outstanding
+3. Start each up face:
+   3.1 Finish send if outstanding
+   3.2 Compute projection * U
+   3.3 Start send
+   3.4 Mark send outstanding
+4. Compute body part
+5. Wait for combined receive to finish
+6. Compute face part
 
-
+Diagonals:
+1. For the full e/o do what needs to be done on each 4-d point.
