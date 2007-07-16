@@ -49,3 +49,97 @@ F-like operators:
 
 Diagonals:
 1. For the full e/o do what needs to be done on each 4-d point.
+
+;;;;;
+;; RTL:
+;;
+for each primitive type define
+
+name -- symbol naming the type
+size -- accessed with (size-of <name>)
+align -- accessed with (align-of <name>)
+
+Compound types, aka structure:
+<structure> := (define-structure <struct-name> (<field>*))
+<field> := (<field-name> <field-type>)
+this defines:
+
+<size-of>    := (size-of <struct-name>)
+<align-of>   := (align-of <struct-name>)
+<offset-off> := (offset-of <struct-name> <field-name>)
+
+Also,
+<alias> := (define-type <new-name> <old-name>) -- type alias
+
+All these should agree with C on the target machine.
+
+RTL file structure:
+<file> :=
+  <decl>*
+
+<decl> :=
+   | <constant>
+   | <alias>
+   | <structure>
+   | <procedure>
+
+<procedure> :=
+   (procedure (<attribute>*)
+      (<arg>*)
+      <operation>)
+
+<attribute> := 
+    <symbol>
+    (<symbol> <value> ...)
+
+<value> :=
+      <const-expr>
+    | <string>
+    | <symbol>
+
+<arg> :=
+   (<name> <attribute>*)
+
+<operation> :=
+   <condition>
+  | <block>
+  | <loop>
+  | <op>
+
+<condition> :=
+  (if (<attribute>*) <in>
+       <operation>
+       <operation>)
+
+<block> :=
+  (begin (<attribute>*) <operation>+)
+
+<loop> :=
+   (loop (<attribute>*)
+         (<out>    ; induction variable
+             <in>  ; inclusive low limit
+             <in>) ; exclusive upper limit
+         <operation>+)
+
+<op> :=
+   (op <name> (<attribute>*) (<out>*) (<in>*))
+
+<out> :=
+   <symbol>
+
+<in> :=
+    (const <const-expr>)
+  | (reg <symbol>)
+
+<const-expr> :=
+    <number>
+   | <symbol>
+   | <size-of>
+   | <offset-of>
+   | <align-of>
+   | (add <const-expr> <const-expr>)
+   | (sub <const-expr> <const-expr>)
+   | (mul <const-expr> <const-expr>)
+
+<constant> :=
+   (define-constant <symbol> <const-expr>)
