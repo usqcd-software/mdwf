@@ -1,10 +1,10 @@
 NOWEAVE  = noweave -filter btdefn -index -latex -delay
-NOTANGLE = notangle -filter btdefn $(TFLAGS)
+NOTANGLE = notangle -filter btdefn
 NOINDEX  = noindex
 INDENT   = indent
 LATEX    = latex
 DVIPDFM  = dvipdfm
-TFLAGS   = -L\#'line %L "%F"%N'
+TFLAGS   = -L'\#line %L "%F"%N'
 CC       = gcc
 INCDIRS  = $$HOME/QDP/qmp-2.1.7/include
 CFLAGS   = -Wall -I. $(INCDIRS:%=-I%)
@@ -29,7 +29,10 @@ qx.sources = memory-g.c \
              export-f.c \
              export-h.c \
              operator-ddw.c \
-             operator-ddwc.c
+             operator-ddwc.c \
+             op-ApF.c
+
+ss.sources = basis.ss
 
 qz.objects = $(q.sources:%.c=%.o) \
              $(qx.sources:%.c=%f.o) \
@@ -39,11 +42,13 @@ c.sources = $(q.sources) \
             $(qx.sources) \
             test-state.c
 
-sources = $(h.sources) $(c.sources)
+x.sources = $(h.sources) $(c.sources)
+
+sources = $(x.sources) $(ss.sources)
 
 f.lib = libqtest.a
 
-test.state.sources = test-state.c state-dump.o finit.o memory.o error.o
+test.state.sources = test-state.c state-dump.c finit.c memory.c error.c
 
 f.tex = $(noweb:%.nw=%.tex)
 f.dvi = $(noweb:%.nw=%.dvi)
@@ -88,8 +93,11 @@ $(f.dvi): %.dvi: %.tex
 $(f.tex): %.tex: %.nw
 	$(NOWEAVE) $< > $@
 
-$(sources): $(noweb)
-	($(NOTANGLE) -R'File [[$@]]' -c $< > $@) || ($(RM) $@; exit 1)
+$(x.sources): $(noweb)
+	($(NOTANGLE) $(TFLAGS) -R'File [[$@]]' -c $< >$@) || ($(RM) $@; exit 1)
+
+$(ss.sources): $(noweb)
+	($(NOTANGLE) -R'File [[$@]]' -c $< >$@) || ($(RM) $@; exit 1)
 
 
 test-state: $(test.state.sources)

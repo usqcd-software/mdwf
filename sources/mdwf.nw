@@ -131,24 +131,24 @@ for now.
                            \end{array}\right)\\
 \end{equation}
 <<Project $(1+\gamma_0)$>>=
-(project 0 plus (+1 0 +i 3)
-	        (+1 1 +i 2))
+((project 0 plus) . ((+1 0 +i 3)
+	             (+1 1 +i 2)))
 @
 <<Unproject $(1+\gamma_0)$>>=
-(unproject 0 plus (+1 0)
-                  (+1 1)
-		  (-i 1)
-		  (-i 0))
+((unproject 0 plus) . ((+1 0)
+                       (+1 1)
+		       (-i 1)
+		       (-i 0)))
 @
 <<Project $(1-\gamma_0)$>>=
-(project 0 minus (+1 0 -i 3)
-	   	 (+1 1 -i 2))
+((project 0 minus) . ((+1 0 -i 3)
+   	              (+1 1 -i 2)))
 @
 <<Unproject $(1-\gamma_0)$>>=
-(unproject 0 minus (+1 0)
-	     	   (+1 1)
-		   (+i 1)
-		   (+i 0))
+((unproject 0 minus) . ((+1 0)
+	     	        (+1 1)
+		        (+i 1)
+		        (+i 0)))
 @
 
 \pagebreak
@@ -166,24 +166,24 @@ for now.
                            \end{array}\right)\\
 \end{equation}
 <<Project $(1+\gamma_1)$>>=
-(project 1 plus (+1 0 -1 3)
-	   	(+1 1 +1 2))
+((project 1 plus) . ((+1 0 -1 3)
+	   	     (+1 1 +1 2)))
 @
 <<Unproject $(1+\gamma_1)$>>=
-(unproject 1 plus (+1 0)
-	     	  (+1 1)
-		  (+1 1)
-		  (-1 0))
+((unproject 1 plus) . ((+1 0)
+	     	       (+1 1)
+		       (+1 1)
+		       (-1 0)))
 @
 <<Project $(1-\gamma_1)$>>=
-(project 1 minus (+1 0 +1 3)
-	   	 (+1 1 -1 2))
+((project 1 minus) . ((+1 0 +1 3)
+	   	      (+1 1 -1 2)))
 @
 <<Unproject $(1-\gamma_1)$>>=
-(unproject 1 minus (+1 0)
-	     	   (+1 1)
-		   (-1 1)
-		   (+1 0))
+((unproject 1 minus) . ((+1 0)
+	     	        (+1 1)
+		        (-1 1)
+		        (+1 0)))
 @
 
 \pagebreak
@@ -201,24 +201,24 @@ for now.
                            \end{array}\right)\\
 \end{equation}
 <<Project $(1+\gamma_2)$>>=
-(project 2 plus (+1 0 +i 2)
-	   	(+1 1 -i 3))
+((project 2 plus) . ((+1 0 +i 2)
+	   	     (+1 1 -i 3)))
 @
 <<Unproject $(1+\gamma_2)$>>=
-(unproject 2 plus (+1 0)
-	     	  (+1 1)
-		  (-i 0)
-		  (+i 1))
+((unproject 2 plus) . ((+1 0)
+	     	       (+1 1)
+		       (-i 0)
+		       (+i 1)))
 @
 <<Project $(1-\gamma_2)$>>=
-(project 2 minus (+1 0 -i 2)
-	   	 (+1 1 +i 3))
+((project 2 minus) . ((+1 0 -i 2)
+	   	      (+1 1 +i 3)))
 @
 <<Unproject $(1-\gamma_2)$>>=
-(unproject 2 minus (+1 0)
-	     	   (+1 1)
-		   (+i 0)
-		   (-i 1))
+((unproject 2 minus) . ((+1 0)
+	     	        (+1 1)
+		        (+i 0)
+		        (-i 1)))
 @
 
 \pagebreak
@@ -236,14 +236,14 @@ for now.
                            \end{array}\right)\\
 \end{equation}
 <<Project $(1+\gamma_3)$>>=
-(project 3 plus (+1 0 +1 2)
-	   	(+1 1 +1 3))
+((project 3 plus) . ((+1 0 +1 2)
+	   	     (+1 1 +1 3)))
 @
 <<Unproject $(1+\gamma_3)$>>=
-(unproject 3 plus (+1 0)
-	     	  (+1 1)
-		  (+1 0)
-		  (+1 1))
+((unproject 3 plus) . ((+1 0)
+	     	       (+1 1)
+		       (+1 0)
+		       (+1 1)))
 @
 This is our starting point in sums over directions
 <<Start $\mu$ sum>>=
@@ -251,14 +251,14 @@ This is our starting point in sums over directions
 @
 
 <<Project $(1-\gamma_3)$>>=
-(project 3 minus (+1 0 -1 2)
-	   	 (+1 1 -1 3))
+((project 3 minus) . ((+1 0 -1 2)
+	   	      (+1 1 -1 3)))
 @
 <<Unproject $(1-\gamma_3)$>>=
-(unproject 3 minus (+1 0)
-	     	   (+1 1)
-		   (-1 0)
-		   (-1 1))
+((unproject 3 minus) . ((+1 0)
+	     	        (+1 1)
+		        (-1 0)
+		        (-1 1)))
 @
 \pagebreak\section{Preconditioning}
 We use four dimensional preconditioner to improve convergence of the CG.
@@ -722,7 +722,8 @@ operations in the [[State]] structure. These numbers are accessed via the
 following function. Only data on the current node is recorded.
 <<Interface functions>>=
 void QOP_MDWF_performance(double *time_sec,
-                          double *flops,
+                          long long *flops,
+                          long long *sent,
                           struct QOP_MDWF_State *state);
 @
 
@@ -1627,7 +1628,7 @@ Q(`fini)(struct Q(State) **state_ptr)
 
 The extend of lattice in the $s$-direction is recorder in [[Ls]]:
 <<[[State]] components>>=
-int `Ls;
+int `Ls;  /* Extend in the s-direction */
 @
 
 <<[[State]] cleanup>>=
@@ -1654,7 +1655,7 @@ struct `sublattice {
 
 We need our local sublattice in [[State]] for import\&export routines:
 <<[[State]] components>>=
-struct sublattice `sublattice;
+struct sublattice `sublattice;  /* sublattice start and end */
 @
 
 <<[[State]] dump>>=
@@ -1678,7 +1679,7 @@ sublattice(state->sublattice.lo, state->sublattice.hi, node, env);
 
 Next, let us compute local 4-volume.
 <<[[State]] components>>=
-int `volume;
+int `volume;  /* local 4-volume */
 @
 
 <<[[State]] dump>>=
@@ -1707,8 +1708,8 @@ There are two [[eo_lattice]] structure in the [[State]]. We use the
  $X_{oe}\psi_o$, [[odd]]---for computing $X_{eo}\psi_e$.
 
 <<[[State]] components>>=
-struct eo_lattice `even;
-struct eo_lattice `odd;
+struct eo_lattice `even; /* even sublattice */
+struct eo_lattice `odd;  /* odd sublattice */
 @
 
 <<[[State]] dump>>=
@@ -1735,12 +1736,13 @@ of sites.
 @
 <<E/O compute sizes>>=
 {
-   int i, p, x[Q(DIM)], parity;
+   int i, p, la, x[Q(DIM)], parity;
    struct eo_lattice *eo;
    int *lo = state->sublattice.lo;
    int *hi = state->sublattice.hi;
 
-   for (p = state->volume; p--;) {
+   for (la = state->volume; la--;) {
+      p = la;
       <<Linear [[p]] to vector [[x]]>>
       <<Compute [[parity]]>>
       eo = (parity & 1)? &state->odd: &state->even;
@@ -1864,7 +1866,7 @@ The inverse table, [[vector2layout]] is only needed while constructing the
 neighbor tables. Though it does not live bejond [[init()]], we allocate it
 in [[State]] to simplify memory management.
 <<[[State]] components>>=
-int *`vector2layout;
+int *`vector2layout; /* linearized vector 4-address -> layout conversion */
 @
 
 <<[[State]] dump>>=
@@ -2186,7 +2188,7 @@ int *xl2v_x;
 Largest extend is just that, the largest value of [[e=hi[i] - lo[i]]] and the
 associated value of the index [[b=i]].
 <<Find the largest extend>>=
-for (b = 0, e = hi[0] - lo[0], i = 1; i < Q(DIM); i++) {
+for (b = 0, e = right[0] - left[0], i = 1; i < Q(DIM); i++) {
    int g = right[i] - left[i];
    if (g > e) e = g, b = i; 
 }
@@ -2714,11 +2716,11 @@ static void
       for (d = 0; d < Q(DIM); d++) {
         eo->body_neighbor[i].f_up[d] *= Ls;
         eo->body_neighbor[i].f_down[d] *= Ls;
+      }
    }
    for (d = 0; d < Q(DIM); d++) {
      for (i = 0; i < eo->send_up_size[d]; i++)
         eo->up_pack[d][i].f_index *= Ls;
-   }
      for (i = 0; i < eo->send_down_size[d]; i++)
         eo->down_pack[d][i].f_index *= Ls;
    }
@@ -2750,8 +2752,10 @@ state->prec = 0;
 @
 
 <<[[State]] cleanup>>=
+#ifndef DEBUG_INIT
 if (state->prec != 0)
    state_comm_cleanup(state);
+#endif
 @
 
 This is needed to avoid calling [[QMP_sum_double]] on a single node machine
@@ -2814,20 +2818,6 @@ state->qmp_memsize = 0;
 <<Collect I/O sizes for direction [[i]]>>=
 *xs += eo->send_up_size[i] + eo->send_down_size[i]
      + eo->up_face[i] + eo->down_face[i];
-@
-
-We do not allocate QMP memory here, but keep a handle and a memory pointer in
-the [[State]].
-<<[[State]] components>>=
-QMP_mem_t *qmp_mem_handle;
-@
-
-<<[[State]] dump>>=
-printf("State.qmp_mem_handle = 0x%p\n", state->qmp_mem_handle);
-@
-
-<<[[State]] cleanup>>=
-state->qmp_mem_handle = NULL;
 @
 
 The rest of communication state is in [[eo_lattice]]. Here we again 
@@ -2900,14 +2890,17 @@ the communication initialization error handling cleans up all communication
 resources, we do not need to keep component handles around.
 <<E/O lattice pieces>>=
 QMP_msghandle_t `receive_handle;
+void *`receive_buffer;
 @
 
 <<E/O reset>>=
 eo->receive_handle = 0;
+eo->receive_buffer = 0;
 @
 
 <<E/O dump>>=
 printf(" %s.receive_handle=%p\n", name, eo->receive_handle);
+printf(" %s.receive_buffer=%p\n", name, eo->receive_buffer);
 @
 
 
@@ -2925,33 +2918,45 @@ operations by hand.
 @
 
 <<[[State]] components>>=
-struct timeval `t0, `t1;
-double `flops;
+struct timeval `t0, `t1; /* start and end times of the last MDWF call */
+long long `flops;        /* last call floating point operations */
+long long `sent;         /* bytes sent during the last call */
 @
 
 <<[[State]] dump>>=
 printf("State.t0 = %d.%06d\n", (int)(state->t0.tv_sec), (int)(state->t0.tv_usec));
 printf("State.t1 = %d.%06d\n", (int)(state->t1.tv_sec), (int)(state->t1.tv_usec));
-printf("State.flops=%g\n", state->flops);
+printf("State.flops=%lld\n", state->flops);
+printf("State.sent=%lld\n", state->sent);
 @
 
 <<[[State]] cleanup>>=
-  state->t0.tv_sec =
-  state->t1.tv_sec =
-  state->t0.tv_usec =
-  state->t1.tv_usec = 0;
-  state->flops = 0;
+state->t0.tv_sec =
+state->t1.tv_sec =
+state->t0.tv_usec =
+state->t1.tv_usec = 0;
+state->flops = 0;
+state->sent = 0;
+@
+
+<<Reset [[flops]] and [[sent]]>>=
+state->flops = 0;
+state->sent = 0;
 @
 
 <<File [[performance.c]]>>=
 <<Precision independent file>>
 #include <mdwf.h>
 void
-Q(`performance)(double *time_sec, double *flops, struct Q(State) *state)
+Q(`performance)(double *time_sec,
+                long long *flops,
+                long long *sent,
+                struct Q(State) *state)
 {
   *time_sec = state->t1.tv_sec - state->t0.tv_sec +
               1e-6 * (state->t1.tv_usec - state->t0.tv_usec);
   *flops = state->flops;
+  *sent = state->sent;
 }
 @
 
@@ -2999,18 +3004,16 @@ conjugate in the next section.
 #include <mdwf.h>
 int
 QX(`DDW_operator)(struct QX(Fermion) *result,
-                 const struct QOP_MDWF_Parameters *params,
+                 const struct Q(Parameters) *params,
                  const struct QX(Gauge) *gauge,
                  const struct QX(Fermion) *fermion)
 {
 #define PROC "DDW_Opearator"
   <<DW Operator prologue>>
   if (params->unit_B) {
-    ops += qx(compute_ApF)(&state->even, result->even,
-                           fermion->even, params, gauge, fermion->odd);
+    qx(compute_ApF)(&state->even, result->even, fermion->even, params, gauge->data, fermion->odd);
 
-    ops += qx(compute_ApF)(&state->odd, result->odd,
-                           params, fermion->odd, gauge, fermion->even);
+    qx(compute_ApF)(&state->odd, result->odd, fermion->odd, params, gauge->data, fermion->even);
   } else {
     void *tmp;
     void *ptr;
@@ -3026,13 +3029,11 @@ QX(`DDW_operator)(struct QX(Fermion) *result,
     Te = ptr;
     To = q(step_even_field)(state, Te, sizeof (struct Fermion));
 
-    ops += qx(compute_B)(&state->even, To, params, fermion->odd);
-    ops += qx(compute_ApF)(&state->even, result->even,
-                           fermion->even, params, gauge, To);
+    qx(compute_B)(&state->even, To, params, fermion->odd);
+    qx(compute_ApF)(&state->even, result->even, fermion->even, params, gauge->data, To);
 
-    ops += qx(compute_B)(&state->odd, Te, params, fermion->even);
-    ops += qx(compute_ApF)(&state->odd, result->odd,
-                           params, fermion->odd, gauge, Te);
+    qx(compute_B)(&state->odd, Te, params, fermion->even);
+    qx(compute_ApF)(&state->odd, result->odd, fermion->odd, params, gauge->data, Te);
 
     q(free)(state, tmp, size);
   }
@@ -3050,8 +3051,7 @@ Here is the prologue:
   CHECK((a)==0, "NULL" #a); \
   CHECK((a)->state != state, #a "geometry mismatch"); } while (0)
  
-struct Q(State) *state;
-double ops = 0;
+struct Q(State) *state = 0;
 
 CHECK_ARG0(result);
 CHECK_ARG(params);
@@ -3062,11 +3062,11 @@ CHECK(fermion == result, "input and output overlap");
 if (q(setup_communication)(state, sizeof (REAL)))
   return 1;
 <<Start timer>>
+<<Reset [[flops]] and [[sent]]>>
 @
 And the epilogue:
 <<DW Operator epilogue>>=
 <<Stop timer>>
-state->flops = ops;
 return 0;
 #undef CHECK_ARG
 #undef CHECK_ARG0
@@ -3078,8 +3078,8 @@ return 0;
 <<File [[operator-ddwc.c]]>>=
 #include <mdwf.h>
 int
-`QX(DDW_operator_conjugated)(struct QX(Fermion) *result,
-                            const struct QOP_MDWF_Parameters *params,
+QX(`DDW_operator_conjugated)(struct QX(Fermion) *result,
+                            const struct Q(Parameters) *params,
                             const struct QX(Gauge) *gauge,
                             const struct QX(Fermion) *fermion)
 {
@@ -3090,13 +3090,13 @@ int
                       fermion->even, params, gauge, fermion->odd);
 
     qx(compute_AxpFx)(&state->odd, result->odd,
-                      params, fermion->odd, gauge, fermion->even);
+                      fermion->odd, params, gauge, fermion->even);
   } else {
     qx(compute_AxpBxFx)(&state->even, result->even,
                         fermion->even, params, gauge, fermion->odd);
 
     qx(compute_AxpBxFx)(&state->odd, result->odd,
-                        params, fermion->odd, gauge, fermion->even);
+                        fermion->odd, params, gauge, fermion->even);
   }
   <<DW Operator epilogue>>
 }
@@ -3107,6 +3107,152 @@ int
 \subsection{d/f routine XXX [[Q(DDW_CG)]]}
 \subsection{d/f routine XXX [[Q(MxM_CG)]]}
 \subsection{d/f routine XXX [[Q(MxM_SCG)]]}
+\section{XXX Middle level routines}
+\subsection{XXX A-operators}
+<<Implementation prototypes>>=
+void qx(`compute_B)(struct eo_lattice *xy,
+                   struct Fermion *result_y,
+                   const struct Q(Parameters) *params,
+                   const struct Fermion *f_y);
+@
+\subsection{XXX F-operators}
+XXX Here is a sample F-operator routine:
+<<Implementation prototypes>>=
+void qx(`compute_ApF)(struct eo_lattice *xy,
+                     struct Fermion *result_x,
+                     const struct Fermion *f_x,
+                     const struct Q(Parameters) *params,
+		     const struct SU3 *u,
+                     const struct Fermion *f_y);
+@
+
+<<File [[op-ApF.c]]>>=
+#include <mdwf.h>
+void
+qx(`compute_ApF)(struct eo_lattice *xy,
+                struct Fermion *r_x,
+                const struct Fermion *f_x,
+                const struct Q(Parameters) *params,
+                const struct SU3 *u,
+                const struct Fermion *f_y)
+{
+   <<[[ApF]] start receive>>
+   <<[[ApF]] start down sends>>
+   <<[[ApF]] start up sends>>
+   <<[[ApF]] compute body>>
+   <<[[ApF]] finish receive>>
+   <<[[ApF]] compute face>>
+}
+@
+The collective receive is started first, but only if there is more than one
+node on the machine:
+<<[[ApF]] start receive>>=
+if (xy->receive_handle)
+  QMP_start(xy->receive_handle);
+@
+<<[[ApF]] finish receive>>=
+if (xy->receive_handle)
+  QMP_wait(xy->receive_handle);
+@
+
+<<[[ApF]] start down sends>>=
+<<[[ApF]] start down 0-send>>
+<<[[ApF]] start down 1-send>>
+<<[[ApF]] start down 2-send>>
+<<[[ApF]] start down 3-send>>
+@
+<<[[ApF]] start down 0-send>>=
+if (xy->send_hused) QMP_wait(xy->send_down_handle[0]);
+if (xy->send_down_size[0]) {
+  qx(proj_g0p)(xy->send_down_buffer[0], xy->send_down_size[0], xy->down_pack[0], f_y);
+  QMP_start(xy->send_down_handle[0]);
+}
+@
+<<[[ApF]] start down 1-send>>=
+if (xy->send_hused) QMP_wait(xy->send_down_handle[1]);
+if (xy->send_down_size[1]) {
+  qx(proj_g1p)(xy->send_down_buffer[1], xy->send_down_size[1], xy->down_pack[1], f_y);
+  QMP_start(xy->send_down_handle[1]);
+}
+@
+<<[[ApF]] start down 2-send>>=
+if (xy->send_hused) QMP_wait(xy->send_down_handle[2]);
+if (xy->send_down_size[2]) {
+  qx(proj_g2p)(xy->send_down_buffer[2], xy->send_down_size[2], xy->down_pack[2], f_y);
+  QMP_start(xy->send_down_handle[2]);
+}
+@
+<<[[ApF]] start down 3-send>>=
+if (xy->send_hused) QMP_wait(xy->send_down_handle[3]);
+if (xy->send_down_size[3]) {
+  qx(proj_g3p)(xy->send_down_buffer[3], xy->send_down_size[3], xy->down_pack[3], f_y);
+  QMP_start(xy->send_down_handle[3]);
+}
+@
+
+<<[[ApF]] start up sends>>=
+<<[[ApF]] start up 0-send>>
+<<[[ApF]] start up 1-send>>
+<<[[ApF]] start up 2-send>>
+<<[[ApF]] start up 3-send>>
+xy->send_hused = 1;
+@
+<<[[ApF]] start up 0-send>>=
+if (xy->send_hused) QMP_wait(xy->send_up_handle[0]);
+if (xy->send_up_size[0]) {
+  qx(proj_Ug0m)(xy->send_up_buffer[0], xy->send_up_size[0], xy->up_pack[0], f_y, u);
+  QMP_start(xy->send_up_handle[0]);
+}
+@
+<<[[ApF]] start up 1-send>>=
+if (xy->send_hused) QMP_wait(xy->send_up_handle[1]);
+if (xy->send_up_size[1]) {
+  qx(proj_Ug1m)(xy->send_up_buffer[1], xy->send_up_size[1], xy->up_pack[1], f_y, u);
+  QMP_start(xy->send_up_handle[1]);
+}
+@
+<<[[ApF]] start up 2-send>>=
+if (xy->send_hused) QMP_wait(xy->send_up_handle[2]);
+if (xy->send_up_size[2]) {
+  qx(proj_Ug2m)(xy->send_up_buffer[2], xy->send_up_size[2], xy->up_pack[2], f_y, u);
+  QMP_start(xy->send_up_handle[2]);
+}
+@
+<<[[ApF]] start up 3-send>>=
+if (xy->send_hused) QMP_wait(xy->send_up_handle[3]);
+if (xy->send_up_size[3]) {
+  qx(proj_Ug3m)(xy->send_up_buffer[3], xy->send_up_size[3], xy->up_pack[3], f_y, u);
+  QMP_start(xy->send_up_handle[3]);
+}
+@
+
+<<[[ApF]] compute body>>=
+qx(do_ApF)(r_x, xy->body_size, xy->body_neighbor, 0 /* XXX params */,
+           f_x, u, f_y, NULL);
+@
+<<[[ApF]] compute face>>=
+qx(do_ApF)(r_x, xy->face_size, xy->face_neighbor, 0 /* XXX params */,
+           f_x, u, f_y, xy->receive_buffer);
+@
+
+and more prototypes:
+<<Implementation prototypes>>=
+void qx(`compute_AxpBxFx)(struct eo_lattice *xy,
+                         struct Fermion *result_x,
+                         const struct Fermion *f_x,
+                         const struct Q(Parameters) *params,
+	     	         const struct QX(Gauge) *gauge,
+                         const struct Fermion *f_y);
+void qx(`compute_AxpFx)(struct eo_lattice *xy,
+                       struct Fermion *result_x,
+                       const struct Fermion *f_x,
+                       const struct Q(Parameters) *params,
+	    	       const struct QX(Gauge) *gauge,
+                       const struct Fermion *f_y);
+@
+
+\section{XXX Communication}
+
 \section{XXX Helpers}
 \subsection{d/f routine XXX [[Q(madd_fermion)]]}
 \subsection{d/f routine XXX [[Q(madd_half_fermion)]]}
@@ -3133,7 +3279,7 @@ QX(`import_gauge)(struct QX(Gauge) **gauge_ptr,
                                   void *env),
                  void *env)
 {
-   int a,b,p,i,d;
+   int a, b, p, la, i, d;
    int x[Q(DIM)];
    struct SU3 *u;
    REAL ur, ui;
@@ -3148,7 +3294,8 @@ QX(`import_gauge)(struct QX(Gauge) **gauge_ptr,
 
    lo = state->sublattice.lo;
    hi = state->sublattice.hi;
-   for (u = (*gauge_ptr)->data, p = 0; p < state->volume; p++) {
+   for (u = (*gauge_ptr)->data, la = 0; la < state->volume; la++) {
+     p = la;
      <<Linear [[p]] to vector [[x]]>>
      for (d = 0; d < Q(DIM); d++, u++) {
        for (a = 0; a < Q(COLORS); a++) {
@@ -3192,7 +3339,7 @@ QX(`import_fermion)(struct QX(Fermion) **fermion_ptr,
 @
 
 <<Import (half)fermion prologue>>=
-int p,i;
+int la, p, i;
 int Ls;
 int x[Q(DIM)+1];
 struct Fermion *f;
@@ -3211,14 +3358,16 @@ Ls = state->Ls;
 @
 
 <<Import even part of (half)fermion>>=
-for (f = (*fermion_ptr)->even, p = 0; p < state->even.full_size; p++, f += Ls) {
+for (f = (*fermion_ptr)->even, la = 0; la < state->even.full_size; la++, f += Ls) {
+  p = la;
   <<Linear [[p]] to vector [[x]]>>
   qx(import_fermion_slice)(state, f, x, reader, env);
 }
 @
 
 <<Import odd part of fermion>>=
-for (f = (*fermion_ptr)->odd, p = 0; p < state->odd.full_size; p++, f += Ls) {
+for (f = (*fermion_ptr)->odd, la = 0; la < state->odd.full_size; la++, f += Ls) {
+  p = la;
   <<Linear [[p]] to vector [[x]]>>
   qx(import_fermion_slice)(state, f, x, reader, env);
 }
@@ -3272,7 +3421,7 @@ Q(`export_fermion)(void (*writer)(const int pos[5],
 
 <<Export (half)fermion prologue>>=
 struct Q(State) *state;
-int p, i;
+int la, p, i;
 int x[Q(DIM)+1];
 const int *lo;
 const int *hi;
@@ -3290,14 +3439,16 @@ Ls = state->Ls;
 @
 
 <<Export even part of (half)fermion>>=
-for (f = fermion->even, p = 0; p < state->even.full_size; p++, f += Ls) {
+for (f = fermion->even, la = 0; la < state->even.full_size; la++, f += Ls) {
+  p = la;
   <<Linear [[p]] to vector [[x]]>>
   qx(export_fermion_slice)(state, f, x, writer, env);
 }
 @
 
 <<Export odd part of fermion>>=
-for (f = fermion->odd, p = 0; p < state->odd.full_size; p++, f += Ls) {
+for (f = fermion->odd, la = 0; la < state->odd.full_size; la++, f += Ls) {
+  p = la;
   <<Linear [[p]] to vector [[x]]>>
   qx(export_fermion_slice)(state, f, x, writer, env);
 }
@@ -3442,8 +3593,8 @@ q(`step_odd_field)(struct Q(State) *state, void *ptr, size_t fsize)
 
 Two extra fields are needed in the [[State]]:
 <<[[State]] components>>=
-unsigned int allocated;
-unsigned int max_allocated;
+unsigned int allocated;     /* currently allocated bytes */
+unsigned int max_allocated; /* maximal allocated bytes */
 @
 <<[[State]] cleanup>>=
 state->allocated = 0;
@@ -3603,7 +3754,8 @@ QX(free_half_fermion)(struct QX(HalfFermion) **hfermion_ptr)
 
 
 \chapter{CODE GENERATION}
-This chapter contains back end specific routines. Here's what we need to define.
+This chapter contains back end specific routines. Here is what we need
+to define.
 
 Load one $s$-slice worth of the domain wall fermion.
 <<Implementation prototypes>>=
@@ -3630,6 +3782,35 @@ void qx(`export_fermion_slice)(struct Q(State) *state,
                                              double value,
                                              void *env),
                               void *env);
+@
+
+Now let us collect the $\gamma$-matrix projections and reconstructions. We
+put them all together into [[mdwf-basis]] as an a list of pairs with keys
+of the form [[(<op> <dir> <sign>)]].
+<<File [[basis.ss]]>>=
+(define mdwf-basis '(
+  <<Project $(1+\gamma_0)$>>
+  <<Project $(1+\gamma_1)$>>
+  <<Project $(1+\gamma_2)$>>
+  <<Project $(1+\gamma_3)$>>
+  <<Project $(1-\gamma_0)$>>
+  <<Project $(1-\gamma_1)$>>
+  <<Project $(1-\gamma_2)$>>
+  <<Project $(1-\gamma_3)$>>
+  <<Unproject $(1+\gamma_0)$>>
+  <<Unproject $(1+\gamma_1)$>>
+  <<Unproject $(1+\gamma_2)$>>
+  <<Unproject $(1+\gamma_3)$>>
+  <<Unproject $(1-\gamma_0)$>>
+  <<Unproject $(1-\gamma_1)$>>
+  <<Unproject $(1-\gamma_2)$>>
+  <<Unproject $(1-\gamma_3)$>>))
+@
+We also define a starting link in a sum over links:
+<<File [[basis.ss]]>>=
+(define mdwf-sum-start '
+  <<Start $\mu$ sum>>
+)
 @
 
 \section{C99}
@@ -3779,6 +3960,10 @@ sublat(int lo[], int hi[], const int node[], void *env)
 }
 @
 
+<<[[Parameters]] components>>=
+int unit_B;
+@
+
 \appendix
 \chapter{CODE CHUNKS}
 \nowebchunks
@@ -3787,6 +3972,3 @@ sublat(int lo[], int hi[], const int node[], void *env)
 \nowebindex
 
 \end{document}
-<<[[Parameters]] components>>=
-int unit_B;
-@
