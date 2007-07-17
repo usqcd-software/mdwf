@@ -60,7 +60,7 @@ size -- accessed with (size-of <name>)
 align -- accessed with (align-of <name>)
 
 Compound types, aka structure:
-<structure> := (define-structure <struct-name> (<field>*))
+<structure> := (structure <struct-name> (<field>*))
 <field> := (<field-name> <field-type>)
 this defines:
 
@@ -69,7 +69,7 @@ this defines:
 <offset-off> := (offset-of <struct-name> <field-name>)
 
 Also,
-<alias> := (define-type <new-name> <old-name>) -- type alias
+<type-alias> := (type-alias <new-name> <old-name>) -- type alias
 
 All these should agree with C on the target machine.
 
@@ -79,7 +79,7 @@ RTL file structure:
 
 <decl> :=
    | <constant>
-   | <alias>
+   | <type-alias>
    | <structure>
    | <procedure>
 
@@ -105,6 +105,8 @@ RTL file structure:
   | <block>
   | <loop>
   | <op>
+  | <load>
+  | <store>
 
 <condition> :=
   (if (<attribute>*) <in>
@@ -143,3 +145,9 @@ RTL file structure:
 
 <constant> :=
    (define-constant <symbol> <const-expr>)
+
+<load> :=
+   (load <type> (<attribute>*) <out> (<in>+))
+
+<store> :=
+   (store <type> (<attribute>*) (<in>+) <in>)

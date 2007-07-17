@@ -47,92 +47,132 @@
       (add/int () (s-p) (s-p (const fermion-size)))
       (add/int () (dst) (dst (const half-fermion-size))))))
 
-(procedure (internal
-            count-flops
-            (file "??"))
-      "do_ApF" ((size   ((type int)))
-                (ls     ((type int)))
-                (desc   ((type pt-desc*)))
-                (dst-y  ((type fermion*)))
-                (src-y  ((type fermion*)))
-                (src-x  ((type fermion*)))
-                (U      ((type gauge*)))
-		(a-data ((type a-data*))))
-  (loop () ;; walk over the sublattice
-      ([i 0 size])
-    ;; compute A src-y -> dst-y on 4-d point i
-    (copy/int () (n-m) (const 1))
-    (sub/int () (n-p) (ls (const 1)))
-    (copy/int () (loop-top) (n-p))
-    (copy/int () (a-i) (a-data))
-    ;; set res address
-    ;; set psi address
-    ;; set psi-plus address (&psi[Ls-1])
-    ;; set psi-minus address (&psi[1])
-    (loop () ;; compute A src
-          [(s 0 loop-top)]
-      (load/real () (wi) (a-i (const w-offset))) ; ?
-      (load/real () (upi) (a-i (const p-offset))) ; ?
-      (load/real () (umi) (a-i (const m-offset))) ; ?
-      (add/int () (a-i) (a-i (const a-size))) ; ?
-      (load/fermion () (psi) (???))
-      (load/upper-fermion () (psi-plus) (???))
-      (load/lower-fermion () (psi-minus) (???))
-      (mul/real-fermion () (wpsi) (wi psi))
-      (madd/real-upper-fermion () (up-w-psi) (upi psi-plus wpsi))
-      (madd/real-lower-fermion () (res) (umi psi-minus up-w-psi))
-      (store/fermion () () (res ? ? ? ))
-      ;; update res address (++)
-      ;; update psi address (++)
-      ;; update psi-plus address (old psi address)
-      ;; update psi-minus address (++)
-     )
-    ;; set psi-minus address (&psi[0])
-    (load/real () (wi) (a-i (const w-offset)))
-    (load/real () (upi) (a-i (const p-offset)))
-    (load/real () (umi) (a-i (const m-offset)))
-    (load/fermion () (psi) (???))
-    (load/upper-fermion () (psi-plus) (???))
-    (load/lower-fermion () (psi-minus) (???))
-    (mul/real-fermion () (wpsi) (wi psi))
-    (madd/real-upper-fermion () (up-w-psi) (upi psi-plus wpsi))
-    (madd/real-lower-fermion () (res) (umi psi-minus up-w-psi))
-    (store/fermion () () (res ? ? ? ))
-    
-    ;; compute dst-y + F src-x -> dst-y
-    (load/int () (forward-u) (???))
-    (loop ((unroll all)) ;; direction loop for F psi
-          [(d 0 DIM)]
-       ;; forward
-       (load/gauge () (Up) (forward-u ???))
-       (load/int () (psi-up) (???))
-       (loop ()
-             ([s 0 ls])
-         (load/fermion () (psi) (psi-up ???))
-         (project/fermion () (eta) (psi) (d plus))
-         (mul/U-half-fermion () (phi) (Up eta))
-         (unproject/fermion () (xx) (phi) (d plus))
-         (load/fermion () (r) (res))
-         (add/fermion () (r) (r xx))
-         (store/fermion () () (r ???))
-         ;; advance psi address
-         ;; advance res addres
+(structure down-table ([f-index int]))
+
+(procedure ([stem "d0p"]
+	    internal
+            count-flops)
+    ([size ([c-type "int"]                  [reg int])]
+     [Ls   ([c-type "int"]                  [reg int])]
+     [d-f  ([c-type "struct xx *"]          [reg pointer])]
+     [res  ([c-type "struct HalfFermion *"] [reg pointer])]
+     [src  ([c-type "struct Fermion *"]     [reg pointer])])
+  (loop () (k [const 0] [reg size])
+    (load int () f-offset ([reg d-f] [const (offset-of down-table f-index)]))
+    (op add ([type pointer]) (f-start) ([reg src] [reg f-offset]))
+    (op add ([type pointer]) (d-f) ([reg d-f] [const (size-of down-table)]))
+    (loop () (s [const 0] [reg Ls])
+      (load fermion () f ([reg f-start]))
+      (op project ([type fermion] [dir 0] [sign plus]) (g) ([reg f]))
+      (store half-fermion () ([reg res]) [reg g])
+      (op add ([type pointer]) (f-start) ([reg (f-start)]
+                                          [const (size-of Fermion)]))
+      (op add ([type pointer]) (res) ([reg res]
+                                      [const (size-of Half-Fermion)])))))
+
+(structure up-table ([f-index int]
+                     [U-index int]))
+
+(procedure ([stem "dU2m"]
+	    internal
+            count-flops)
+    ([size ([c-type "int"]                        [reg int])]
+     [Ls   ([c-type "int"]                        [reg int])]
+     [d-f  ([c-type "const struct xx *"]          [reg pointer])]
+     [res  ([c-type "struct HalfFermion *"]       [reg pointer])]
+     [U    ([c-type "const struct SU3 *"]         [reg pointer])]
+     [src  ([c-type "const struct Fermion *"]     [reg pointer])])
+  (loop () (k [const 0] [reg size])
+    (load int () f-offset ([reg d-f] [const (offset-of up-table f-index)]))
+    (load int () U-offset ([reg d-f] [const (offset-of up-table U-index)]))
+    (op add ([type pointer]) (d-f) ([reg d-f] [const (size-of up-table)]))
+    (op add ([type pointer]) (f-start) ([reg src] [reg f-offset]))
+    (op add ([type pointer]) (U-ptr) ([reg U] [reg U-offset]))
+    (op load ([type gauge]) (U) ([reg U-ptr]))
+    (loop () (s [const 0] [reg Ls])
+      (load fermion () f ([reg f-start]))
+      (op project ([type fermion] [dir 2] [sign minus]) (g) ([reg f]))
+      (op adjoint-mul ([matrix su3] [matter half]) (h) ([reg U] [reg g]))
+      (store half-fermion () ([reg res]) [reg h])
+      (op add ([type pointer]) (f-start) ([reg (f-start)]
+                                          [const (size-of Fermion)]))
+      (op add ([type pointer]) (res) ([reg res]
+                                      [const (size-of Half-Fermion)])))))
+
+(structure f-table ([mask    int]
+                    [u-up    int]
+                    [f-up0   int]
+                    [f-up1   int]
+                    [f-up2   int]
+                    [f-up3   int]
+                    [u-down0 int]
+                    [u-down1 int]
+                    [u-down2 int]
+                    [u-down3 int]
+                    [f-down0 int]
+                    [f-down1 int]
+                    [f-down2 int]
+                    [f-down3 int]))
+
+(structure a-table ([u-index int]
+                    [d-index int]
+                    [u-value double]
+                    [s-value double]
+                    [d-value double]))
+
+(procedure ([stem "ApF"]
+	    internal
+            count-flops)
+       ([size   ([c-type "int"]                    [reg int])]
+        [Ls     ([c-type "int"]                    [reg int])]
+        [f-t    ([c-type "const struct F_Table *"] [reg pointer])]
+        [a-t    ([c-type "const struct A_Table *"] [reg pointer])]
+        [res-x  ([c-type "struct Fermion *"]       [reg pointer])]
+        [U      ([c-type "const struct SU3 *"]     [reg pointer])]
+        [src-x  ([c-type "const struct Fermion *"] [reg pointer])]
+        [src-y  ([c-type "const struct Fermion *"] [reg pointer])]
+        [buf-y  ([c-type "const struct Fermion *"] [reg pointer])])
+  (loop () (k [const 0] [reg size])
+     (op move ([type pointer]) (a-i) ([reg a-t]))
+     (op move ([type pointer]) (r-i) ([reg res-x]))
+     (loop () (i [const 0] [reg Ls])
+        (load int () u-idx ([reg a-i] [const (offset-of a-table u-index)]))
+        (load int () d-idx ([reg a-i] [const (offset-of a-table d-index)]))
+        (load double () u-scale ([reg a-i] [const (offset-of a-table u-value)]))
+        (load double () s-scale ([reg a-i] [const (offset-of a-table s-value)]))
+        (load double () d-scale ([reg a-i] [const (offset-of a-table d-value)]))
+        (load fermion () f ([reg src-x]))
+        (op mul (fermion) (g) ([reg s-scale] [reg f]))
+        (load fermion (upper) u ([reg src-x] [reg u-idx]))
+        (load fermion (lower) d ([reg src-x] [reg d-idx]))
+        (op madd (upper-fermion) (g) ([reg u-scale] [reg u] [reg g]))
+        (op madd (lower-fermion) (g) ([reg d-scale] [reg d] [reg g]))
+        (store fermion () ([reg r-i]) [reg g])
+        (op add ([type pointer]) (a-i) ([reg a-i] [const (size-of a-table)]))
+        (op add ([type pointer]) (r-i) ([reg r-i] [const (size-of Fermion)]))
+        (op add ([type pointer]) (src-x) ([reg src-x] [const (size-of Fermion)])))
+     (load int () mask ([reg f-t] [const (offset-of f-table mask)]))
+     (load int () u-off ([reg f-t] [const (offset-of f-table u-up)]))
+     (op add (int) (f-idx) ([reg f-t] [const (offset-of f-table f-up0)]))
+     (loop ([unroll all]) (d [const 0] [const DIM])
+        (load int () (f-off) ([reg f-idx]))
+        (load gauge () (U) ([reg u-off]))
+        (op add (int) (f-addr) ([reg src-y] [reg f-off]))
+        (op move (pointer) (r-addr) ([reg res-x]))
+        (loop () (i [const 0] [reg Ls])
+           (load fermion () (f) ([reg f-addr]))
+           (op project ([dir d] [sign plus]) (g) ([reg f]))
+           (op mul (gauge-half) (h) ([reg U] [reg g]))
+           (load fermion () (r) ([reg r-addr]))
+           (op unproject-add ([dir d] [sign plus]) (r) ([reg g] [reg r]))
+           (store fermion () ([reg r-addr]) [reg r])
+           (op add (pointer) (f-addr) ([reg f-addr] [const (size-of Fermion)]))
+           (op add (pointer) (r-addr) ([reg r-addr] [const (size-of Fermion)])))
+        (op add (pointer) (u-off) ([reg u-off] [const (size-of Gauge)]))
+        (op add (int) (f-idx) ([reg f-idx] [const (size-of int)])))
+     ...
+     (loop ([unroll all]) (d [const 0] [const DIM])
+        ...
         )
-        ;; advance forward-u
-       ;; backward
-       (load/int () (psi-down) (???))
-       (load/int () (backward-u) (d ???))
-       (load/gauge () (Ud) (backward-u ???))
-       (loop ()
-             ([s 0 ls])
-         (load/fermion () (psi) (psi-down ???))
-         (project/fermion () (eta) (psi) (d minus))
-         (mul/Ua-half-fermion () (phi (Ud eta)))
-         (unporject/fermion () (xx) (phi) (d minus))
-         (load/fermion () (r) (res))
-         (add/fermion () (r) (r xx))
-         (store/fermion () () (r ???))
-         ;; advance psi address
-         ;; advance res address
-        )
-       )))
+     ...
+     ))   
