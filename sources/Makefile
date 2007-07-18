@@ -9,7 +9,7 @@ CC       = gcc
 INCDIRS  = $$HOME/QDP/qmp-2.1.7/include
 CFLAGS   = -Wall -I. $(INCDIRS:%=-I%)
 
-noweb = mdwf.nw
+noweb = mdwf.nw qa0.nw
 
 h.sources = qop-mdwf3.h \
             mdwf.h
@@ -93,10 +93,10 @@ $(f.dvi): %.dvi: %.tex
 $(f.tex): %.tex: %.nw
 	$(NOWEAVE) $< > $@
 
-$(x.sources): $(noweb)
+$(x.sources): mdwf.nw
 	($(NOTANGLE) $(TFLAGS) -R'File [[$@]]' -c $< >$@) || ($(RM) $@; exit 1)
 
-$(ss.sources): $(noweb)
+$(ss.sources): mdwf.nw
 	($(NOTANGLE) -R'File [[$@]]' -c $< >$@) || ($(RM) $@; exit 1)
 
 

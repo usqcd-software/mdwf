@@ -60,16 +60,19 @@ size -- accessed with (size-of <name>)
 align -- accessed with (align-of <name>)
 
 Compound types, aka structure:
-<structure> := (structure <struct-name> (<field>*))
-<field> := (<field-name> <field-type>)
+<structure> := (structure <struct-name> <c-name> (<field>*))
+<field> := (<field-name> <field-type> <c-name>)
 this defines:
 
 <size-of>    := (size-of <struct-name>)
 <align-of>   := (align-of <struct-name>)
 <offset-off> := (offset-of <struct-name> <field-name>)
 
+There are also array types:
+<array> := (array <array-name> <c-name> <base-type> <const-expr>)
+
 Also,
-<type-alias> := (type-alias <new-name> <old-name>) -- type alias
+<type-alias> := (type-alias <new-name> <old-name>)
 
 All these should agree with C on the target machine.
 
@@ -81,6 +84,7 @@ RTL file structure:
    | <constant>
    | <type-alias>
    | <structure>
+   | <array>
    | <procedure>
 
 <procedure> :=

@@ -1,0 +1,116 @@
+\documentclass[twoside,openright]{article}
+\usepackage{noweb}
+\noweboptions{externalindex,longchunks,longxref}
+\usepackage{color}
+\definecolor{darkblue}{cmyk}{1,1,0,0.7}
+\usepackage[dvipdfm,colorlinks=true,linkcolor=darkblue]{hyperref}
+\newcommand{\note}[1]{$[\![$NB: #1$]\!]$}
+\setlength{\parindent}{0pt}
+\setlength{\topmargin}{-40pt}
+\setlength{\oddsidemargin}{-16pt}
+\setlength{\evensidemargin}{-16pt}
+\setlength{\textwidth}{522pt}
+\setlength{\textheight}{680pt}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+
+\title{QA---Register Transfer Language}
+\author{Andrew Pochinsky}
+\catcode`\$=11
+\date{$Id$}
+\catcode`\$=3
+
+\newcommand{\nonterminal}[1]{$\langle$\emph{#1}$\rangle$}
+\newcommand{\is}{&$\rightarrow$&&}
+\newcommand{\also}{&&$|$&}
+\newcommand{\terminal}[1]{\texttt{#1}}
+\newcommand{\nothing}{\terminal{/* nothing */}}
+\newenvironment{grammar}{\hfill\medskip\par\begin{small}\begin{tabular}{lccl}}{
+  \end{tabular}\end{small}\par\medskip}
+
+\begin{document}
+\maketitle
+\section{GRAMMAR}
+Here we define the grammar for QA.
+\begin{grammar}
+\nonterminal{qa0} \is \nonterminal{decls} \\
+\nonterminal{decls} \is \nothing \\
+  \also\nonterminal{decls} \nonterminal{decl} \\
+\nonterminal{decl}\is\nonterminal{alias}\\
+  \also\nonterminal{constant}\\
+  \also\nonterminal{structure}\\
+  \also\nonterminal{array}\\
+  \also\nonterminal{procedure}\\
+\nonterminal{alias}\is\terminal{(} \terminal{alias}
+ \nonterminal{new name} \nonterminal{old name}\terminal{)}\\
+\nonterminal{constant}\is\terminal{(} \terminal{constant}
+ \nonterminal{name} \nonterminal{constant expression}\terminal{)}\\
+\nonterminal{structure}\is\terminal{(} \terminal{structure}
+ \nonterminal{external name}
+   \terminal{(}\nonterminal{fields}\terminal{)}\terminal{)}\\
+\nonterminal{array}\is\terminal{(} \terminal{array}
+ \nonterminal{external name} \nonterminal{type name}
+     \nonterminal{constant expression}\terminal{)}\\
+\nonterminal{procedure}\is\terminal{(} \terminal{procedure}
+  \terminal{(} \nonterminal{attributes} \terminal{)}
+  \nonterminal{code} \terminal{)}\\
+\nonterminal{new name}\is\nonterminal{name}\\
+\nonterminal{old name}\is\nonterminal{name}\\
+\nonterminal{name}\is\nonterminal{symbol}\\
+\nonterminal{constant expression}\is\terminal{(} \terminal{const}
+  \nonterminal{c-expr} \terminal{)}\\
+\nonterminal{external name}\is\nonterminal{name} \nonterminal{string}\\
+\nonterminal{fields}\is\nonterminal{field}\\
+  \also\nonterminal{fields} \nonterminal{field}\\
+\nonterminal{type name}\is\nonterminal{name}\\
+\nonterminal{attributes}\is\nothing\\
+  \also\nonterminal{attributes} \nonterminal{attribute}\\
+\nonterminal{code}\is \nonterminal{operation}\\
+  \also\nonterminal{block}\\
+  \also\nonterminal{loop}\\
+  \also\nonterminal{conditional}\\
+\nonterminal{c-expr}\is\nonterminal{number}\\
+  \also\nonterminal{name}\\
+  \also\terminal{(} \nonterminal{c-op} \nonterminal{c-expr} \nonterminal{c-expr}
+       \terminal{)}\\
+\nonterminal{field}\is\terminal{(} \nonterminal{external name}
+  \nonterminal{type name} \terminal{)}\\
+\nonterminal{attribute}\is\nonterminal{name}\\
+  \also\terminal{(} \nonterminal{name} \nonterminal{a-values} \terminal{)}\\
+\nonterminal{operation}\is\terminal{(} \terminal{op}
+  \nonterminal{name} \terminal{(} \nonterminal{attributes} \terminal{)}
+  \terminal{(} \nonterminal{outs} \terminal{)}
+  \terminal{(} \nonterminal{ins} \terminal{)} \terminal{)}\\
+\nonterminal{block}\is\terminal{(} \terminal{begin}
+  \nonterminal{<codes>} \terminal{)}\\
+\nonterminal{loop}\is\terminal{(} \terminal{loop}
+  \terminal{(} \nonterminal{loop variable} \nonterminal{inclusive low}
+              \nonterminal{exclusive high} \terminal{)}
+  \nonterminal{codes} \terminal{)}\\
+\nonterminal{conditional}\is\terminal{(} \terminal{if}
+   \nonterminal{in} \nonterminal{non-zero branch} \nonterminal{zero branch}
+   \terminal{)}\\
+\nonterminal{a-values}\is\nonterminal{a-value}\\
+   \also\nonterminal{a-values} \nonterminal{a-value}\\
+\nonterminal{outs}\is\nothing\\
+   \also\nonterminal{outs} \nonterminal{out}\\
+\nonterminal{ins}\is\nothing\\
+   \also\nonterminal{ins} \nonterminal{in}\\
+\nonterminal{codes}\is\nonterminal{code}\\
+   \also\nonterminal{codes} \nonterminal{code}\\
+\nonterminal{loop variable}\is\nonterminal{out}\\
+\nonterminal{inclusive low}\is\nonterminal{in}\\
+\nonterminal{exclusive high}\is\nonterminal{in}\\
+\nonterminal{non-zero branch}\is\nonterminal{code}\\
+\nonterminal{zero branch}\is\nonterminal{code}\\
+\nonterminal{a-value}\is\nonterminal{string}\\
+   \also\nonterminal{number}\\
+   \also\nonterminal{symbol}\\
+\nonterminal{out}\is\nonterminal{name}\\
+\nonterminal{in}\is\nonterminal{register}\\
+    \also \nonterminal{constant expression}\\
+\nonterminal{register}\is\terminal{(} \terminal{reg}
+    \nonterminal{name} \terminal{)}
+\end{grammar}
+and the following text.
+\end{document}
