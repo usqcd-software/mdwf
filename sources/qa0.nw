@@ -121,9 +121,10 @@ attributes. The internal names are not used in this version.
   \nonterminal{code}\oneplus \terminal{)}\\
 \nonterminal{argument}\is\terminal{(}
     \nonterminal{argument name} \nonterminal{type name}
-    \nonterminal{prototype} \terminal{)}\\
+    \nonterminal{C type} \nonterminal{C name} \terminal{)}\\
 \nonterminal{argument name}\is\nonterminal{name}\\
-\nonterminal{prototype}\is\nonterminal{string}\\
+\nonterminal{C type}\is\nonterminal{string}\\
+\nonterminal{C name}\is\nonterminal{string}\\
 \nonterminal{attribute}\is\nonterminal{name}\\
   \also\terminal{(} \nonterminal{name}
                   \nonterminal{a-value}\oneplus \terminal{)}\\
