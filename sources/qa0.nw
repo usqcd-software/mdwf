@@ -20,97 +20,201 @@
 \date{$Id$}
 \catcode`\$=3
 
+\newcommand{\any}{${}^{*}$}
+\newcommand{\oneplus}{${}^{+}$}
 \newcommand{\nonterminal}[1]{$\langle$\emph{#1}$\rangle$}
 \newcommand{\is}{&$\rightarrow$&&}
 \newcommand{\also}{&&$|$&}
 \newcommand{\terminal}[1]{\texttt{#1}}
 \newcommand{\nothing}{\terminal{/* nothing */}}
-\newenvironment{grammar}{\hfill\medskip\par\begin{small}\begin{tabular}{lccl}}{
-  \end{tabular}\end{small}\par\medskip}
+\newenvironment{grammar}{\par\medskip\begin{tabular}{lccl}}{%
+\end{tabular}\medskip\par}
 
 \begin{document}
 \maketitle
 \section{GRAMMAR}
-Here we define the grammar for QA.
+Here we define the grammar for QA. We start with the file level constructs:
+
 \begin{grammar}
-\nonterminal{qa0} \is \nonterminal{decls} \\
-\nonterminal{decls} \is \nothing \\
-  \also\nonterminal{decls} \nonterminal{decl} \\
+\nonterminal{qa0} \is \nonterminal{decl}\any\\
 \nonterminal{decl}\is\nonterminal{alias}\\
   \also\nonterminal{constant}\\
   \also\nonterminal{structure}\\
   \also\nonterminal{array}\\
   \also\nonterminal{procedure}\\
-\nonterminal{alias}\is\terminal{(} \terminal{alias}
- \nonterminal{new name} \nonterminal{old name}\terminal{)}\\
+\end{grammar}
+
+Integer constants may be defined and given names. We do not specify the
+allowed set of operations in \nonterminal{c-expr} here,
+they will be introduced as needed.
+
+\begin{grammar}
 \nonterminal{constant}\is\terminal{(} \terminal{constant}
  \nonterminal{name} \nonterminal{constant expression}\terminal{)}\\
+\nonterminal{constant expression}\is\terminal{(} \terminal{const}
+  \nonterminal{c-expr} \terminal{)}\\
+\nonterminal{c-expr}\is\nonterminal{number}\\
+  \also\nonterminal{name}\\
+  \also\nonterminal{string}\\
+  \also\terminal{(} \nonterminal{c-op} \nonterminal{c-expr}\any\terminal{)}\\
+\nonterminal{c-op}\is\nonterminal{symbol}\\
+\nonterminal{name}\is\nonterminal{symbol}\\
+\end{grammar}
+
+Structure definitions provide a way to compute offsets to various elements
+within a memory block. They also contain enough information to generate a
+corresponding C declaration.
+
+\begin{grammar}
 \nonterminal{structure}\is\terminal{(} \terminal{structure}
  \nonterminal{external name}
-   \terminal{(}\nonterminal{fields}\terminal{)}\terminal{)}\\
+   \terminal{(}\nonterminal{field}\oneplus\terminal{)}\terminal{)}\\
+\nonterminal{field}\is\terminal{(} \nonterminal{external name}
+  \nonterminal{type name} \terminal{)}\\
+\nonterminal{external name}\is\nonterminal{name} \nonterminal{string}\\
+\nonterminal{type name}\is\nonterminal{name}\\
+\end{grammar}
+
+Each \nonterminal{structure} definition provides the following set of
+\nonterminal{c-expr}. First, there is \terminal{(size-of}
+\nonterminal{structure name}\terminal{)} which computes the size
+of the structure in bytes. It properly handles all alignment requirements for
+parts of the structure and produces the same result as
+\verb|sizeof (struct foo)| in C where \verb|foo| is the corresponding C tag.
+Second, there is \terminal{(align-of} \nonterminal{structure name}\terminal{)}
+computing the alignment of the structure in bytes. It is always a power of 2.
+In addition, for each component of the structure, there is 
+\terminal{(offset-of} \nonterminal{structure name}
+\nonterminal{field name}\terminal{)}, which computes an offset from the
+begining of the structure to the given field.
+
+Array types are introduced with the following contruct:
+\begin{grammar}
 \nonterminal{array}\is\terminal{(} \terminal{array}
  \nonterminal{external name} \nonterminal{type name}
      \nonterminal{constant expression}\terminal{)}\\
-\nonterminal{procedure}\is\terminal{(} \terminal{procedure}
-  \terminal{(} \nonterminal{attributes} \terminal{)}
-  \nonterminal{code} \terminal{)}\\
+\end{grammar}
+
+There is also a set of predefined types. At this stage we do not specify
+them.
+
+Constants, predefined types, arrays, and structures may be aliased. For
+simplicity, we do not keep separate name spaces for them. All definitions are
+checked for conflicts.
+\begin{grammar}
+\nonterminal{alias}\is\terminal{(} \terminal{alias}
+ \nonterminal{new name} \nonterminal{old name}\terminal{)}\\
 \nonterminal{new name}\is\nonterminal{name}\\
 \nonterminal{old name}\is\nonterminal{name}\\
-\nonterminal{name}\is\nonterminal{symbol}\\
-\nonterminal{constant expression}\is\terminal{(} \terminal{const}
-  \nonterminal{c-expr} \terminal{)}\\
-\nonterminal{external name}\is\nonterminal{name} \nonterminal{string}\\
-\nonterminal{fields}\is\nonterminal{field}\\
-  \also\nonterminal{fields} \nonterminal{field}\\
-\nonterminal{type name}\is\nonterminal{name}\\
-\nonterminal{attributes}\is\nothing\\
-  \also\nonterminal{attributes} \nonterminal{attribute}\\
-\nonterminal{code}\is \nonterminal{operation}\\
-  \also\nonterminal{block}\\
-  \also\nonterminal{loop}\\
-  \also\nonterminal{conditional}\\
-\nonterminal{c-expr}\is\nonterminal{number}\\
-  \also\nonterminal{name}\\
-  \also\terminal{(} \nonterminal{c-op} \nonterminal{c-expr} \nonterminal{c-expr}
-       \terminal{)}\\
-\nonterminal{field}\is\terminal{(} \nonterminal{external name}
-  \nonterminal{type name} \terminal{)}\\
+\end{grammar}
+
+\pagebreak
+The last part of the top level structure is procedure. At this time we only
+define leaf procedures. Since we need to generate multiple variants of the
+procedures from the same sources, external names are generated from the
+attributes. The internal names are not used in this version.
+
+\begin{grammar}
+\nonterminal{procedure}\is\terminal{(} \terminal{procedure}
+  \nonterminal{name} \terminal{(} \nonterminal{attribute}\any \terminal{)}
+  \terminal{(} \nonterminal{argument}\any \terminal{)}
+  \nonterminal{code}\oneplus \terminal{)}\\
+\nonterminal{argument}\is\terminal{(}
+    \nonterminal{argument name} \nonterminal{type name}
+    \nonterminal{prototype} \terminal{)}\\
+\nonterminal{argument name}\is\nonterminal{name}\\
+\nonterminal{prototype}\is\nonterminal{string}\\
 \nonterminal{attribute}\is\nonterminal{name}\\
-  \also\terminal{(} \nonterminal{name} \nonterminal{a-values} \terminal{)}\\
-\nonterminal{operation}\is\terminal{(} \terminal{op}
-  \nonterminal{name} \terminal{(} \nonterminal{attributes} \terminal{)}
-  \terminal{(} \nonterminal{outs} \terminal{)}
-  \terminal{(} \nonterminal{ins} \terminal{)} \terminal{)}\\
-\nonterminal{block}\is\terminal{(} \terminal{begin}
-  \nonterminal{<codes>} \terminal{)}\\
-\nonterminal{loop}\is\terminal{(} \terminal{loop}
-  \terminal{(} \nonterminal{loop variable} \nonterminal{inclusive low}
-              \nonterminal{exclusive high} \terminal{)}
-  \nonterminal{codes} \terminal{)}\\
-\nonterminal{conditional}\is\terminal{(} \terminal{if}
-   \nonterminal{in} \nonterminal{non-zero branch} \nonterminal{zero branch}
-   \terminal{)}\\
-\nonterminal{a-values}\is\nonterminal{a-value}\\
-   \also\nonterminal{a-values} \nonterminal{a-value}\\
-\nonterminal{outs}\is\nothing\\
-   \also\nonterminal{outs} \nonterminal{out}\\
-\nonterminal{ins}\is\nothing\\
-   \also\nonterminal{ins} \nonterminal{in}\\
-\nonterminal{codes}\is\nonterminal{code}\\
-   \also\nonterminal{codes} \nonterminal{code}\\
-\nonterminal{loop variable}\is\nonterminal{out}\\
-\nonterminal{inclusive low}\is\nonterminal{in}\\
-\nonterminal{exclusive high}\is\nonterminal{in}\\
-\nonterminal{non-zero branch}\is\nonterminal{code}\\
-\nonterminal{zero branch}\is\nonterminal{code}\\
+  \also\terminal{(} \nonterminal{name}
+                  \nonterminal{a-value}\oneplus \terminal{)}\\
 \nonterminal{a-value}\is\nonterminal{string}\\
    \also\nonterminal{number}\\
    \also\nonterminal{symbol}\\
-\nonterminal{out}\is\nonterminal{name}\\
-\nonterminal{in}\is\nonterminal{register}\\
+\end{grammar}
+
+The code is design to help with instruction generation and data flow analysis.
+At this stage we keep regular loops and provide conditional branching. There is
+no back branches or returns. We do not provide automatic variables since
+there are only leaf procedures.
+
+\begin{grammar}
+\nonterminal{code}\is \nonterminal{operation}\\
+  \also\nonterminal{memory access}\\
+  \also\nonterminal{block}\\
+  \also\nonterminal{loop}\\
+  \also\nonterminal{conditional}\\
+\end{grammar}
+
+Operations modify only their outputs and depends only on their inputs. The
+name space of the opcodes is open-ended, the attributes are specific for each
+opcode.
+
+\begin{grammar}
+\nonterminal{operation}\is\terminal{(} \terminal{op}
+  \nonterminal{opcode} \terminal{(} \nonterminal{attribute}\any \terminal{)}
+  \terminal{(} \nonterminal{output}\oneplus \terminal{)}
+  \terminal{(} \nonterminal{input}\any \terminal{)} \terminal{)}\\
+\nonterminal{opcode}\is\nonterminal{name}\\
+\nonterminal{output}\is\nonterminal{name}\\
+\nonterminal{input}\is\nonterminal{register}\\
     \also \nonterminal{constant expression}\\
 \nonterminal{register}\is\terminal{(} \terminal{reg}
     \nonterminal{name} \terminal{)}
 \end{grammar}
-and the following text.
+
+Memory operations read and write memory. The type of the data is provided
+explicitly and is checked for writes (reads define the output which is checked
+at use.)
+
+\begin{grammar}
+\nonterminal{memory access}\is
+  \terminal{(} \terminal{load} \nonterminal{type name}
+              \terminal{(} \nonterminal{attribute}\any \terminal{)}
+          \nonterminal{output}
+          \nonterminal{address} \terminal{)}\\
+ \also
+  \terminal{(} \terminal{store} \nonterminal{type name}
+              \terminal{(} \nonterminal{attribute}\any \terminal{)}
+          \nonterminal{address}
+          \nonterminal{input} \terminal{)}\\
+\nonterminal{address}\is\terminal{(} \nonterminal{input}\oneplus \terminal{)}\\
+\end{grammar}
+
+The next is the block. It packages codes together into a single code to
+simplify syntax.
+
+\begin{grammar}
+\nonterminal{block}\is\terminal{(} \terminal{begin}
+  \nonterminal{code}\oneplus \terminal{)}\\
+\end{grammar}
+
+The conditional is also simple. We provide two forms. The constant predicates
+are handled in the compile time.
+\begin{grammar}
+\nonterminal{conditional}\is\terminal{(} \terminal{if-else}
+  \nonterminal{predicate} \nonterminal{non-zero branch}
+                          \nonterminal{zero branch} \terminal{)}\\
+ \also \terminal{(} \terminal{if}
+  \nonterminal{predicate} \nonterminal{non-zero branch} \terminal{)}\\
+\nonterminal{predicate}\is\nonterminal{in}\\
+\nonterminal{non-zero branch}\is\nonterminal{code}\\
+\nonterminal{zero branch}\is\nonterminal{code}\\
+\end{grammar}
+
+The loop construct always runs through a given number of iterations. The
+limits are computed once at the beginning of the loop. The loop variable is
+of time int and is visible only inside the loop. Unrolling and prefetching
+inside the loop is controlled by the attributes. The loop step is alway $1$.
+
+\begin{grammar}
+\nonterminal{loop}\is\terminal{(} \terminal{loop}
+  \terminal{(} \nonterminal{attribute}\any \terminal{)}
+  \terminal{(} \nonterminal{loop variable} \nonterminal{inclusive low}
+              \nonterminal{exclusive high} \terminal{)}
+  \nonterminal{code}\oneplus \terminal{)}\\
+\nonterminal{loop variable}\is\nonterminal{output}\\
+\nonterminal{inclusive low}\is\nonterminal{input}\\
+\nonterminal{exclusive high}\is\nonterminal{input}\\
+\end{grammar}
+
 \end{document}
