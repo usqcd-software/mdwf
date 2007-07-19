@@ -91,8 +91,9 @@ begining of the structure to the given field.
 Array types are introduced with the following contruct:
 \begin{grammar}
 \nonterminal{array}\is\terminal{(} \terminal{array}
- \nonterminal{external name} \nonterminal{type name}
+ \nonterminal{external name} \nonterminal{base type name}
      \nonterminal{constant expression}\terminal{)}\\
+\nonterminal{base type name}\is\nonterminal{type name}
 \end{grammar}
 
 There is also a set of predefined types. At this stage we do not specify
@@ -197,7 +198,7 @@ are handled in the compile time.
                           \nonterminal{zero branch} \terminal{)}\\
  \also \terminal{(} \terminal{if}
   \nonterminal{predicate} \nonterminal{non-zero branch} \terminal{)}\\
-\nonterminal{predicate}\is\nonterminal{in}\\
+\nonterminal{predicate}\is\nonterminal{input}\\
 \nonterminal{non-zero branch}\is\nonterminal{code}\\
 \nonterminal{zero branch}\is\nonterminal{code}\\
 \end{grammar}
