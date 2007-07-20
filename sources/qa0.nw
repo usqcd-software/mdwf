@@ -42,6 +42,22 @@ Here we define the grammar for QA. We start with the file level constructs:
   \also\nonterminal{structure}\\
   \also\nonterminal{array}\\
   \also\nonterminal{procedure}\\
+  \also\nonterminal{top level macro}\\
+\nonterminal{top level macro}\is\terminal{(} \terminal{repeat}
+         \terminal{(} \nonterminal{iterator}\any \terminal{)}
+         \nonterminal{procedure}\oneplus \terminal{)}\\
+\end{grammar}
+
+There are two kinds of iterators. One is an enumeration, another is loop-like
+\begin{grammar}
+\nonterminal{iterator}\is\terminal{(}
+   \nonterminal{name} \terminal( \nonterminal{c-expr}\oneplus \terminal)
+     \terminal{)}\\
+  \also\terminal{(}
+   \nonterminal{name} \nonterminal{inclusive constant low}
+      \nonterminal{exclusive constant high} \terminal{)}\\
+\nonterminal{inclusive constant low}\is\nonterminal{c-expr}\\
+\nonterminal{exclusive constant high}\is\nonterminal{c-expr}\\
 \end{grammar}
 
 Integer constants may be defined and given names. We do not specify the
@@ -109,7 +125,6 @@ checked for conflicts.
 \nonterminal{old name}\is\nonterminal{name}\\
 \end{grammar}
 
-\pagebreak
 The last part of the top level structure is procedure. At this time we only
 define leaf procedures. Since we need to generate multiple variants of the
 procedures from the same sources, external names are generated from the
@@ -145,6 +160,10 @@ there are only leaf procedures.
   \also\nonterminal{block}\\
   \also\nonterminal{loop}\\
   \also\nonterminal{conditional}\\
+  \also\nonterminal{inner macro}\\
+\nonterminal{inner macro}\is\terminal{(} \terminal{repeat}
+         \terminal{(} \nonterminal{iterator}\any \terminal{)}
+         \nonterminal{code}\oneplus \terminal{)}\\
 \end{grammar}
 
 Operations modify only their outputs and depends only on their inputs. The
