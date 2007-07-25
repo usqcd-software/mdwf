@@ -51,13 +51,13 @@ Here we define the grammar for QA. We start with the file level constructs:
 There are two kinds of iterators. One is an enumeration, another is loop-like
 \begin{grammar}
 \nonterminal{iterator}\is\terminal{(}
-   \nonterminal{name} \terminal( \nonterminal{c-expr}\oneplus \terminal)
+   \nonterminal{name} \terminal( \nonterminal{a-value}\oneplus \terminal)
      \terminal{)}\\
   \also\terminal{(}
    \nonterminal{name} \nonterminal{inclusive constant low}
       \nonterminal{exclusive constant high} \terminal{)}\\
-\nonterminal{inclusive constant low}\is\nonterminal{c-expr}\\
-\nonterminal{exclusive constant high}\is\nonterminal{c-expr}\\
+\nonterminal{inclusive constant low}\is\nonterminal{constant expr}\\
+\nonterminal{exclusive constant high}\is\nonterminal{constant expr}\\
 \end{grammar}
 
 Integer constants may be defined and given names. We do not specify the
@@ -237,5 +237,588 @@ inside the loop is controlled by the attributes. The loop step is alway $1$.
 \nonterminal{inclusive low}\is\nonterminal{input}\\
 \nonterminal{exclusive high}\is\nonterminal{input}\\
 \end{grammar}
+
+It is possible to use quare brackets [[[]]] instead if parentheses [[()]] in
+any place as long as the closing backet matches the open one.
+Also, [[;]] starts a commnet upto the end of line.
+
+\section{PARSING}
+Function [[parse-qa0]] converts the surface syntax into an abstract syntax tree.
+Checks are done at this stage, but since we use Scheme's [[read]], error
+reporting does not include line numbers.
+
+<<File [[parser.ss]]>>=
+<<Abstract syntax tree definitions>>
+(define (parse-qa0-file file-name)
+  <<Parser helpers>>
+  (let ([f (open-input-file file-name)])
+    (let loop ([s-expr (read f)] [ast (empty-ast)])
+      (cond
+        [(eof-object? s-expr) ast]
+        [else (loop (read f) (parse-top s-expr ast))]))))
+@
+
+\subsection{AST definitions}
+Definitions of the abstract syntax tree mirror the grammar.
+<<Abstract syntax tree definitions>>=
+(define-variant qa0-top (decl*))
+(define-variant qa0-alias (old-name new-name))
+(define-variant qa0-const (name value))
+(define-variant qa0-struct (name c-name
+                            field-name*
+                            field-type*
+                            field-c-name*))
+(define-variant qa0-array (name c-name base-name size))
+(define-variant qa0-proc (attribute*
+                          name
+                          arg-name*
+                          arg-type*
+                          arg-c-name*
+                          arg-c-type*
+                          code*))
+(define-variant qa0-repeat (id* iterator* proc*))
+(define-variant qa0-iterator-list (value*))
+(define-variant qa0-iterator-range (low high))
+@
+
+Here are codes:
+<<Abstract syntax tree definitions>>=
+(define-variant qa0-operation (attribute* name output* input*))
+(define-variant qa0-load (attribute* type output addr*))
+(define-variant qa0-store (attribute* type value addr*))
+(define-variant qa0-loop (attribute* var low high code*))
+(define-variant qa0-if (var true-code* false-code*))
+(define-variant qa0-macro (id* iterator* code*))
+@
+
+The attributes:
+<<Abstract syntax tree definitions>>=
+(define-variant qa0-attribute (name value*))
+@
+
+Constant expressions and registers:
+<<Abstract syntax tree definitions>>=
+(define-variant c-expr-id (id))
+(define-variant c-expr-number (number))
+(define-variant c-expr-string (string))
+(define-variant c-expr-op (name c-expr*))
+(define-variant reg (name))
+@
+
+\subsection{Parser helpers}
+In many places a list is expected. Here we check that a list is
+provided indeed.
+<<Parser helpers>>=
+(define (check-list msg in cmp min-size)
+  (if (not (list? in))
+      (error 'parse-qa0 "List expected in ~a, found~%  ~a~%"
+             msg in))
+  (if (cmp (length in) min-size)
+      (error 'parse-qa0
+             "List of ~a ~a is expected in ~a, found:~%   ~a~%"
+             (if (eq? cmp =) "exactly" "at least")
+             min-size msg in)))
+@
+We also often check if something is a name:
+<<Parser helpers>>=
+(define (check-name msg form name)
+  (if (not (symbol? name))
+      (error 'parse-qa0
+             "Expecting name for ~a, found ~a in:~%~a~%"
+             msg name form)))
+@
+and that something is a string:
+<<Parser helpers>>=
+(define (check-string msg form string)
+  (if (not (string? string))
+      (error 'parse-qa0
+             "Expecting string for ~a, found ~a in:~%~a~%"
+             msg string form)))
+@
+
+Checking the syntax of the attribute
+<<Parser helpers>>=
+(define (check-attrib* msg form attr*)
+  (for-each (lambda (attr) (check-attrib msg form attr)) attr*))
+(define (check-attrib msg form attr)
+  (if (not (or (symbol? attr)
+               (and (list? attr)
+                    (>= (length attr) 1)
+                    (symbol? (car attr)))))
+      (error 'parse-qa0 "Expecting attribute for ~a, found ~a in~%~a~%"
+             msg attr form)))
+@
+
+Each output is a symbol:
+<<Parser helpers>>=
+(define (check-output* msg form out*)
+  (cond
+    [(null? out*) #t]
+    [(not (symbol? (car out*)))
+       (error 'parse-qa0 "Bad value for output of ~a, found ~a in~%~a~%"
+               msg (car out*) form)]
+    [else (check-output* msg form (cdr out*))]))
+@
+
+Each input is either a constant or a register:
+<<Parser helpers>>=
+(define (check-input* msg form in*)
+  (for-each (lambda (in) (check-input msg form in)) in*))
+(define (check-input msg form in)
+  (check-list msg in = 2)
+  (if (case (car in)
+        [(reg) (not (symbol? (cadr in)))]
+        [(const) #f]
+        [else #t])
+      (error 'parse-qa0 "Bad value for input of ~a, found ~a in ~%~a~%"
+             msg in form)))
+@
+There are two iterator forms:
+<<Parser helpers>>=
+(define (check-iterator* msg form iter*)
+   (for-each (lambda (iter) (check-iterator msg form iter)) iter*))
+(define (check-iterator msg form iter)
+   (check-list msg iter >= 2)
+   (check-name msg form (car iter))
+   (case (length iter)
+     [(2) (check-list "iterator range" (cadr iter) >= 0)]
+     [(3) #t]
+     [else (error 'parse-qa0 "Bad iterator form of ~a, found ~a in~%~a~%"
+                  msg iter form)]))
+@
+
+We start with an empty AST. It is a valid input, by the way:
+<<Parser helpers>>=
+(define (empty-ast) (make-qa0-top '()))
+@
+
+Add another top-level form:
+<<Parser helpers>>=
+(define (parse-top s-expr ast)
+   (check-list "top level" s-expr >= 1)
+   (variant-case ast
+     [qa0-top (decl*)
+       (case (car s-expr)
+         <<Recognize top-level forms>>
+         [else (error 'parse-qa0 "Unknown form:~%~a~%" s-expr)])]))
+@
+
+<<Recognize top-level forms>>=
+[(alias) (make-qa0-top (append decl* (parse-alias s-expr)))]
+@
+<<Parser helpers>>=
+(define (parse-alias s-expr)
+  (check-list "top level alias" s-expr = 3)
+  (check-name "alias new name" s-expr (cadr s-expr))
+  (check-name "alias old name" s-expr (caddr s-expr))
+  (make-qa0-alias (caddr s-expr) (cadr s-expr)))
+@
+
+<<Recognize top-level forms>>=
+[(constant) (make-qa0-top (append decl* (parse-constant s-expr)))]
+@
+<<Parser helpers>>=
+(define (parse-constant s-expr)
+  (check-list "constant" s-expr = 3)
+  (check-name "constant name" s-expr (cadr s-expr))
+  (make-qa0-const (cadr s-expr (parse-const-expr (caddr s-expr)))))
+@
+
+<<Recognize top-level forms>>=
+[(array) (make-qa0-top (append decl* (parse-array s-expr)))]
+@
+<<Parser helpers>>=
+(define (parse-array s-expr)
+  (check-list "array" s-expr = 5)
+  (check-name "array name" s-expr (cadr s-expr))
+  (check-string "array c-name" s-expr (caddr s-expr))
+  (check-name "array base name" s-expr (cadddr s-expr))
+  (make-qa0-array (cadr s-expr) (caddr s-expr) (cadddr s-expr)
+                  (parse-const-expr (car (cddddr s-expr)))))
+@
+
+<<Recognize top-level forms>>=
+[(structure) (make-qa0-top (append decl* (parse-structure s-expr)))]
+@
+<<Parser helpers>>=
+(define (parse-structure s-expr)
+  (check-list "structure" s-expr = 4)
+  (let ([name (cadr s-expr)]
+        [c-name (caddr s-expr)]
+        [f* (cadddr s-expr)])
+    (check-name "struct name" s-expr name)
+    (check-string "struct c-name" s-expr c-name)
+    (map (lambda (f)
+            (check-list "struct field" f = 3)
+            (check-name "struct field name" s-expr (car f))
+            (check-string "struct field c-name" s-expr (cadr f))
+            (check-name "struct field type" s-expr (caddr f)))
+         f*)
+    (make-qa0-struct name c-name (map car f*) (map caddr f*) (map cadr f*))))
+@
+
+<<Recognize top-level forms>>=
+[(repeat) (make-qa0-top (append decl* (parse-repeat s-expr)))]
+@
+<<Parser helpers>>=
+(define (parse-repeat s-expr)
+   (check-list "top level repeat" s-expr >= 3)
+   (let ([bind* (cadr s-expr)]
+         [proc* (cddr s-expr)])
+     (check-iterator* "top level repeat" s-expr bind*)
+     (make-qa0-repeat (map car bind*)
+                      (map parse-iterator bind*)
+                      (map parse-procedure proc*))))
+@
+Iterators can occur in two places, therefore a parser for them
+<<Parser helpers>>=
+(define (parse-iterator iter)
+   (case (length iter)
+     [(2) (make-qa0-iterator-list (map parse-a-value (cadr iter)))]
+     [(3) (make-qa0-iterator-range (parse-const-expr (cadr iter))
+                                   (parse-const-expr (caddr iter)))]
+     [else (error 'parse-qa0 "Bad iterator ~a~%" iter)]))
+@
+
+Parsing an a-value is trivial:
+<<Parser helpers>>=
+(define (parse-a-value expr)
+   (if (or (number? expr)
+           (symbol? expr)
+           (string? expr)) expr
+       (error 'parse-qa0 "a-value is not ~a~%" expr)))
+@
+
+<<Recognize top-level forms>>=
+[(procedure) (make-qa0-top (append decl* (parse-procedure s-expr)))]
+@
+<<Parser helpers>>=
+(define (parse-procedure s-expr)
+   (check-list "procedure" s-expr >= 5)
+   (check-name "procedure name" s-expr (cadr s-expr))
+   (check-attrib* "procedure attributes" s-expr (caddr s-expr))
+   (check-list "procedure arguments" (cadddr s-expr) >= 0)
+   (map (lambda (arg)
+          (check-list "procedure argument" arg = 4)
+          (check-name "argument name" arg (car arg))
+          (check-name "argument type" arg (cadr arg))
+          (check-string "argument c-name" arg (caddr arg))
+          (check-string "argument c-type" arg (cadddr arg)))
+        (cadddr s-expr))
+   (parse-code* (cddddr s-expr)
+                (lambda (code*)
+                  (make-qa0-proc (map parse-attribute (caddr s-expr))
+                                 (cadr s-expr)
+                                 (map car (cadddr s-expr))
+                                 (map cadr (cadddr s-expr))
+                                 (map caddr (cadddr s-expr))
+                                 (map caddr (cadddr s-expr))
+                                 (map cadddr (cadddr s-expr))
+                                 code*))))
+@
+Parse a list of codes flattening blocks.
+<<Parser helpers>>=
+(define (parse-code* code* k)
+   (if (null? code*) (k '())
+       (parse-code* (cdr code*)
+         (lambda (op*)
+           (let ([code (car code*)])
+             (check-list "operation" code >= 1)
+             (if (eq? (car code) 'begin) (parse-code* (cdr code)
+                                           (lambda (op2*)
+                                             (k (append op2* op*))))
+                 (k (cons (parse-code code) op*))))))))
+@
+
+Attribute may be without values or it can contain a list of a-values:
+<<Parser helpers>>=
+(define (parse-attribute f)
+   (cond
+    [(symbol? f) (make-qa0-attribute f '())]
+    [else (check-list "attribute" f >= 1)
+       (make-qa0-attribute (car f) (map parse-a-value (cdr f)))]))
+@
+
+Parsing a code element dispatches on the [[car]]:
+<<Parser helpers>>=
+(define (parse-code f)
+  (check-list "code" f >= 1)
+  (case (car f)
+    <<Recognize code forms>>
+    [else (error 'parse-qa0 "Unexpected code~%~a~%" f)]))
+@
+
+Let us start with an [[op]]:
+<<Recognize code forms>>=
+[(op) (parse-op f)]
+@
+<<Parser helpers>>=
+(define (parse-op f)
+  (check-list "code op" f = 5)
+  (let ([name (cadr f)]
+        [attr* (caddr f)]
+        [out* (cadddr f)]
+        [in* (car (cddddr f))])
+    (check-name "code op name" f name)
+    (check-attrib* "code op attirbutes" f attr*)
+    (check-output* "code op outputs" f out*)
+    (check-input* "code op inputs" f in*)
+    (make-qa0-operation (map parse-attribute attr*)
+                        name
+                        (map parse-output out*)
+                        (map parse-input in*))))
+@
+<<Parser helpers>>=
+(define (parse-output out) (make-reg out))
+@
+<<Parser helpers>>=
+(define (parse-input in)
+  (case (car in)
+    [(reg) (make-reg (cadr in))]
+    [(const) (parse-const-expr in)]
+    [else (error 'parse-qa0 "Internal error in parse-input")]))
+@
+
+<<Recognize code forms>>=
+[(load) (parse-load f)]
+@
+<<Parser helpers>>=
+(define (parse-load f)
+  (check-list "load" f = 5)
+  (let ([type (cadr f)]
+        [attr* (caddr f)]
+        [out (cadddr f)]
+        [addr (car (cddddr f))])
+    (check-attrib* "load" f attr*)
+    (check-name "load" type)
+    (check-output* "load" f (list out))
+    (check-input* "load" f addr)
+    (make-qa0-load (map parse-attribute attr*)
+                   type
+                   (parse-output out)
+                   (map parse-input addr))))
+@
+
+<<Recognize code forms>>=
+[(store) (parse-store f)]
+@
+<<Parser helpers>>=
+(define (parse-store f)
+  (check-list "store" f = 5)
+  (let ([type (cadr f)]
+        [attr* (caddr f)]
+        [addr (cadddr f)]
+        [value (car (cddddr f))])
+    (check-attrib* "store" f attr*)
+    (check-name "store" type)
+    (check-input* "store" f addr)
+    (check-input "store" f value)
+    (make-qa0-store (map parse-attribute attr*)
+                    type
+                    (map parse-input addr)
+                    (parse-input value))))
+@
+
+<<Recognize code forms>>=
+[(loop) (parse-loop f)]
+@
+<<Parser helpers>>=
+(define (parse-loop f)
+  (check-list "loop" f >= 4)
+  (let ([attr* (cadr f)]
+        [ctl (caddr f)]
+        [code* (cdddr f)])
+    (check-attrib* "loop" f attr*)
+    (check-list "loop control" ctl = 3)
+    (parse-code* code*
+      (lambda (op*)
+        (make-qa0-loop (map parse-attribute attr*)
+                       (parse-output (car ctl))
+                       (parse-input (cadr ctl))
+                       (parse-input (caddr ctl))
+                       op*)))))
+@
+
+<<Recognize code forms>>=
+[(if) (parse-if f)]
+@
+<<Parser helpers>>=
+(define (parse-if f)
+  (check-list "if" f = 3)
+  (let ([c (cadr f)]
+        [t (caddr f)])
+    (check-input "if predicate" f c)
+    (check-list "if branch" t)
+    (parse-code* t
+      (lambda (t*) (make-qa0-if (parse-input c) t* '())))))
+@
+
+<<Recognize code forms>>=
+[(if-else) (parse-if-else f)]
+@
+<<Parser helpers>>=
+(define (parse-if-else form)
+  (check-list "if-else" form = 4)
+  (let ([c (cadr form)]
+        [t (caddr form)]
+        [f (cadddr form)])
+    (check-input "if-else predicate" form c)
+    (check-list "if-else true branch" t)
+    (check-list "if-else false branch" f)
+    (parse-code* t
+      (lambda (t*)
+        (parse-code* f
+          (lambda (f*) (make-qa0-if (parse-input c) t* f*)))))))
+@
+
+<<Recognize code forms>>=
+[(repeat) (parse-macro f)]
+@
+<<Parser helpers>>=
+(define (parse-macro form)
+  (check-list "macro" form >= 3)
+  (let ([iterator* (cadr form)]
+        [code* (cddr form)])
+    (check-iterator* "macro" form iterator*)
+    (parse-code* code*
+      (lambda (op*) (make-qa0-macro (map car iterator*)
+                                    (map parse-iterator iterator*)
+                                    op*)))))
+@
+
+Finally, the constant expressions:
+<<Parser helpers>>=
+(define (parse-const-expr form)
+  (check-list "constant expression" form = 2)
+  (parse-c-expr (cadr form)))
+(define (parse-c-expr form)
+  (cond
+    [(number? form) (make-c-expr-number form)]
+    [(symbol? form) (make-c-expr-id form)]
+    [(string? form) (make-c-expr-string form)]
+    [(and (list? form) (>= (length form) 1) (symbol? (car form)))
+     (make-c-expr-op (car form) (map parse-c-expr (cdr form)))]
+    [else (error 'parse-qa0 "constant expression is bad:~%~a~%" form)]))
+@
+
+\section{MACROS}
+Useful macros for R5RS with [[syntax-case]]. First, progress reporting:
+<<File [[common.ss]]>>=
+(define *verbose?* #f)
+(define (progress-report fmt . args)
+  (if *verbose?*
+      (begin (printf "  ")
+             (apply printf format args)
+             (printf "...~%")
+             (flush-output-port (current-output-port)))))
+@
+Also, my favorite debugging procedure
+<<File [[common.ss]]>>=
+(define (dbg . msg)
+   (display "D:")
+   (for-each (lambda (x) (display " ") (write x)) msg)
+   (newline)
+   #f)
+@
+Next, assertions.
+<<File [[common.ss]]>>=
+(define-syntax assert
+  (lambda (x)
+    (syntax-case x ()
+      [(_ test fmt arg ...)
+       (syntax (if (not test) (error 'assert (string-append "FAILED: " fmt)
+                                     arg ...)))])))
+@
+For [[define-variant]] we need to be able to inject new names into the current
+lexical environment. The code below does the Right Thing.
+<<File [[common.ss]]>>=
+(define-syntax define-variant
+  (lambda (x)
+    <<Define [[mk-name]]>>
+    (syntax-case x ()
+      [(_ name (field ...))
+       (with-syntax (
+          <<Injected names for [[define-syntax]]>>
+         )
+         (with-syntax
+           ([(index ...) (let f ([i 1])
+                            (if (= i (syntax-object->datum (syntax count))) '()
+                                (cons i (f (+ 1 i)))))])
+           (syntax
+             (begin
+               <<[[variant]] definitions>>
+             ))))])))
+@
+
+<<Define [[mk-name]]>>=
+(define (mk-name template-id . args)
+  (datum->syntax-object template-id
+    (string->symbol (apply string-append
+                           (map (lambda (x)
+                                  (if (string? x) x
+                                      (symbol->string (syntax-object->datum x))))
+                                args)))))
+@
+Now define the names used by [[variant]]:
+<<Injected names for [[define-syntax]]>>=
+[constructor (mk-name (syntax name) 'make- (syntax name))]
+[predicate (mk-name (syntax name) (syntax name) '?)]
+[reader (map (lambda (field) (mk-name (syntax name) (syntax name) "->" field))
+             (syntax (field ...)))]
+[count (length (syntax (name field ...)))]
+@
+
+Finally, we can expand a new [[variant]] into corresponding defintions:
+<<[[variant]] definitions>>=
+(define constructor (lambda (field ...) (vector 'name field ...)))
+(define predicate (lambda (object)
+                    (and (vector? object)
+                         (= (vector-length object) count)
+                         (eq? (vector-ref object 0) 'name))))
+(define reader (lambda (object) (vector-ref object index))) ...
+@
+
+Here is a generic variant discriminator:
+<<File [[common.ss]]>>=
+(define variant-type (lambda (variant) (vector-ref variant 0)))
+@
+
+These variants are very useful with the [[variant-case]]:
+<<File [[common.ss]]>>=
+(define-syntax variant-case
+  (lambda (x)
+    <<Define [[mk-name]]>>
+    (syntax-case x (else)
+      [(_ exp clause ...) (not (identifier? (syntax exp)))
+          (syntax (let ([var exp]) (_ var clause ...)))]
+      [(_ var) (syntax (error 'variant-case "no clause matches ~a" var))]
+      [(_ var (else exp exp1 ...)) (syntax (begin exp exp1 ...))]
+      [(_ var (name [(fname field) ...] exp1 exp2 ...) clause ...)
+       (with-syntax
+         ([predicate (mk-name (syntax name) (syntax name) '?)]
+          [(reader ...) (map (lambda (fld)
+                               (mk-name (syntax name) (syntax name) "->" fld))
+                             (syntax (field ...)))])
+         (syntax (if (predicate var)
+                     (let ([fname (reader var)] ...) exp1 exp2 ...)
+                     (_ var clause ...))))]
+      [(_ var (name (field ...) exp1 exp2 ...) clause ...)
+       (syntax (_ var (name ([field field] ...) exp1 exp2 ...) clause ...))])))
+@
+
+Finally, [[let-values*]]:
+<<File [[common.ss]]>>=
+(define-syntax let-values*
+  (lambda (x)
+    (syntax-case x ()
+      [(_ () e ...) (syntax (let () e ...))]
+      [(_ ([(n ...) i ...]) e ...) (syntax (call-with-values
+                                             (lambda () (let () i ...))
+                                             (lambda (n ...) (let () e ...))))]
+      [(_ (b0 b1 ...) e ...) (syntax (_ (b0) (_ (b1 ...) e ...)))])))
+@
+
+\section{CODE CHUNKS}
+\nowebchunks
 
 \end{document}

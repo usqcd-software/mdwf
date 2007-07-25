@@ -34,6 +34,9 @@ qx.sources = memory-g.c \
 
 ss.sources = basis.ss
 
+qs.sources = common.ss \
+             parser.ss
+
 qz.objects = $(q.sources:%.c=%.o) \
              $(qx.sources:%.c=%f.o) \
              $(qx.sources:%.c=%d.o)
@@ -44,7 +47,7 @@ c.sources = $(q.sources) \
 
 x.sources = $(h.sources) $(c.sources)
 
-sources = $(x.sources) $(ss.sources)
+sources = $(x.sources) $(ss.sources) $(qs.sources)
 
 f.lib = libqtest.a
 
@@ -99,6 +102,8 @@ $(x.sources): mdwf.nw
 $(ss.sources): mdwf.nw
 	($(NOTANGLE) -R'File [[$@]]' -c $< >$@) || ($(RM) $@; exit 1)
 
+$(qs.sources): qa0.nw
+	($(NOTANGLE) -R'File [[$@]]' -c $< >$@) || ($(RM) $@; exit 1)
 
 test-state: $(test.state.sources)
 	$(CC) -g -Wall -DDEBUG_INIT -I. $(INCDIRS:%=-I%) \
