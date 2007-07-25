@@ -313,7 +313,7 @@ provided indeed.
   (if (not (list? in))
       (error 'parse-qa0 "List expected in ~a, found~%  ~a~%"
              msg in))
-  (if (cmp (length in) min-size)
+  (if (not (cmp (length in) min-size))
       (error 'parse-qa0
              "List of ~a ~a is expected in ~a, found:~%   ~a~%"
              (if (eq? cmp =) "exactly" "at least")
@@ -404,7 +404,7 @@ Add another top-level form:
 @
 
 <<Recognize top-level forms>>=
-[(alias) (make-qa0-top (append decl* (parse-alias s-expr)))]
+[(alias) (make-qa0-top (append decl* (list (parse-alias s-expr))))]
 @
 <<Parser helpers>>=
 (define (parse-alias s-expr)
@@ -415,17 +415,17 @@ Add another top-level form:
 @
 
 <<Recognize top-level forms>>=
-[(constant) (make-qa0-top (append decl* (parse-constant s-expr)))]
+[(constant) (make-qa0-top (append decl* (list (parse-constant s-expr))))]
 @
 <<Parser helpers>>=
 (define (parse-constant s-expr)
   (check-list "constant" s-expr = 3)
   (check-name "constant name" s-expr (cadr s-expr))
-  (make-qa0-const (cadr s-expr (parse-const-expr (caddr s-expr)))))
+  (make-qa0-const (cadr s-expr) (parse-const-expr (caddr s-expr))))
 @
 
 <<Recognize top-level forms>>=
-[(array) (make-qa0-top (append decl* (parse-array s-expr)))]
+[(array) (make-qa0-top (append decl* (list (parse-array s-expr))))]
 @
 <<Parser helpers>>=
 (define (parse-array s-expr)
@@ -438,7 +438,7 @@ Add another top-level form:
 @
 
 <<Recognize top-level forms>>=
-[(structure) (make-qa0-top (append decl* (parse-structure s-expr)))]
+[(structure) (make-qa0-top (append decl* (list (parse-structure s-expr))))]
 @
 <<Parser helpers>>=
 (define (parse-structure s-expr)
@@ -458,7 +458,7 @@ Add another top-level form:
 @
 
 <<Recognize top-level forms>>=
-[(repeat) (make-qa0-top (append decl* (parse-repeat s-expr)))]
+[(repeat) (make-qa0-top (append decl* (list (parse-repeat s-expr))))]
 @
 <<Parser helpers>>=
 (define (parse-repeat s-expr)
@@ -490,7 +490,7 @@ Parsing an a-value is trivial:
 @
 
 <<Recognize top-level forms>>=
-[(procedure) (make-qa0-top (append decl* (parse-procedure s-expr)))]
+[(procedure) (make-qa0-top (append decl* (list (parse-procedure s-expr))))]
 @
 <<Parser helpers>>=
 (define (parse-procedure s-expr)
@@ -511,7 +511,6 @@ Parsing an a-value is trivial:
                                  (cadr s-expr)
                                  (map car (cadddr s-expr))
                                  (map cadr (cadddr s-expr))
-                                 (map caddr (cadddr s-expr))
                                  (map caddr (cadddr s-expr))
                                  (map cadddr (cadddr s-expr))
                                  code*))))
@@ -590,7 +589,7 @@ Let us start with an [[op]]:
         [out (cadddr f)]
         [addr (car (cddddr f))])
     (check-attrib* "load" f attr*)
-    (check-name "load" type)
+    (check-name "load" f type)
     (check-output* "load" f (list out))
     (check-input* "load" f addr)
     (make-qa0-load (map parse-attribute attr*)
@@ -610,7 +609,7 @@ Let us start with an [[op]]:
         [addr (cadddr f)]
         [value (car (cddddr f))])
     (check-attrib* "store" f attr*)
-    (check-name "store" type)
+    (check-name "store" f type)
     (check-input* "store" f addr)
     (check-input "store" f value)
     (make-qa0-store (map parse-attribute attr*)
@@ -763,8 +762,9 @@ Now define the names used by [[variant]]:
 <<Injected names for [[define-syntax]]>>=
 [constructor (mk-name (syntax name) 'make- (syntax name))]
 [predicate (mk-name (syntax name) (syntax name) '?)]
-[reader (map (lambda (field) (mk-name (syntax name) (syntax name) "->" field))
-             (syntax (field ...)))]
+[(reader ...) (map (lambda (field)
+                     (mk-name (syntax name) (syntax name) "->" field))
+                   (syntax (field ...)))]
 [count (length (syntax (name field ...)))]
 @
 

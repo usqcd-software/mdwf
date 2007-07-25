@@ -1,0 +1,32 @@
+(constant *colors* (const 3))
+(constant *dim* (const 4))
+
+(structure up-link "UpLink" ([up-gauge "u" int] [up-fermion "f" int]))
+(structure down-link "DownLink" ([down-fermion "f" int]))
+
+(array links "Links" int (const *dim*))
+
+(structure neighbor "Neighbor" ([mask      "mask"         int]
+                                [u-gauge   "up_gauge"     int]
+                                [u-fermion "up_fermion"   links]
+                                [d-gauge   "down_gauge"   links]
+                                [d-fermion "down_fermion" links]))
+
+(repeat ([d (const 0) (const *dim*)]
+         [p/m (plus minus)])
+   (procedure up-face ([stem "Up_face" d p/m] count-flops)
+                      ()
+     (store void () ((reg r-a) (const (size-of up-link))) (const *colors*)))
+   (procedure down-face ([stem "Down_face" d "_" p/m] count-flops)
+                        ([size int "int" "size"]
+                         [res pointer "struct F*" "r"]
+                         [src pointer "struct F*" "s"])
+     (loop () [k (const 0) (reg size)]
+        (load fermion () f ([reg src]))
+        (op add-int () (src) ([reg src] [const (size-of Fermion)]))
+        (store fermion () ([reg dst]) [reg f])
+        (op add-int () (res) ([reg res] [const (size-of Fermion)])))))
+                         
+(procedure no-count ([stem "funny_name"])
+            ([n neighbor "struct bar *" "zzz"])
+   (op add-int () (n) ([reg n] [const 0])))
