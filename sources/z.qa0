@@ -1,5 +1,4 @@
-(constant *colors* (const 3))
-(constant *dim* (const 4))
+(array Fermion "Fermion" real (const (* *fermion-dim* *colors* 2)))
 
 (structure up-link "UpLink" ([up-gauge "u" int] [up-fermion "f" int]))
 (structure down-link "DownLink" ([down-fermion "f" int]))

@@ -35,7 +35,8 @@ qx.sources = memory-g.c \
 ss.sources = basis.ss
 
 qs.sources = common.ss \
-             parser.ss
+             parser.ss \
+             cfolding.ss
 
 qz.objects = $(q.sources:%.c=%.o) \
              $(qx.sources:%.c=%f.o) \
