@@ -2,3 +2,4 @@
 (constant foo (const (+ 2 3 (* 4 bar))))
 
 (array bar-a "some_array_type" int (const foo))
+(alias foo-a bar-a)
