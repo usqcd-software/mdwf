@@ -784,7 +784,7 @@ We keep structures and arrays as they are needed to produce a header file.
           (ce-add-struct env name field-name* field-type*)))
 (define (cf-array name c-name base size out* env)
   (let ([size (cf-eval-const size env)])
-    (values (cons (make-qa0-array name c-name base size) out*)
+    (values (cons (make-qa0-array name c-name base (cf-rewrap size)) out*)
             (ce-add-array env name base size))))
 @
 In procedures we fold instructions. Care should be taken of loops and
@@ -924,7 +924,7 @@ Memory accesses are similar:
   (cons (make-qa0-store (cf-attribute* attribute* env)
                        type
                        (cf-addr* addr* env)
-                       value)
+                       (cf-input value env))
         out*))
 @
 
@@ -975,7 +975,12 @@ An input is either [[reg]] or [[const]]:
 (define (cf-input input env)
   (variant-case input
     [reg () input]
-    [else (cf-eval-const input env)]))
+    [else (cf-rewrap (cf-eval-const input env))]))
+(define (cf-rewrap c)
+    (cond
+      [(number? c) (make-c-expr-number c)]
+      [(string? c) (make-c-expr-string c)]
+      [else (error 'qa0 "Unexpected computed constant is ~a" c)]))
 @
 
 Evaluation of constant should find all [[c-expr-id]] with appropriate values.

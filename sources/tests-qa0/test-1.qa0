@@ -1,0 +1,12 @@
+(constant foo (const (+ 2 3 (* 4 5))))
+
+(array bar "some_array_type" int (const foo))
+
+(procedure p-x ([stem "foo"])
+               ([a int     "int"             "a"]
+                [b double  "double"          "b"]
+                [c pointer "some_array_type" "c"])
+   (op add () (x) ([reg a] [const 1] [const foo]))
+   (load int () xxx ([reg a] [const (+ foo 1)]))
+   (store double () ([reg a] [const (size-of int)]) [reg b])
+   (store int () ([reg a]) [const foo]))
