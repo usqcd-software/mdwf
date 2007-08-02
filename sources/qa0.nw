@@ -572,14 +572,21 @@ Let us start with an [[op]]:
                         (map parse-input in*))))
 @
 <<Parser helpers>>=
-(define (parse-output out) (make-reg out))
+(define (parse-output out) (parse-reg out))
 @
 <<Parser helpers>>=
 (define (parse-input in)
   (case (car in)
-    [(reg) (make-reg (cadr in))]
+    [(reg) (parse-reg (cadr in))]
     [(const) (parse-const-expr in)]
     [else (error 'parse-qa0 "Internal error in parse-input")]))
+@
+
+All input registers are prefixed with [[_]]. Other prefixed will be used for
+generated registers.
+<<Parser helpers>>=
+(define (parse-reg name)
+  (make-reg (string->symbol (format "_~a" name))))
 @
 
 <<Recognize code forms>>=
@@ -738,8 +745,18 @@ The [[machine]] is a procedure that adds definitions of [[int]], [[double]],
 environment passed as an argument. It returns a new environment.
 <<Folding helpers>>=
 (define (ce-start-env machine real)
-  (let* ([env (ce-add-alias (machine (ce-empty-env)) 'REAL real)])
-    env))
+  (let* ([env (ce-empty-env)]
+         [env (machine env)])
+    (case real
+      [(double) (let* ([env (ce-add-alias env 'REAL    'double)]
+                       [env (ce-add-alias env 'COMPLEX 'complex-double)]
+                       [env (ce-add-alias env 'VECTOR  'vector-double)])
+                  env)]
+      [(float) (let* ([env (ce-add-alias env 'REAL    'float)]
+                      [env (ce-add-alias env 'COMPLEX 'complex-float)]
+                      [env (ce-add-alias env 'VECTOR  'vector-float)])
+                 env)]
+      [else (error 'fold-constant "Bad value of REAL: ~a" real)])))
 @
 <<Folding environment routines>>=
 (define (ce-empty-env) '())
