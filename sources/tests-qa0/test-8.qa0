@@ -1,0 +1,7 @@
+(procedure qcd-1 ([stem "qcd"]
+                  count-flops)
+              ([res    pointer   "struct Fermion *" "result"]
+               [U      pointer   "struct SU3 *"     "U"]
+               [src    pointer   "struct Fermion *" "source"])
+   (load qcd-fermion () xxx ([reg src]))
+   (store qcd-fermion () ([reg res] [const 200]) [reg xxx]))

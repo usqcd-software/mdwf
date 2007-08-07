@@ -1,6 +1,6 @@
 ;; projections
-(array x-spinor        "x_Spinor"   COMPLEX       (const 4))
-(array x-half-spinor   "x_HSpinor"  COMPLEX       (const 2))
+(array x-spinor        "x_Spinor"   COMPLEX       (const *fermion-dim*))
+(array x-half-spinor   "x_HSpinor"  COMPLEX       (const (/ *fermion-dim* 2)))
 (array x-fermion       "x_Fermion"  x-spinor      (const *colors*))
 (array x-half-fermion  "x_HFermion" x-half-spinor (const *colors*))
 (array x-gauge         "x_SU3"      COMPLEX       (const (* *colors* *colors*)))
