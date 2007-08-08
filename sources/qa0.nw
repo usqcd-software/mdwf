@@ -512,7 +512,7 @@ Parsing an a-value is trivial:
                 (lambda (code*)
                   (make-qa0-proc (map parse-attribute (caddr s-expr))
                                  (cadr s-expr)
-                                 (map car (cadddr s-expr))
+                                 (map user-reg (map car (cadddr s-expr)))
                                  (map cadr (cadddr s-expr))
                                  (map caddr (cadddr s-expr))
                                  (map cadddr (cadddr s-expr))
@@ -585,8 +585,8 @@ Let us start with an [[op]]:
 All input registers are prefixed with [[_]]. Other prefixed will be used for
 generated registers.
 <<Parser helpers>>=
-(define (parse-reg name)
-  (make-reg (string->symbol (format "_~a" name))))
+(define (parse-reg name) (make-reg (user-reg name)))
+(define (user-reg name) (string->symbol (format "_~a" name)))
 @
 
 <<Recognize code forms>>=
@@ -1212,18 +1212,17 @@ This section does QCD to [[complex]] conversion.
 (define (qcd->complex ast env)
   <<QCD to complex routines>>
   (variant-case ast
-    [qa0-top (decl*) (let loop ([r* '()] [decl* decl*] [env env])
+    [qa0-top (decl*) (let loop ([r* '()] [decl* decl*])
                        (cond
-                         [(null? decl*) (values (make-qa0-top (reverse r*))
-                                                env)]
+                         [(null? decl*) (make-qa0-top (reverse r*))]
                          [else (let-values ([(d e) (q2c-decl (car decl*) env)])
-                                 (loop (cons d r*) (cdr decl*) e))]))]))
+                                 (loop (cons d r*) (cdr decl*)))]))]))
 @
 
 This conversion uses the following generator for register names
 <<QCD to complex routines>>=
 (define new-reg (let ([n 0])
-                  (lambda () (let ([r (string->symbol (format "~a-~a" 'c n))])
+                  (lambda () (let ([r (string->symbol (format "~a~a" 'c n))])
                                (set! n (+ n 1))
                                r))))
 @
@@ -1317,6 +1316,8 @@ For operations there is also a set of cases requiring special attention
     [(qcd-mulh-conj)     (q2c-mulh-conj     attribute* output* input* r* env)]
     [(qcd-addf)          (q2c-addf          attribute* output* input* r* env)]
     [(qcd-addh)          (q2c-addh          attribute* output* input* r* env)]
+    [(qcd-maddf)         (q2c-maddf         attribute* output* input* r* env)]
+    [(qcd-maddh)         (q2c-maddh         attribute* output* input* r* env)]
     [else (values (cons c r*) env)]))
 @
 
@@ -1365,6 +1366,12 @@ fermion is their dimension in the spinor space
 (define (q2c-mulh-conj attribute* output* input* r* env)
   (q2c-mulx-conj attribute* output* input* '*half-fermion-dim*
                  'half-fermion r* env))
+(define (q2c-maddf attribute* output* input* r* env)
+  (q2c-maddx attribute* output* input* '*fermion-dim*
+            'fermion r* env))
+(define (q2c-maddh attribute* output* input* r* env)
+  (q2c-maddx attribute* output* input* '*half-fermion-dim*
+            'half-fermion r* env))
 @
 
 \subsection{Loads}
@@ -1395,7 +1402,7 @@ produce one load instruction
                 [(off) (* c-s (+ f (* f-n c)))])
     (values (cons (make-qa0-load attribute*
                                  c-t
-                                 x
+                                 (make-reg x)
                                  (append addr* (list (make-c-expr-number off))))
                   r*)
             env)))
@@ -1456,14 +1463,45 @@ produce one load instruction
                 [(d env) (q2c-rename env (car output*) t c f)])
     (values (cons (make-qa0-operation attribute*
                                       'complex-add
-                                      (list d)
+                                      (list (make-reg d))
                                       (list (make-reg a) (make-reg b)))
                   r*)
             env)))
 @
 
 <<QCD to complex routines>>=
-(define (q2c-mulx attribute* output* input* f-n t r* env)
+(define (q2c-maddx attribute* output* input* f-n t r* env)
+  <<Generate complex multiply-add>>
+  (q2c-check-list output* = 1 "QCD madd outputs")
+  (q2c-check-list input* = 3 "QCD madd inputs")
+  (let ([c-n (ce-lookup-x env 'const '*colors* "Color count")]
+        [f-n (ce-lookup-x env 'const f-n "Field dimension")])
+    (let c-loop ([c 0] [r* r*] [env env])
+      (cond
+        [(= c c-n) (values r* env)]
+        [else (let f-loop ([f 0] [r* r*] [env env])
+                (cond
+                  [(= f f-n) (c-loop (+ c 1) r* env)]
+                  [else (let-values* ([(r* env) (complex-madd c f r* env)])
+                           (f-loop (+ f 1) r* env))]))]))))
+                                  
+@
+<<Generate complex multiply-add>>=
+(define (complex-madd c f r* env)
+  (let-values* ([(a) (car input*)]
+                [(b env) (q2c-rename env (cadr input*) t c f)]
+                [(r env) (q2c-rename env (caddr input*) t c f)]
+                [(x env) (q2c-rename env (car output*) t c f)])
+    (values (cons (make-qa0-operation attribute*
+                                      'complex-rmadd
+                                      (list (make-reg x))
+                                      (list a (make-reg b) (make-reg r)))
+                  r*)
+            env)))
+@
+
+<<QCD to complex routines>>=
+(define (q2c-mul-g attribute* output* input* f-n t op-0 op-k u-get r* env)
   (q2c-check-list output* = 1 "QCD mul outputs")
   (q2c-check-list input* = 2 "QCD mul outputs")
   (let ([c-n (ce-lookup-x env 'const '*colors* "Color count")]
@@ -1485,7 +1523,7 @@ produce one load instruction
 @
 <<Generate complex multiply>>=
 (define (s-mul-z r* env)
-  (let-values* ([(a env) (q2c-rename env r-a 'gauge 0 0)])
+  (let-values* ([(a env) (u-get r-a 0 0 env)])
     (let loop ([f 0] [r* r*] [env env])
       (cond
         [(= f f-n) (values r* env)]
@@ -1494,8 +1532,8 @@ produce one load instruction
                         [(z env) (q2c-rename env r-r t 0 f)])
             (loop (+ f 1)
                   (cons (make-qa0-operation attribute*
-                                            'complex-mul
-                                            (list z)
+                                            op-0
+                                            (list (make-reg z))
                                             (list (make-reg a) (make-reg b)))
                         r*)
                   env))]))))
@@ -1512,12 +1550,12 @@ produce one load instruction
               [(= y f-n) (x-loop (+ x 1) r* env)]
               [else
                 (let-values* ([(q-v env) (q2c-rename env q t x y)]
-                              [(a-v env) (q2c-rename env r-a 'gauge x 0)]
+                              [(a-v env) (u-get r-a x 0 env)]
                               [(b-v env) (q2c-rename env r-b t 0 y)])
                   (y-loop (+ y 1)
                           (cons (make-qa0-operation attribute*
-                                                    'complex-mul
-                                                    (list q-v)
+                                                    op-0
+                                                    (list (make-reg q-v))
                                                     (list (make-reg a-v)
                                                           (make-reg b-v)))
                                  r*)
@@ -1535,12 +1573,12 @@ produce one load instruction
             [else
               (let-values* ([(q-v env) (q2c-rename env r-x t x y)]
                             [(r-v env) (q2c-rename env r-r t x y)]
-                            [(a-v env) (q2c-rename env r-a 'gauge x c)]
+                            [(a-v env) (u-get r-a x c env)]
                             [(b-v env) (q2c-rename env r-b t c y)])
                 (y-loop (+ y 1)
                         (cons (make-qa0-operation attribute*
-                                                  'complex-madd
-                                                  (list r-v)
+                                                  op-k
+                                                  (list (make-reg r-v))
                                                   (list (make-reg a-v)
                                                         (make-reg b-v)
                                                         (make-reg q-v)))
@@ -1548,7 +1586,19 @@ produce one load instruction
                         env))]))])))
 @
 
-XXX conjugate multiply here.
+Two multiplication routines:
+<<QCD to complex routines>>=
+(define (q2c-mulx attribute* output* input* f-n t r* env)
+  (q2c-mul-g attribute* output* input* f-n t
+             'complex-mul 'complex-madd
+             (lambda (r i j env) (q2c-rename env r 'gauge i j))
+	     r* env))
+(define (q2c-mulx-conj attribute* output* input* f-n t r* env)
+  (q2c-mul-g attribute* output* input* f-n t
+             'complex-cmul 'complex-cmadd
+             (lambda (r i j env) (q2c-rename env r 'gauge j i))
+	     r* env))
+@
 
 \subsection{Syntax check}
 We should have lists of certain sizes in various places. Here we check that
@@ -1563,10 +1613,288 @@ This function finds a name of the complex component for a given QCD register
 <<QCD to complex routines>>=
 (define (q2c-rename env base type i-a i-b)
   (let ([key (list 'qcd->complex base type i-a i-b)])
-    (ce-search env key (lambda (val) (values val env))
+    (ce-search env key
+       (lambda (val)
+         (values val env))
        (lambda ()
-         (let ([r (new-reg)])
-           (values r (ce-bind env key r)))))))
+         (let* ([r (new-reg)]
+                [env (ce-bind env key r)])
+           (values r env))))))
+@
+
+\subsection{Gamma projection and unprojection}
+
+%
+% -> (values r* env)
+%    [(qcd-project)       (q2c-project       attribute* output* input* r* env)]
+%    [(qcd-unproject)     (q2c-unproject     attribute* output* input* r* env)]
+%    [(qcd-add-unproject) (q2c-add-unproject attribute* output* input* r* env)]
+%
+
+\section{TREE PRINTING}
+To make the output of various phases easier to read, here is an printer for the
+tree.
+<<File [[qa0print.ss]]>>=
+(define (print-tree ast)
+  <<Print routines>>
+  (variant-case ast
+    [qa0-top (decl*) (for-each (lambda (decl) (print-decl decl 0)) decl*)]))
+@
+
+<<Print routines>>=
+(define (print-decl decl level)
+  (variant-case decl
+    [qa0-alias (old-name new-name)
+       (print-alias level old-name new-name)]
+    [qa0-const (name value)
+       (print-const level name value)]
+    [qa0-struct (name c-name field-name* field-type* field-c-name*)
+       (print-struct level name c-name field-name* field-type* field-c-name*)]
+    [qa0-array (name c-name base-name size)
+       (print-array level name c-name base-name size)]
+    [qa0-proc (attribute* name arg-name* arg-type* arg-c-name* arg-c-type* code*)
+       (print-proc level attribute* name
+                   arg-name* arg-type* arg-c-name* arg-c-type* code*)]
+    [qa0-repeat-list (id value* body*)
+       (print-repeat-list level id value* body*)]
+    [qa0-repeat-range (id low high body*)
+       (print-repeat-range level id low high body*)]))
+@
+
+<<Print routines>>=
+(define (print-start level)
+  (do ([i 0 (+ i 1)])
+      [(= i level)]
+    (printf "  ")))
+@
+
+<<Print routines>>=
+(define (print-alias level old-name new-name)
+  (print-start level)
+  (printf "Alias of ~a is ~a~%" old-name new-name))
+@
+
+<<Print routines>>=
+(define (print-const level name value)
+  (print-start level)
+  (printf "Constant ~a = " name)
+  (print-input value)
+  (printf "~%"))
+@
+
+<<Print routines>>=
+(define (print-struct level name c-name field-name* field-type* field-c-name*)
+  (print-start level)
+  (printf "Structure ~a ~s:~%" name c-name)
+  (for-each (lambda (name type c-name)
+               (print-start (+ level 1))
+               (printf "~a ~a ~s~%" name type c-name))
+            field-name* field-type* field-c-name*))
+@
+
+<<Print routines>>=
+(define (print-array level name c-name base-name size)
+  (print-start level)
+  (printf "Array ~a ~s is ~a of " name c-name base-name)
+  (print-input size)
+  (printf "~%"))
+@
+
+<<Print routines>>=
+(define (print-proc level attribute* name
+                   arg-name* arg-type* arg-c-name* arg-c-type* code*)
+  (print-start level)
+  (printf "Procedure ~a attributes " name)
+  (print-attribute* attribute*)
+  (printf "~%")
+  (for-each (lambda (n t c-n c-t)
+               (print-start (+ level 3))
+               (printf "[~a ~a ~s ~s]~%" n t c-n c-t))
+            arg-name* arg-type* arg-c-name* arg-c-type*)
+  (print-code* (+ level 1) code*)
+  (print-start level)
+  (printf "Procedure ~a end~%" name))
+@
+
+<<Print routines>>=
+(define (print-repeat-list level id value* body*)
+  (print-start level)
+  (printf "Repeat ~a in ~s~%" id value*)
+  (for-each (lambda (decl) (print-decl (+ level 1) decl)) body*)
+  (print-start level)
+  (printf "Repeat ~a end~%" id))
+@
+
+<<Print routines>>=
+(define (print-repeat-range level id low high body*)
+  (print-start level)
+  (printf "Repeat ~a from " id)
+  (print-input low)
+  (printf " to ")
+  (print-input high)
+  (printf "~%")
+  (for-each (lambda (decl) (print-decl (+ level 1) decl)) body*)
+  (print-start level)
+  (printf "Repeat ~a end~%" id))
+@
+
+<<Print routines>>=
+(define (print-code* level code*)
+  (for-each (lambda (code) (print-code level code)) code*))
+@
+
+<<Print routines>>=
+(define (print-code level code)
+  (variant-case code
+    [qa0-operation (attribute* name output* input*)
+        (print-operation level attribute* name output* input*)]
+    [qa0-load (attribute* type output addr*)
+        (print-load level attribute* type output addr*)]
+    [qa0-store (attribute* type addr* value)
+        (print-store level attribute* type addr* value)]
+    [qa0-loop (attribute* var low high code*)
+        (print-loop level attribute* var low high code*)]
+    [qa0-if (var true-code* false-code*)
+        (print-if level var true-code* false-code*)]
+    [qa0-macro-list (id value* code*)
+        (print-macro-list level id value* code*)]
+    [qa0-macro-range (id low high code*)
+        (print-macro-range level id low high code*)]))
+@
+
+<<Print routines>>=
+(define (print-operation level attribute* name output* input*)
+  (print-start level)
+  (printf "op ")
+  (print-attribute* attribute*)
+  (printf " (")
+  (print-output* output*)
+  (printf ") <- ~a (" name)
+  (print-input* input*)
+  (printf ")~%"))
+@
+<<Print routines>>=
+(define (print-load level attribute* type output addr*)
+  (print-start level)
+  (printf "load ~a " type)
+  (print-attribute* attribute*)
+  (printf " ")
+  (print-output output)
+  (printf " <- Mem{")
+  (print-input* addr*)
+  (printf "}~%"))
+@
+<<Print routines>>=
+(define (print-store level attribute* type addr* value)
+  (print-start level)
+  (printf "store ~a " type)
+  (print-attribute* attribute*)
+  (printf " Mem{")
+  (print-input* addr*)
+  (printf "] <- ")
+  (print-input value)
+  (printf "}~%"))
+@
+
+<<Print routines>>=
+(define (print-loop level attribute* var low high code*)
+  (print-start level)
+  (printf "Loop ")
+  (print-attribute* attribute*)
+  (printf " ~a from " var)
+  (print-input low)
+  (printf " to ")
+  (print-input high)
+  (printf "~%")
+  (print-code* (+ level 1) code*)
+  (print-start level)
+  (printf "Loop ~a end~%" var))
+@
+<<Print routines>>=
+(define (print-if level var true-code* false-code*)
+  (print-start level)
+  (printf "If ")
+  (print-input var)
+  (printf " then~%")
+  (print-code* (+ level 1) true-code*)
+  (print-start level)
+  (printf "else~%")
+  (print-code* (+ level 1) false-code*)
+  (print-start level)
+  (printf "fi~%"))
+@
+
+<<Print routines>>=
+(define (print-macro-list level id value* body*)
+  (print-start level)
+  (printf "Macro ~a in ~s~%" id value*)
+  (print-code* (+ level 1) body*)
+  (print-start level)
+  (printf "Macro ~a end~%" id))
+@
+
+<<Print routines>>=
+(define (print-macro-range level id low high body*)
+  (print-start level)
+  (printf "Macrot ~a from " id)
+  (print-input low)
+  (printf " to ")
+  (print-input high)
+  (printf "~%")
+  (print-code* (+ level 1) body*)
+  (print-start level)
+  (printf "Macro ~a end~%" id))
+@
+
+<<Print routines>>=
+(define (print-input* input*) (print-list print-input input*))
+(define (print-output* output*) (print-list print-output output*))
+(define (print-attribute* attribute*)
+  (printf "(") (print-list print-attribute attribute*) (printf ")"))
+@
+
+<<Print routines>>=
+(define (print-list print-it l*)
+  (if (null? l*) #f
+      (begin (print-it (car l*))
+             (do ([l* (cdr l*) (cdr l*)])
+                 [(null? l*)]
+               (printf " ")
+               (print-it (car l*))))))
+@
+
+<<Print routines>>=
+(define (print-attribute attr)
+  (variant-case attr
+    [qa0-attribute (name value*)
+       (if (null? value*) (printf "~a" name)
+           (begin (printf "[~a " name)
+                  (print-list write value*)
+                  (printf "]")))]))
+@
+
+<<Print routines>>=
+(define (print-output out)
+  (variant-case out
+    [reg (name) (printf "~a" name)]))
+@
+
+<<Print routines>>=
+(define (print-input in)
+  (variant-case in
+    [reg (name) (printf "[reg ~a]" name)]
+    [else (printf "[const ") (print-cexpr in) (printf "]")]))
+@
+
+<<Print routines>>=
+(define (print-cexpr ce)
+  (variant-case ce
+    [c-expr-id (id) (printf "~a" id)]
+    [c-expr-number (number) (printf "~a" number)]
+    [c-expr-string (string) (printf "~s" string)]
+    [c-expr-op (name c-expr*) (printf "(~a " name)
+                              (print-list print-cexpr c-expr*)
+                              (printf ")")]))
 @
 
 \section{BG/L}

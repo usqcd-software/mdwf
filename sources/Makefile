@@ -37,7 +37,8 @@ ss.sources = basis.ss
 qs.sources = common.ss \
              parser.ss \
              cfolding.ss \
-             q2complex.ss
+             q2complex.ss \
+             qa0print.ss
 
 qz.objects = $(q.sources:%.c=%.o) \
              $(qx.sources:%.c=%f.o) \
