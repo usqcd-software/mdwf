@@ -131,24 +131,24 @@ for now.
                            \end{array}\right)\\
 \end{equation}
 <<Project $(1+\gamma_0)$>>=
-((project 0 plus) . ((+1 0 +i 3)
-	             (+1 1 +i 2)))
+((project 0 plus) . ((plus-one 0 plus-i 3)
+	             (plus-one 1 plus-i 2)))
 @
 <<Unproject $(1+\gamma_0)$>>=
-((unproject 0 plus) . ((+1 0)
-                       (+1 1)
-		       (-i 1)
-		       (-i 0)))
+((unproject 0 plus) . ((plus-one 0)
+                       (plus-one 1)
+		       (minus-i 1)
+		       (minus-i 0)))
 @
 <<Project $(1-\gamma_0)$>>=
-((project 0 minus) . ((+1 0 -i 3)
-   	              (+1 1 -i 2)))
+((project 0 minus) . ((plus-one 0 minus-i 3)
+   	              (plus-one 1 minus-i 2)))
 @
 <<Unproject $(1-\gamma_0)$>>=
-((unproject 0 minus) . ((+1 0)
-	     	        (+1 1)
-		        (+i 1)
-		        (+i 0)))
+((unproject 0 minus) . ((plus-one 0)
+	     	        (plus-one 1)
+		        (plus-i 1)
+		        (plus-i 0)))
 @
 
 \pagebreak
@@ -166,24 +166,24 @@ for now.
                            \end{array}\right)\\
 \end{equation}
 <<Project $(1+\gamma_1)$>>=
-((project 1 plus) . ((+1 0 -1 3)
-	   	     (+1 1 +1 2)))
+((project 1 plus) . ((plus-one 0 minus-one 3)
+	   	     (plus-one 1 plus-one 2)))
 @
 <<Unproject $(1+\gamma_1)$>>=
-((unproject 1 plus) . ((+1 0)
-	     	       (+1 1)
-		       (+1 1)
-		       (-1 0)))
+((unproject 1 plus) . ((plus-one 0)
+	     	       (plus-one 1)
+		       (plus-one 1)
+		       (minus-one 0)))
 @
 <<Project $(1-\gamma_1)$>>=
-((project 1 minus) . ((+1 0 +1 3)
-	   	      (+1 1 -1 2)))
+((project 1 minus) . ((plus-one 0 plus-one 3)
+	   	      (plus-one 1 minus-one 2)))
 @
 <<Unproject $(1-\gamma_1)$>>=
-((unproject 1 minus) . ((+1 0)
-	     	        (+1 1)
-		        (-1 1)
-		        (+1 0)))
+((unproject 1 minus) . ((plus-one 0)
+	     	        (plus-one 1)
+		        (minus-one 1)
+		        (plus-one 0)))
 @
 
 \pagebreak
@@ -201,24 +201,24 @@ for now.
                            \end{array}\right)\\
 \end{equation}
 <<Project $(1+\gamma_2)$>>=
-((project 2 plus) . ((+1 0 +i 2)
-	   	     (+1 1 -i 3)))
+((project 2 plus) . ((plus-one 0 plus-i 2)
+	   	     (plus-one 1 minus-i 3)))
 @
 <<Unproject $(1+\gamma_2)$>>=
-((unproject 2 plus) . ((+1 0)
-	     	       (+1 1)
-		       (-i 0)
-		       (+i 1)))
+((unproject 2 plus) . ((plus-one 0)
+	     	       (plus-one 1)
+		       (minus-i 0)
+		       (plus-i 1)))
 @
 <<Project $(1-\gamma_2)$>>=
-((project 2 minus) . ((+1 0 -i 2)
-	   	      (+1 1 +i 3)))
+((project 2 minus) . ((plus-one 0 minus-i 2)
+	   	      (plus-one 1 plus-i 3)))
 @
 <<Unproject $(1-\gamma_2)$>>=
-((unproject 2 minus) . ((+1 0)
-	     	        (+1 1)
-		        (+i 0)
-		        (-i 1)))
+((unproject 2 minus) . ((plus-one 0)
+	     	        (plus-one 1)
+		        (plus-i 0)
+		        (minus-i 1)))
 @
 
 \pagebreak
@@ -236,29 +236,29 @@ for now.
                            \end{array}\right)\\
 \end{equation}
 <<Project $(1+\gamma_3)$>>=
-((project 3 plus) . ((+1 0 +1 2)
-	   	     (+1 1 +1 3)))
+((project 3 plus) . ((plus-one 0 plus-one 2)
+	   	     (plus-one 1 plus-one 3)))
 @
 <<Unproject $(1+\gamma_3)$>>=
-((unproject 3 plus) . ((+1 0)
-	     	       (+1 1)
-		       (+1 0)
-		       (+1 1)))
+((unproject 3 plus) . ((plus-one 0)
+	     	       (plus-one 1)
+		       (plus-one 0)
+		       (plus-one 1)))
 @
 This is our starting point in sums over directions
 <<Start $\mu$ sum>>=
-(start-sum 3 plus)
+(3 plus)
 @
 
 <<Project $(1-\gamma_3)$>>=
-((project 3 minus) . ((+1 0 -1 2)
-	   	      (+1 1 -1 3)))
+((project 3 minus) . ((plus-one 0 minus-one 2)
+	   	      (plus-one 1 minus-one 3)))
 @
 <<Unproject $(1-\gamma_3)$>>=
-((unproject 3 minus) . ((+1 0)
-	     	        (+1 1)
-		        (-1 0)
-		        (-1 1)))
+((unproject 3 minus) . ((plus-one 0)
+	     	        (plus-one 1)
+		        (minus-one 0)
+		        (minus-one 1)))
 @
 \pagebreak\section{Preconditioning}
 We use four dimensional preconditioner to improve convergence of the CG.
