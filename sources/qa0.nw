@@ -269,7 +269,7 @@ Definitions of the abstract syntax tree mirror the grammar.
                             field-type*
                             field-c-name*))
 (define-variant qa0-array (name c-name base-name size))
-(define-variant qa0-proc (attribute*
+(define-variant qa0-proc (attr*
                           name
                           arg-name*
                           arg-type*
@@ -282,10 +282,10 @@ Definitions of the abstract syntax tree mirror the grammar.
 
 Here are codes:
 <<Abstract syntax tree definitions>>=
-(define-variant qa0-operation (attribute* name output* input*))
-(define-variant qa0-load (attribute* type output addr*))
-(define-variant qa0-store (attribute* type addr* value))
-(define-variant qa0-loop (attribute* var low high code*))
+(define-variant qa0-operation (attr* name output* input*))
+(define-variant qa0-load (attr* type output addr*))
+(define-variant qa0-store (attr* type addr* value))
+(define-variant qa0-loop (attr* var low high code*))
 (define-variant qa0-if (var true-code* false-code*))
 (define-variant qa0-macro-list (id value* code*))
 (define-variant qa0-macro-range (id low high code*))
@@ -293,7 +293,7 @@ Here are codes:
 
 The attributes:
 <<Abstract syntax tree definitions>>=
-(define-variant qa0-attribute (name value*))
+(define-variant qa0-attr (name value*))
 @
 
 Constant expressions and registers:
@@ -510,7 +510,7 @@ Parsing an a-value is trivial:
         (cadddr s-expr))
    (parse-code* (cddddr s-expr)
                 (lambda (code*)
-                  (make-qa0-proc (map parse-attribute (caddr s-expr))
+                  (make-qa0-proc (map parse-attr (caddr s-expr))
                                  (cadr s-expr)
                                  (map user-reg (map car (cadddr s-expr)))
                                  (map cadr (cadddr s-expr))
@@ -535,11 +535,11 @@ Parse a list of codes flattening blocks.
 
 Attribute may be without values or it can contain a list of a-values:
 <<Parser helpers>>=
-(define (parse-attribute f)
+(define (parse-attr f)
    (cond
-    [(symbol? f) (make-qa0-attribute f '())]
+    [(symbol? f) (make-qa0-attr f '())]
     [else (check-list "attribute" f >= 1)
-       (make-qa0-attribute (car f) (map parse-a-value (cdr f)))]))
+       (make-qa0-attr (car f) (map parse-a-value (cdr f)))]))
 @
 
 Parsing a code element dispatches on the [[car]]:
@@ -566,7 +566,7 @@ Let us start with an [[op]]:
     (check-attrib* "code op attirbutes" f attr*)
     (check-output* "code op outputs" f out*)
     (check-input* "code op inputs" f in*)
-    (make-qa0-operation (map parse-attribute attr*)
+    (make-qa0-operation (map parse-attr attr*)
                         name
                         (map parse-output out*)
                         (map parse-input in*))))
@@ -603,7 +603,7 @@ generated registers.
     (check-name "load" f type)
     (check-output* "load" f (list out))
     (check-input* "load" f addr)
-    (make-qa0-load (map parse-attribute attr*)
+    (make-qa0-load (map parse-attr attr*)
                    type
                    (parse-output out)
                    (map parse-input addr))))
@@ -623,7 +623,7 @@ generated registers.
     (check-name "store" f type)
     (check-input* "store" f addr)
     (check-input "store" f value)
-    (make-qa0-store (map parse-attribute attr*)
+    (make-qa0-store (map parse-attr attr*)
                     type
                     (map parse-input addr)
                     (parse-input value))))
@@ -642,7 +642,7 @@ generated registers.
     (check-list "loop control" ctl = 3)
     (parse-code* code*
       (lambda (op*)
-        (make-qa0-loop (map parse-attribute attr*)
+        (make-qa0-loop (map parse-attr attr*)
                        (parse-output (car ctl))
                        (parse-input (cadr ctl))
                        (parse-input (caddr ctl))
@@ -746,17 +746,23 @@ environment passed as an argument. It returns a new environment.
 <<Folding helpers>>=
 (define (ce-start-env machine real)
   (let* ([env (ce-empty-env)]
-         [env (machine env)])
-    (case real
-      [(double) (let* ([env (ce-add-alias env 'REAL    'double)]
-                       [env (ce-add-alias env 'COMPLEX 'complex-double)]
-                       [env (ce-add-alias env 'VECTOR  'vector-double)])
-                  env)]
-      [(float) (let* ([env (ce-add-alias env 'REAL    'float)]
-                      [env (ce-add-alias env 'COMPLEX 'complex-float)]
-                      [env (ce-add-alias env 'VECTOR  'vector-float)])
-                 env)]
-      [else (error 'fold-constant "Bad value of REAL: ~a" real)])))
+         [env (machine env)]
+         [env
+           (case real
+             [(double) (let* ([env (ce-add-alias env 'REAL    'double)]
+                              [env (ce-add-alias env 'COMPLEX 'complex-double)]
+                              [env (ce-add-alias env 'VECTOR  'vector-double)])
+                         env)]
+             [(float) (let* ([env (ce-add-alias env 'REAL    'float)]
+                             [env (ce-add-alias env 'COMPLEX 'complex-float)]
+                             [env (ce-add-alias env 'VECTOR  'vector-float)])
+                        env)]
+             [else (error 'fold-constant "Bad value of REAL: ~a" real)])]
+         [env (ce-add-const env '*mdwf-sum-start*  mdwf-sum-start)])
+     (let loop ([env env] [p* mdwf-basis])
+       (cond
+         [(null? p*) env]
+         [else (loop (ce-bind env (caar p*) (cdar p*)) (cdr p*))]))))
 @
 <<Folding environment routines>>=
 (define (ce-empty-env) '())
@@ -772,9 +778,9 @@ We rebuild the AST while walking though it.
         (cf-struct name c-name field-name* field-type* field-c-name* out* env)]
     [qa0-array (name c-name base-name size)
         (cf-array name c-name base-name size out* env)]
-    [qa0-proc (attribute* name arg-name* arg-type* arg-c-name* arg-c-type*
+    [qa0-proc (attr* name arg-name* arg-type* arg-c-name* arg-c-type*
                code*)
-       (cf-proc attribute* name arg-name* arg-type* arg-c-name* arg-c-type*
+       (cf-proc attr* name arg-name* arg-type* arg-c-name* arg-c-type*
                 code* out* env)]
     [qa0-repeat-list (id value* body*)
        (cf-repeat-list id value* body* out* env)]
@@ -810,9 +816,9 @@ We keep structures and arrays as they are needed to produce a header file.
 In procedures we fold instructions. Care should be taken of loops and
 conditionals, as they may expand into a sequence of instructions.
 <<Folding helpers>>=
-(define (cf-proc attribute* name arg-name* arg-type* arg-c-name* arg-c-type*
+(define (cf-proc attr* name arg-name* arg-type* arg-c-name* arg-c-type*
                  code* out* env)
-  (values (cons (make-qa0-proc (cf-attribute* attribute* env)
+  (values (cons (make-qa0-proc (cf-attr* attr* env)
                                name
                                arg-name*
                                arg-type*
@@ -856,9 +862,9 @@ On the other hand, a range repeat evaluates both ranges:
 (define (cf-repeat ast out* env)
    (let-values* ([(out* env)
        (variant-case ast
-         [qa0-proc (attribute* name arg-name* arg-type* arg-c-name* arg-c-type*
+         [qa0-proc (attr* name arg-name* arg-type* arg-c-name* arg-c-type*
                     code*)
-            (cf-proc attribute* name arg-name* arg-type* arg-c-name* arg-c-type*
+            (cf-proc attr* name arg-name* arg-type* arg-c-name* arg-c-type*
                      code* out* env)]
          [qa0-repeat-list (id value* body*)
             (cf-repeat-list id value* body* out* env)]
@@ -869,27 +875,27 @@ On the other hand, a range repeat evaluates both ranges:
 
 For the attributes the values are weakly substituted with literals.
 <<Folding helpers>>=
-(define (cf-attribute attribute env)
-  (variant-case attribute
-    [qa0-attribute (name value*)
-      (make-qa0-attribute name
+(define (cf-attr attr env)
+  (variant-case attr
+    [qa0-attr (name value*)
+      (make-qa0-attr name
                           (map (lambda (v) (cf-eval-literal v env)) value*))]))
-(define (cf-attribute* attribute* env)
-  (map (lambda (attr) (cf-attribute attr env)) attribute*))
+(define (cf-attr* attr* env)
+  (map (lambda (attr) (cf-attr attr env)) attr*))
 @
 
 Finally, the code.
 <<Folding helpers>>=
 (define (cf-code code out* env)
   (variant-case code
-    [qa0-operation (attribute* name output* input*)
-       (cf-operation attribute* name output* input* out* env)]
-    [qa0-load (attribute* type output addr*)
-       (cf-load attribute* type output addr* out* env)]
-    [qa0-store (attribute* type addr* value)
-       (cf-store attribute* type addr* value out* env)]
-    [qa0-loop (attribute* var low high code*)
-       (cf-loop attribute* var low high code* out* env)]
+    [qa0-operation (attr* name output* input*)
+       (cf-operation attr* name output* input* out* env)]
+    [qa0-load (attr* type output addr*)
+       (cf-load attr* type output addr* out* env)]
+    [qa0-store (attr* type addr* value)
+       (cf-store attr* type addr* value out* env)]
+    [qa0-loop (attr* var low high code*)
+       (cf-loop attr* var low high code* out* env)]
     [qa0-if (var true-code* false-code*)
        (cf-if var true-code* false-code* out* env)]
     [qa0-macro-list (id value* code*)
@@ -922,8 +928,8 @@ constant, eliminate the unreacheable code.
 In [[operation]], we evaluate attributes and inputs. We may extend constant
 folding later to [[name]] and [[output*]].
 <<Folding helpers>>=
-(define (cf-operation attribute* name output* input* out* env)
-  (cons (make-qa0-operation (cf-attribute* attribute* env)
+(define (cf-operation attr* name output* input* out* env)
+  (cons (make-qa0-operation (cf-attr* attr* env)
                             name
                             output*
                             (cf-input* input* env))
@@ -931,8 +937,8 @@ folding later to [[name]] and [[output*]].
 @
 Memory accesses are similar:
 <<Folding helpers>>=
-(define (cf-load attribute* type output addr* out* env)
-  (cons (make-qa0-load (cf-attribute* attribute* env)
+(define (cf-load attr* type output addr* out* env)
+  (cons (make-qa0-load (cf-attr* attr* env)
                        type
                        output
                        (cf-addr* addr* env))
@@ -940,8 +946,8 @@ Memory accesses are similar:
 @
 
 <<Folding helpers>>=
-(define (cf-store attribute* type addr* value out* env)
-  (cons (make-qa0-store (cf-attribute* attribute* env)
+(define (cf-store attr* type addr* value out* env)
+  (cons (make-qa0-store (cf-attr* attr* env)
                        type
                        (cf-addr* addr* env)
                        (cf-input value env))
@@ -951,8 +957,8 @@ Memory accesses are similar:
 In [[loop]] only limits and the body are folded. We do not do loop unrolling
 here.
 <<Folding helpers>>=
-(define (cf-loop attribute* var low high code* out* env)
-   (cons (make-qa0-loop (cf-attribute* attribute* env)
+(define (cf-loop attr* var low high code* out* env)
+   (cons (make-qa0-loop (cf-attr* attr* env)
                         var
                         (cf-input low env)
                         (cf-input high env)
@@ -1037,6 +1043,10 @@ Literals may stand for themselves, so their evaluation is weaker:
     [(-) (compute-arith -)]
     [(*) (compute-arith *)]
     [(/) (compute-arith quotient)]
+    [(equal) (compute-equal)]
+    [(and) (compute-and)]
+    [(or) (compute-or)]
+    [(not) (compute-not)]
     [else (error 'qa0 "Unexpected constant operation ~a" name)]))
 @
 
@@ -1073,6 +1083,40 @@ Computation of arithmetic expressions:
 (define (check-number-arg arg)
   (if (not (number? arg))
       (error 'qa0 "A number is expected, found ~a" arg)))
+@
+
+<<Arithmetic helpers>>=
+(define (compute-equal)
+  (or (null? expr*)
+      (let loop ([v (cf-eval-const (car expr*) env)] [arg* (cdr expr*)])
+        (cond
+          [(null? arg*) 1]
+          [(equal? v (cf-eval-const (car arg*) env)) (loop v (cdr arg*))]
+          [else 0]))))
+@
+
+<<Arithmetic helpers>>=
+(define (compute-not)
+  (if (not (= (length expr*) 1)) (error 'qa0 "Bad number of arguments for not"))
+  (if (zero? (cf-eval-const (car expr*) env)) 1 0))
+@
+
+<<Arithmetic helpers>>=
+(define (compute-or)
+  (let loop ([arg* expr*])
+    (cond
+      [(null? arg*) 0]
+      [(cf-eval-const (car arg*) env) 1]
+      [else (loop (cdr arg*))])))
+@
+
+<<Arithmetic helpers>>=
+(define (compute-and)
+  (let loop ([arg* expr*])
+    (cond
+      [(null? arg*) 1]
+      [(cf-eval-const (car arg*) env) (loop (cdr arg*))]
+      [else 0])))
 @
 
 \subsection{Constant folding environment manipulation}
@@ -1209,8 +1253,9 @@ error.
 \section{COMPLEX EXPANSION}
 This section does QCD to [[complex]] conversion.
 <<File [[q2complex.ss]]>>=
+<<QCD to complex routines>>
 (define (qcd->complex ast env)
-  <<QCD to complex routines>>
+  <<QCD to complex helpers>>
   (variant-case ast
     [qa0-top (decl*) (let loop ([r* '()] [decl* decl*])
                        (cond
@@ -1220,34 +1265,34 @@ This section does QCD to [[complex]] conversion.
 @
 
 This conversion uses the following generator for register names
-<<QCD to complex routines>>=
+<<QCD to complex helpers>>=
 (define new-reg (let ([n 0])
                   (lambda () (let ([r (string->symbol (format "~a~a" 'c n))])
                                (set! n (+ n 1))
                                r))))
 @
 Here we are only interested in [[qa0-proc]], the rest is passed without change
-<<QCD to complex routines>>=
+<<QCD to complex helpers>>=
 (define (q2c-decl decl env)
   (variant-case decl
-    [qa0-proc (attribute*
+    [qa0-proc (attr*
                name
                arg-name* arg-type*
                arg-c-name* arg-c-type*
                code*)
-        (q2c-proc attribute* name arg-name* arg-type* arg-c-name* arg-c-type*
+        (q2c-proc attr* name arg-name* arg-type* arg-c-name* arg-c-type*
                   code* env)]         
     [else (values decl env)]))
 @
-<<QCD to complex routines>>=
-(define (q2c-proc attribute* name arg-name* arg-type* arg-c-name* arg-c-type*
+<<QCD to complex helpers>>=
+(define (q2c-proc attr* name arg-name* arg-type* arg-c-name* arg-c-type*
                   code* env)
   (let-values* ([(c* env) (q2c-code* code* env)])
-     (values (make-qa0-proc attribute* name arg-name* arg-type*
+     (values (make-qa0-proc attr* name arg-name* arg-type*
                             arg-c-name* arg-c-type* c*)
              env)))
 @
-<<QCD to complex routines>>=
+<<QCD to complex helpers>>=
 (define (q2c-code* code* env)
   (let loop ([r* '()] [code* code*] [env env])
     (cond
@@ -1255,130 +1300,130 @@ Here we are only interested in [[qa0-proc]], the rest is passed without change
       [else (let-values ([(r* env) (q2c-code (car code*) r* env)])
               (loop r* (cdr code*) env))])))
 @
-<<QCD to complex routines>>=
+<<QCD to complex helpers>>=
 (define (q2c-code c r* env)
   (variant-case c
-    [qa0-operation (attribute* name output* input*)
-        (q2c-operation c attribute* name output* input* r* env)]
-    [qa0-load (attribute* type output addr*)
-        (q2c-load c attribute* type output addr* r* env)]
-    [qa0-store (attribute* type addr* value)
-        (q2c-store c attribute* type addr* value r* env)]
-    [qa0-loop (attribute* var low high code*)
-        (q2c-loop c attribute* var low high code* r* env)]
+    [qa0-operation (attr* name output* input*)
+        (q2c-operation c attr* name output* input* r* env)]
+    [qa0-load (attr* type output addr*)
+        (q2c-load c attr* type output addr* r* env)]
+    [qa0-store (attr* type addr* value)
+        (q2c-store c attr* type addr* value r* env)]
+    [qa0-loop (attr* var low high code*)
+        (q2c-loop c attr* var low high code* r* env)]
     [qa0-if (var true-code* false-code*)
         (q2c-if c var true-code* false-code* r* env)]))
 @
 Let us do simple cases first.
-<<QCD to complex routines>>=
+<<QCD to complex helpers>>=
 (define (q2c-if c var true-code* false-code* r* env)
   (let-values* ([(t* env) (q2c-code* true-code* env)]
                 [(f* env) (q2c-code* false-code* env)])
     (values (cons (make-qa0-if var t* f*) r*)
             env)))
 @
-<<QCD to complex routines>>=
-(define (q2c-loop c attribute* var low high code* r* env)
+<<QCD to complex helpers>>=
+(define (q2c-loop c attr* var low high code* r* env)
   (let-values* ([(c* env) (q2c-code* code* env)])
-    (values (cons (make-qa0-loop attribute* var low high c*) r*)
+    (values (cons (make-qa0-loop attr* var low high c*) r*)
             env)))
 @
 Now, the store handles some types in a special way
-<<QCD to complex routines>>=
-(define (q2c-store c attribute* type addr* value r* env)
+<<QCD to complex helpers>>=
+(define (q2c-store c attr* type addr* value r* env)
   (case type
-    [(qcd-su-n) (q2c-store-su-n attribute* addr* value r* env)]
-    [(qcd-fermion) (q2c-store-fermion attribute* addr* value r* env)]
-    [(qcd-half-fermion) (q2c-store-half-fermion attribute* addr* value r* env)]
+    [(qcd-su-n) (q2c-store-su-n attr* addr* value r* env)]
+    [(qcd-fermion) (q2c-store-fermion attr* addr* value r* env)]
+    [(qcd-half-fermion) (q2c-store-half-fermion attr* addr* value r* env)]
     [else (values (cons c r*) env)]))
 @
 So does the load. It should be the same set of types as for the store, by
 the way.
-<<QCD to complex routines>>=
-(define (q2c-load c attribute* type output addr* r* env)
+<<QCD to complex helpers>>=
+(define (q2c-load c attr* type output addr* r* env)
   (case type
-    [(qcd-su-n) (q2c-load-su-n attribute* output addr* r* env)]
-    [(qcd-fermion) (q2c-load-fermion attribute* output addr* r* env)]
-    [(qcd-half-fermion) (q2c-load-half-fermion attribute* output addr* r* env)]
+    [(qcd-su-n) (q2c-load-su-n attr* output addr* r* env)]
+    [(qcd-fermion) (q2c-load-fermion attr* output addr* r* env)]
+    [(qcd-half-fermion) (q2c-load-half-fermion attr* output addr* r* env)]
     [else (values (cons c r*) env)]))
 @
 
 For operations there is also a set of cases requiring special attention
-<<QCD to complex routines>>=
-(define (q2c-operation c attribute* name output* input* r* env)
+<<QCD to complex helpers>>=
+(define (q2c-operation c attr* name output* input* r* env)
   (case name
-    [(qcd-project)       (q2c-project       attribute* output* input* r* env)]
-    [(qcd-unproject)     (q2c-unproject     attribute* output* input* r* env)]
-    [(qcd-add-unproject) (q2c-add-unproject attribute* output* input* r* env)]
-    [(qcd-mulf)          (q2c-mulf          attribute* output* input* r* env)]
-    [(qcd-mulh)          (q2c-mulh          attribute* output* input* r* env)]
-    [(qcd-mulf-conj)     (q2c-mulf-conj     attribute* output* input* r* env)]
-    [(qcd-mulh-conj)     (q2c-mulh-conj     attribute* output* input* r* env)]
-    [(qcd-addf)          (q2c-addf          attribute* output* input* r* env)]
-    [(qcd-addh)          (q2c-addh          attribute* output* input* r* env)]
-    [(qcd-maddf)         (q2c-maddf         attribute* output* input* r* env)]
-    [(qcd-maddh)         (q2c-maddh         attribute* output* input* r* env)]
+    [(qcd-project)       (q2c-project       attr* output* input* r* env)]
+    [(qcd-unproject)     (q2c-unproject     attr* output* input* r* env)]
+    [(qcd-unproject-add) (q2c-unproject-add attr* output* input* r* env)]
+    [(qcd-mulf)          (q2c-mulf          attr* output* input* r* env)]
+    [(qcd-mulh)          (q2c-mulh          attr* output* input* r* env)]
+    [(qcd-mulf-conj)     (q2c-mulf-conj     attr* output* input* r* env)]
+    [(qcd-mulh-conj)     (q2c-mulh-conj     attr* output* input* r* env)]
+    [(qcd-addf)          (q2c-addf          attr* output* input* r* env)]
+    [(qcd-addh)          (q2c-addh          attr* output* input* r* env)]
+    [(qcd-maddf)         (q2c-maddf         attr* output* input* r* env)]
+    [(qcd-maddh)         (q2c-maddh         attr* output* input* r* env)]
     [else (values (cons c r*) env)]))
 @
 
 All stores/load are similar, the only difference is the register renaming model
 and the number of [[complex]] numbers to store/load. Fortunately, the number
 is computable from the renaming model.
-<<QCD to complex routines>>=
-(define (q2c-load-su-n attribute* output addr* r* env)
-  (q2c-load-xy attribute* output addr* '*colors* '*colors*
+<<QCD to complex helpers>>=
+(define (q2c-load-su-n attr* output addr* r* env)
+  (q2c-load-xy attr* output addr* '*colors* '*colors*
                'gauge r* env))
-(define (q2c-load-fermion attribute* output addr* r* env)
-  (q2c-load-xy attribute* output addr* '*colors* '*fermion-dim*
+(define (q2c-load-fermion attr* output addr* r* env)
+  (q2c-load-xy attr* output addr* '*colors* '*fermion-dim*
                'fermion r* env))
-(define (q2c-load-half-fermion attribute* output addr* r* env)
-  (q2c-load-xy attribute* output addr* '*colors* '*half-fermion-dim*
+(define (q2c-load-half-fermion attr* output addr* r* env)
+  (q2c-load-xy attr* output addr* '*colors* '*half-fermion-dim*
                'half-fermion r* env))
-(define (q2c-store-su-n attribute* addr* value r* env)
-  (q2c-store-xy attribute* addr* value '*colors* '*colors*
+(define (q2c-store-su-n attr* addr* value r* env)
+  (q2c-store-xy attr* addr* value '*colors* '*colors*
                 'gauge r* env))
-(define (q2c-store-fermion attribute* addr* value r* env)
-  (q2c-store-xy attribute* addr* value '*colors* '*fermion-dim*
+(define (q2c-store-fermion attr* addr* value r* env)
+  (q2c-store-xy attr* addr* value '*colors* '*fermion-dim*
                 'fermion r* env))
-(define (q2c-store-half-fermion attribute* addr* value r* env)
-  (q2c-store-xy attribute* addr* value '*colors* '*half-fermion-dim*
+(define (q2c-store-half-fermion attr* addr* value r* env)
+  (q2c-store-xy attr* addr* value '*colors* '*half-fermion-dim*
                 'half-fermion r* env))
 @
 
 For additions and multiplications the only difference between full and half
 fermion is their dimension in the spinor space
-<<QCD to complex routines>>=
-(define (q2c-addf attribute* output* input* r* env)
-  (q2c-addx attribute* output* input* '*fermion-dim*
+<<QCD to complex helpers>>=
+(define (q2c-addf attr* output* input* r* env)
+  (q2c-addx attr* output* input* '*fermion-dim*
             'fermion r* env))
-(define (q2c-addh attribute* output* input* r* env)
-  (q2c-addx attribute* output* input* '*half-fermion-dim*
+(define (q2c-addh attr* output* input* r* env)
+  (q2c-addx attr* output* input* '*half-fermion-dim*
             'half-fermion r* env))
-(define (q2c-mulf attribute* output* input* r* env)
-  (q2c-mulx attribute* output* input* '*fermion-dim*
+(define (q2c-mulf attr* output* input* r* env)
+  (q2c-mulx attr* output* input* '*fermion-dim*
             'fermion r* env))
-(define (q2c-mulh attribute* output* input* r* env)
-  (q2c-mulx attribute* output* input* '*half-fermion-dim*
+(define (q2c-mulh attr* output* input* r* env)
+  (q2c-mulx attr* output* input* '*half-fermion-dim*
             'half-fermion r* env))
-(define (q2c-mulf-conj attribute* output* input* r* env)
-  (q2c-mulx-conj attribute* output* input* '*fermion-dim*
+(define (q2c-mulf-conj attr* output* input* r* env)
+  (q2c-mulx-conj attr* output* input* '*fermion-dim*
                  'fermion r* env))
-(define (q2c-mulh-conj attribute* output* input* r* env)
-  (q2c-mulx-conj attribute* output* input* '*half-fermion-dim*
+(define (q2c-mulh-conj attr* output* input* r* env)
+  (q2c-mulx-conj attr* output* input* '*half-fermion-dim*
                  'half-fermion r* env))
-(define (q2c-maddf attribute* output* input* r* env)
-  (q2c-maddx attribute* output* input* '*fermion-dim*
+(define (q2c-maddf attr* output* input* r* env)
+  (q2c-maddx attr* output* input* '*fermion-dim*
             'fermion r* env))
-(define (q2c-maddh attribute* output* input* r* env)
-  (q2c-maddx attribute* output* input* '*half-fermion-dim*
+(define (q2c-maddh attr* output* input* r* env)
+  (q2c-maddx attr* output* input* '*half-fermion-dim*
             'half-fermion r* env))
 @
 
 \subsection{Loads}
 Now, all loads may be reordered as needed, but here we generate them in
 the increasing address order.
-<<QCD to complex routines>>=
-(define (q2c-load-xy attribute* output addr* c-n f-n t r* env)
+<<QCD to complex helpers>>=
+(define (q2c-load-xy attr* output addr* c-n f-n t r* env)
   (let ([c-n (ce-lookup-x env 'const c-n "Color count")]
         [f-n (ce-lookup-x env 'const f-n "Fermion size")])
     <<Generate complex load>>
@@ -1400,7 +1445,7 @@ produce one load instruction
                 [(d-s) (ce-lookup-x env 'size-of 'complex-double "double size")]
                 [(c-t) (if (= c-s d-s) 'complex-double 'complex-float)]
                 [(off) (* c-s (+ f (* f-n c)))])
-    (values (cons (make-qa0-load attribute*
+    (values (cons (make-qa0-load attr*
                                  c-t
                                  (make-reg x)
                                  (append addr* (list (make-c-expr-number off))))
@@ -1409,8 +1454,8 @@ produce one load instruction
 @
 
 \subsection{Stores}
-<<QCD to complex routines>>=
-(define (q2c-store-xy attribute* addr* value c-n f-n t r* env)
+<<QCD to complex helpers>>=
+(define (q2c-store-xy attr* addr* value c-n f-n t r* env)
   (let ([c-n (ce-lookup-x env 'const c-n "Color count")]
         [f-n (ce-lookup-x env 'const f-n "Fermion size")])
     <<Generate complex store>>
@@ -1430,7 +1475,7 @@ produce one load instruction
                 [(d-s) (ce-lookup-x env 'size-of 'complex-double "double size")]
                 [(c-t) (if (= c-s d-s) 'complex-double 'complex-float)]
                 [(off) (* c-s (+ f (* f-n c)))])
-    (values (cons (make-qa0-store attribute*
+    (values (cons (make-qa0-store attr*
                                   c-t
                                   (append addr* (list (make-c-expr-number off)))
                                   (make-reg x))
@@ -1439,13 +1484,13 @@ produce one load instruction
 @
 
 \subsection{Addition and Multiplication}
-<<QCD to complex routines>>=
-(define (q2c-addx attribute* output* input* f-n t r* env)
+<<QCD to complex helpers>>=
+(define (q2c-addx attr* output* input* f-n t r* env)
   <<Generate complex add>>
+  (q2c-check-list output* = 1 "QCD add outputs")
+  (q2c-check-list input* = 2 "QCD add inputs")
   (let ([c-n (ce-lookup-x env 'const '*colors* "Color count")]
         [f-n (ce-lookup-x env 'const f-n "Field dimension")])
-    (q2c-check-list output* = 1 "QCD add outputs")
-    (q2c-check-list input* = 2 "QCD add inputs")
     (let c-loop ([c 0] [r* r*] [env env])
       (cond
         [(= c c-n) (values r* env)]
@@ -1461,7 +1506,7 @@ produce one load instruction
   (let-values* ([(a env) (q2c-rename env (car input*) t c f)]
                 [(b env) (q2c-rename env (cadr input*) t c f)]
                 [(d env) (q2c-rename env (car output*) t c f)])
-    (values (cons (make-qa0-operation attribute*
+    (values (cons (make-qa0-operation attr*
                                       'complex-add
                                       (list (make-reg d))
                                       (list (make-reg a) (make-reg b)))
@@ -1469,8 +1514,8 @@ produce one load instruction
             env)))
 @
 
-<<QCD to complex routines>>=
-(define (q2c-maddx attribute* output* input* f-n t r* env)
+<<QCD to complex helpers>>=
+(define (q2c-maddx attr* output* input* f-n t r* env)
   <<Generate complex multiply-add>>
   (q2c-check-list output* = 1 "QCD madd outputs")
   (q2c-check-list input* = 3 "QCD madd inputs")
@@ -1492,7 +1537,7 @@ produce one load instruction
                 [(b env) (q2c-rename env (cadr input*) t c f)]
                 [(r env) (q2c-rename env (caddr input*) t c f)]
                 [(x env) (q2c-rename env (car output*) t c f)])
-    (values (cons (make-qa0-operation attribute*
+    (values (cons (make-qa0-operation attr*
                                       'complex-rmadd
                                       (list (make-reg x))
                                       (list a (make-reg b) (make-reg r)))
@@ -1500,10 +1545,10 @@ produce one load instruction
             env)))
 @
 
-<<QCD to complex routines>>=
-(define (q2c-mul-g attribute* output* input* f-n t op-0 op-k u-get r* env)
+<<QCD to complex helpers>>=
+(define (q2c-mul-g attr* output* input* f-n t op-0 op-k u-get r* env)
   (q2c-check-list output* = 1 "QCD mul outputs")
-  (q2c-check-list input* = 2 "QCD mul outputs")
+  (q2c-check-list input* = 2 "QCD mul inputs")
   (let ([c-n (ce-lookup-x env 'const '*colors* "Color count")]
         [f-n (ce-lookup-x env 'const f-n "Field dimension")]
         [r-a (car input*)]
@@ -1531,7 +1576,7 @@ produce one load instruction
           (let-values* ([(b env) (q2c-rename env r-b t 0 f)]
                         [(z env) (q2c-rename env r-r t 0 f)])
             (loop (+ f 1)
-                  (cons (make-qa0-operation attribute*
+                  (cons (make-qa0-operation attr*
                                             op-0
                                             (list (make-reg z))
                                             (list (make-reg a) (make-reg b)))
@@ -1553,7 +1598,7 @@ produce one load instruction
                               [(a-v env) (u-get r-a x 0 env)]
                               [(b-v env) (q2c-rename env r-b t 0 y)])
                   (y-loop (+ y 1)
-                          (cons (make-qa0-operation attribute*
+                          (cons (make-qa0-operation attr*
                                                     op-0
                                                     (list (make-reg q-v))
                                                     (list (make-reg a-v)
@@ -1576,7 +1621,7 @@ produce one load instruction
                             [(a-v env) (u-get r-a x c env)]
                             [(b-v env) (q2c-rename env r-b t c y)])
                 (y-loop (+ y 1)
-                        (cons (make-qa0-operation attribute*
+                        (cons (make-qa0-operation attr*
                                                   op-k
                                                   (list (make-reg r-v))
                                                   (list (make-reg a-v)
@@ -1587,14 +1632,14 @@ produce one load instruction
 @
 
 Two multiplication routines:
-<<QCD to complex routines>>=
-(define (q2c-mulx attribute* output* input* f-n t r* env)
-  (q2c-mul-g attribute* output* input* f-n t
+<<QCD to complex helpers>>=
+(define (q2c-mulx attr* output* input* f-n t r* env)
+  (q2c-mul-g attr* output* input* f-n t
              'complex-mul 'complex-madd
              (lambda (r i j env) (q2c-rename env r 'gauge i j))
 	     r* env))
-(define (q2c-mulx-conj attribute* output* input* f-n t r* env)
-  (q2c-mul-g attribute* output* input* f-n t
+(define (q2c-mulx-conj attr* output* input* f-n t r* env)
+  (q2c-mul-g attr* output* input* f-n t
              'complex-cmul 'complex-cmadd
              (lambda (r i j env) (q2c-rename env r 'gauge j i))
 	     r* env))
@@ -1603,14 +1648,14 @@ Two multiplication routines:
 \subsection{Syntax check}
 We should have lists of certain sizes in various places. Here we check that
 the size is corrent.
-<<QCD to complex routines>>=
+<<QCD to complex helpers>>=
 (define (q2c-check-list x* op size msg)
   (if (not (op (length x*) size))
       (error 'qcd->complex "ERROR: ~a" msg)))
 @
 \subsection{Accessing components}
 This function finds a name of the complex component for a given QCD register
-<<QCD to complex routines>>=
+<<QCD to complex helpers>>=
 (define (q2c-rename env base type i-a i-b)
   (let ([key (list 'qcd->complex base type i-a i-b)])
     (ce-search env key
@@ -1621,15 +1666,169 @@ This function finds a name of the complex component for a given QCD register
                 [env (ce-bind env key r)])
            (values r env))))))
 @
+\subsection{Attributes access}
+Very much the environment, but records have different representation here.
+<<QCD to complex routines>>=
+(define (attr-search attr* key found missed)
+  (let loop ([attr* attr*])
+    (cond
+      [(null? attr*) (missed)]
+      [else (variant-case (car attr*)
+              [qa0-attr (name value*) (if (eq? key name) (found value*)
+                                          (loop (cdr attr*)))])])))
+@
+<<QCD to complex routines>>=
+(define (attr-lookup attr* key msg . arg*)
+  (attr-search attr* key
+               (lambda (v*) v*)
+               (lambda () (apply error 'qa0 msg arg*))))
+@
 
 \subsection{Gamma projection and unprojection}
 
-%
-% -> (values r* env)
-%    [(qcd-project)       (q2c-project       attribute* output* input* r* env)]
-%    [(qcd-unproject)     (q2c-unproject     attribute* output* input* r* env)]
-%    [(qcd-add-unproject) (q2c-add-unproject attribute* output* input* r* env)]
-%
+<<QCD to complex helpers>>=
+(define (q2c-project attr* output* input* r* env)
+  (q2c-check-list output* = 1 "QCD gamma projection result")
+  (q2c-check-list input* = 1 "QCD gamma projection source")
+  (let* ([kind (attr-lookup attr* 'project "qcd-project")]
+         [op* (ce-lookup env `(project ,@kind) "project op-table for ~a" kind)]
+         [c-n (ce-lookup-x env 'const '*colors* "Color count")]
+         [h-n (/ (ce-lookup-x env 'const '*fermion-dim* "Fermion dim") 2)]
+         [r-r (car output*)]
+         [r-a (car input*)])
+    <<Projection helpers>>
+    (let c-loop ([c 0] [r* r*] [env env])
+      (cond
+        [(= c c-n) (values r* env)]
+        [else (let h-loop ([h 0] [op* op*] [r* r*] [env env])
+                (cond
+                  [(null? op*) (c-loop (+ c 1) r* env)]
+                  [else (let-values* ([(r* env) (proj c h (car op*) r* env)])
+                          (h-loop (+ h 1) (cdr op*) r* env))]))]))))
+@
+
+Build one component of the half-fermion
+<<Projection helpers>>=
+(define (proj c h op r* env)
+  (q2c-check-list op = 4 "Projection operation")
+  (let-values* ([(op-0) (car op)] [(f-0) (cadr op)]
+                [(a-0 env) (q2c-rename env r-a 'fermion c f-0)]
+                [(op-1) (caddr op)] [(f-1) (cadddr op)]
+                [(a-1 env) (q2c-rename env r-a 'fermion c f-1)]
+                [(cmd) (binary-cmd op-0 op-1)]
+                [(r env) (q2c-rename env r-r 'half-fermion c h)])
+    (values (cons (make-qa0-operation attr*
+                                      cmd
+                                      (list (make-reg r))
+                                      (list (make-reg a-0) (make-reg a-1)))
+                  r*)
+            env)))
+@
+
+<<Projection helpers>>=
+(define (binary-cmd op-0 op-1)
+   (case op-0
+     [(plus-one)
+       (case op-1
+         [(plus-one) 'complex-add]
+         [(minus-one) 'complex-sub]
+         [(plus-i) 'complex-add-i]
+         [(minus-i) 'complex-sub-i]
+         [else (error 'qa0 "Unknown second factor (~a ~a)" op-0 op-1)])]
+     [else (error 'qa0 "Unknown first factor (~a ~a)" op-0 op-1)]))
+@
+
+<<QCD to complex helpers>>=
+(define (q2c-unproject attr* output* input* r* env)
+  (q2c-check-list output* = 1 "QCD gamma unprojection result")
+  (q2c-check-list input* = 1 "QCD gamma unprojection source")
+  (let* ([kind (attr-lookup attr* 'unproject "qcd-unproject")]
+         [op* (ce-lookup env `(unproject ,@kind) "unproj op-table for ~a" kind)]
+         [c-n (ce-lookup-x env 'const '*colors* "Color count")]
+         [f-n (ce-lookup-x env 'const '*fermion-dim* "Fermion dim")]
+         [r-r (car output*)]
+         [r-a (car input*)])
+    <<Unproject helpers>>
+    (let c-loop ([c 0] [r* r*] [env env])
+      (cond
+        [(= c c-n) (values r* env)]
+        [else (let f-loop ([f 0] [op* op*] [r* r*] [env env])
+                (cond
+                  [(null? op*) (c-loop (+ c 1) r* env)]
+                  [else (let-values* ([(r* env) (unproj c f (car op*) r* env)])
+                          (f-loop (+ f 1) (cdr op*) r* env))]))]))))
+@
+
+<<Unproject helpers>>=
+(define (unproj c f op r* env)
+  (q2c-check-list op = 2 "Unprojection operation")
+  (let-values* ([(opcode) (car op)] [(component) (cadr op)]
+                [(a env) (q2c-rename env r-a 'half-fermion c component)]
+                [(cmd) (unary-cmd opcode)]
+                [(r env) (q2c-rename env r-r 'fermion c f)])
+    (values (cons (make-qa0-operation attr*
+                                      cmd
+                                      (list (make-reg r))
+                                      (list (make-reg a)))
+                  r*)
+            env)))
+@
+
+<<Unproject helpers>>=
+(define (unary-cmd name)
+  (case name
+    [(plus-one) 'complex-move]
+    [(minus-one) 'complex-neg]
+    [(plus-i) 'complex-times-plus-i]
+    [(minus-i) 'complex-times-minus-i]
+    [else (error 'qa0 "Unknown unproject operation ~a" name)]))
+@
+
+<<QCD to complex helpers>>=
+(define (q2c-unproject-add attr* output* input* r* env)
+  (q2c-check-list output* = 1 "QCD gamma unproject-add result")
+  (q2c-check-list input* = 2 "QCD gamma unproject-add sources")
+  (let* ([kind (attr-lookup attr* 'unproject "qcd-unproject-add")]
+         [op* (ce-lookup env `(unproject ,@kind) "unproj op-table for ~a" kind)]
+         [c-n (ce-lookup-x env 'const '*colors* "Color count")]
+         [r-r (car output*)]
+         [r-a (car input*)]
+         [r-b (cadr input*)])
+    <<Unproject-add helpers>>
+    (let c-loop ([c 0] [r* r*] [env env])
+      (cond
+        [(= c c-n) (values r* env)]
+        [else (let f-loop ([f 0] [op* op*] [r* r*] [env env])
+                (cond
+                  [(null? op*) (c-loop (+ c 1) r* env)]
+                  [else (let-values* ([(r* env) (upa c f (car op*) r* env)])
+                          (f-loop (+ f 1) (cdr op*) r* env))]))]))))
+@
+<<Unproject-add helpers>>=
+(define (upa c f op r* env)
+  (q2c-check-list op = 2 "Unprojection operation")
+  (let-values* ([(a env) (q2c-rename env r-a 'fermion c f)]
+                [(opcode) (car op)] [(component) (cadr op)]
+                [(b env) (q2c-rename env r-b 'half-fermion c component)]
+                [(cmd) (add-cmd opcode)]
+                [(r env) (q2c-rename env r-r 'fermion c f)])
+    (values (cons (make-qa0-operation attr*
+                                      cmd
+                                      (list (make-reg r))
+                                      (list (make-reg a) (make-reg b)))
+                  r*)
+            env)))
+@
+
+<<Unproject-add helpers>>=
+(define (add-cmd name)
+  (case name
+    [(plus-one) 'complex-add]
+    [(minus-one) 'complex-sub]
+    [(plus-i) 'complex-add-times-plus-i]
+    [(minus-i) 'complex-sub-times-plus-i]
+    [else (error 'qa0 "Unknown unproject operation ~a" name)]))
+@
 
 \section{TREE PRINTING}
 To make the output of various phases easier to read, here is an printer for the
@@ -1652,8 +1851,8 @@ tree.
        (print-struct level name c-name field-name* field-type* field-c-name*)]
     [qa0-array (name c-name base-name size)
        (print-array level name c-name base-name size)]
-    [qa0-proc (attribute* name arg-name* arg-type* arg-c-name* arg-c-type* code*)
-       (print-proc level attribute* name
+    [qa0-proc (attr* name arg-name* arg-type* arg-c-name* arg-c-type* code*)
+       (print-proc level attr* name
                    arg-name* arg-type* arg-c-name* arg-c-type* code*)]
     [qa0-repeat-list (id value* body*)
        (print-repeat-list level id value* body*)]
@@ -1701,11 +1900,11 @@ tree.
 @
 
 <<Print routines>>=
-(define (print-proc level attribute* name
+(define (print-proc level attr* name
                    arg-name* arg-type* arg-c-name* arg-c-type* code*)
   (print-start level)
-  (printf "Procedure ~a attributes " name)
-  (print-attribute* attribute*)
+  (printf "Procedure ~a attrs " name)
+  (print-attr* attr*)
   (printf "~%")
   (for-each (lambda (n t c-n c-t)
                (print-start (+ level 3))
@@ -1746,14 +1945,14 @@ tree.
 <<Print routines>>=
 (define (print-code level code)
   (variant-case code
-    [qa0-operation (attribute* name output* input*)
-        (print-operation level attribute* name output* input*)]
-    [qa0-load (attribute* type output addr*)
-        (print-load level attribute* type output addr*)]
-    [qa0-store (attribute* type addr* value)
-        (print-store level attribute* type addr* value)]
-    [qa0-loop (attribute* var low high code*)
-        (print-loop level attribute* var low high code*)]
+    [qa0-operation (attr* name output* input*)
+        (print-operation level attr* name output* input*)]
+    [qa0-load (attr* type output addr*)
+        (print-load level attr* type output addr*)]
+    [qa0-store (attr* type addr* value)
+        (print-store level attr* type addr* value)]
+    [qa0-loop (attr* var low high code*)
+        (print-loop level attr* var low high code*)]
     [qa0-if (var true-code* false-code*)
         (print-if level var true-code* false-code*)]
     [qa0-macro-list (id value* code*)
@@ -1763,10 +1962,10 @@ tree.
 @
 
 <<Print routines>>=
-(define (print-operation level attribute* name output* input*)
+(define (print-operation level attr* name output* input*)
   (print-start level)
   (printf "op ")
-  (print-attribute* attribute*)
+  (print-attr* attr*)
   (printf " (")
   (print-output* output*)
   (printf ") <- ~a (" name)
@@ -1774,10 +1973,10 @@ tree.
   (printf ")~%"))
 @
 <<Print routines>>=
-(define (print-load level attribute* type output addr*)
+(define (print-load level attr* type output addr*)
   (print-start level)
   (printf "load ~a " type)
-  (print-attribute* attribute*)
+  (print-attr* attr*)
   (printf " ")
   (print-output output)
   (printf " <- Mem{")
@@ -1785,22 +1984,22 @@ tree.
   (printf "}~%"))
 @
 <<Print routines>>=
-(define (print-store level attribute* type addr* value)
+(define (print-store level attr* type addr* value)
   (print-start level)
   (printf "store ~a " type)
-  (print-attribute* attribute*)
+  (print-attr* attr*)
   (printf " Mem{")
   (print-input* addr*)
-  (printf "] <- ")
+  (printf "} <- ")
   (print-input value)
-  (printf "}~%"))
+  (printf "~%"))
 @
 
 <<Print routines>>=
-(define (print-loop level attribute* var low high code*)
+(define (print-loop level attr* var low high code*)
   (print-start level)
   (printf "Loop ")
-  (print-attribute* attribute*)
+  (print-attr* attr*)
   (printf " ~a from " var)
   (print-input low)
   (printf " to ")
@@ -1849,8 +2048,8 @@ tree.
 <<Print routines>>=
 (define (print-input* input*) (print-list print-input input*))
 (define (print-output* output*) (print-list print-output output*))
-(define (print-attribute* attribute*)
-  (printf "(") (print-list print-attribute attribute*) (printf ")"))
+(define (print-attr* attr*)
+  (printf "(") (print-list print-attr attr*) (printf ")"))
 @
 
 <<Print routines>>=
@@ -1864,9 +2063,9 @@ tree.
 @
 
 <<Print routines>>=
-(define (print-attribute attr)
+(define (print-attr attr)
   (variant-case attr
-    [qa0-attribute (name value*)
+    [qa0-attr (name value*)
        (if (null? value*) (printf "~a" name)
            (begin (printf "[~a " name)
                   (print-list write value*)
@@ -1913,7 +2112,7 @@ The machine settings for BG/L:
          [env (ce-add-const env '*DIM*               4)]
          [env (ce-add-const env '*fermion-dim*       4)]
          [env (ce-add-const env '*half-fermion-dim*  2)])
-     env))
+    env))
 @
 
 \section{MACROS}
