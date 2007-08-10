@@ -695,12 +695,12 @@ generated registers.
                   [(2) (let ([c* (loop i* '())]
                              [v* (map parse-a-value (cadr i))]
                              [id (car i)])
-                         (append (make-qa0-macro-list id v* c*) t*))]
+                         (cons (make-qa0-macro-list id v* c*) t*))]
                   [(3) (let ([c* (loop i* '())]
                              [id (car i)]
                              [lo (parse-const-expr (cadr i))]
 			     [hi (parse-const-expr (caddr i))])
-                         (append (make-qa0-macro-range id lo hi c*) t*))]
+                         (cons (make-qa0-macro-range id lo hi c*) t*))]
                   [else (error 'qa0 "Internal error in parse-macro")]))]))))
 @
 
