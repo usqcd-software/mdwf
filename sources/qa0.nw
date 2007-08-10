@@ -939,7 +939,7 @@ constant, eliminate the unreacheable code.
                                                  (cf-code* true* out* env))]
       [reg (name) (cons (make-qa0-if var (cf-block true* env)
                                      (cf-block false* env))
-                        env)])))
+                        out*)])))
 @
 
 In [[operation]], we evaluate attributes and inputs. We may extend constant
@@ -1062,6 +1062,7 @@ Literals may stand for themselves, so their evaluation is weaker:
     [(*) (compute-arith *)]
     [(/) (compute-arith quotient)]
     [(=) (compute-equal)]
+    [(shift) (compute-shift)]
     [(and) (compute-and)]
     [(or) (compute-or)]
     [(not) (compute-not)]
@@ -1111,6 +1112,21 @@ Computation of arithmetic expressions:
           [(null? arg*) 1]
           [(equal? v (cf-eval-const (car arg*) env)) (loop v (cdr arg*))]
           [else 0]))))
+@
+
+<<Arithmetic helpers>>=
+(define (compute-shift)
+  (cond
+    [(not (= (length expr*) 2)) (error 'qa0 "Bad number of args for shift")]
+    [else (let ([v (cf-eval-const (car expr*) env)]
+                [s (cf-eval-const (cadr expr*) env)])
+            (check-number-arg v)
+            (check-number-arg s)
+            (let loop ([v v] [s s])
+              (cond
+                [(zero? s) v]
+                [(positive? s) (loop (* v 2) (- s 1))]
+                [else (loop (quotient v 2) (+ s 1))])))]))
 @
 
 <<Arithmetic helpers>>=
@@ -2053,7 +2069,7 @@ tree.
 <<Print routines>>=
 (define (print-macro-range level id low high body*)
   (print-start level)
-  (printf "Macrot ~a from " id)
+  (printf "Macro ~a from " id)
   (print-input low)
   (printf " to ")
   (print-input high)
@@ -2106,6 +2122,7 @@ tree.
 <<Print routines>>=
 (define (print-cexpr ce)
   (variant-case ce
+    [c-expr-quote (literal) (printf "'~a" literal)]
     [c-expr-id (id) (printf "~a" id)]
     [c-expr-number (number) (printf "~a" number)]
     [c-expr-string (string) (printf "~s" string)]

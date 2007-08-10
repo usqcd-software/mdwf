@@ -8,7 +8,8 @@
 (define (c-t name d/f)
   (let-values* ([(ast) (parse-qa0-file name)]
                 [(ast env) (fold-constants/env ast ce-bgl d/f)]
-                [(ast) (qcd->complex ast env)])
+                [(ast) (qcd->complex ast env)]
+)
     (printf "~%**** Tree~%")
     (print-tree ast)
     (printf "~%**** Environment~%")
