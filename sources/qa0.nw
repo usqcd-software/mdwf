@@ -778,8 +778,7 @@ We rebuild the AST while walking though it.
         (cf-struct name c-name field-name* field-type* field-c-name* out* env)]
     [qa0-array (name c-name base-name size)
         (cf-array name c-name base-name size out* env)]
-    [qa0-proc (attr* name arg-name* arg-type* arg-c-name* arg-c-type*
-               code*)
+    [qa0-proc (attr* name arg-name* arg-type* arg-c-name* arg-c-type* code*)
        (cf-proc attr* name arg-name* arg-type* arg-c-name* arg-c-type*
                 code* out* env)]
     [qa0-repeat-list (id value* body*)
@@ -808,6 +807,8 @@ We keep structures and arrays as they are needed to produce a header file.
                                  field-name* field-type* field-c-name*)
                 out*)
           (ce-add-struct env name c-name field-name* field-type*)))
+@
+<<Folding helpers>>=
 (define (cf-array name c-name base size out* env)
   (let ([size (cf-eval-const size env)])
     (values (cons (make-qa0-array name c-name base (cf-rewrap size)) out*)
@@ -824,7 +825,7 @@ conditionals, as they may expand into a sequence of instructions.
                                arg-type*
                                arg-c-name*
                                arg-c-type*
-                               (cf-code* code* '() env))
+                               (cf-block code* env))
                 out*)
           env))
 @
@@ -886,6 +887,22 @@ For the attributes the values are weakly substituted with literals.
 
 Finally, the code.
 <<Folding helpers>>=
+(define (cf-block code* env)
+  (let loop ([code* code*] [out* '()])
+    (cond
+      [(null? code*) (reverse out*)]
+      [else (loop (cdr code*) (cf-code (car code*) out* env))])))
+@
+
+<<Folding helpers>>=
+(define (cf-code* code* out* env)
+  (let loop ([code* code*] [out* out*])
+    (cond
+      [(null? code*) out*]
+      [else (loop (cdr code*) (cf-code (car code*) out* env))])))
+@
+
+<<Folding helpers>>=
 (define (cf-code code out* env)
   (variant-case code
     [qa0-operation (attr* name output* input*)
@@ -909,20 +926,11 @@ constant, eliminate the unreacheable code.
 (define (cf-if var true* false* out* env)
   (let ([var (cf-input var env)])
     (variant-case var
-      [qa0-const (value) (if (zero? value) (cf-code* false* out* env)
-                             (cf-code* true* out* env))]
-      [reg (name) (cons (make-qa0-if var
-                                     (cf-code* true* '() env)
-                                     (cf-code* false* '() env))
+      [c-expr-number (number) (if (zero? number) (cf-code* false* out* env)
+                                                 (cf-code* true* out* env))]
+      [reg (name) (cons (make-qa0-if var (cf-block true* env)
+                                     (cf-block false* env))
                         env)])))
-@
-
-<<Folding helpers>>=
-(define (cf-code* code* out* env)
-  (let loop ([code* code*] [out* out*])
-    (cond
-      [(null? code*) (reverse out*)]
-      [else (loop (cdr code*) (cf-code (car code*) out* env))])))
 @
 
 In [[operation]], we evaluate attributes and inputs. We may extend constant
@@ -962,7 +970,7 @@ here.
                         var
                         (cf-input low env)
                         (cf-input high env)
-                        (cf-code* code* '() env))
+                        (cf-block code* env))
          out*))
 @
 
@@ -1043,7 +1051,7 @@ Literals may stand for themselves, so their evaluation is weaker:
     [(-) (compute-arith -)]
     [(*) (compute-arith *)]
     [(/) (compute-arith quotient)]
-    [(equal) (compute-equal)]
+    [(=) (compute-equal)]
     [(and) (compute-and)]
     [(or) (compute-or)]
     [(not) (compute-not)]
