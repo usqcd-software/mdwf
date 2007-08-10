@@ -247,7 +247,8 @@ for now.
 @
 This is our starting point in sums over directions
 <<Start $\mu$ sum>>=
-(3 plus)
+(define mdwf-start-sum-dimension 3)
+(define mdwf-start-sum-direction 'plus)
 @
 
 <<Project $(1-\gamma_3)$>>=
@@ -3808,9 +3809,7 @@ of the form [[(<op> <dir> <sign>)]].
 @
 We also define a starting link in a sum over links:
 <<File [[basis.ss]]>>=
-(define mdwf-sum-start '
   <<Start $\mu$ sum>>
-)
 @
 
 \section{C99}

@@ -299,6 +299,7 @@ The attributes:
 Constant expressions and registers:
 <<Abstract syntax tree definitions>>=
 (define-variant c-expr-id (id))
+(define-variant c-expr-quote (literal))
 (define-variant c-expr-number (number))
 (define-variant c-expr-string (string))
 (define-variant c-expr-op (name c-expr*))
@@ -658,9 +659,8 @@ generated registers.
   (let ([c (cadr f)]
         [t (caddr f)])
     (check-input "if predicate" f c)
-    (check-list "if branch" t)
-    (parse-code* t
-      (lambda (t*) (make-qa0-if (parse-input c) t* '())))))
+    (check-list "if branch" t >= 1)
+    (make-qa0-if (parse-input c) (parse-seq t) '())))
 @
 
 <<Recognize code forms>>=
@@ -673,12 +673,16 @@ generated registers.
         [t (caddr form)]
         [f (cadddr form)])
     (check-input "if-else predicate" form c)
-    (check-list "if-else true branch" t)
-    (check-list "if-else false branch" f)
-    (parse-code* t
-      (lambda (t*)
-        (parse-code* f
-          (lambda (f*) (make-qa0-if (parse-input c) t* f*)))))))
+    (check-list "if-else true branch" t >= 1)
+    (check-list "if-else false branch" f >= 1)
+    (make-qa0-if (parse-input c) (parse-seq t) (parse-seq f))))
+@
+
+<<Parser helpers>>=
+(define (parse-seq s)
+  (if (and (list s) (> (length s) 0) (equal? (car s) 'begin))
+      (parse-code* (cdr s) (lambda (p*) p*))
+      (list (parse-code s))))
 @
 
 <<Parser helpers>>=
@@ -714,8 +718,10 @@ Finally, the constant expressions:
     [(number? form) (make-c-expr-number form)]
     [(symbol? form) (make-c-expr-id form)]
     [(string? form) (make-c-expr-string form)]
+    [(and (= (length form) 2) (eq? (car form) 'quote))
+      (make-c-expr-quote (cadr form))]
     [(and (list? form) (>= (length form) 1) (symbol? (car form)))
-     (make-c-expr-op (car form) (map parse-c-expr (cdr form)))]
+      (make-c-expr-op (car form) (map parse-c-expr (cdr form)))]
     [else (error 'parse-qa0 "constant expression is bad:~%~a~%" form)]))
 @
 \section{CONSTANT FOLDING}
@@ -758,7 +764,10 @@ environment passed as an argument. It returns a new environment.
                              [env (ce-add-alias env 'VECTOR  'vector-float)])
                         env)]
              [else (error 'fold-constant "Bad value of REAL: ~a" real)])]
-         [env (ce-add-const env '*mdwf-sum-start*  mdwf-sum-start)])
+         [env (ce-add-const env '*mdwf-start-sum-dimension*
+                                 mdwf-start-sum-dimension)]
+         [env (ce-add-const env '*mdwf-start-sum-direction*
+                                mdwf-start-sum-direction)])
      (let loop ([env env] [p* mdwf-basis])
        (cond
          [(null? p*) env]
@@ -1021,6 +1030,7 @@ Evaluation of constant should find all [[c-expr-id]] with appropriate values.
 <<Folding helpers>>=
 (define (cf-eval-const const env)
   (variant-case const
+    [c-expr-quote (literal) literal]
     [c-expr-op (name c-expr*) (cx-const-op name c-expr* env)]
     [c-expr-string (string) string]
     [c-expr-number (number) number]
@@ -1114,7 +1124,7 @@ Computation of arithmetic expressions:
   (let loop ([arg* expr*])
     (cond
       [(null? arg*) 0]
-      [(cf-eval-const (car arg*) env) 1]
+      [(not (zero? (cf-eval-const (car arg*) env))) 1]
       [else (loop (cdr arg*))])))
 @
 
@@ -1123,8 +1133,8 @@ Computation of arithmetic expressions:
   (let loop ([arg* expr*])
     (cond
       [(null? arg*) 1]
-      [(cf-eval-const (car arg*) env) (loop (cdr arg*))]
-      [else 0])))
+      [(zero? (cf-eval-const (car arg*) env)) 0]
+      [else (loop (cdr arg*))])))
 @
 
 \subsection{Constant folding environment manipulation}
