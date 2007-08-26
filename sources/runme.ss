@@ -4,14 +4,32 @@
 (load "qa0print.ss")
 (load "cfolding.ss")
 (load "q2complex.ss")
+(load "backends.ss")
+(load "gen-header.ss")
 
-(define (c-t name d/f)
-  (let-values* ([(ast) (parse-qa0-file name)]
-                [(ast env) (fold-constants/env ast ce-bgl d/f)]
-                [(ast) (qcd->complex ast env)])
-    (printf "~%**** Tree~%")
-    (print-tree ast)
-    (printf "~%**** Environment~%")
-    (for-each (lambda (r) (printf "   ~s : ~s~%" (car r) (cdr r))) env)))
+;(define (c99-emit . args) (printf "~%/* TODO: c99-emit */~%"))
+
+(define (c-t name machine d/f)
+  (let-values* ([ast (parse-qa0-file name)]
+                [(ast env) (fold-constants/env ast machine d/f)]
+                [(ast e-x) (qcd->complex ast env)]
+;		[_ (printf "~%**** Tree before back end~%")]
+;		[_ (print-tree ast)]
+;		[_ (printf "~%**** Environment before back end~%")]
+;		[_ (for-each (lambda (r)
+;			       (printf "   ~s : ~s~%" (car r) (cdr r))) e-x)]
+;		[_ (printf "~%*****~%~%")]
+                [(ast env) (complex->back-end ast env)]
+		[_ (printf "~%**** Tree at the back end~%")]
+		[_ (print-tree ast)]
+		[_ (printf "~%**** Environment after back end~%")]
+		[_ (for-each (lambda (r)
+			       (printf "   ~s : ~s~%" (car r) (cdr r))) env)]
+		[_ (printf "~%*****~%~%")]
+		)
+    (emit-back-end ast env)
+    (printf "~%~%~%HEADER BEGIN~%~%")
+    (gen-header ast env)
+    (printf "~%~%~%HEADER END~%~%")))
 
                 

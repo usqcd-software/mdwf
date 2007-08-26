@@ -724,6 +724,19 @@ Finally, the constant expressions:
       (make-c-expr-op (car form) (map parse-c-expr (cdr form)))]
     [else (error 'parse-qa0 "constant expression is bad:~%~a~%" form)]))
 @
+
+We also need a procedure to build a procedure name:
+<<File [[parser.ss]]>>=
+(define (build-proc-name stem* env)
+  (let loop ([r (ce-lookup env 'proc-prefix "missing proc-prefix in CE")]
+             [stem* stem*])
+    (cond
+      [(null? stem*) (format "~a~a" r
+                             (ce-lookup env 'proc-suffix
+                                        "missing proc-suffix in CE"))]
+      [else (loop (format "~a~a" r (car stem*)) (cdr stem*))])))
+@
+
 \section{CONSTANT FOLDING}
 This pass computes all constant expressions and expands the macros. Constant
 conditional are also handled at this stage as well as other constant operations.
@@ -753,13 +766,16 @@ environment passed as an argument. It returns a new environment.
 (define (ce-start-env machine real)
   (let* ([env (ce-empty-env)]
          [env (machine env)]
+         [env (ce-bind env 'proc-prefix "mdwf_")]
          [env
            (case real
-             [(double) (let* ([env (ce-add-alias env 'REAL    'double)]
+             [(double) (let* ([env (ce-bind env 'proc-suffix "_D")]
+                              [env (ce-add-alias env 'REAL    'double)]
                               [env (ce-add-alias env 'COMPLEX 'complex-double)]
                               [env (ce-add-alias env 'VECTOR  'vector-double)])
                          env)]
-             [(float) (let* ([env (ce-add-alias env 'REAL    'float)]
+             [(float) (let* ([env (ce-bind env 'proc-suffix "_F")]
+                             [env (ce-add-alias env 'REAL    'float)]
                              [env (ce-add-alias env 'COMPLEX 'complex-float)]
                              [env (ce-add-alias env 'VECTOR  'vector-float)])
                         env)]
@@ -1284,6 +1300,18 @@ error.
                                          o)))])))]
        [else (error 'qa0 "Internal error in ce-add-alias")])))
 @
+
+Do something on each environment entry satisfying given constraint:
+<<Folding environment routines>>=
+(define (ce-for-each env predicate? proc)
+  (let loop ([env env])
+    (cond
+      [(null? env) #t]
+      [(predicate? (caar env) (cdar env)) (proc (caar env) (cdar env))
+                                          (loop (cdr env))]
+      [else (loop (cdr env))])))
+@
+
 \section{COMPLEX EXPANSION}
 This section does QCD to [[complex]] conversion.
 <<File [[q2complex.ss]]>>=
@@ -1291,11 +1319,12 @@ This section does QCD to [[complex]] conversion.
 (define (qcd->complex ast env)
   <<QCD to complex helpers>>
   (variant-case ast
-    [qa0-top (decl*) (let loop ([r* '()] [decl* decl*])
-                       (cond
-                         [(null? decl*) (make-qa0-top (reverse r*))]
-                         [else (let-values ([(d e) (q2c-decl (car decl*) env)])
-                                 (loop (cons d r*) (cdr decl*)))]))]))
+    [qa0-top (decl*)
+      (let loop ([r* '()] [decl* decl*] [env env])
+        (cond
+          [(null? decl*) (values (make-qa0-top (reverse r*)) env)]
+          [else (let-values* ([(d e) (q2c-decl (car decl*) env)])
+                  (loop (cons d r*) (cdr decl*) e))]))]))
 @
 
 This conversion uses the following generator for register names
@@ -1475,10 +1504,10 @@ produce one load instruction
 <<Generate complex load>>=
 (define (c-load c f r* env)
   (let-values* ([(x env) (q2c-rename env output t c f)]
-                [(c-s) (ce-lookup-x env 'size-of 'COMPLEX "complex size")]
-                [(d-s) (ce-lookup-x env 'size-of 'complex-double "double size")]
-                [(c-t) (if (= c-s d-s) 'complex-double 'complex-float)]
-                [(off) (* c-s (+ f (* f-n c)))])
+                [c-s (ce-lookup-x env 'size-of 'COMPLEX "complex size")]
+                [d-s (ce-lookup-x env 'size-of 'complex-double "double size")]
+                [c-t (if (= c-s d-s) 'complex-double 'complex-float)]
+                [off (* c-s (+ f (* f-n c)))])
     (values (cons (make-qa0-load attr*
                                  c-t
                                  (make-reg x)
@@ -1505,10 +1534,10 @@ produce one load instruction
 <<Generate complex store>>=
 (define (c-store c f r* env)
   (let-values* ([(x env) (q2c-rename env value t c f)]
-                [(c-s) (ce-lookup-x env 'size-of 'COMPLEX "complex size")]
-                [(d-s) (ce-lookup-x env 'size-of 'complex-double "double size")]
-                [(c-t) (if (= c-s d-s) 'complex-double 'complex-float)]
-                [(off) (* c-s (+ f (* f-n c)))])
+                [c-s (ce-lookup-x env 'size-of 'COMPLEX "complex size")]
+                [d-s (ce-lookup-x env 'size-of 'complex-double "double size")]
+                [c-t (if (= c-s d-s) 'complex-double 'complex-float)]
+                [off (* c-s (+ f (* f-n c)))])
     (values (cons (make-qa0-store attr*
                                   c-t
                                   (append addr* (list (make-c-expr-number off)))
@@ -1745,11 +1774,11 @@ Build one component of the half-fermion
 <<Projection helpers>>=
 (define (proj c h op r* env)
   (q2c-check-list op = 4 "Projection operation")
-  (let-values* ([(op-0) (car op)] [(f-0) (cadr op)]
+  (let-values* ([op-0 (car op)] [(f-0) (cadr op)]
                 [(a-0 env) (q2c-rename env r-a 'fermion c f-0)]
-                [(op-1) (caddr op)] [(f-1) (cadddr op)]
+                [op-1 (caddr op)] [(f-1) (cadddr op)]
                 [(a-1 env) (q2c-rename env r-a 'fermion c f-1)]
-                [(cmd) (binary-cmd op-0 op-1)]
+                [cmd (binary-cmd op-0 op-1)]
                 [(r env) (q2c-rename env r-r 'half-fermion c h)])
     (values (cons (make-qa0-operation attr*
                                       cmd
@@ -1796,9 +1825,9 @@ Build one component of the half-fermion
 <<Unproject helpers>>=
 (define (unproj c f op r* env)
   (q2c-check-list op = 2 "Unprojection operation")
-  (let-values* ([(opcode) (car op)] [(component) (cadr op)]
+  (let-values* ([opcode (car op)] [(component) (cadr op)]
                 [(a env) (q2c-rename env r-a 'half-fermion c component)]
-                [(cmd) (unary-cmd opcode)]
+                [cmd (unary-cmd opcode)]
                 [(r env) (q2c-rename env r-r 'fermion c f)])
     (values (cons (make-qa0-operation attr*
                                       cmd
@@ -1842,9 +1871,9 @@ Build one component of the half-fermion
 (define (upa c f op r* env)
   (q2c-check-list op = 2 "Unprojection operation")
   (let-values* ([(a env) (q2c-rename env r-a 'fermion c f)]
-                [(opcode) (car op)] [(component) (cadr op)]
+                [opcode (car op)] [(component) (cadr op)]
                 [(b env) (q2c-rename env r-b 'half-fermion c component)]
-                [(cmd) (add-cmd opcode)]
+                [cmd (add-cmd opcode)]
                 [(r env) (q2c-rename env r-r 'fermion c f)])
     (values (cons (make-qa0-operation attr*
                                       cmd
@@ -2034,14 +2063,14 @@ tree.
   (print-start level)
   (printf "Loop ")
   (print-attr* attr*)
-  (printf " ~a from " var)
+  (printf " ~a from " (reg->name var))
   (print-input low)
   (printf " to ")
   (print-input high)
   (printf "~%")
   (print-code* (+ level 1) code*)
   (print-start level)
-  (printf "Loop ~a end~%" var))
+  (printf "Loop ~a end~%" (reg->name var)))
 @
 <<Print routines>>=
 (define (print-if level var true-code* false-code*)
@@ -2131,18 +2160,294 @@ tree.
                               (printf ")")]))
 @
 
+\section{BACK ENDS}
+The call interface to the back end is simple: we hide everything into the
+environment and simply lookup relevant pieces here:
+<<File [[backends.ss]]>>=
+(define (complex->back-end ast env)
+  ((ce-lookup env 'back-end "Back end transformer not found") ast env))
+(define (emit-back-end ast env)
+  ((ce-lookup env 'be-emit "Code emitter not found") ast env))
+(define new-var
+  (let ([x 0]) (lambda () (let ([s (format "g~a" x)])
+                            (set! x (+ x 1))
+                            s))))
+@
+
+\subsection{Generic 32 bit back end}
+<<File [[backends.ss]]>>=
+(define (machine-*-32 env op* load*)
+  (let* ([env (ce-add-type env 'int            "int"              4  4)]
+         [env (ce-add-type env 'pointer        "void *"           4  4)]
+         [env (ce-add-type env 'float          "float"            4  4)]
+         [env (ce-add-type env 'double         "double"           8  8)]
+         [env (ce-add-type env 'vector-float   "vector float"     8  8)]
+         [env (ce-add-type env 'vector-double  "vector double"   16 16)]
+         [env (ce-add-type env 'complex-float  "float _Complex"   8  8)]
+         [env (ce-add-type env 'complex-double "double _Complex" 16 16)]
+         [env (ce-add-const env '*colors*            3)]
+         [env (ce-add-const env '*DIM*               4)]
+         [env (ce-add-const env '*fermion-dim*       4)]
+         [env (ce-add-const env '*half-fermion-dim*  2)])
+    (let loop ([env env] [op* op*])
+      (cond
+        [(null? op*)
+          (let loop ([env env] [load* load*])
+            (cond
+              [(null? load*) env]
+              [else (loop (ce-bind-x env 'be-load-type (caar load*)
+                                     (cadar load*))
+                          (cdr load*))]))]
+        [else (loop (ce-bind-x env 'be-op-type* (caar op*) (cdar op*))
+                    (cdr op*))]))))
+@
+
+Get the types of output registers in an operation.
+<<File [[backends.ss]]>>=
+(define (be-out-type* env name)
+  (ce-lookup-x env 'be-op-type* name
+               "Unknown operation ~a in be-op-type*" name))
+
+(define (be-load-type env load-op)
+  (ce-lookup-x env 'be-load-type load-op
+               "Unknown load operation ~a in be-load-type" load-op))
+@
+
+
+\subsection{C99 back end}
+<<File [[backends.ss]]>>=
+(define (c99-back-end ast env)
+  <<C99 back-end helpers>>
+  (let ([env (c99-collect-outputs ast env)])
+    (c99-check-inputs ast env)
+    (values ast env)))
+@
+
+<<C99 back-end helpers>>=
+(define (c99-collect-outputs ast env)
+  (variant-case ast
+    [qa0-top (decl*)
+      (let loop ([decl* decl*] [env env])
+        (cond
+          [(null? decl*) env]
+          [else (loop (cdr decl*)
+                      (variant-case (car decl*)
+                        [qa0-proc (arg-name* arg-type* code*)
+                          (c99-proc-outputs arg-name* arg-type* code* env)]
+                        [else env]))]))]))
+@
+
+<<C99 back-end helpers>>=
+(define (c99-proc-outputs arg-name* arg-type* code* env)
+  <<C99 output helpers>>
+  (let* ([env (collect-args arg-name* arg-type* env)]
+  	 [env (collect-output* code* env)])
+    env))
+@
+
+<<C99 output helpers>>=
+(define (collect-args arg-name* arg-type* env)
+  (cond
+    [(null? arg-name*) env]
+    [else (let* ([env (ce-bind-x env 'back-end (car arg-name*)
+                                 (list (new-var) (car arg-type*)))])
+            (collect-args (cdr arg-name*) (cdr arg-type*) env))]))
+@
+
+<<C99 output helpers>>=
+(define (collect-output* code* env)
+  (cond
+    [(null? code*) env]
+    [else (collect-output* (cdr code*) (c99-output-code (car code*) env))]))
+@
+
+<<C99 output helpers>>=
+(define (c99-output-code code env)
+  (variant-case code
+    [qa0-operation (name output*)
+       (add-output* output* (be-out-type* env name) env)]
+    [qa0-load (output type) (add-output output (be-load-type env type) env)]
+    [qa0-store () env]
+    [qa0-loop (var code*) (let ([env (collect-output* code* env)])
+                            (add-output var 'int env))]
+    [qa0-if (true-code* false-code*)
+       (let* ([env (collect-output* true-code* env)]
+              [env (collect-output* false-code* env)])
+         env)]))
+@
+
+<<C99 output helpers>>=
+(define (add-output* output* type* env)
+  (cond
+    [(null? output*) env]
+    [else (add-output* (cdr output*) (cdr type*)
+                       (add-output (car output*) (car type*) env))]))
+@
+
+<<C99 output helpers>>=
+(define (add-output output type env)
+  (variant-case output
+    [reg (name)
+      (ce-search env (list 'back-end name)
+                (lambda (v) env)
+                (lambda () (ce-bind-x env 'back-end name
+                                      (list (new-var) type))))]))
+@
+
+<<C99 back-end helpers>>=
+(define (c99-check-inputs ast env)
+  <<C99 input helpers>>
+  (variant-case ast
+    [qa0-top (decl*)
+      (for-each (lambda (decl) (c99-decl decl env)) decl*)]))
+@
+
+<<C99 input helpers>>=
+(define (c99-decl decl env)
+  (variant-case decl
+    [qa0-proc (code*) (c99-input-code* code* env)]
+    [else #t]))
+@
+<<C99 input helpers>>=
+(define (c99-input-code* code* env)
+  (for-each (lambda (code) (c99-input-code code env)) code*))
+@
+
+<<C99 input helpers>>=
+(define (c99-input-code code env)
+  (variant-case code
+    [qa0-operation (input*) (c99-input* input* env)]
+    [qa0-load (addr*) (c99-input* addr* env)]
+    [qa0-store (addr* value) (c99-input* addr* env) (c99-input value env)]
+    [qa0-loop (low high code*) (c99-input-code* code* env)
+      (c99-input low env) (c99-input high env)]
+    [qa0-if (var true-code* false-code*) (c99-input var env)
+      (c99-input-code* true-code* env) (c99-input-code* false-code* env)]))
+@
+
+<<C99 input helpers>>=
+(define (c99-input* input* env)
+  (for-each (lambda (input) (c99-input input env)) env))
+@
+
+<<C99 input helpers>>=
+(define (c99-input input env)
+  (variant-case input
+    [reg (name)
+      (ce-lookup-x env 'back-end name "C99 looking for definition of ~a" name)]
+    [else #t]))
+@
+
+
+Build C99 code of the the input. We only emit procedures here and expect
+another function to produce type declarations and function prototypes.
+<<File [[backends.ss]]>>=
+(define (c99-emit qa0 env)
+  <<C99 emit helpers>>
+  (variant-case qa0
+    [qa0-top (decl*) (let loop ([decl* decl*])
+                       (cond
+                         [(null? decl*)]
+                         [else (emit-decl (car decl*)) (loop (cdr decl*))]))]))
+@
+
+<<C99 emit helpers>>=
+(define (emit-decl decl)
+  (variant-case decl
+    [qa0-proc (attr* name arg-name* arg-type* arg-c-name* arg-c-type* code*)
+      (emit-proc attr* name arg-name* arg-type* arg-c-name* arg-c-type* code*)]
+    [else #t]))
+@
+
+<<C99 emit helpers>>=
+(define (emit-proc attr* name arg-name* arg-type* arg-c-name* arg-c-type* code*)
+  (let ([cf? (attr-search attr* 'count-flops (lambda (v) #t) (lambda () #f))]
+        [counter (new-var)])
+    (printf "/* emitting procedure ~a */~%" name)
+    (emit-proc-decl cf? attr* name arg-c-name* arg-c-type*)
+    (printf "{~%")
+    (if cf? (printf "  int ~a = 0;~%" counter))
+    (printf "  /* procedure body XXX */~%")
+    (if cf? (printf "  return ~a;~%" counter))
+    (printf "}~%~%")))
+@
+
+<<C99 emit helpers>>=
+(define (emit-proc-decl count-flops? attr* name arg-c-name* arg-c-type*)
+  (printf "~a~%~a" (if count-flops? "int" "void")
+          (build-proc-name (attr-lookup attr* 'stem
+                                        "missing stem in proc ~a" name) env))
+  (if (null? arg-c-name*) (printf "(void)~%")
+      (begin (printf "(")
+             (let loop ([name* arg-c-name*] [type* arg-c-type*])
+               (cond
+                 [(null? name*)]
+                 [else (printf "~a~a ~a" (if (eq? name* arg-c-name*) "" ", ")
+                               (car type*) (car name*))
+                       (loop (cdr name*) (cdr type*))]))
+             (printf ")~%"))))
+@
+
+<<File [[backends.ss]]>>=
+(define (machine-c99-32 env)
+  <<C99 back-end types>>
+  (let* ([env (machine-*-32 env c99-op* c99-load*)]
+         [env (ce-bind env 'back-end c99-back-end)]
+	 [env (ce-bind env 'be-emit c99-emit)])
+    env))
+  
+@
+
+<<C99 back-end types>>=
+(define c99-op* '(
+  (pointer-move  pointer)
+  (pointer-add   pointer)
+  (int-move      int)
+  (int-add       int)
+  (int-sub       int)
+  (int-mul       int)
+  (int-div       int)
+  (int-mod       int)
+  (int-and       int)
+  (int-or        int)
+  (int-xor       int)
+  (double-move   double)
+  (double-add    double)
+  (double-sub    double)
+  (double-mul    double)
+  (double-div    double)
+  (double-madd   double)
+  (complex-move  complex)
+  (complex-add   complex)
+  (complex-sub   complex)
+  (complex-mul   complex)
+  (complex-cmul  complex)
+  (complex-madd  complex)
+  (complex-cmadd complex)))
+@
+
+<<C99 back-end types>>=
+(define c99-load* '(
+   (int               int)
+   (pointer           pointer)
+   (float             double)
+   (double            double)
+   (complex-float     complex-double)
+   (complex-double    complex-double)))
+@
+
 \section{BG/L}
 The machine settings for BG/L:
 <<Folding environment routines>>=
 (define (ce-bgl env)
-  (let* ([env (ce-add-type env 'int            "int"             4  4)]
-         [env (ce-add-type env 'pointer        "void *"          4  4)]
-         [env (ce-add-type env 'float          "float"           4  4)]
-         [env (ce-add-type env 'double         "double"          8  8)]
-         [env (ce-add-type env 'vector-float   "vector float"    8  8)]
-         [env (ce-add-type env 'vector-double  "vector double"  16 16)]
-         [env (ce-add-type env 'complex-float  "complex float"   8  8)]
-         [env (ce-add-type env 'complex-double "complex double" 16 16)]
+  (let* ([env (ce-add-type env 'int            "int"              4  4)]
+         [env (ce-add-type env 'pointer        "void *"           4  4)]
+         [env (ce-add-type env 'float          "float"            4  4)]
+         [env (ce-add-type env 'double         "double"           8  8)]
+         [env (ce-add-type env 'vector-float   "vector float"     8  8)]
+         [env (ce-add-type env 'vector-double  "vector double"   16 16)]
+         [env (ce-add-type env 'complex-float  "float _Complex"   8  8)]
+         [env (ce-add-type env 'complex-double "double _Complex" 16 16)]
          [env (ce-add-const env '*colors*            3)]
          [env (ce-add-const env '*DIM*               4)]
          [env (ce-add-const env '*fermion-dim*       4)]
@@ -2265,6 +2570,7 @@ Finally, [[let-values*]]:
       [(_ ([(n ...) i ...]) e ...) (syntax (call-with-values
                                              (lambda () (let () i ...))
                                              (lambda (n ...) (let () e ...))))]
+      [(_ ([n i ...]) e ...) (syntax (let ([n (let () i ...)]) (let () e ...)))]
       [(_ (b0 b1 ...) e ...) (syntax (_ (b0) (_ (b1 ...) e ...)))])))
 @
 
