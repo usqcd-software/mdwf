@@ -1888,8 +1888,8 @@ Build one component of the half-fermion
   (case name
     [(plus-one) 'complex-add]
     [(minus-one) 'complex-sub]
-    [(plus-i) 'complex-add-times-plus-i]
-    [(minus-i) 'complex-sub-times-plus-i]
+    [(plus-i) 'complex-add-i]
+    [(minus-i) 'complex-sub-i]
     [else (error 'qa0 "Unknown unproject operation ~a" name)]))
 @
 
@@ -2688,11 +2688,17 @@ operations needed, but some compilers are not very good with $i$.
   (+ flops 8)]
 @
 
-;  (complex-add-i             complex-double)
-;  (complex-add-times-plus-i  complex-double)
-;  (complex-sub-i             complex-double)
-;  (complex-sub-times-plus-i  complex-double)
+<<C99 emit-op operations>>=
+[(complex-add-i) (check-put* out* 1) (check-put* in* 2)
+  (do-emit l "~a = ~a + I * ~a;" (car out*) (car in*) (cadr in*))
+  (+ flops 2)]
+@
 
+<<C99 emit-op operations>>=
+[(complex-sub-i) (check-put* out* 1) (check-put* in* 2)
+  (do-emit l "~a = ~a - I * ~a;" (car out*) (car in*) (cadr in*))
+  (+ flops 2)]
+@
 
 Finally,
 <<File [[backends.ss]]>>=
@@ -2709,7 +2715,6 @@ Finally,
 (define c99-op* '(
   (complex-add               complex-double)
   (complex-add-i             complex-double)
-  (complex-add-times-plus-i  complex-double)
   (complex-cmadd             complex-double)
   (complex-cmul              complex-double)
   (complex-madd              complex-double)
@@ -2718,7 +2723,6 @@ Finally,
   (complex-neg               complex-double)
   (complex-sub               complex-double)
   (complex-sub-i             complex-double)
-  (complex-sub-times-plus-i  complex-double)
   (double-add                double)
   (double-div                double)
   (double-madd               double)
