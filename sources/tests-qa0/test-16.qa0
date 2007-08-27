@@ -8,13 +8,13 @@
                                   [d-f "dF"  d-table]))
                                
 (procedure K-n ([stem "K"] count-flops)
-              ([res  pointer "struct Femion *"            "res"]
-               [size int     "int"                        "size"]
- 	       [Vs   int     "int"                        "Vs"]
-               [nt   pointer "const struct Neighbor  *"   "nt"]
-               [U    pointer "const struct SUN *"         "U"]
-               [src  pointer "const struct Fermion *"     "src"]
-               [rcv  pointer "const struct HalfFermion *" "rcv"])
+              ([res  pointer "res"  "struct Femion *"          ]
+               [size int     "size" "int"                      ]
+ 	       [Vs   int     "Vs"   "int"                      ]
+               [nt   pointer "nt"   "const struct Neighbor  *" ]
+               [U    pointer "U"    "const struct SUN *"       ]
+               [src  pointer "src"  "const struct Fermion *"   ]
+               [rcv  pointer "rcv"  "const struct HalfFermion *"])
   (op int-mul () (sf-size) ([reg Vs] [const (size-of Fermion)]))
   (loop () [i (const 0) (reg size)]
     (load int () mask ([reg nt] [const (offset-of k-neighbor mask)]))

@@ -2342,10 +2342,10 @@ Make the emitted code look nice:
     [qa0-proc (attr* name arg-name* arg-type* arg-c-name* arg-c-type* code*)
       (let ([env (proc-outputs arg-name* arg-type* code* env)])
          (input-code* code* env)
-         (printf "~%**** Environment in back end~%")
-         (for-each (lambda (r)
-	             (printf "   ~s : ~s~%" (car r) (cdr r))) env)
-         (printf "~%*****~%~%")
+;         (printf "~%**** Environment in back end~%")
+;         (for-each (lambda (r)
+;	             (printf "   ~s : ~s~%" (car r) (cdr r))) env)
+;         (printf "~%*****~%~%")
          (emit-proc attr* name
                     arg-name* arg-type*
                     arg-c-name* arg-c-type*
@@ -2513,11 +2513,186 @@ The emit routines for five codes
 
 <<C99 emit helpers>>=
 (define (emit-op l name output* input* env flops)
+  <<C99 emit-op helpers>>
   (let ([out* (map (lambda (out) (preemit-output out env)) output*)]
         [in* (map (lambda (in) (preemit-input in env)) input*)])
-    (do-emit l "/* XXX op: ~a, out* ~a, in* ~a */" name out* in*)
-    (+ flops 1)))
+    (case name
+      <<C99 emit-op operations>>
+      [else (do-emit l "/* XXX op: ~a, out* ~a, in* ~a */" name out* in*)
+            (+ flops 1)])))
 @
+
+<<C99 emit-op helpers>>=
+(define (check-put* p* size)
+   (if (not (= size (length p*)))
+       (error 'c99-backend "Illformed operation: ~a <- ~a ~a"
+              output* name input*)))
+@
+
+Moves may occur for many reasons, they are likely to be eliminated by the
+compiler anyway. We don't attempt to do anything about them here.
+<<C99 emit-op operations>>=
+[(int-move double-move complex-move pointer-move)
+   (check-put* out* 1) (check-put* in* 1)
+   (do-emit l "~a = ~a;" (car out*) (car in*))
+   flops]
+@
+
+On pointers there is only one operation. We may have many inputs here.
+<<C99 emit-op operations>>=
+[(pointer-add) (check-put* out* 1)
+  (do-emit l "~a = ~a;" (preemit-addr* in* env))
+  flops]
+@
+
+Integer operations.
+<<C99 emit-op operations>>=
+[(int-mul) (check-put* out* 1) (check-put* in* 2)
+  (do-emit l "~a = ~a * ~a;" (car out*) (car in*) (cadr in*))
+  flops]
+@
+
+<<C99 emit-op operations>>=
+[(int-div) (check-put* out* 1) (check-put* in* 2)
+  (do-emit l "~a = ~a / ~a;" (car out*) (car in*) (cadr in*))
+  flops]
+@
+
+<<C99 emit-op operations>>=
+[(int-mod) (check-put* out* 1) (check-put* in* 2)
+  (do-emit l "~a = ~a % ~a;" (car out*) (car in*) (cadr in*))
+  flops]
+@
+
+<<C99 emit-op operations>>=
+[(int-add) (check-put* out* 1) (check-put* in* 2)
+  (do-emit l "~a = ~a + ~a;" (car out*) (car in*) (cadr in*))
+  flops]
+@
+
+<<C99 emit-op operations>>=
+[(int-sub) (check-put* out* 1) (check-put* in* 2)
+  (do-emit l "~a = ~a - ~a;" (car out*) (car in*) (cadr in*))
+  flops]
+@
+
+<<C99 emit-op operations>>=
+[(int-neg) (check-put* out* 1) (check-put* in* 1)
+  (do-emit l "~a = - ~a;" (car out*) (car in*))
+  flops]
+@
+
+<<C99 emit-op operations>>=
+[(int-and) (check-put* out* 1) (check-put* in* 2)
+  (do-emit l "~a = ~a & ~a;" (car out*) (car in*) (cadr in*))
+  flops]
+@
+
+<<C99 emit-op operations>>=
+[(int-or) (check-put* out* 1) (check-put* in* 2)
+  (do-emit l "~a = ~a | ~a;" (car out*) (car in*) (cadr in*))
+  flops]
+@
+
+<<C99 emit-op operations>>=
+[(int-xor) (check-put* out* 1) (check-put* in* 2)
+  (do-emit l "~a = ~a ^ ~a;" (car out*) (car in*) (cadr in*))
+  flops]
+@
+
+<<C99 emit-op operations>>=
+[(int-not) (check-put* out* 1) (check-put* in* 1)
+  (do-emit l "~a = ! ~a;" (car out*) (car in*))
+  flops]
+@
+
+Next are double operations
+<<C99 emit-op operations>>=
+[(double-neg) (check-put* out* 1) (check-put* in* 1)
+  (do-emit l "~a = - ~a;" (car out*) (car in*))
+  (+ flops 1)]
+@
+
+<<C99 emit-op operations>>=
+[(double-add) (check-put* out* 1) (check-put* in* 2)
+  (do-emit l "~a = ~a + ~a;" (car out*) (car in*) (cadr in*))
+  (+ flops 1)]
+@
+
+<<C99 emit-op operations>>=
+[(double-sub) (check-put* out* 1) (check-put* in* 2)
+  (do-emit l "~a = ~a - ~a;" (car out*) (car in*) (cadr in*))
+  (+ flops 1)]
+@
+
+<<C99 emit-op operations>>=
+[(double-div) (check-put* out* 1) (check-put* in* 2)
+  (do-emit l "~a = ~a / ~a;" (car out*) (car in*) (cadr in*))
+  (+ flops 1)] ; This is optimistic, of course.
+@
+
+<<C99 emit-op operations>>=
+[(double-mul) (check-put* out* 1) (check-put* in* 2)
+  (do-emit l "~a = ~a * ~a;" (car out*) (car in*) (cadr in*))
+  (+ flops 1)]
+@
+
+<<C99 emit-op operations>>=
+[(double-madd) (check-put* out* 1) (check-put* in* 3)
+  (do-emit l "~a = ~a * ~a + ~a;" (car out*) (car in*) (cadr in*) (caddr in*))
+  (+ flops 2)]
+@
+
+Finally, complex operations. We count the minimal number of floating point
+operations needed, but some compilers are not very good with $i$.
+<<C99 emit-op operations>>=
+[(complex-neg) (check-put* out* 1) (check-put* in* 1)
+  (do-emit l "~a = - ~a;" (car out*) (car in*))
+  (+ flops 2)]
+@
+
+<<C99 emit-op operations>>=
+[(complex-add) (check-put* out* 1) (check-put* in* 2)
+  (do-emit l "~a = ~a + ~a;" (car out*) (car in*) (cadr in*))
+  (+ flops 2)]
+@
+
+<<C99 emit-op operations>>=
+[(complex-sub) (check-put* out* 1) (check-put* in* 2)
+  (do-emit l "~a = ~a - ~a;" (car out*) (car in*) (cadr in*))
+  (+ flops 2)]
+@
+
+<<C99 emit-op operations>>=
+[(complex-mul) (check-put* out* 1) (check-put* in* 2)
+  (do-emit l "~a = ~a * ~a;" (car out*) (car in*) (cadr in*))
+  (+ flops 6)]
+@
+
+<<C99 emit-op operations>>=
+[(complex-madd) (check-put* out* 1) (check-put* in* 3)
+  (do-emit l "~a = ~a * ~a + ~a;" (car out*) (car in*) (cadr in*) (caddr in*))
+  (+ flops 8)]
+@
+
+<<C99 emit-op operations>>=
+[(complex-cmul) (check-put* out* 1) (check-put* in* 2)
+  (do-emit l "~a = conj(~a) * ~a;" (car out*) (car in*) (cadr in*))
+  (+ flops 6)]
+@
+
+<<C99 emit-op operations>>=
+[(complex-cmadd) (check-put* out* 1) (check-put* in* 3)
+  (do-emit l "~a = conj(~a) * ~a + ~a;"
+           (car out*) (car in*) (cadr in*) (caddr in*))
+  (+ flops 8)]
+@
+
+;  (complex-add-i             complex-double)
+;  (complex-add-times-plus-i  complex-double)
+;  (complex-sub-i             complex-double)
+;  (complex-sub-times-plus-i  complex-double)
+
 
 Finally,
 <<File [[backends.ss]]>>=
@@ -2532,32 +2707,37 @@ Finally,
 
 <<C99 back-end types>>=
 (define c99-op* '(
-  (pointer-move  pointer)
-  (pointer-add   pointer)
-  (int-move      int)
-  (int-add       int)
-  (int-sub       int)
-  (int-mul       int)
-  (int-div       int)
-  (int-mod       int)
-  (int-and       int)
-  (int-or        int)
-  (int-xor       int)
-  (double-move   double)
-  (double-neg    double)
-  (double-add    double)
-  (double-sub    double)
-  (double-mul    double)
-  (double-div    double)
-  (double-madd   double)
-  (complex-move  complex)
-  (complex-neg   complex)
-  (complex-add   complex)
-  (complex-sub   complex)
-  (complex-mul   complex)
-  (complex-cmul  complex)
-  (complex-madd  complex)
-  (complex-cmadd complex)))
+  (complex-add               complex-double)
+  (complex-add-i             complex-double)
+  (complex-add-times-plus-i  complex-double)
+  (complex-cmadd             complex-double)
+  (complex-cmul              complex-double)
+  (complex-madd              complex-double)
+  (complex-move              complex-double)
+  (complex-mul               complex-double)
+  (complex-neg               complex-double)
+  (complex-sub               complex-double)
+  (complex-sub-i             complex-double)
+  (complex-sub-times-plus-i  complex-double)
+  (double-add                double)
+  (double-div                double)
+  (double-madd               double)
+  (double-move               double)
+  (double-mul                double)
+  (double-neg                double)
+  (double-sub                double)
+  (int-add                   int)
+  (int-and                   int)
+  (int-div                   int)
+  (int-mod                   int)
+  (int-move                  int)
+  (int-mul                   int)
+  (int-or                    int)
+  (int-sub                   int)
+  (int-xor                   int)
+  (pointer-add               pointer)
+  (pointer-move              pointer)
+))
 @
 
 <<C99 back-end types>>=
