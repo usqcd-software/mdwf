@@ -22,14 +22,15 @@
                 [(ast env) (complex->back-end ast env)]
 		[_ (printf "~%**** Tree at the back end~%")]
 		[_ (print-tree ast)]
-		[_ (printf "~%**** Environment after back end~%")]
-		[_ (for-each (lambda (r)
-			       (printf "   ~s : ~s~%" (car r) (cdr r))) env)]
+;		[_ (printf "~%**** Environment after back end~%")]
+;		[_ (for-each (lambda (r)
+;			       (printf "   ~s : ~s~%" (car r) (cdr r))) env)]
 		[_ (printf "~%*****~%~%")]
 		)
     (emit-back-end ast env)
-    (printf "~%~%~%HEADER BEGIN~%~%")
-    (gen-header ast env)
-    (printf "~%~%~%HEADER END~%~%")))
+;    (printf "~%~%~%HEADER BEGIN~%~%")
+;    (gen-header ast env)
+;    (printf "~%~%~%HEADER END~%~%")
+))
 
                 

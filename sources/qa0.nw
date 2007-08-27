@@ -2178,7 +2178,7 @@ environment and simply lookup relevant pieces here:
 <<File [[backends.ss]]>>=
 (define (machine-*-32 env op* load*)
   (let* ([env (ce-add-type env 'int            "int"              4  4)]
-         [env (ce-add-type env 'pointer        "void *"           4  4)]
+         [env (ce-add-type env 'pointer        "unsigned char *"  4  4)]
          [env (ce-add-type env 'float          "float"            4  4)]
          [env (ce-add-type env 'double         "double"           8  8)]
          [env (ce-add-type env 'vector-float   "vector float"     8  8)]
@@ -2215,30 +2215,14 @@ Get the types of output registers in an operation.
 
 
 \subsection{C99 back end}
+Conversion to the back-end is trivial for C99. We postpone naming registers to
+avoid going through the code twice.
 <<File [[backends.ss]]>>=
-(define (c99-back-end ast env)
-  <<C99 back-end helpers>>
-  (let ([env (c99-collect-outputs ast env)])
-    (c99-check-inputs ast env)
-    (values ast env)))
+(define (c99-back-end ast env) (values ast env))
 @
 
 <<C99 back-end helpers>>=
-(define (c99-collect-outputs ast env)
-  (variant-case ast
-    [qa0-top (decl*)
-      (let loop ([decl* decl*] [env env])
-        (cond
-          [(null? decl*) env]
-          [else (loop (cdr decl*)
-                      (variant-case (car decl*)
-                        [qa0-proc (arg-name* arg-type* code*)
-                          (c99-proc-outputs arg-name* arg-type* code* env)]
-                        [else env]))]))]))
-@
-
-<<C99 back-end helpers>>=
-(define (c99-proc-outputs arg-name* arg-type* code* env)
+(define (proc-outputs arg-name* arg-type* code* env)
   <<C99 output helpers>>
   (let* ([env (collect-args arg-name* arg-type* env)]
   	 [env (collect-output* code* env)])
@@ -2295,46 +2279,34 @@ Get the types of output registers in an operation.
 @
 
 <<C99 back-end helpers>>=
-(define (c99-check-inputs ast env)
-  <<C99 input helpers>>
-  (variant-case ast
-    [qa0-top (decl*)
-      (for-each (lambda (decl) (c99-decl decl env)) decl*)]))
+(define (input-code* code* env)
+  <<C99 input helpers>>=
+  (for-each (lambda (code) (input-code code env)) code*))
 @
 
 <<C99 input helpers>>=
-(define (c99-decl decl env)
-  (variant-case decl
-    [qa0-proc (code*) (c99-input-code* code* env)]
-    [else #t]))
-@
-<<C99 input helpers>>=
-(define (c99-input-code* code* env)
-  (for-each (lambda (code) (c99-input-code code env)) code*))
-@
-
-<<C99 input helpers>>=
-(define (c99-input-code code env)
+(define (input-code code env)
   (variant-case code
     [qa0-operation (input*) (c99-input* input* env)]
     [qa0-load (addr*) (c99-input* addr* env)]
     [qa0-store (addr* value) (c99-input* addr* env) (c99-input value env)]
-    [qa0-loop (low high code*) (c99-input-code* code* env)
+    [qa0-loop (low high code*) (input-code* code* env)
       (c99-input low env) (c99-input high env)]
     [qa0-if (var true-code* false-code*) (c99-input var env)
-      (c99-input-code* true-code* env) (c99-input-code* false-code* env)]))
+      (input-code* true-code* env) (input-code* false-code* env)]))
 @
 
 <<C99 input helpers>>=
 (define (c99-input* input* env)
-  (for-each (lambda (input) (c99-input input env)) env))
+  (for-each (lambda (input) (c99-input input env)) input*))
 @
 
 <<C99 input helpers>>=
 (define (c99-input input env)
   (variant-case input
     [reg (name)
-      (ce-lookup-x env 'back-end name "C99 looking for definition of ~a" name)]
+      (ce-lookup-x env 'back-end name
+                   "C99 looking for definition of ~a" name)]
     [else #t]))
 @
 
@@ -2351,29 +2323,57 @@ another function to produce type declarations and function prototypes.
                          [else (emit-decl (car decl*)) (loop (cdr decl*))]))]))
 @
 
+Make the emitted code look nice:
+<<C99 emit helpers>>=
+(define (emit-indent n)
+   (cond
+     [(zero? n)]
+     [else (printf "  ") (emit-indent (- n 1))]))
+(define (do-emit n fmt . arg*)
+  (emit-indent n)
+  (apply printf fmt arg*)
+  (newline))
+@
+
 <<C99 emit helpers>>=
 (define (emit-decl decl)
+  <<C99 back-end helpers>>
   (variant-case decl
     [qa0-proc (attr* name arg-name* arg-type* arg-c-name* arg-c-type* code*)
-      (emit-proc attr* name arg-name* arg-type* arg-c-name* arg-c-type* code*)]
+      (let ([env (proc-outputs arg-name* arg-type* code* env)])
+         (input-code* code* env)
+         (printf "~%**** Environment in back end~%")
+         (for-each (lambda (r)
+	             (printf "   ~s : ~s~%" (car r) (cdr r))) env)
+         (printf "~%*****~%~%")
+         (emit-proc attr* name
+                    arg-name* arg-type*
+                    arg-c-name* arg-c-type*
+                    code* env))]
     [else #t]))
 @
 
 <<C99 emit helpers>>=
-(define (emit-proc attr* name arg-name* arg-type* arg-c-name* arg-c-type* code*)
+(define (emit-proc attr* name
+                   arg-name* arg-type*
+                   arg-c-name* arg-c-type*
+                   code* env)
   (let ([cf? (attr-search attr* 'count-flops (lambda (v) #t) (lambda () #f))]
         [counter (new-var)])
     (printf "/* emitting procedure ~a */~%" name)
-    (emit-proc-decl cf? attr* name arg-c-name* arg-c-type*)
+    (emit-proc-decl cf? attr* name arg-c-name* arg-c-type* env)
     (printf "{~%")
-    (if cf? (printf "  int ~a = 0;~%" counter))
-    (printf "  /* procedure body XXX */~%")
-    (if cf? (printf "  return ~a;~%" counter))
-    (printf "}~%~%")))
+    (if cf? (do-emit 1 "int ~a = 0;" counter))
+    (emit-variables env)
+    (emit-param* arg-name* arg-c-name* env)
+    (emit-code* 1 code* env cf? counter 0)
+    (if cf? (do-emit 1 "return ~a;" counter))
+    (printf "}~%~%")
+))
 @
 
 <<C99 emit helpers>>=
-(define (emit-proc-decl count-flops? attr* name arg-c-name* arg-c-type*)
+(define (emit-proc-decl count-flops? attr* name arg-c-name* arg-c-type* env)
   (printf "~a~%~a" (if count-flops? "int" "void")
           (build-proc-name (attr-lookup attr* 'stem
                                         "missing stem in proc ~a" name) env))
@@ -2388,6 +2388,138 @@ another function to produce type declarations and function prototypes.
              (printf ")~%"))))
 @
 
+<<C99 emit helpers>>=
+(define (emit-variables env)
+  (ce-for-each env (lambda (k v) (and (list? k) (eq? (car k) 'back-end)))
+    (lambda (k v)
+      (do-emit 1  "~a ~a;"
+               (ce-lookup-x env 'name-of (cadr v) "c99 type for ~a" v)
+               (car v)))))
+@
+
+<<C99 emit helpers>>=
+(define (emit-param* arg-name* arg-c-name* env)
+   (do-emit 0 "")
+   (let loop ([name* arg-name*] [c-name* arg-c-name*])
+     (cond
+       [(null? name*) (do-emit 0 "")]
+       [else (let ([rt (ce-lookup-x env 'back-end (car name*)
+                                    "C99 name for ~a" (car name*))])
+               (do-emit 1 "~a = (~a)~a;"
+                        (car rt)
+                        (ce-lookup-x env 'name-of (cadr rt)
+                                     "C99 type for ~a" rt)
+		        (car c-name*))
+               (loop (cdr name*) (cdr c-name*)))])))
+@
+
+<<C99 emit helpers>>=
+(define (emit-code* level code* env count-flops? counter f)
+   (cond
+     [(null? code*) (emit-count level count-flops? counter f)]
+     [else (let ([f (emit-code level (car code*) env count-flops? counter f)])
+             (emit-code* level (cdr code*) env count-flops? counter f))]))
+                    
+@
+
+<<C99 emit helpers>>=
+(define (emit-count level count-flops? counter flops)
+  (if (and count-flops? (not (zero? flops)))
+      (do-emit level "~a += ~a;" counter flops)))
+@
+
+<<C99 emit helpers>>=
+(define (emit-code l code env count-flops? counter flops) ; => flops'
+  (variant-case code
+    [qa0-operation (name output* input*)
+       (emit-op l name output* input* env flops)]
+    [qa0-load (type output addr*)
+       (emit-load l type output addr* env flops)]
+    [qa0-store (type addr* value)
+       (emit-store l type addr* value env flops)]
+    [qa0-if (var true-code* false-code*)
+       (emit-if l var true-code* false-code* env count-flops? counter flops)]
+    [qa0-loop (var low high code*)
+       (emit-loop l var low high code* env count-flops? counter flops)]))
+@
+
+The emit routines for five codes
+<<C99 emit helpers>>=
+(define (emit-loop l var low high code* env count-flops? counter flops)
+  (cond
+    [(null? code*) (do-emit l "~a = ~a; /* empty loop */" var high) flops]
+    [else (let ([v (preemit-output var env)]
+                [lo (preemit-input low env)]
+                [hi (preemit-input high env)])
+            (emit-count l count-flops? counter flops)
+            (do-emit l "for (~a = ~a; ~a < ~a; ~a++) {" v lo v hi v)
+            (emit-code* (+ l 1) code* env count-flops? counter 0)
+            (do-emit l "}")
+            0)]))
+@
+
+<<C99 emit helpers>>=
+(define (emit-if l var true-code* false-code* env count-flops? counter flops)
+  (emit-count l count-flops? counter flops)
+  (do-emit l "if (~a) {" (preemit-input var env))
+  (emit-code* (+ l 1) true-code* env count-flops? counter 0)
+  (if (not (null? false-code*))
+      (begin (do-emit l "} else {")
+             (emit-code* (+ l 1) false-code* env count-flops? counter 0)))
+  (do-emit l "}")
+  0)
+@
+
+<<C99 emit helpers>>=
+(define (emit-store l type addr* value env flops)
+  (do-emit l "*(~a *)(~a) = ~a;"
+           (ce-lookup-x env 'name-of type "C99 name of type ~a" type)
+           (preemit-addr* addr* env)
+           (preemit-input value env))
+  flops)
+@
+
+<<C99 emit helpers>>=
+(define (emit-load l type output addr* env flops)
+  (do-emit l "~a = *(~a *)(~a);"
+           (preemit-output output env)
+           (ce-lookup-x env 'name-of type "C99 name of type ~a" type)
+           (preemit-addr* addr* env))
+  flops)
+@
+
+<<C99 emit helpers>>=
+(define (preemit-addr* addr* env)
+  (let loop ([v (preemit-input (car addr*) env)] [addr* (cdr addr*)])
+    (cond
+      [(null? addr*) v]
+      [else (loop (format "~a + ~a" v (preemit-input (car addr*) env))
+                  (cdr addr*))])))
+@
+<<C99 emit helpers>>=
+(define (preemit-input in env)
+  (variant-case in
+    [reg (name) (car (ce-lookup-x env 'back-end name
+                                  "C99 of reg ~a at input" name))]
+    [c-expr-number (number) number]))
+@
+
+<<C99 emit helpers>>=
+(define (preemit-output out env)
+  (variant-case out
+    [reg (name) (car (ce-lookup-x env 'back-end name
+                                  "C99 of reg ~a at output" name))]))
+@
+
+<<C99 emit helpers>>=
+(define (emit-op l name output* input* env flops)
+  (let ([out* (map (lambda (out) (preemit-output out env)) output*)]
+        [in* (map (lambda (in) (preemit-input in env)) input*)])
+    (do-emit l "/* XXX op: ~a, out* ~a, in* ~a */" name out* in*)
+    (+ flops 1)))
+@
+
+Finally,
 <<File [[backends.ss]]>>=
 (define (machine-c99-32 env)
   <<C99 back-end types>>
@@ -2412,12 +2544,14 @@ another function to produce type declarations and function prototypes.
   (int-or        int)
   (int-xor       int)
   (double-move   double)
+  (double-neg    double)
   (double-add    double)
   (double-sub    double)
   (double-mul    double)
   (double-div    double)
   (double-madd   double)
   (complex-move  complex)
+  (complex-neg   complex)
   (complex-add   complex)
   (complex-sub   complex)
   (complex-mul   complex)
