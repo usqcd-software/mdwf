@@ -2518,8 +2518,7 @@ The emit routines for five codes
         [in* (map (lambda (in) (preemit-input in env)) input*)])
     (case name
       <<C99 emit-op operations>>
-      [else (do-emit l "/* XXX op: ~a, out* ~a, in* ~a */" name out* in*)
-            (+ flops 1)])))
+      [else (error 'c99-emit "UNKNOWN op ~a, out* ~a, in* ~a" name out* in*)])))
 @
 
 <<C99 emit-op helpers>>=
@@ -2652,6 +2651,18 @@ operations needed, but some compilers are not very good with $i$.
 @
 
 <<C99 emit-op operations>>=
+[(complex-times-plus-i) (check-put* out* 1) (check-put* in* 1)
+  (do-emit l "~a = I * ~a;" (car out*) (car in*))
+  (+ flops 2)]
+@
+
+<<C99 emit-op operations>>=
+[(complex-times-minus-i) (check-put* out* 1) (check-put* in* 1)
+  (do-emit l "~a = -I * ~a;" (car out*) (car in*))
+  (+ flops 2)]
+@
+
+<<C99 emit-op operations>>=
 [(complex-add) (check-put* out* 1) (check-put* in* 2)
   (do-emit l "~a = ~a + ~a;" (car out*) (car in*) (cadr in*))
   (+ flops 2)]
@@ -2671,6 +2682,12 @@ operations needed, but some compilers are not very good with $i$.
 
 <<C99 emit-op operations>>=
 [(complex-madd) (check-put* out* 1) (check-put* in* 3)
+  (do-emit l "~a = ~a * ~a + ~a;" (car out*) (car in*) (cadr in*) (caddr in*))
+  (+ flops 8)]
+@
+
+<<C99 emit-op operations>>=
+[(complex-rmadd) (check-put* out* 1) (check-put* in* 3)
   (do-emit l "~a = ~a * ~a + ~a;" (car out*) (car in*) (cadr in*) (caddr in*))
   (+ flops 8)]
 @
@@ -2714,15 +2731,18 @@ Finally,
 <<C99 back-end types>>=
 (define c99-op* '(
   (complex-add               complex-double)
+  (complex-sub               complex-double)
   (complex-add-i             complex-double)
+  (complex-sub-i             complex-double)
+  (complex-times-plus-i      complex-double)
+  (complex-times-minus-i     complex-double)
+  (complex-rmadd             complex-double)
   (complex-cmadd             complex-double)
   (complex-cmul              complex-double)
   (complex-madd              complex-double)
   (complex-move              complex-double)
   (complex-mul               complex-double)
   (complex-neg               complex-double)
-  (complex-sub               complex-double)
-  (complex-sub-i             complex-double)
   (double-add                double)
   (double-div                double)
   (double-madd               double)

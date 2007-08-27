@@ -20,12 +20,12 @@
 ;			       (printf "   ~s : ~s~%" (car r) (cdr r))) e-x)]
 ;		[_ (printf "~%*****~%~%")]
                 [(ast env) (complex->back-end ast env)]
-;		[_ (printf "~%**** Tree at the back end~%")]
-;		[_ (print-tree ast)]
+		[_ (printf "~%**** Tree at the back end~%")]
+		[_ (print-tree ast)]
 ;		[_ (printf "~%**** Environment after back end~%")]
 ;		[_ (for-each (lambda (r)
 ;			       (printf "   ~s : ~s~%" (car r) (cdr r))) env)]
-;		[_ (printf "~%*****~%~%")]
+		[_ (printf "~%*****~%~%")]
 		)
     (emit-back-end ast env)
 ;    (printf "~%~%~%HEADER BEGIN~%~%")
