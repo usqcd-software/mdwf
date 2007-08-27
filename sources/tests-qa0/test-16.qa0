@@ -8,7 +8,7 @@
                                   [d-f "dF"  d-table]))
                                
 (procedure K-n ([stem "K"] count-flops)
-              ([res  pointer "res"  "struct Femion *"          ]
+              ([res  pointer "res"  "struct Fermion *"         ]
                [size int     "size" "int"                      ]
  	       [Vs   int     "Vs"   "int"                      ]
                [nt   pointer "nt"   "const struct Neighbor  *" ]
@@ -27,17 +27,17 @@
                                   [const (+ (offset-of k-neighbor u-f)
                                             (* d (size-of int)))]))
           (op int-mul () (f-offset) ([reg fs-offset] [reg sf-size]))
-          (op int-add () (f) ([reg rcv] [reg f-offset]))
-          (op int-move () (r) ([reg res]))
+          (op pointer-add () (f) ([reg rcv] [reg f-offset]))
+          (op pointer-move () (r) ([reg res]))
           (if-else [reg md]
             ; starting in d plus masked
             (loop () [j (const 0) (reg Vs)]
               (load qcd-half-fermion () h ([reg f]))
               (op qcd-unproject ([unproject d plus]) (ff) ([reg h]))
               (store qcd-fermion () ([reg r]) [reg ff])
-              (op int-add () (r) ([reg r] [const (size-of Fermion)]))
-              (op int-add () (f) ([reg f]
-                                  [const (/ (size-of Fermion) 2)])))
+              (op pointer-add () (r) ([reg r] [const (size-of Fermion)]))
+              (op pointer-add () (f) ([reg f]
+                                      [const (/ (size-of Fermion) 2)])))
             ; starting in d plus unmasked
             (begin
               (load int () u-x ([reg nt] [const (offset-of k-neighbor u-g)]))
@@ -50,9 +50,9 @@
                 (op qcd-mulh-conj () (gh) ([reg gauge] [reg hh]))
                 (op qcd-unproject ([unproject d plus]) (ff) ([reg gh]))
                 (store qcd-fermion () ([reg r]) [reg ff])
-                (op int-add () (r) ([reg r] [const (size-of Fermion)]))
-                (op int-add () (f) ([reg f]
-                                    [const (/ (size-of Fermion) 2)])))))))
+                (op pointer-add () (r) ([reg r] [const (size-of Fermion)]))
+                (op pointer-add () (f) ([reg f]
+                                        [const (/ (size-of Fermion) 2)])))))))
       (if [const (and (= *mdwf-start-sum-direction* 'minus)
                      (= *mdwf-start-sum-dimension* d))]
         (begin
@@ -65,8 +65,8 @@
                                                (* (size-of int) d))]))
           (op int-mul () (u-x) ([reg u-x] [const (size-of Gauge)]))
           (load qcd-su-n () gauge ([reg U] [reg u-x]))
-          (op int-add () (f) ([reg rcv] [reg f-offset]))
-          (op int-move () (r) ([reg res]))
+          (op pointer-add () (f) ([reg rcv] [reg f-offset]))
+          (op pointer-move () (r) ([reg res]))
           (if-else [reg md]
             ; starting in d minus masked
             (loop () [j (const 0) (reg Vs)]
@@ -74,9 +74,9 @@
               (op qcd-mulh () (gh) ([reg gauge] [reg h]))
               (op qcd-unproject ([unproject d minus]) (ff) ([reg gh]))
               (store qcd-fermion () ([reg r]) [reg ff])
-              (op int-add () (r) ([reg r] [const (size-of Fermion)]))
-              (op int-add () (f) ([reg f]
-                                  [const (/ (size-of Fermion) 2)])))
+              (op pointer-add () (r) ([reg r] [const (size-of Fermion)]))
+              (op pointer-add () (f) ([reg f]
+                                      [const (/ (size-of Fermion) 2)])))
             ; starting in d plus unmasked
             (loop () [j (const 0) (reg Vs)]
               (load qcd-fermion () h [(reg f)])
@@ -84,9 +84,9 @@
               (op qcd-mulh () (gh) ([reg gauge] [reg hh]))
               (op qcd-unproject ([unproject d minus]) (ff) ([reg gh]))
               (store qcd-fermion () ([reg r]) [reg ff])
-              (op int-add () (r) ([reg r] [const (size-of Fermion)]))
-              (op int-add () (f) ([reg f]
-                                  [const (/ (size-of Fermion) 2)])))))))
+              (op pointer-add () (r) ([reg r] [const (size-of Fermion)]))
+              (op pointer-add () (f) ([reg f]
+                                      [const (/ (size-of Fermion) 2)])))))))
     (load int () u-x ([reg nt] [const (offset-of k-neighbor u-g)]))
     (macro ([d (const 0) (const *dim*)])
       (if [const (not (and (= *mdwf-start-sum-direction* 'plus)
@@ -97,8 +97,8 @@
                                   [const (+ (offset-of k-neighbor u-f)
                                             (* d (size-of int)))]))
           (op int-mul () (f-offset) ([reg fs-offset] [reg sf-size]))
-          (op int-add () (f) ([reg rcv] [reg f-offset]))
-          (op int-move () (r) ([reg res]))
+          (op pointer-add () (f) ([reg rcv] [reg f-offset]))
+          (op pointer-move () (r) ([reg res]))
           (if-else [reg md]
             ; starting in d plus masked
             (loop () [j (const 0) (reg Vs)]
@@ -107,9 +107,9 @@
               (op qcd-unproject-add ([unproject d plus])
                                     (ff) ([reg ff] [reg h]))
               (store qcd-fermion () ([reg r]) [reg ff])
-              (op int-add () (r) ([reg r] [const (size-of Fermion)]))
-              (op int-add () (f) ([reg f]
-                                  [const (/ (size-of Fermion) 2)])))
+              (op pointer-add () (r) ([reg r] [const (size-of Fermion)]))
+              (op pointer-add () (f) ([reg f]
+                                      [const (/ (size-of Fermion) 2)])))
             ; continuing in d plus unmasked
             (begin
               (op int-add () (u-xd) ([reg u-x] [const (* (size-of int) d)]))
@@ -123,9 +123,9 @@
                 (op qcd-unproject-add ([unproject d plus])
                                       (ff) ([reg ff] [reg gh]))
                 (store qcd-fermion () ([reg r]) [reg ff])
-                (op int-add () (r) ([reg r] [const (size-of Fermion)]))
-                (op int-add () (f) ([reg f]
-                                    [const (/ (size-of Fermion) 2)])))))))
+                (op pointer-add () (r) ([reg r] [const (size-of Fermion)]))
+                (op pointer-add () (f) ([reg f]
+                                        [const (/ (size-of Fermion) 2)])))))))
       (if [const (not (and (= *mdwf-start-sum-direction* 'minus)
                            (= *mdwf-start-sum-dimension* d)))]
         (begin
@@ -138,8 +138,8 @@
                                                (* (size-of int) d))]))
           (op int-mul () (u-x) ([reg u-x] [const (size-of Gauge)]))
           (load qcd-su-n () gauge ([reg U] [reg u-x]))
-          (op int-add () (f) ([reg rcv] [reg f-offset]))
-          (op int-move () (r) ([reg res]))
+          (op pointer-add () (f) ([reg rcv] [reg f-offset]))
+          (op pointer-move () (r) ([reg res]))
           (if-else [reg md]
             ; starting in d minus masked
             (loop () [j (const 0) (reg Vs)]
@@ -149,9 +149,9 @@
               (op qcd-unproject-add ([unproject d minus])
                                     (ff) ([reg ff] [reg gh]))
               (store qcd-fermion () ([reg r]) [reg ff])
-              (op int-add () (r) ([reg r] [const (size-of Fermion)]))
-              (op int-add () (f) ([reg f]
-                                  [const (/ (size-of Fermion) 2)])))
+              (op pointer-add () (r) ([reg r] [const (size-of Fermion)]))
+              (op pointer-add () (f) ([reg f]
+                                      [const (/ (size-of Fermion) 2)])))
             ; starting in d plus unmasked
             (loop () [j (const 0) (reg Vs)]
               (load qcd-fermion () ff [(reg r)])
@@ -161,6 +161,6 @@
               (op qcd-unproject-add ([unproject d minus])
                                     (ff) ([reg ff] [reg gh]))
               (store qcd-fermion () ([reg r]) [reg ff])
-              (op int-add () (r) ([reg r] [const (size-of Fermion)]))
-              (op int-add () (f) ([reg f]
-                                  [const (/ (size-of Fermion) 2)])))))))))
+              (op pointer-add () (r) ([reg r] [const (size-of Fermion)]))
+              (op pointer-add () (f) ([reg f]
+                                      [const (/ (size-of Fermion) 2)])))))))))

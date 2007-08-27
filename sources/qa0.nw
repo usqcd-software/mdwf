@@ -2541,7 +2541,7 @@ compiler anyway. We don't attempt to do anything about them here.
 On pointers there is only one operation. We may have many inputs here.
 <<C99 emit-op operations>>=
 [(pointer-add) (check-put* out* 1)
-  (do-emit l "~a = ~a;" (preemit-addr* in* env))
+  (do-emit l "~a = ~a;" (car out*) (preemit-addr* input* env))
   flops]
 @
 
