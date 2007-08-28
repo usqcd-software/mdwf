@@ -1426,6 +1426,9 @@ For operations there is also a set of cases requiring special attention
     [(qcd-addh)          (q2c-addh          attr* output* input* r* env)]
     [(qcd-maddf)         (q2c-maddf         attr* output* input* r* env)]
     [(qcd-maddh)         (q2c-maddh         attr* output* input* r* env)]
+    [(qcd-fnorm-init)    (q2c-fnorm-init    attr* output* input* r* env)]
+    [(qcd-fnorm-add)     (q2c-fnorm-add     attr* output* input* r* env)]
+    [(qcd-fnorm-fini)    (q2c-fnorm-fini    attr* output* input* r* env)]
     [else (values (cons c r*) env)]))
 @
 
@@ -1480,6 +1483,57 @@ fermion is their dimension in the spinor space
 (define (q2c-maddh attr* output* input* r* env)
   (q2c-maddx attr* output* input* '*half-fermion-dim*
             'half-fermion r* env))
+@
+Operations to compute norm squared of Fermions:
+<<QCD to complex helpers>>=
+(define (q2c-fnorm-init attr* output* input* r* env)
+  (q2c-check-list output* = 1 "QCD fermion norm init outputs")
+  (q2c-check-list input* = 0 "QCD fermion norm init inputs")
+  (values (cons (make-qa0-operation attr*
+                                    'complex-norm-init
+                                    output*
+                                    input*)
+                r*)
+          env))
+@
+<<QCD to complex helpers>>=
+(define (q2c-fnorm-add attr* output* input* r* env)
+  <<Generate complex norm>>
+  (q2c-check-list output* = 1 "QCD fermion norm add outputs")
+  (q2c-check-list input* = 2 "QCD fermion norm add inputs")
+  (let ([c-n (ce-lookup-x env 'const '*colors* "Color count")]
+        [f-n (ce-lookup-x env 'const '*fermion-dim* "Fermion dimension")])
+    (let c-loop ([c 0] [r* r*] [env env])
+      (cond
+        [(= c c-n) (values r* env)]
+        [else (let f-loop ([f 0] [r* r*] [env env])
+                (cond
+                  [(= f f-n) (c-loop (+ c 1) r* env)]
+                  [else (let-values* ([(r* env) (complex-norm c f r* env)])
+                          (f-loop (+ f 1) r* env))]))]))))
+@
+
+<<Generate complex norm>>=
+(define (complex-norm c f r* env)
+  (let-values* ([(a env) (q2c-rename env (cadr input*) 'fermion c f)])
+    (values (cons (make-qa0-operation attr*
+                                      'complex-norm-add
+                                      output*
+                                      (list (car input*) (make-reg a)))
+                  r*)
+            env)))
+@
+
+<<QCD to complex helpers>>=
+(define (q2c-fnorm-fini attr* output* input* r* env)
+  (q2c-check-list output* = 1 "QCD fermion norm fini outputs")
+  (q2c-check-list input* = 1 "QCD fermion norm fini inputs")
+  (values (cons (make-qa0-operation attr*
+                                    'complex-norm-fini
+                                    output*
+                                    input*)
+                r*)
+          env))
 @
 
 \subsection{Loads}
@@ -2717,6 +2771,25 @@ operations needed, but some compilers are not very good with $i$.
   (+ flops 2)]
 @
 
+<<C99 emit-op operations>>=
+[(complex-norm-init) (check-put* out* 1) (check-put* in* 0)
+  (do-emit l "~a = 0.0;" (car out*))
+  flops]
+@
+
+<<C99 emit-op operations>>=
+[(complex-norm-add) (check-put* out* 1) (check-put* in* 2)
+  (do-emit l "~a = ~a + creal(conj(~a) * ~a);"
+           (car out*) (car in*) (cadr in*) (cadr in*))
+  (+ flops 4)]
+@
+
+<<C99 emit-op operations>>=
+[(complex-norm-fini) (check-put* out* 1) (check-put* in* 1)
+  (do-emit l "~a = ~a;" (car out*) (car in*))
+  flops]
+@
+
 Finally,
 <<File [[backends.ss]]>>=
 (define (machine-c99-32 env)
@@ -2743,6 +2816,9 @@ Finally,
   (complex-move              complex-double)
   (complex-mul               complex-double)
   (complex-neg               complex-double)
+  (complex-norm-init         double)
+  (complex-norm-add          double)
+  (complex-norm-fini         double)
   (double-add                double)
   (double-div                double)
   (double-madd               double)
