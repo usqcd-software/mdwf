@@ -39,6 +39,7 @@ qs.sources = common.ss \
              cfolding.ss \
              q2complex.ss \
              qa0print.ss \
+             mk-cheader.ss \
              backends.ss
 
 qz.objects = $(q.sources:%.c=%.o) \
