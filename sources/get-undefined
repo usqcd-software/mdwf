@@ -1,4 +1,5 @@
 #!/bin/sh -f
+
 nm -P libqtest.a | \
  awk '/ U /{if (found[$1]==0) found[$1]=1;} \
       / T /{found[$1]=2;} \
