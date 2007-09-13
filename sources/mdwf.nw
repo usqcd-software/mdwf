@@ -3013,45 +3013,46 @@ QX(`DDW_operator)(struct QX(Fermion) *result,
   <<DW Operator prologue>>
   if (params->unit_B) {
     qx(compute_ApF)(&state->even, result->even, fermion->even, params, gauge->data, fermion->odd);
-
     qx(compute_ApF)(&state->odd, result->odd, fermion->odd, params, gauge->data, fermion->even);
   } else {
-    void *tmp;
-    void *ptr;
-    size_t size;
-    struct Fermion *Te;
-    struct Fermion *To;
-
-    tmp = q(allocate_eo)(state, &size, &ptr, 0, 1, 1, sizeof (struct Fermion));
-    if (tmp == 0) {
-       q(setup_communication)(state, 0);
-       CHECK(tmp == 0, "not enough memory");
-    }
-    Te = ptr;
-    To = q(step_even_field)(state, Te, sizeof (struct Fermion));
-
-    qx(compute_B)(&state->even, To, params, fermion->odd);
-    qx(compute_ApF)(&state->even, result->even, fermion->even, params, gauge->data, To);
-
-    qx(compute_B)(&state->odd, Te, params, fermion->even);
-    qx(compute_ApF)(&state->odd, result->odd, fermion->odd, params, gauge->data, Te);
-
-    q(free)(state, tmp, size);
+    <<DW Generic Operator>>
   }
   <<DW Operator epilogue>>
 }
 @
+The generic operator does not assume that $B$ is trivial:
+<<DW Generic Operator>>=
+void *tmp;
+void *ptr;
+size_t size;
+struct Fermion *Te;
+struct Fermion *To;
+
+<<DW Generic Operator allocate memory>>
+qx(compute_B)(&state->even, To, params, fermion->odd);
+qx(compute_ApF)(&state->even, result->even, fermion->even, params, gauge->data, To);
+
+qx(compute_B)(&state->odd, Te, params, fermion->even);
+qx(compute_ApF)(&state->odd, result->odd, fermion->odd, params, gauge->data, Te);
+<<DW Generic Operator free memory>>
+@
+<<DW Generic Operator allocate memory>>=
+tmp = q(allocate_eo)(state, &size, &ptr, 0, 1, 1, sizeof (struct Fermion));
+if (tmp == 0) {
+   q(setup_communication)(state, 0);
+   CHECK(tmp == 0, "not enough memory");
+}
+Te = ptr;
+To = q(step_even_field)(state, Te, sizeof (struct Fermion));
+@
+
+<<DW Generic Operator free memory>>=
+q(free)(state, tmp, size);
+@
+
 Here is the prologue:
 <<DW Operator prologue>>=
-#define CHECK_ARG0(a) do { \
-  if ((a) == 0) return 1; else state = (a)->state; \
-  if (state->record == 0) return 1; } while (0)
-#define CHECK(cond,msg) do { \
-  if (cond) { q(set_error)(state, PROC "(): " msg); return 1; } } while (0)
-#define CHECK_ARG(a) do { \
-  CHECK((a)==0, "NULL" #a); \
-  CHECK((a)->state != state, #a "geometry mismatch"); } while (0)
- 
+<<Argument check macros begin>>
 struct Q(State) *state = 0;
 
 CHECK_ARG0(result);
@@ -3069,12 +3070,25 @@ And the epilogue:
 <<DW Operator epilogue>>=
 <<Stop timer>>
 return 0;
+<<Argument check macros end>>
+@
+<<Argument check macros begin>>=
+#define CHECK_ARG0(a) do { \
+  if ((a) == 0) return 1; else state = (a)->state; \
+  if (state->record == 0) return 1; } while (0)
+#define CHECK(cond,msg) do { \
+  if (cond) { q(set_error)(state, PROC "(): " msg); return 1; } } while (0)
+#define CHECK_ARG(a) do { \
+  CHECK((a)==0, "NULL" #a); \
+  CHECK((a)->state != state, #a "geometry mismatch"); } while (0)
+@
+
+<<Argument check macros end>>=
 #undef CHECK_ARG
 #undef CHECK_ARG0
 #undef CHECK
 #undef PROC
 @
-
 \subsection{Conjugated Dirac Domain Wall operator}
 <<File [[operator-ddwc.c]]>>=
 #include <mdwf.h>
