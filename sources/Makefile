@@ -1,6 +1,8 @@
 NOWEAVE  = noweave -filter btdefn -index -latex -delay
 NOTANGLE = notangle -filter btdefn
 NOINDEX  = noindex
+MZSCHEME = mzscheme
+MZC      = mzc
 INDENT   = indent
 LATEX    = latex
 DVIPDFM  = dvipdfm
@@ -40,7 +42,8 @@ qs.sources = common.ss \
              q2complex.ss \
              qa0print.ss \
              mk-cheader.ss \
-             backends.ss
+             backends.ss \
+             qa0.xx
 
 qz.objects = $(q.sources:%.c=%.o) \
              $(qx.sources:%.c=%f.o) \
@@ -70,10 +73,10 @@ all: pdf sources
 clean:
 	$(RM) $(noweb:%.nw=%.aux) $(noweb:%.nw=%.dvi) $(noweb:%.nw=%.log) \
               $(noweb:%.nw=%.nwi) $(noweb:%.nw=%.out) $(noweb:%.nw=%.tex) \
-              $(noweb:%.nw=%.toc) $(qz.objects) $(f.lib)
+              $(noweb:%.nw=%.toc) $(qz.objects) $(f.lib) qa0.xx qa0.ss
 
 realclean: clean
-	$(RM) $(f.pdf) $(sources) test-state
+	$(RM) $(f.pdf) $(sources) test-state qa0.ss qa0
 
 sources: $(sources)
 
@@ -130,3 +133,8 @@ $(qx.sources:%.c=%f.o): %f.o: %.c
 
 $(qz.objects): $(h.sources)
 
+qa0.ss: $(qs.sources) mk-qa0.ss
+	echo '(load "mk-qa0.ss")' | $(MZSCHEME)
+
+qa0: qa0.ss
+	$(MZC) --exe $@ $<

@@ -728,13 +728,17 @@ Finally, the constant expressions:
 We also need a procedure to build a procedure name:
 <<File [[parser.ss]]>>=
 (define (build-proc-name stem* env)
-  (let loop ([r (ce-lookup env 'proc-prefix "missing proc-prefix in CE")]
-             [stem* stem*])
-    (cond
-      [(null? stem*) (format "~a~a" r
-                             (ce-lookup env 'proc-suffix
-                                        "missing proc-suffix in CE"))]
-      [else (loop (format "~a~a" r (car stem*)) (cdr stem*))])))
+  (let ([prefix (ce-lookup env 'proc-prefix "missing proc-prefix in CE")]
+        [colors (ce-lookup-x env 'const '*colors* "missing *colors* in CE")]
+	[prec   (ce-lookup env 'prec-letter "missing prec-letter in CE")]
+	[infix  (ce-lookup env 'proc-infix "missing proc-infix in CE")])
+    (let loop ([r (format "~a~a~a~a" prefix prec colors infix)]
+               [stem* stem*])
+      (cond
+        [(null? stem*) (format "~a~a" r
+                               (ce-lookup env 'proc-suffix
+                                          "missing proc-suffix in CE"))]
+        [else (loop (format "~a~a" r (car stem*)) (cdr stem*))]))))
 @
 
 \section{CONSTANT FOLDING}
@@ -766,15 +770,17 @@ environment passed as an argument. It returns a new environment.
 (define (ce-start-env machine real)
   (let* ([env (ce-empty-env)]
          [env (machine env)]
-         [env (ce-bind env 'proc-prefix "mdwf_")]
+         [env (ce-bind env 'proc-prefix "qop_")]
+         [env (ce-bind env 'proc-infix "_MDWF_")]
+         [env (ce-bind env 'proc-suffix "")]
          [env
            (case real
-             [(double) (let* ([env (ce-bind env 'proc-suffix "_D")]
+             [(double) (let* ([env (ce-bind env 'prec-letter  "D")]
                               [env (ce-add-alias env 'REAL    'double)]
                               [env (ce-add-alias env 'COMPLEX 'complex-double)]
                               [env (ce-add-alias env 'VECTOR  'vector-double)])
                          env)]
-             [(float) (let* ([env (ce-bind env 'proc-suffix "_F")]
+             [(float) (let* ([env (ce-bind env 'prec-letter  "F")]
                              [env (ce-add-alias env 'REAL    'float)]
                              [env (ce-add-alias env 'COMPLEX 'complex-float)]
                              [env (ce-add-alias env 'VECTOR  'vector-float)])
@@ -2296,7 +2302,7 @@ environment and simply lookup relevant pieces here:
          [env (ce-add-type env 'complex-float  "float _Complex"   8  8)]
          [env (ce-add-type env 'complex-double "double _Complex" 16 16)]
          [env (ce-add-const env '*colors*            3)]
-         [env (ce-add-const env '*DIM*               4)]
+         [env (ce-add-const env '*dim*               4)]
          [env (ce-add-const env '*fermion-dim*       4)]
          [env (ce-add-const env '*half-fermion-dim*  2)])
     (let loop ([env env] [op* op*])
@@ -2470,7 +2476,7 @@ Make the emitted code look nice:
                    code* env)
   (let ([cf? (attr-search attr* 'count-flops (lambda (v) #t) (lambda () #f))]
         [counter (new-var)])
-    (printf "/* emitting procedure ~a */~%" name)
+;    (printf "/* emitting procedure ~a */~%" name)
     (emit-proc-decl cf? attr* name arg-c-name* arg-c-type* env)
     (printf "{~%")
     (if cf? (do-emit 1 "int ~a = 0;" counter))
@@ -2935,7 +2941,7 @@ The machine settings for BG/L:
          [env (ce-add-type env 'complex-float  "float _Complex"   8  8)]
          [env (ce-add-type env 'complex-double "double _Complex" 16 16)]
          [env (ce-add-const env '*colors*            3)]
-         [env (ce-add-const env '*DIM*               4)]
+         [env (ce-add-const env '*dim*               4)]
          [env (ce-add-const env '*fermion-dim*       4)]
          [env (ce-add-const env '*half-fermion-dim*  2)])
     env))
@@ -3001,6 +3007,119 @@ The machine settings for BG/L:
                        (loop (cdr name*) (cdr type*))]))
              (printf ");~%"))))
 @
+\section{PLT wrapper}
+Here is a wrapper for PLT scheme to make an executable.
+<<File [[qa0.xx]]>>=
+(module qa0
+        mzscheme
+   (include "common.ss")
+   (include "basis.ss")
+   (include "parser.ss")
+   (include "qa0print.ss")
+   (include "cfolding.ss")
+   (include "q2complex.ss")
+   (include "backends.ss")
+   (include "mk-cheader.ss")
+   (define *version* "$Id$")
+   <<Compiler routines>>
+   <<Compiler main>>
+)
+@
+
+The module does dispatching, substituting [[help]] for a missing command:
+<<Compiler main>>=
+(let ([arg* (current-command-line-arguments)])
+  (if (zero? (vector-length arg*))
+      (dispatch "help" '#("help"))
+      (dispatch (vector-ref arg* 0) arg*)))
+@
+
+<<Compiler routines>>=
+(define dispatch
+  (letrec ([cmd* `(
+             <<Compiler command>>
+            )])
+   (lambda (name arg*)
+     (let loop ([cmd* cmd*])
+       (cond
+         [(null? cmd*) (printf "qa0: Unknown command ~s. Try saying qa0 help~%"
+                               name)]
+         [(string=? name (caar cmd*)) ((caddar cmd*) arg*)]
+         [else (loop (cdr cmd*))])))))
+@
+
+Generic compiler:
+<<Compiler routines>>=
+(define (do-compile name machine d/f back-end)
+  (let-values* ([ast (parse-qa0-file name)]
+                [(ast env) (fold-constants/env ast machine d/f)]
+                [(ast e-x) (qcd->complex ast env)]
+                [(ast env) (complex->back-end ast env)])
+     (back-end ast env)
+))
+@
+
+Code generator:
+<<Compiler routines>>=
+(define (co-gen machine arg*)
+  (if (not  (= (vector-length arg*) 4))
+      (error 'qa0 "bad arguments"))
+  (let* ([d/f (vector-ref arg* 1)]
+         [output (vector-ref arg* 2)]
+         [input (vector-ref arg* 3)]
+         [d/f (cond
+                [(string=? d/f "double") 'double]
+                [(string=? d/f "float") 'float]
+                [else (error 'qa "Unexpected value for d/f: ~a" d/f)])])
+    (if (file-exists? output) (delete-file output))
+    (with-output-to-file output
+       (lambda ()
+         (printf "/* automagically generated by qa0 ~a */~%" *version*)
+         (do-compile input machine d/f
+            (lambda (ast env)
+              (mk-c-header ast env)
+              (emit-back-end ast env)))))))
+@
+
+
+Here are the commands:
+<<Compiler command>>=
+("help"   "                    print available commands"
+   ,(lambda (arg*)
+      (for-each (lambda (cdf) (printf "\t~a\t~a~%" (car cdf) (cadr cdf)))
+                cmd*)))
+@
+Building the C header. For now we use 32-bit C99 as the machine definition:
+<<Compiler command>>=
+("header" "d/f output input    build .h file d/f is double or float"
+  ,(lambda (arg*)
+     (if (not  (= (vector-length arg*) 4))
+         (error 'qa0 "bad arguments"))
+     (let* ([d/f (vector-ref arg* 1)]
+            [output (vector-ref arg* 2)]
+            [input (vector-ref arg* 3)]
+            [d/f (cond
+                   [(string=? d/f "double") 'double]
+                   [(string=? d/f "float") 'float]
+                   [else (error 'qa "Unexpected value for d/f: ~a" d/f)])])
+       (if (file-exists? output) (delete-file output))
+       (with-output-to-file output
+         (lambda ()
+           (printf "/* automagically generated by qa0 ~a */~%" *version*)
+           (do-compile input machine-c99-32 d/f mk-c-header))))))
+@
+
+Compile into C99:
+<<Compiler command>>=
+("c99"    "d/f output input    compile into C99 file d/f is double or float"
+  ,(lambda (arg*) (co-gen machine-c99-32 arg*)))
+@
+
+The version, as usual:
+<<Compiler command>>=
+("version" "                    print qa0 version and exit"
+  ,(lambda (arg*) (printf "qa0: ~a~%" *version*)))
+@
 
 \section{MACROS}
 Useful macros for R5RS with [[syntax-case]]. First, progress reporting:
@@ -3011,7 +3130,7 @@ Useful macros for R5RS with [[syntax-case]]. First, progress reporting:
       (begin (printf "  ")
              (apply printf format args)
              (printf "...~%")
-             (flush-output-port (current-output-port)))))
+             (flush-output (current-output-port)))))
 @
 Also, my favorite debugging procedure
 <<File [[common.ss]]>>=
@@ -3056,18 +3175,21 @@ lexical environment. The code below does the Right Thing.
   (datum->syntax-object template-id
     (string->symbol (apply string-append
                            (map (lambda (x)
-                                  (if (string? x) x
-                                      (symbol->string (syntax-object->datum x))))
+                                  (cond
+                                    [(string? x) x]
+                                    [(symbol? x) (symbol->string x)]
+                                    [else (symbol->string (syntax-object->datum 
+                                                                    x))]))
                                 args)))))
 @
 Now define the names used by [[variant]]:
 <<Injected names for [[define-syntax]]>>=
 [constructor (mk-name (syntax name) 'make- (syntax name))]
-[predicate (mk-name (syntax name) (syntax name) '?)]
-[(reader ...) (map (lambda (field)
-                     (mk-name (syntax name) (syntax name) "->" field))
-                   (syntax (field ...)))]
-[count (length (syntax (name field ...)))]
+[predicate (mk-name (syntax name) (syntax name) "?")]
+[(reader ...) (map (lambda (fld)
+                     (mk-name (syntax name) (syntax name) "->" fld))
+                   (syntax->list (syntax (field ...))))]
+[count (length (syntax->list (syntax (name field ...))))]
 @
 
 Finally, we can expand a new [[variant]] into corresponding defintions:
@@ -3097,10 +3219,10 @@ These variants are very useful with the [[variant-case]]:
       [(_ var (else exp exp1 ...)) (syntax (begin exp exp1 ...))]
       [(_ var (name [(fname field) ...] exp1 exp2 ...) clause ...)
        (with-syntax
-         ([predicate (mk-name (syntax name) (syntax name) '?)]
+         ([predicate (mk-name (syntax name) (syntax name) "?")]
           [(reader ...) (map (lambda (fld)
                                (mk-name (syntax name) (syntax name) "->" fld))
-                             (syntax (field ...)))])
+                             (syntax->list (syntax (field ...))))])
          (syntax (if (predicate var)
                      (let ([fname (reader var)] ...) exp1 exp2 ...)
                      (_ var clause ...))))]

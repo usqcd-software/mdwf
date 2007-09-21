@@ -1,6 +1,7 @@
 (array Fermion "xFermion" COMPLEX [const (* *fermion-dim* *colors*)])
 (array Gauge   "xGauge"   COMPLEX [const (* *colors* *colors*)])
 (array d-table "xdtable"  int     [const *dim*])
+(structure x-fermion "Fermion"   ([f "xFermion" Fermion]))
 (structure k-neighbor "Neighbor" ([mask "mask" int]
                                   [u-g "uU"  int]
                                   [u-f "uF"  d-table]
