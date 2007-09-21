@@ -133,7 +133,7 @@ $(qx.sources:%.c=%f.o): %f.o: %.c
 
 $(qz.objects): $(h.sources)
 
-qa0.ss: $(qs.sources) mk-qa0.ss
+qa0.ss: $(qs.sources) basis.ss mk-qa0.ss
 	echo '(load "mk-qa0.ss")' | $(MZSCHEME)
 
 qa0: qa0.ss
