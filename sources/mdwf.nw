@@ -3827,7 +3827,98 @@ We also define a starting link in a sum over links:
 @
 
 \section{C99}
-\par XXX gamma matrix descriptions -> complex code
+This section contains all low level routines for the C99 target. We still use
+[[qa0]] to generate the code, because it simplifies code verification and
+maintanence.
+\subsection{Boundary spin projection}
+<<File [[c99/spin.qa0]]>>=
+<<[[c99/qa0]] data types>>
+(repeat ([d (const 0) (const *dim*)]
+         [p/m (plus minus)])
+   <<[[c99/qa0]] simple boundary projection>>
+   <<[[c99/qa0]] gauged boundary projection>>
+)
+@
+
+Backward boundaries are projected and packed for sends:
+<<[[c99/qa0]] simple boundary projection>>=
+(procedure down-face ([stem "proj_g" d p/m]
+                      count-flops)
+           ([res    pointer "res"         "struct HalfFermion *"]
+            [size   int     "size"        "int"]
+            [l-v    int     "LsV"         "int"]
+            [link   pointer "down_link"   "const int *"]
+            [src    pointer "src"         "const struct Fermion *"])
+   (op int-mul () (bytes-in-s) ([reg l-v]
+                                [const (size-of Fermion)]))
+   (loop () (k [const 0] [reg size])
+     (load int () index ([reg link]))
+     (op pointer-add () (link) ([reg link]
+                                [const (size-of int)]))
+     (op int-mul () (src-off) ([reg bytes-in-s]
+                               [reg index]))
+     (op pointer-add () (f-addr) ([reg src]
+                                  [reg src-off]))
+     (loop () (j [const 0] [reg l-v])
+       (load qcd-fermion () f ([reg f-addr]))
+       (op pointer-add () (f-addr) ([reg f-addr]
+                                    [const (size-of Fermion)]))
+       (op qcd-project ([project d p/m]) (g) ([reg f]))
+       (store qcd-half-fermion () ([reg res]) [reg g])
+       (op pointer-add () (res) ([reg res]
+                                 [const (size-of Half-Fermion)])))))
+@
+Forward projections include multiplication by the gauge field. Since we move
+data forward along the link, the multiplication here is by $U^\dagger$.
+<<[[c99/qa0]] gauged boundary projection>>=
+(procedure up-face ([stem "proj_Ug" d p/m]
+                    count-flops)
+           ([res    pointer  "res"       "struct HalfFermion *"]
+            [size   int      "size"      "int"]
+            [l-v    int      "LsV"       "int"]
+            [link   pointer  "up_link"   "const struct UpLink *"]
+            [U      pointer  "U"         "const struct SUn *"]
+            [src    pointer  "src"       "const struct Fermion *"])
+   (op int-mul () (src-size) ([reg l-v]
+                              [const (size-of Fermion)]))
+   (loop () (k [const 0] [reg size])
+     (load int () f-index ([reg link]
+                           [const (offset-of up-link fermion)]))
+     (load int () U-index ([reg link]
+                           [const (offset-of up-link gauge)]))
+     (op pointer-add () (link) ([reg link]
+                                [const (size-of up-link)]))
+     (op int-mul () (f-offset) ([reg f-index]
+                                [reg src-size]))
+     (op int-mul () (U-offset) ([reg U-index]
+                                [const (size-of SU-n)]))
+     (op pointer-add () (f-addr) ([reg src]
+                                  [reg f-offset]))
+     (op pointer-add () (U-addr) ([reg U]
+                                  [reg U-offset]))
+     (load qcd-su-n () gauge ([reg U-addr]))
+     (loop () (j [const 0] [reg l-v])
+       (load qcd-fermion () f ([reg f-addr]))
+       (op pointer-add () (f-addr) ([reg f-addr]
+                                    [const (size-of Fermion)]))
+       (op qcd-project ([project d p/m]) (g) ([reg f]))
+       (op qcd-mulh-conj () (Ug) ([reg gauge]
+                                  [reg g]))
+       (store qcd-half-fermion () ([reg res]) [reg Ug])
+       (op pointer-add () (res) ([reg res]
+                                 [const (size-of Half-Fermion)])))))
+@
+
+\subsection{Data types}
+The forward link contains [[fermion]] and [[gauge]] index measured in units
+of $L_s$ links and $SU_n$ respectively:
+<<[[c99/qa0]] data types>>=
+(structure up-link "UpLink" ([fermion "fermion" int]
+                             [gauge   "gauge"   int]))
+@
+For QCD data types, the storage order is maintained by [[qa0]]. We do not need
+to define it here.
+
 \section{Blue Gene}
 \par XXX gamma matrix descriptions -> bg/l code
 \chapter{INTERFACE EXAMPLES}

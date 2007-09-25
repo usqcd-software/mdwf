@@ -789,7 +789,13 @@ environment passed as an argument. It returns a new environment.
          [env (ce-add-const env '*mdwf-start-sum-dimension*
                                  mdwf-start-sum-dimension)]
          [env (ce-add-const env '*mdwf-start-sum-direction*
-                                mdwf-start-sum-direction)])
+                                mdwf-start-sum-direction)]
+         [env (ce-add-qcd-type env 'Fermion "struct Fermion"
+                               '*colors* '*fermion-dim*)]
+         [env (ce-add-qcd-type env 'Half-Fermion "struct HalfFermion"
+                               '*colors* '*half-fermion-dim*)]
+         [env (ce-add-qcd-type env 'SU-n "struct SUn"
+                               '*colors* '*colors*)])
      (let loop ([env env] [p* mdwf-basis])
        (cond
          [(null? p*) env]
@@ -1307,6 +1313,17 @@ error.
        [else (error 'qa0 "Internal error in ce-add-alias")])))
 @
 
+All three QCD types are arrays of [[COMPLEX]]. They are added once [[COMPLEX]]
+has been aliased.
+<<Folding environment routines>>=
+(define (ce-add-qcd-type env name c-name a-dim b-dim)
+   (let ([c-size (ce-lookup-x env 'size-of 'COMPLEX "(size-of COMPLEX)")]
+         [c-align (ce-lookup-x env 'align-of 'COMPLEX "(align-of COMPLEX)")]
+         [a-size (ce-lookup-x env 'const a-dim "(const ~a)" a-dim)]
+         [b-size (ce-lookup-x env 'const b-dim "(const ~a)" b-dim)])
+     (ce-add-type env name c-name (* a-size b-size c-size) c-align)))
+@
+
 Do something on each environment entry satisfying given constraint:
 <<Folding environment routines>>=
 (define (ce-for-each env predicate? proc)
@@ -1401,8 +1418,8 @@ Now, the store handles some types in a special way
 <<QCD to complex helpers>>=
 (define (q2c-store c attr* type addr* value r* env)
   (case type
-    [(qcd-su-n) (q2c-store-su-n attr* addr* value r* env)]
-    [(qcd-fermion) (q2c-store-fermion attr* addr* value r* env)]
+    [(qcd-su-n)         (q2c-store-su-n         attr* addr* value r* env)]
+    [(qcd-fermion)      (q2c-store-fermion      attr* addr* value r* env)]
     [(qcd-half-fermion) (q2c-store-half-fermion attr* addr* value r* env)]
     [else (values (cons c r*) env)]))
 @
@@ -1411,8 +1428,8 @@ the way.
 <<QCD to complex helpers>>=
 (define (q2c-load c attr* type output addr* r* env)
   (case type
-    [(qcd-su-n) (q2c-load-su-n attr* output addr* r* env)]
-    [(qcd-fermion) (q2c-load-fermion attr* output addr* r* env)]
+    [(qcd-su-n)         (q2c-load-su-n         attr* output addr* r* env)]
+    [(qcd-fermion)      (q2c-load-fermion      attr* output addr* r* env)]
     [(qcd-half-fermion) (q2c-load-half-fermion attr* output addr* r* env)]
     [else (values (cons c r*) env)]))
 @
@@ -1421,23 +1438,27 @@ For operations there is also a set of cases requiring special attention
 <<QCD to complex helpers>>=
 (define (q2c-operation c attr* name output* input* r* env)
   (case name
-    [(qcd-project)       (q2c-project       attr* output* input* r* env)]
-    [(qcd-unproject)     (q2c-unproject     attr* output* input* r* env)]
-    [(qcd-unproject-add) (q2c-unproject-add attr* output* input* r* env)]
-    [(qcd-mulf)          (q2c-mulf          attr* output* input* r* env)]
-    [(qcd-mulh)          (q2c-mulh          attr* output* input* r* env)]
-    [(qcd-mulf-conj)     (q2c-mulf-conj     attr* output* input* r* env)]
-    [(qcd-mulh-conj)     (q2c-mulh-conj     attr* output* input* r* env)]
-    [(qcd-addf)          (q2c-addf          attr* output* input* r* env)]
-    [(qcd-addh)          (q2c-addh          attr* output* input* r* env)]
-    [(qcd-maddf)         (q2c-maddf         attr* output* input* r* env)]
-    [(qcd-maddh)         (q2c-maddh         attr* output* input* r* env)]
-    [(qcd-fnorm-init)    (q2c-fnorm-init    attr* output* input* r* env)]
-    [(qcd-fnorm-add)     (q2c-fnorm-add     attr* output* input* r* env)]
-    [(qcd-fnorm-fini)    (q2c-fnorm-fini    attr* output* input* r* env)]
-    [(qcd-fdot-init)     (q2c-fdot-init     attr* output* input* r* env)]
-    [(qcd-fdot-add)      (q2c-fdot-add     attr* output* input* r* env)]
-    [(qcd-fdot-fini)     (q2c-fdot-fini    attr* output* input* r* env)]
+    [(qcd-project)        (q2c-project         attr* output* input* r* env)]
+    [(qcd-unproject)      (q2c-unproject       attr* output* input* r* env)]
+    [(qcd-unproject-add)  (q2c-unproject-add   attr* output* input* r* env)]
+    [(qcd-mulf)           (q2c-mulf            attr* output* input* r* env)]
+    [(qcd-mulh)           (q2c-mulh            attr* output* input* r* env)]
+    [(qcd-mulf-conj)      (q2c-mulf-conj       attr* output* input* r* env)]
+    [(qcd-mulh-conj)      (q2c-mulh-conj       attr* output* input* r* env)]
+    [(qcd-addf)           (q2c-addf            attr* output* input* r* env)]
+    [(qcd-addh)           (q2c-addh            attr* output* input* r* env)]
+    [(qcd-maddf)          (q2c-maddf           attr* output* input* r* env)]
+    [(qcd-maddh)          (q2c-maddh           attr* output* input* r* env)]
+    [(qcd-fnorm-init)     (q2c-fnorm-init      attr* output* input* r* env)]
+    [(qcd-fnorm-add)      (q2c-fnorm-add       attr* output* input* r* env)]
+    [(qcd-fnorm-fini)     (q2c-fnorm-fini      attr* output* input* r* env)]
+    [(qcd-fdot-init)      (q2c-fdot-init       attr* output* input* r* env)]
+    [(qcd-fdot-add)       (q2c-fdot-add        attr* output* input* r* env)]
+    [(qcd-fdot-fini)      (q2c-fdot-fini       attr* output* input* r* env)]
+    [(qcd-su-n-offset)    (q2c-su-n-offset     attr* output* input* r* env)]
+    [(qcd-fermion-offset) (q2c-fermion-offset  attr* output* input* r* env)]
+    [(qcd-half-fermion-offset)
+                      (q2c-half-fermion-offset attr* output* input* r* env)]
     [else (values (cons c r*) env)]))
 @
 
@@ -1463,6 +1484,15 @@ is computable from the renaming model.
 (define (q2c-store-half-fermion attr* addr* value r* env)
   (q2c-store-xy attr* addr* value '*colors* '*half-fermion-dim*
                 'half-fermion r* env))
+(define (q2c-su-n-offset attr* output* input* r* env)
+  (q2c-offset attr* output* input* '*colors* '*colors*
+             'gauge r* env))
+(define (q2c-fermion-offset attr* output* input* r* env)
+  (q2c-offset attr* output* input* '*colors* '*fermion-dim*
+             'fermion r* env))
+(define (q2c-half-fermion-offset attr* output* input* r* env)
+  (q2c-offset attr* output* input* '*colors* '*half-fermion-dim*
+             'half-fermion r* env))
 @
 
 For additions and multiplications the only difference between full and half
@@ -1659,6 +1689,26 @@ produce one load instruction
                                   (append addr* (list (make-c-expr-number off)))
                                   (make-reg x))
                   r*)
+            env)))
+@
+
+\subsection{QCD offset computation}
+<<QCD to complex helpers>>=
+(define (q2c-offset attr* output* input* c-n f-n t r* env)
+  (let* ([c-n (ce-lookup-x env 'const c-n "Color count")]
+         [f-n (ce-lookup-x env 'const f-n "Fermion size")]
+ 	 [d-n (ce-lookup-x env 'size-of 'COMPLEX "complex size")]
+         [c   (car input*)] [f (cadr input*)] [r (car output*)]
+	 [r0  (make-reg (new-reg))] [m0 (* d-n f-n)]
+	 [r1  (make-reg (new-reg))] [m1 d-n])
+    (values `(,(make-qa0-operation '() 'int-add output* (list r0 r1))
+              ,(make-qa0-operation '() 'int-mul (list r1)
+                                                (list c
+						      (make-c-expr-number m1)))
+              ,(make-qa0-operation '() 'int-mul (list r0)
+                                                (list f
+						      (make-c-expr-number m0)))
+              ,@r*)
             env)))
 @
 
@@ -2761,6 +2811,12 @@ Next are double operations
 Finally, complex operations. We count the minimal number of floating point
 operations needed, but some compilers are not very good with $i$.
 <<C99 emit-op operations>>=
+[(complex) (check-put* out* 1) (check-put* in* 2)
+  (do-emit l "~a = ~a + I * ~a;" (car out*) (car in*) (cadr in*))
+  flops]
+@
+
+<<C99 emit-op operations>>=
 [(complex-real) (check-put* out* 1) (check-put* in* 1)
   (do-emit l "~a = creal(~a);" (car out*) (car in*))
   flops]
@@ -2890,6 +2946,7 @@ Finally,
   (complex-move              complex-double)
   (complex-mul               complex-double)
   (complex-neg               complex-double)
+  (complex                   complex-double)
   (complex-real              double)
   (complex-imag              double)
   (complex-norm-init         double)
@@ -3129,8 +3186,7 @@ Useful macros for R5RS with [[syntax-case]]. First, progress reporting:
   (if *verbose?*
       (begin (printf "  ")
              (apply printf format args)
-             (printf "...~%")
-             (flush-output (current-output-port)))))
+             (printf "...~%"))))
 @
 Also, my favorite debugging procedure
 <<File [[common.ss]]>>=

@@ -45,6 +45,8 @@ qs.sources = common.ss \
              backends.ss \
              qa0.xx
 
+qa.sources = c99/spin.qa0
+
 qz.objects = $(q.sources:%.c=%.o) \
              $(qx.sources:%.c=%f.o) \
              $(qx.sources:%.c=%d.o)
@@ -107,7 +109,7 @@ $(f.tex): %.tex: %.nw
 $(x.sources): mdwf.nw
 	($(NOTANGLE) $(TFLAGS) -R'File [[$@]]' -c $< >$@) || ($(RM) $@; exit 1)
 
-$(ss.sources): mdwf.nw
+$(qa.sources) $(ss.sources): mdwf.nw
 	($(NOTANGLE) -R'File [[$@]]' -c $< >$@) || ($(RM) $@; exit 1)
 
 $(qs.sources): qa0.nw
