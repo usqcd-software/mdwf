@@ -8,7 +8,9 @@ LATEX    = latex
 DVIPDFM  = dvipdfm
 TFLAGS   = -L'\#line %L "%F"%N'
 CC       = gcc
-INCDIRS  = $$HOME/QDP/qmp-2.1.7/include
+QA0c     = ./qa0 c99
+QA0h     = ./qa0 header
+INCDIRS  = $$HOME/QDP/qmp-2.1.7/include ./c99
 CFLAGS   = -Wall -I. $(INCDIRS:%=-I%)
 
 noweb = mdwf.nw qa0.nw
@@ -34,6 +36,8 @@ qx.sources = memory-g.c \
              operator-ddwc.c \
              op-ApF.c
 
+qi.sources = spin.c
+
 ss.sources = basis.ss
 
 qs.sources = common.ss \
@@ -49,13 +53,15 @@ qa.sources = c99/spin.qa0
 
 qz.objects = $(q.sources:%.c=%.o) \
              $(qx.sources:%.c=%f.o) \
-             $(qx.sources:%.c=%d.o)
+             $(qx.sources:%.c=%d.o) \
+             $(qi.sources:%.c=%d.o) \
+             $(qi.sources:%.c=%f.o) \
 
 c.sources = $(q.sources) \
             $(qx.sources) \
             test-state.c
 
-x.sources = $(h.sources) $(c.sources)
+x.sources = $(h.sources) $(c.sources) $(qi.sources)
 
 sources = $(x.sources) $(ss.sources) $(qs.sources)
 
@@ -127,11 +133,16 @@ $(f.lib): $(qz.objects)
 $(q.sources:%.c=%.o): %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-$(qx.sources:%.c=%d.o): %d.o: %.c
+$(qi.sources:%.c=%d.o) $(qx.sources:%.c=%d.o): %d.o: %.c
 	$(CC) -DQOP_MDWF_DEFAULT_PRECISION=\'D\' $(CFLAGS) -c -o $@ $<
 
-$(qx.sources:%.c=%f.o): %f.o: %.c
+$(qi.sources:%.c=%f.o) $(qx.sources:%.c=%f.o): %f.o: %.c
 	$(CC) -DQOP_MDWF_DEFAULT_PRECISION=\'F\' $(CFLAGS) -c -o $@ $<
+
+$(qi.sources:%.c=%f.o): $(qa.sources:%.qa0=%f.c)
+$(qi.sources:%.c=%d.o): $(qa.sources:%.qa0=%d.c)
+$(qi.sources:%.c=%f.o): $(qa.sources:%.qa0=%f.h)
+$(qi.sources:%.c=%d.o): $(qa.sources:%.qa0=%d.h)
 
 $(qz.objects): $(h.sources)
 
@@ -140,3 +151,22 @@ qa0.ss: $(qs.sources) basis.ss mk-qa0.ss
 
 qa0: qa0.ss
 	$(MZC) --exe $@ $<
+
+$(qa.sources:%.qa0=%d.c): %d.c: %.qa0
+	$(QA0c) double $@ $<
+
+$(qa.sources:%.qa0=%f.c): %f.c: %.qa0
+	$(QA0c) float $@ $<
+
+$(qa.sources:%.qa0=%d.h): %d.h: %.qa0
+	$(QA0h) double $@ $<
+
+$(qa.sources:%.qa0=%f.h): %f.h: %.qa0
+	$(QA0h) float $@ $<
+
+
+$(qa.sources:%.qa0=%d.c): qa0
+$(qa.sources:%.qa0=%f.c): qa0
+$(qa.sources:%.qa0=%d.h): qa0
+$(qa.sources:%.qa0=%f.h): qa0
+

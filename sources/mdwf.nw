@@ -1393,7 +1393,7 @@ with typos:
 Other types are now easy to define. Let us start with underlying arrays. First
 the $SU_3$ matrix. We only 
 <<Implementation types>>=
-struct SU3 {
+struct SUn {
   REAL complex u[Q(COLORS)][Q(COLORS)];
 };
 @
@@ -1433,7 +1433,7 @@ the actual data.
 struct QX(`Gauge) {
   struct Q(State) *state;
   size_t size;
-  struct SU3 *data;
+  struct SUn *data;
 };
 @
 
@@ -3137,7 +3137,7 @@ void qx(`compute_ApF)(struct eo_lattice *xy,
                      struct Fermion *result_x,
                      const struct Fermion *f_x,
                      const struct Q(Parameters) *params,
-		     const struct SU3 *u,
+		     const struct SUn *u,
                      const struct Fermion *f_y);
 @
 
@@ -3148,7 +3148,7 @@ qx(`compute_ApF)(struct eo_lattice *xy,
                 struct Fermion *r_x,
                 const struct Fermion *f_x,
                 const struct Q(Parameters) *params,
-                const struct SU3 *u,
+                const struct SUn *u,
                 const struct Fermion *f_y)
 {
    <<[[ApF]] start receive>>
@@ -3179,28 +3179,28 @@ if (xy->receive_handle)
 <<[[ApF]] start down 0-send>>=
 if (xy->send_hused) QMP_wait(xy->send_down_handle[0]);
 if (xy->send_down_size[0]) {
-  qx(proj_g0p)(xy->send_down_buffer[0], xy->send_down_size[0], xy->down_pack[0], f_y);
+  qx(proj_g0plus)(xy->send_down_buffer[0], xy->send_down_size[0], xy->down_pack[0], f_y);
   QMP_start(xy->send_down_handle[0]);
 }
 @
 <<[[ApF]] start down 1-send>>=
 if (xy->send_hused) QMP_wait(xy->send_down_handle[1]);
 if (xy->send_down_size[1]) {
-  qx(proj_g1p)(xy->send_down_buffer[1], xy->send_down_size[1], xy->down_pack[1], f_y);
+  qx(proj_g1plus)(xy->send_down_buffer[1], xy->send_down_size[1], xy->down_pack[1], f_y);
   QMP_start(xy->send_down_handle[1]);
 }
 @
 <<[[ApF]] start down 2-send>>=
 if (xy->send_hused) QMP_wait(xy->send_down_handle[2]);
 if (xy->send_down_size[2]) {
-  qx(proj_g2p)(xy->send_down_buffer[2], xy->send_down_size[2], xy->down_pack[2], f_y);
+  qx(proj_g2plus)(xy->send_down_buffer[2], xy->send_down_size[2], xy->down_pack[2], f_y);
   QMP_start(xy->send_down_handle[2]);
 }
 @
 <<[[ApF]] start down 3-send>>=
 if (xy->send_hused) QMP_wait(xy->send_down_handle[3]);
 if (xy->send_down_size[3]) {
-  qx(proj_g3p)(xy->send_down_buffer[3], xy->send_down_size[3], xy->down_pack[3], f_y);
+  qx(proj_g3plus)(xy->send_down_buffer[3], xy->send_down_size[3], xy->down_pack[3], f_y);
   QMP_start(xy->send_down_handle[3]);
 }
 @
@@ -3215,28 +3215,28 @@ xy->send_hused = 1;
 <<[[ApF]] start up 0-send>>=
 if (xy->send_hused) QMP_wait(xy->send_up_handle[0]);
 if (xy->send_up_size[0]) {
-  qx(proj_Ug0m)(xy->send_up_buffer[0], xy->send_up_size[0], xy->up_pack[0], f_y, u);
+  qx(proj_Ug0minus)(xy->send_up_buffer[0], xy->send_up_size[0], xy->up_pack[0], f_y, u);
   QMP_start(xy->send_up_handle[0]);
 }
 @
 <<[[ApF]] start up 1-send>>=
 if (xy->send_hused) QMP_wait(xy->send_up_handle[1]);
 if (xy->send_up_size[1]) {
-  qx(proj_Ug1m)(xy->send_up_buffer[1], xy->send_up_size[1], xy->up_pack[1], f_y, u);
+  qx(proj_Ug1minus)(xy->send_up_buffer[1], xy->send_up_size[1], xy->up_pack[1], f_y, u);
   QMP_start(xy->send_up_handle[1]);
 }
 @
 <<[[ApF]] start up 2-send>>=
 if (xy->send_hused) QMP_wait(xy->send_up_handle[2]);
 if (xy->send_up_size[2]) {
-  qx(proj_Ug2m)(xy->send_up_buffer[2], xy->send_up_size[2], xy->up_pack[2], f_y, u);
+  qx(proj_Ug2minus)(xy->send_up_buffer[2], xy->send_up_size[2], xy->up_pack[2], f_y, u);
   QMP_start(xy->send_up_handle[2]);
 }
 @
 <<[[ApF]] start up 3-send>>=
 if (xy->send_hused) QMP_wait(xy->send_up_handle[3]);
 if (xy->send_up_size[3]) {
-  qx(proj_Ug3m)(xy->send_up_buffer[3], xy->send_up_size[3], xy->up_pack[3], f_y, u);
+  qx(proj_Ug3minus)(xy->send_up_buffer[3], xy->send_up_size[3], xy->up_pack[3], f_y, u);
   QMP_start(xy->send_up_handle[3]);
 }
 @
@@ -3296,7 +3296,7 @@ QX(`import_gauge)(struct QX(Gauge) **gauge_ptr,
 {
    int a, b, p, la, i, d;
    int x[Q(DIM)];
-   struct SU3 *u;
+   struct SUn *u;
    REAL ur, ui;
    int *hi;
    int *lo;
@@ -3636,7 +3636,7 @@ qx(allocate_gauge)(struct Q(State) *state, struct QX(Gauge) **gauge_ptr)
   <<Begin interface routine>>
   *gauge_ptr = NULL;
   g = q(allocate_aligned)(state, &size, &ptr, sizeof (struct QX(Gauge)),
-                          state->volume * Q(DIM) * sizeof (struct SU3));
+                          state->volume * Q(DIM) * sizeof (struct SUn));
   CHECK0(g == NULL, "not enough memory for gauge field");
   state->used++;
   g->state = state;
@@ -3826,6 +3826,21 @@ We also define a starting link in a sum over links:
   <<Start $\mu$ sum>>
 @
 
+\section{Back-end interface}
+For spin projection we start with a simple file. Selection of the back end is
+done via compile-time switches.
+<<File [[spin.c]]>>=
+#include <mdwf.h>
+#if QOP_MDWF_DEFAULT_PRECISION == 'F'
+#include <spinf.h>
+#include <spinf.c>
+#endif
+#if QOP_MDWF_DEFAULT_PRECISION == 'D'
+#include <spind.h>
+#include <spind.c>
+#endif
+@
+
 \section{C99}
 This section contains all low level routines for the C99 target. We still use
 [[qa0]] to generate the code, because it simplifies code verification and
@@ -3844,7 +3859,7 @@ Backward boundaries are projected and packed for sends:
 <<[[c99/qa0]] simple boundary projection>>=
 (procedure down-face ([stem "proj_g" d p/m]
                       count-flops)
-           ([res    pointer "res"         "struct HalfFermion *"]
+           ([res    pointer "res"         "struct ProjectedFermion *"]
             [size   int     "size"        "int"]
             [l-v    int     "LsV"         "int"]
             [link   pointer "down_link"   "const int *"]
@@ -3873,7 +3888,7 @@ data forward along the link, the multiplication here is by $U^\dagger$.
 <<[[c99/qa0]] gauged boundary projection>>=
 (procedure up-face ([stem "proj_Ug" d p/m]
                     count-flops)
-           ([res    pointer  "res"       "struct HalfFermion *"]
+           ([res    pointer  "res"       "struct ProjectedFermion *"]
             [size   int      "size"      "int"]
             [l-v    int      "LsV"       "int"]
             [link   pointer  "up_link"   "const struct UpLink *"]
