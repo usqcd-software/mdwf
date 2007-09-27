@@ -10,11 +10,11 @@
 
 (procedure shift-down ([stem "shift_down" d p/m]
                        count-flops)
-              ([size   int       "int"              "size"]
-               [Ls     int       "int"              "ls"]
-               [res    pointer   "struct HalfFermion *" "result"]
-               [index pointer    "struct sd_data *" "index"]
-               [src    pointer   "struct Fermion *" "source"])
+              ([size   int       "size"   "int"                      ]
+               [Ls     int       "ls"     "int"                      ]
+               [res    pointer   "result" "struct ProjectedFermion *"]
+               [index  pointer   "index"  "struct sd_data *"         ]
+               [src    pointer   "source" "struct Fermion *"         ])
    (loop () (i [const 0] [reg size])
      (load int () s-index ([reg index]))
      (op mul-int () (s-offset) ([reg s-index] [const (size-of x-fermion)]))

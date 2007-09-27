@@ -3,7 +3,7 @@
        [b pointer   "b"    "double *"]
        [c pointer   "d"    "double _Complex *"]
        [va int      "va"   "int"]
-       [vb double    "vb"  "double"])
+       [vb double   "vb"   "double"])
    (load int ()
        r-a
        ([reg a] [const 20]))
@@ -45,11 +45,11 @@
        [reg r-c0]))
 
 (procedure test-proc ([stem "test2"])
-      ([a pointer   "a"    "int *"]
-       [b pointer   "b"    "double *"]
-       [c pointer   "d"    "double _Complex *"]
-       [va int      "va"   "int"]
-       [vb double    "vb"  "double"])
+      ([a  pointer   "a"    "int *"]
+       [b  pointer   "b"    "double *"]
+       [c  pointer   "d"    "double _Complex *"]
+       [va int       "va"   "int"]
+       [vb double    "vb"   "double"])
    (load int ()
        r-a
        ([reg a] [const 20]))

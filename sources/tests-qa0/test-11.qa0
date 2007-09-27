@@ -1,8 +1,8 @@
 (procedure proj-xx ([stem "qcd" 2 plus]
                    count-flops)
-              ([res    pointer   "struct Fermion *" "result"]
-               [U      pointer   "struct SU3 *"     "U"]
-               [src    pointer   "struct Fermion *" "source"])
+              ([res    pointer   "result" "struct Fermion *"]
+               [U      pointer   "U"      "struct SU3 *"    ]
+               [src    pointer   "source" "struct Fermion *"])
    (load qcd-fermion () x ([reg src]))
    (load qcd-su-n () v ([reg U]))
    (op qcd-project ([project 2 plus]) (q) ([reg x]))

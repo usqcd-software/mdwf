@@ -792,7 +792,7 @@ environment passed as an argument. It returns a new environment.
                                 mdwf-start-sum-direction)]
          [env (ce-add-qcd-type env 'Fermion "struct Fermion"
                                '*colors* '*fermion-dim*)]
-         [env (ce-add-qcd-type env 'Half-Fermion "struct HalfFermion"
+         [env (ce-add-qcd-type env 'Projected-Fermion "struct ProjectedFermion"
                                '*colors* '*half-fermion-dim*)]
          [env (ce-add-qcd-type env 'SU-n "struct SUn"
                                '*colors* '*colors*)])

@@ -1,9 +1,9 @@
 
 (procedure qcd-2 ([stem "qcd"]
                   count-flops)
-              ([res    pointer   "struct Fermion *" "result"]
-               [U      pointer   "struct SU3 *"     "U"]
-               [src    pointer   "struct Fermion *" "source"])
+              ([res    pointer   "result" "struct Fermion *"]
+               [U      pointer   "U"      "struct SU3 *"    ]
+               [src    pointer   "source" "struct Fermion *"])
    (load qcd-half-fermion () x ([reg src]))
    (load qcd-half-fermion () v ([reg U]))
    (op qcd-addh () (z) ([reg v] [reg x]))
@@ -11,9 +11,9 @@
 
 (procedure qcd-f ([stem "qcd_ff"]
                   count-flops)
-              ([res    pointer   "struct Fermion *" "result"]
-               [U      pointer   "struct SU3 *"     "U"]
-               [src    pointer   "struct Fermion *" "source"])
+              ([res    pointer   "result" "struct Fermion *"]
+               [U      pointer   "U"      "struct SU3 *"    ]
+               [src    pointer   "source" "struct Fermion *"])
    (load qcd-fermion () x ([reg src]))
    (load qcd-fermion () v ([reg U]))
    (op qcd-addf () (z) ([reg v] [reg x]))
@@ -21,10 +21,10 @@
 
 (procedure qcd-g ([stem "qcd_gg"]
                   count-flops)
-              ([res    pointer   "struct Fermion *" "result"]
-               [U      pointer   "struct SU3 *"     "U"]
-               [scale  double    "double"           "scale"]
-               [src    pointer   "struct Fermion *" "source"])
+              ([res    pointer   "result" "struct Fermion *"]
+               [U      pointer   "U"      "struct SU3 *"    ]
+               [scale  double    "scale"  "double"          ]
+               [src    pointer   "source" "struct Fermion *"])
    (load qcd-fermion () x ([reg src]))
    (load qcd-fermion () v ([reg U]))
    (op qcd-maddf () (z) ([reg scale] [reg v] [reg x]))

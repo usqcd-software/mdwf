@@ -27,5 +27,5 @@
         (op add-int () (res) ([reg res] [const (size-of Fermion)])))))
                          
 (procedure no-count ([stem "funny_name"])
-            ([n neighbor "struct bar *" "zzz"])
+            ([n neighbor "zzz" "struct bar *"])
    (op add-int () (n) ([reg n] [const 0])))

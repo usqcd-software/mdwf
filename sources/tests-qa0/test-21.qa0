@@ -1,13 +1,13 @@
 ; dot product of two fermions
 
 (procedure F-dot ([stem "fdot"] count-flops)
-              ([r-re  pointer "res_r"  "double *"              ]
-               [r-im  pointer "res_i"  "double *"              ]
-               [z     pointer "z"      "double _Complex *"     ]
-               [size int     "size" "int"                      ]
- 	       [Vs   int     "Vs"   "int"                      ]
-               [a    pointer "a"    "const struct Fermion *"   ]
-               [b    pointer "b"    "const struct Fermion *"   ])
+              ([r-re  pointer "res_r"  "double *"               ]
+               [r-im  pointer "res_i"  "double *"               ]
+               [z     pointer "z"      "double _Complex *"      ]
+               [size  int     "size"   "int"                    ]
+ 	       [Vs    int     "Vs"     "int"                    ]
+               [a     pointer "a"      "const struct Fermion *" ]
+               [b     pointer "b"      "const struct Fermion *" ])
   (op int-mul () (sf-size) ([reg Vs] [reg size]))
   (op qcd-fdot-init () (v) ())
   (loop () [i (const 0) (reg sf-size)]

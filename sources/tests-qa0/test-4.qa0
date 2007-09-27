@@ -8,11 +8,11 @@
                               [d-scale     "d_scale" double]))
 
 (procedure AB ([stem "AB"] count-flops)
-              ([size   int       "int"              "size"]
-               [Ls     int       "int"              "ls"]
-               [res    pointer   "struct Fermion *" "result"]
-               [matrix pointer   "struct AB_data *" "matrix"]
-               [src    pointer   "struct Fermion *" "source"])
+              ([size   int       "size"   "int"             ]
+               [Ls     int       "ls"     "int"             ]
+               [res    pointer   "result" "struct Fermion *"]
+               [matrix pointer   "matrix" "struct AB_data *"]
+               [src    pointer   "source" "struct Fermion *"])
    (loop () (i [const 0] [reg size])
      (op move ([type pointer]) (m) ([reg matrix]))
      (loop () (s [const 0] [reg Ls])

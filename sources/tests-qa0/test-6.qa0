@@ -10,12 +10,12 @@
 
 (procedure shift-up ([stem "shift_up" d p/m]
                       count-flops)
-              ([size   int       "int"                  "size"]
-               [Ls     int       "int"                  "ls"]
-               [res    pointer   "struct HalfFermion *" "result"]
-               [index  pointer   "struct sd_data *"     "index"]
-               [U      pointer   "struct SU3 *"         "U"]
-               [src    pointer   "struct Fermion *"     "source"])
+              ([size   int       "size"   "int"                      ]
+               [Ls     int       "ls"     "int"                      ]
+               [res    pointer   "result" "struct ProjectedFermion *"]
+               [index  pointer   "index"  "struct sd_data *"         ]
+               [U      pointer   "U"      "struct SU3 *"             ]
+               [src    pointer   "source" "struct Fermion *"         ])
    (loop () (i [const 0] [reg size])
      (load int () s-index ([reg index] [const (offset-of shift-data f-offset)]))
      (load int () u-index ([reg index] [const (offset-of shift-data u-offset)]))
