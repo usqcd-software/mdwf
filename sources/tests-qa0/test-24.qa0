@@ -1,0 +1,12 @@
+(procedure xx ([stem "madd_lohi"])
+           ([r     pointer "r"     "struct Fermion *"]
+	    [a     pointer "a"     "const struct Fermion *"]
+	    [b     pointer "b"     "const struct Fermion *"]
+            [alpha double  "alpha" "double"]
+            [beta  double  "beta"  "double"])
+  (load qcd-fermion-lo () x ([reg a]))
+  (load qcd-fermion-hi () y ([reg b]))
+  (load qcd-fermion () z ([reg r]))
+  (op pointer-add () (q) ([reg r] [const (size-of Fermion)]))
+  (op qcd-madd-lohi () (v) ([reg z] [reg alpha] [reg x] [reg beta] [reg y]))
+  (store qcd-fermion () ([reg r]) [reg v]))

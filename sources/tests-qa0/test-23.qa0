@@ -1,0 +1,6 @@
+(procedure load-xx ([stem "lohi"])
+           ([a pointer "a" "struct Fermion *"]
+	    [b pointer "b" "struct Fermion *"])
+  (load qcd-fermion () z ([reg a]))
+  (load qcd-fermion-lo () x ([reg a]))
+  (load qcd-fermion-hi () y ([reg b])))

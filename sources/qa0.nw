@@ -1429,8 +1429,10 @@ the way.
 (define (q2c-load c attr* type output addr* r* env)
   (case type
     [(qcd-su-n)         (q2c-load-su-n         attr* output addr* r* env)]
-    [(qcd-fermion)      (q2c-load-fermion      attr* output addr* r* env)]
     [(qcd-half-fermion) (q2c-load-half-fermion attr* output addr* r* env)]
+    [(qcd-fermion)      (q2c-load-fermion      attr* output addr* r* env)]
+    [(qcd-fermion-lo)   (q2c-load-fermion-lo   attr* output addr* r* env)]
+    [(qcd-fermion-hi)   (q2c-load-fermion-hi   attr* output addr* r* env)]
     [else (values (cons c r*) env)]))
 @
 
@@ -1449,6 +1451,7 @@ For operations there is also a set of cases requiring special attention
     [(qcd-addh)           (q2c-addh            attr* output* input* r* env)]
     [(qcd-maddf)          (q2c-maddf           attr* output* input* r* env)]
     [(qcd-maddh)          (q2c-maddh           attr* output* input* r* env)]
+    [(qcd-madd-lohi)      (q2c-madd-lohi       attr* output* input* r* env)]
     [(qcd-fnorm-init)     (q2c-fnorm-init      attr* output* input* r* env)]
     [(qcd-fnorm-add)      (q2c-fnorm-add       attr* output* input* r* env)]
     [(qcd-fnorm-fini)     (q2c-fnorm-fini      attr* output* input* r* env)]
@@ -1468,13 +1471,19 @@ is computable from the renaming model.
 <<QCD to complex helpers>>=
 (define (q2c-load-su-n attr* output addr* r* env)
   (q2c-load-xy attr* output addr* '*colors* '*colors*
-               'gauge r* env))
+               'all 'gauge r* env))
 (define (q2c-load-fermion attr* output addr* r* env)
   (q2c-load-xy attr* output addr* '*colors* '*fermion-dim*
-               'fermion r* env))
+               'all 'fermion r* env))
+(define (q2c-load-fermion-lo attr* output addr* r* env)
+  (q2c-load-xy attr* output addr* '*colors* '*fermion-dim*
+               'low 'fermion r* env))
+(define (q2c-load-fermion-hi attr* output addr* r* env)
+  (q2c-load-xy attr* output addr* '*colors* '*fermion-dim*
+               'high 'fermion r* env))
 (define (q2c-load-half-fermion attr* output addr* r* env)
   (q2c-load-xy attr* output addr* '*colors* '*half-fermion-dim*
-               'half-fermion r* env))
+               'all 'half-fermion r* env))
 (define (q2c-store-su-n attr* addr* value r* env)
   (q2c-store-xy attr* addr* value '*colors* '*colors*
                 'gauge r* env))
@@ -1632,16 +1641,18 @@ be sped up by reducing dependencies in [[qcd-fdot-add]].
 Now, all loads may be reordered as needed, but here we generate them in
 the increasing address order.
 <<QCD to complex helpers>>=
-(define (q2c-load-xy attr* output addr* c-n f-n t r* env)
-  (let ([c-n (ce-lookup-x env 'const c-n "Color count")]
-        [f-n (ce-lookup-x env 'const f-n "Fermion size")])
+(define (q2c-load-xy attr* output addr* c-n f-n part t r* env)
+  (let* ([c-n (ce-lookup-x env 'const c-n "Color count")]
+       	 [f-n (ce-lookup-x env 'const f-n "Fermion size")]
+	 [f-lo (if (eq? part 'high) (/ f-n 2) 0)]
+	 [f-hi (if (eq? part 'low) (/ f-n 2) f-n)])
     <<Generate complex load>>
     (let c-loop ([c 0] [r* r*] [env env])
       (cond
         [(= c c-n) (values r* env)]
-        [else (let f-loop ([f 0] [r* r*] [env env])
+        [else (let f-loop ([f f-lo] [r* r*] [env env])
                 (cond
-                  [(= f f-n) (c-loop (+ c 1) r* env)]
+                  [(= f f-hi) (c-loop (+ c 1) r* env)]
                   [else (let-values* ([(r* e) (c-load c f r* env)])
                           (f-loop (+ f 1) r* e))]))]))))
 @
@@ -1744,32 +1755,61 @@ produce one load instruction
 @
 
 <<QCD to complex helpers>>=
+(define (q2c-madd-lohi attr* output* input* r* env)
+  (let ([t 'fermion])
+    <<Generate complex multiply-add>>
+    (q2c-check-list output* = 1 "QCD madd-lohi outputs")
+    (q2c-check-list input* = 5 "QCD madd-lohi inputs")
+    (let* ([c-n (ce-lookup-x env 'const '*colors* "Color count")]
+           [f-n (ce-lookup-x env 'const '*fermion-dim* "Field dimension")]
+ 	   [f-m (/ f-n 2)]
+           [s  (car input*)]
+           [alpha (cadr input*)] [a (caddr input*)]
+           [beta (cadddr input*)] [b (car (cddddr input*))])
+      (let c-loop ([c 0] [r* r*] [env env])
+        (cond
+          [(= c c-n) (values r* env)]
+          [else
+            (let f-loop ([f 0] [r* r*] [env env])
+              (cond
+                [(= f f-n) (c-loop (+ c 1) r* env)]
+                [else
+                  (let-values*
+                       ([(r* env) (if (< f f-m)
+                                      (complex-madd c f s alpha a r* env)
+                                      (complex-madd c f s beta b r* env))])
+                    (f-loop (+ f 1) r* env))]))])))))
+@
+
+<<QCD to complex helpers>>=
 (define (q2c-maddx attr* output* input* f-n t r* env)
   <<Generate complex multiply-add>>
   (q2c-check-list output* = 1 "QCD madd outputs")
   (q2c-check-list input* = 3 "QCD madd inputs")
   (let ([c-n (ce-lookup-x env 'const '*colors* "Color count")]
-        [f-n (ce-lookup-x env 'const f-n "Field dimension")])
+        [f-n (ce-lookup-x env 'const f-n "Field dimension")]
+        [s  (car input*)]
+        [alpha (cadr input*)] [a (caddr input*)])
     (let c-loop ([c 0] [r* r*] [env env])
       (cond
         [(= c c-n) (values r* env)]
         [else (let f-loop ([f 0] [r* r*] [env env])
                 (cond
                   [(= f f-n) (c-loop (+ c 1) r* env)]
-                  [else (let-values* ([(r* env) (complex-madd c f r* env)])
+                  [else (let-values*
+                             ([(r* env) (complex-madd c f s alpha a r* env)])
                            (f-loop (+ f 1) r* env))]))]))))
                                   
 @
 <<Generate complex multiply-add>>=
-(define (complex-madd c f r* env)
-  (let-values* ([(a) (car input*)]
-                [(b env) (q2c-rename env (cadr input*) t c f)]
-                [(r env) (q2c-rename env (caddr input*) t c f)]
+(define (complex-madd c f s alpha a r* env)
+  (let-values* ([(s env) (q2c-rename env s t c f)]
+                [(a env) (q2c-rename env a t c f)]
                 [(x env) (q2c-rename env (car output*) t c f)])
     (values (cons (make-qa0-operation attr*
                                       'complex-rmadd
                                       (list (make-reg x))
-                                      (list a (make-reg b) (make-reg r)))
+                                      (list alpha (make-reg a) (make-reg s)))
                   r*)
             env)))
 @
