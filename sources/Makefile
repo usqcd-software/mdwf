@@ -8,6 +8,7 @@ LATEX    = latex
 DVIPDFM  = dvipdfm
 TFLAGS   = -L'\#line %L "%F"%N'
 CC       = gcc
+AR       = ar
 QA0c     = ./qa0 c99
 QA0h     = ./qa0 header
 INCDIRS  = $$HOME/QDP/qmp-2.1.7/include ./c99
@@ -34,9 +35,11 @@ qx.sources = memory-g.c \
              export-h.c \
              operator-ddw.c \
              operator-ddwc.c \
-             op-ApF.c
+             op-ApF.c \
+             op-B.c
 
-qi.sources = spin.c
+qi.sources = spin.c \
+             ABF.c
 
 ss.sources = basis.ss
 
@@ -49,7 +52,8 @@ qs.sources = common.ss \
              backends.ss \
              qa0.xx
 
-qa.sources = c99/spin.qa0
+qa.sources = c99/spin.qa0 \
+             c99/ABF.qa0
 
 qz.objects = $(q.sources:%.c=%.o) \
              $(qx.sources:%.c=%f.o) \

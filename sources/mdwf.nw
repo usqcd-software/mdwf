@@ -3130,6 +3130,17 @@ void qx(`compute_B)(struct eo_lattice *xy,
                    const struct Q(Parameters) *params,
                    const struct Fermion *f_y);
 @
+<<File [[op-B.c]]>>=
+#include <mdwf.h>
+void
+qx(`compute_B)(struct eo_lattice *xy,
+               struct Fermion *result_x,
+               const struct Q(Parameters) *params,
+               const struct Fermion *f_x)
+{
+  qx(do_AB)(result_x, xy->full_size, params->LsV, params->B, f_x);
+}
+@
 \subsection{XXX F-operators}
 XXX Here is a sample F-operator routine:
 <<Implementation prototypes>>=
@@ -3151,6 +3162,7 @@ qx(`compute_ApF)(struct eo_lattice *xy,
                 const struct SUn *u,
                 const struct Fermion *f_y)
 {
+   int LsV = params->LsV;
    <<[[ApF]] start receive>>
    <<[[ApF]] start down sends>>
    <<[[ApF]] start up sends>>
@@ -3179,28 +3191,28 @@ if (xy->receive_handle)
 <<[[ApF]] start down 0-send>>=
 if (xy->send_hused) QMP_wait(xy->send_down_handle[0]);
 if (xy->send_down_size[0]) {
-  qx(proj_g0plus)(xy->send_down_buffer[0], xy->send_down_size[0], xy->down_pack[0], f_y);
+  qx(proj_g0plus)(xy->send_down_buffer[0], xy->send_down_size[0], LsV, xy->down_pack[0], f_y);
   QMP_start(xy->send_down_handle[0]);
 }
 @
 <<[[ApF]] start down 1-send>>=
 if (xy->send_hused) QMP_wait(xy->send_down_handle[1]);
 if (xy->send_down_size[1]) {
-  qx(proj_g1plus)(xy->send_down_buffer[1], xy->send_down_size[1], xy->down_pack[1], f_y);
+  qx(proj_g1plus)(xy->send_down_buffer[1], xy->send_down_size[1], LsV, xy->down_pack[1], f_y);
   QMP_start(xy->send_down_handle[1]);
 }
 @
 <<[[ApF]] start down 2-send>>=
 if (xy->send_hused) QMP_wait(xy->send_down_handle[2]);
 if (xy->send_down_size[2]) {
-  qx(proj_g2plus)(xy->send_down_buffer[2], xy->send_down_size[2], xy->down_pack[2], f_y);
+  qx(proj_g2plus)(xy->send_down_buffer[2], xy->send_down_size[2], LsV, xy->down_pack[2], f_y);
   QMP_start(xy->send_down_handle[2]);
 }
 @
 <<[[ApF]] start down 3-send>>=
 if (xy->send_hused) QMP_wait(xy->send_down_handle[3]);
 if (xy->send_down_size[3]) {
-  qx(proj_g3plus)(xy->send_down_buffer[3], xy->send_down_size[3], xy->down_pack[3], f_y);
+  qx(proj_g3plus)(xy->send_down_buffer[3], xy->send_down_size[3], LsV, xy->down_pack[3], f_y);
   QMP_start(xy->send_down_handle[3]);
 }
 @
@@ -3215,14 +3227,14 @@ xy->send_hused = 1;
 <<[[ApF]] start up 0-send>>=
 if (xy->send_hused) QMP_wait(xy->send_up_handle[0]);
 if (xy->send_up_size[0]) {
-  qx(proj_Ug0minus)(xy->send_up_buffer[0], xy->send_up_size[0], xy->up_pack[0], f_y, u);
+  qx(proj_Ug0minus)(xy->send_up_buffer[0], xy->send_up_size[0], LsV, xy->up_pack[0], f_y, u);
   QMP_start(xy->send_up_handle[0]);
 }
 @
 <<[[ApF]] start up 1-send>>=
 if (xy->send_hused) QMP_wait(xy->send_up_handle[1]);
 if (xy->send_up_size[1]) {
-  qx(proj_Ug1minus)(xy->send_up_buffer[1], xy->send_up_size[1], xy->up_pack[1], f_y, u);
+  qx(proj_Ug1minus)(xy->send_up_buffer[1], xy->send_up_size[1], LsV, xy->up_pack[1], f_y, u);
   QMP_start(xy->send_up_handle[1]);
 }
 @
@@ -3236,18 +3248,16 @@ if (xy->send_up_size[2]) {
 <<[[ApF]] start up 3-send>>=
 if (xy->send_hused) QMP_wait(xy->send_up_handle[3]);
 if (xy->send_up_size[3]) {
-  qx(proj_Ug3minus)(xy->send_up_buffer[3], xy->send_up_size[3], xy->up_pack[3], f_y, u);
+  qx(proj_Ug3minus)(xy->send_up_buffer[3], xy->send_up_size[3], LsV, xy->up_pack[3], f_y, u);
   QMP_start(xy->send_up_handle[3]);
 }
 @
 
 <<[[ApF]] compute body>>=
-qx(do_ApF)(r_x, xy->body_size, xy->body_neighbor, 0 /* XXX params */,
-           f_x, u, f_y, NULL);
+qx(do_ApF)(r_x, xy->body_size, LsV, xy->body_neighbor, params->A, f_x, u, f_y, NULL);
 @
 <<[[ApF]] compute face>>=
-qx(do_ApF)(r_x, xy->face_size, xy->face_neighbor, 0 /* XXX params */,
-           f_x, u, f_y, xy->receive_buffer);
+qx(do_ApF)(r_x, xy->face_size, LsV, xy->face_neighbor, params->A, f_x, u, f_y, xy->receive_buffer);
 @
 
 and more prototypes:
@@ -3826,7 +3836,8 @@ We also define a starting link in a sum over links:
   <<Start $\mu$ sum>>
 @
 
-\section{Back-end interface}
+\section{XXX Back-end interface}
+XXX make it better --- move includes to [[<mdwf.h>]].
 For spin projection we start with a simple file. Selection of the back end is
 done via compile-time switches.
 <<File [[spin.c]]>>=
@@ -3840,14 +3851,74 @@ done via compile-time switches.
 #include <spind.c>
 #endif
 @
+Compute engines for $A$, $B$, $F$, and their combinations.
+<<File [[ABF.c]]>>=
+#include <mdwf.h>
+#if QOP_MDWF_DEFAULT_PRECISION == 'F'
+#include <abff.h>
+#include <abff.c>
+#endif
+#if QOP_MDWF_DEFAULT_PRECISION == 'D'
+#include <abfd.h>
+#include <abfd.c>
+#endif
+@
 
 \section{C99}
 This section contains all low level routines for the C99 target. We still use
 [[qa0]] to generate the code, because it simplifies code verification and
 maintanence.
+\subsection{Diagonal parts}
+<<File [[c99/ABF.qa0]]>>=
+<<[[c99/qa0]] ABF diagonal data types>>
+(procedure A-B ([stem "do_AB"] count-flops)
+           ([res-x    pointer "res_x"    "struct Fermion *"]
+            [size     int     "size"     "int"]
+            [LsV      int     "LsV"      "int"]
+            [a-table  pointer "a_table"  "const struct ABTable *"]
+	    [src-x    pointer "src_x"    "const struct Fermion *"])
+   (loop () (i [const 0] [reg size])
+     (op pointer-move () (a-k) ([reg a-table]))
+     (loop () (k [const 0] [reg LsV])
+        <<[[A-B]] process one point>>
+        (op pointer-add () (a-k) ([reg a-k] [const (size-of AB-Table)]))
+        (op pointer-add () (res-x) ([reg a-k] [const (size-of Fermion)]))
+        (op pointer-add () (src-x) ([reg a-k] [const (size-of Fermion)])))))
+@
+
+<<[[A-B]] process one point>>=
+(load int () lo-i ([reg a-k] [const (offset-of AB-Table lo-i)]))
+(load int () hi-i ([reg a-k] [const (offset-of AB-Table hi-i)]))
+(load double () c-zz ([reg a-k] [const (offset-of AB-Table alpha-c)]))
+(load double () c-lo ([reg a-k] [const (offset-of AB-Table alpha-lo)]))
+(load double () c-hi ([reg a-k] [const (offset-of AB-Table alpha-hi)]))
+(op int-mul () (lo-off) ([reg lo-i] [const (size-of Fermion)]))
+(op int-mul () (hi-off) ([reg hi-i] [const (size-of Fermion)]))
+(op pointer-add () (s-lo) ([reg src-x] [reg lo-off]))
+(op pointer-add () (s-hi) ([reg src-x] [reg hi-off]))
+(load qcd-fermion () f-zz ([reg src-x]))
+(load qcd-fermion-lo () f-lo ([reg s-lo]))
+(load qcd-fermion-hi () f-hi ([reg s-hi]))
+(op qcd-scalef () (r-z) ([reg c-zz] [reg f-zz]))
+(op qcd-madd-lohi () (v) ([reg r-z] [reg c-lo] [reg f-lo] [reg c-hi] [reg f-hi]))
+(store qcd-fermion () ([reg res-x]) [reg v])
+@
+
+The diagonal parts expect offsets from the curernt position for
+$(1+\gamma_5)/2$ and $(1-\gamma_5)/2$, and three [[double]] scales---for each
+projected piece and the central element. The order of structure elements
+is chosen to minimize [[struct ABTable]] size.
+<<[[c99/qa0]] ABF diagonal data types>>=
+(structure AB-Table "ABTable" ([lo-i      "lo"    int]
+                               [hi-i      "hi"    int]
+                               [alpha-c   "c"     double]
+                               [alpha-lo  "c_lo"  double]
+                               [alpha-hi  "c_hi"  double]))
+@
+
 \subsection{Boundary spin projection}
 <<File [[c99/spin.qa0]]>>=
-<<[[c99/qa0]] data types>>
+<<[[c99/qa0]] spin data types>>
 (repeat ([d (const 0) (const *dim*)]
          [p/m (plus minus)])
    <<[[c99/qa0]] simple boundary projection>>
@@ -3881,7 +3952,7 @@ Backward boundaries are projected and packed for sends:
        (op qcd-project ([project d p/m]) (g) ([reg f]))
        (store qcd-half-fermion () ([reg res]) [reg g])
        (op pointer-add () (res) ([reg res]
-                                 [const (size-of Half-Fermion)])))))
+                                 [const (size-of Projected-Fermion)])))))
 @
 Forward projections include multiplication by the gauge field. Since we move
 data forward along the link, the multiplication here is by $U^\dagger$.
@@ -3921,18 +3992,15 @@ data forward along the link, the multiplication here is by $U^\dagger$.
                                   [reg g]))
        (store qcd-half-fermion () ([reg res]) [reg Ug])
        (op pointer-add () (res) ([reg res]
-                                 [const (size-of Half-Fermion)])))))
+                                 [const (size-of Projected-Fermion)])))))
 @
 
-\subsection{Data types}
 The forward link contains [[fermion]] and [[gauge]] index measured in units
 of $L_s$ links and $SU_n$ respectively:
-<<[[c99/qa0]] data types>>=
+<<[[c99/qa0]] spin data types>>=
 (structure up-link "UpLink" ([fermion "fermion" int]
                              [gauge   "gauge"   int]))
 @
-For QCD data types, the storage order is maintained by [[qa0]]. We do not need
-to define it here.
 
 \section{Blue Gene}
 \par XXX gamma matrix descriptions -> bg/l code
@@ -4079,8 +4147,13 @@ sublat(int lo[], int hi[], const int node[], void *env)
 }
 @
 
+
+XXX Place where it belongs
 <<[[Parameters]] components>>=
 int unit_B;
+int LsV;
+void *A;
+void *B;
 @
 
 \appendix
