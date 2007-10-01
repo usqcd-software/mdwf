@@ -3868,53 +3868,6 @@ Compute engines for $A$, $B$, $F$, and their combinations.
 This section contains all low level routines for the C99 target. We still use
 [[qa0]] to generate the code, because it simplifies code verification and
 maintanence.
-\subsection{Diagonal parts}
-<<File [[c99/ABF.qa0]]>>=
-<<[[c99/qa0]] ABF diagonal data types>>
-(procedure A-B ([stem "do_AB"] count-flops)
-           ([res-x    pointer "res_x"    "struct Fermion *"]
-            [size     int     "size"     "int"]
-            [LsV      int     "LsV"      "int"]
-            [a-table  pointer "a_table"  "const struct ABTable *"]
-	    [src-x    pointer "src_x"    "const struct Fermion *"])
-   (loop () (i [const 0] [reg size])
-     (op pointer-move () (a-k) ([reg a-table]))
-     (loop () (k [const 0] [reg LsV])
-        <<[[A-B]] process one point>>
-        (op pointer-add () (a-k) ([reg a-k] [const (size-of AB-Table)]))
-        (op pointer-add () (res-x) ([reg a-k] [const (size-of Fermion)]))
-        (op pointer-add () (src-x) ([reg a-k] [const (size-of Fermion)])))))
-@
-
-<<[[A-B]] process one point>>=
-(load int () lo-i ([reg a-k] [const (offset-of AB-Table lo-i)]))
-(load int () hi-i ([reg a-k] [const (offset-of AB-Table hi-i)]))
-(load double () c-zz ([reg a-k] [const (offset-of AB-Table alpha-c)]))
-(load double () c-lo ([reg a-k] [const (offset-of AB-Table alpha-lo)]))
-(load double () c-hi ([reg a-k] [const (offset-of AB-Table alpha-hi)]))
-(op int-mul () (lo-off) ([reg lo-i] [const (size-of Fermion)]))
-(op int-mul () (hi-off) ([reg hi-i] [const (size-of Fermion)]))
-(op pointer-add () (s-lo) ([reg src-x] [reg lo-off]))
-(op pointer-add () (s-hi) ([reg src-x] [reg hi-off]))
-(load qcd-fermion () f-zz ([reg src-x]))
-(load qcd-fermion-lo () f-lo ([reg s-lo]))
-(load qcd-fermion-hi () f-hi ([reg s-hi]))
-(op qcd-scalef () (r-z) ([reg c-zz] [reg f-zz]))
-(op qcd-madd-lohi () (v) ([reg r-z] [reg c-lo] [reg f-lo] [reg c-hi] [reg f-hi]))
-(store qcd-fermion () ([reg res-x]) [reg v])
-@
-
-The diagonal parts expect offsets from the curernt position for
-$(1+\gamma_5)/2$ and $(1-\gamma_5)/2$, and three [[double]] scales---for each
-projected piece and the central element. The order of structure elements
-is chosen to minimize [[struct ABTable]] size.
-<<[[c99/qa0]] ABF diagonal data types>>=
-(structure AB-Table "ABTable" ([lo-i      "lo"    int]
-                               [hi-i      "hi"    int]
-                               [alpha-c   "c"     double]
-                               [alpha-lo  "c_lo"  double]
-                               [alpha-hi  "c_hi"  double]))
-@
 
 \subsection{Boundary spin projection}
 <<File [[c99/spin.qa0]]>>=
@@ -3935,24 +3888,18 @@ Backward boundaries are projected and packed for sends:
             [l-v    int     "LsV"         "int"]
             [link   pointer "down_link"   "const int *"]
             [src    pointer "src"         "const struct Fermion *"])
-   (op int-mul () (bytes-in-s) ([reg l-v]
-                                [const (size-of Fermion)]))
+   (op int-mul () (bytes-in-s) ([reg l-v] [const (size-of Fermion)]))
    (loop () (k [const 0] [reg size])
      (load int () index ([reg link]))
-     (op pointer-add () (link) ([reg link]
-                                [const (size-of int)]))
-     (op int-mul () (src-off) ([reg bytes-in-s]
-                               [reg index]))
-     (op pointer-add () (f-addr) ([reg src]
-                                  [reg src-off]))
+     (op pointer-add () (link) ([reg link] [const (size-of int)]))
+     (op int-mul () (src-off) ([reg bytes-in-s] [reg index]))
+     (op pointer-add () (f-addr) ([reg src] [reg src-off]))
      (loop () (j [const 0] [reg l-v])
        (load qcd-fermion () f ([reg f-addr]))
-       (op pointer-add () (f-addr) ([reg f-addr]
-                                    [const (size-of Fermion)]))
+       (op pointer-add () (f-addr) ([reg f-addr] [const (size-of Fermion)]))
        (op qcd-project ([project d p/m]) (g) ([reg f]))
        (store qcd-half-fermion () ([reg res]) [reg g])
-       (op pointer-add () (res) ([reg res]
-                                 [const (size-of Projected-Fermion)])))))
+       (op pointer-add () (res) ([reg res] [const (size-of Projected-Fermion)])))))
 @
 Forward projections include multiplication by the gauge field. Since we move
 data forward along the link, the multiplication here is by $U^\dagger$.
@@ -3965,34 +3912,23 @@ data forward along the link, the multiplication here is by $U^\dagger$.
             [link   pointer  "up_link"   "const struct UpLink *"]
             [U      pointer  "U"         "const struct SUn *"]
             [src    pointer  "src"       "const struct Fermion *"])
-   (op int-mul () (src-size) ([reg l-v]
-                              [const (size-of Fermion)]))
+   (op int-mul () (src-size) ([reg l-v] [const (size-of Fermion)]))
    (loop () (k [const 0] [reg size])
-     (load int () f-index ([reg link]
-                           [const (offset-of up-link fermion)]))
-     (load int () U-index ([reg link]
-                           [const (offset-of up-link gauge)]))
-     (op pointer-add () (link) ([reg link]
-                                [const (size-of up-link)]))
-     (op int-mul () (f-offset) ([reg f-index]
-                                [reg src-size]))
-     (op int-mul () (U-offset) ([reg U-index]
-                                [const (size-of SU-n)]))
-     (op pointer-add () (f-addr) ([reg src]
-                                  [reg f-offset]))
-     (op pointer-add () (U-addr) ([reg U]
-                                  [reg U-offset]))
+     (load int () f-index ([reg link] [const (offset-of up-link fermion)]))
+     (load int () U-index ([reg link] [const (offset-of up-link gauge)]))
+     (op pointer-add () (link) ([reg link] [const (size-of up-link)]))
+     (op int-mul () (f-offset) ([reg f-index] [reg src-size]))
+     (op int-mul () (U-offset) ([reg U-index] [const (size-of SU-n)]))
+     (op pointer-add () (f-addr) ([reg src] [reg f-offset]))
+     (op pointer-add () (U-addr) ([reg U] [reg U-offset]))
      (load qcd-su-n () gauge ([reg U-addr]))
      (loop () (j [const 0] [reg l-v])
        (load qcd-fermion () f ([reg f-addr]))
-       (op pointer-add () (f-addr) ([reg f-addr]
-                                    [const (size-of Fermion)]))
+       (op pointer-add () (f-addr) ([reg f-addr] [const (size-of Fermion)]))
        (op qcd-project ([project d p/m]) (g) ([reg f]))
-       (op qcd-mulh-conj () (Ug) ([reg gauge]
-                                  [reg g]))
+       (op qcd-mulh-conj () (Ug) ([reg gauge] [reg g]))
        (store qcd-half-fermion () ([reg res]) [reg Ug])
-       (op pointer-add () (res) ([reg res]
-                                 [const (size-of Projected-Fermion)])))))
+       (op pointer-add () (res) ([reg res] [const (size-of Projected-Fermion)])))))
 @
 
 The forward link contains [[fermion]] and [[gauge]] index measured in units
@@ -4000,6 +3936,102 @@ of $L_s$ links and $SU_n$ respectively:
 <<[[c99/qa0]] spin data types>>=
 (structure up-link "UpLink" ([fermion "fermion" int]
                              [gauge   "gauge"   int]))
+@
+
+\subsection{Diagonal parts}
+<<File [[c99/ABF.qa0]]>>=
+<<[[c99/qa0]] ABF data types>>
+(procedure A-B ([stem "do_AB"] count-flops)
+           ([res-x    pointer "res_x"    "struct Fermion *"]
+            [size     int     "size"     "int"]
+            [LsV      int     "LsV"      "int"]
+            [a-table  pointer "a_table"  "const struct ABTable *"]
+	    [src-x    pointer "src_x"    "const struct Fermion *"])
+   (op pointer-move () (dst-x) ([reg res-x]))
+   (loop () (i [const 0] [reg size])
+     <<[[A-B]] process one s-slice>>))
+@
+
+<<[[A-B]] process one s-slice>>=
+(op pointer-move () (a-k) ([reg a-table]))
+(loop () (k [const 0] [reg LsV])
+  <<[[A-B]] process one point>>
+  (op pointer-add () (a-k) ([reg a-k] [const (size-of AB-Table)]))
+  (op pointer-add () (dst-x) ([reg dst-x] [const (size-of Fermion)]))
+  (op pointer-add () (src-x) ([reg src-x] [const (size-of Fermion)])))
+@
+
+<<[[A-B]] process one point>>=
+(load int () lo-i ([reg a-k] [const (offset-of AB-Table lo-i)]))
+(load int () hi-i ([reg a-k] [const (offset-of AB-Table hi-i)]))
+(load double () c-zz ([reg a-k] [const (offset-of AB-Table alpha-c)]))
+(load double () c-lo ([reg a-k] [const (offset-of AB-Table alpha-lo)]))
+(load double () c-hi ([reg a-k] [const (offset-of AB-Table alpha-hi)]))
+(op int-mul () (lo-off) ([reg lo-i] [const (size-of Fermion)]))
+(op int-mul () (hi-off) ([reg hi-i] [const (size-of Fermion)]))
+(op pointer-add () (s-lo) ([reg src-x] [reg lo-off]))
+(op pointer-add () (s-hi) ([reg src-x] [reg hi-off]))
+(load qcd-fermion () f-zz ([reg src-x]))
+(load qcd-fermion-lo () f-lo ([reg s-lo]))
+(load qcd-fermion-hi () f-hi ([reg s-hi]))
+(op qcd-scalef () (r-z) ([reg c-zz] [reg f-zz]))
+(op qcd-madd-lohi () (v) ([reg r-z] [reg c-lo] [reg f-lo] [reg c-hi] [reg f-hi]))
+(store qcd-fermion () ([reg dst-x]) [reg v])
+@
+
+The diagonal parts expect offsets from the curernt position for
+$(1+\gamma_5)/2$ and $(1-\gamma_5)/2$, and three [[double]] scales---for each
+projected piece and the central element. The order of structure elements
+is chosen to minimize [[struct ABTable]] size.
+<<[[c99/qa0]] ABF data types>>=
+(structure AB-Table "ABTable" ([lo-i      "lo"    int]
+                               [hi-i      "hi"    int]
+                               [alpha-c   "c"     double]
+                               [alpha-lo  "c_lo"  double]
+                               [alpha-hi  "c_hi"  double]))
+@
+
+\subsection{Dirac Operator}
+Here we compute $A\psi_x + F\psi_y$.
+<<File [[c99/ABF.qa0]]>>=
+(procedure A+F ([stem "ApF"] count-flops)
+           ([res-x     pointer   "res_x"    "struct Fermion *"               ]
+            [size      int       "size"     "int"                            ]
+            [LsV       int       "LsV"      "int"                            ]
+            [a-table   pointer   "a_table"  "const struct ABTable *"         ]
+            [f-table   pointer   "f_table"  "const struct FTable *"          ]
+            [U         pointer   "U"        "const struct SUn *"             ]
+            [src-x     pointer   "src_x"    "const struct Fermion *"         ]
+            [src-y     pointer   "src_y"    "const struct Fermion *"         ]
+            [src-b     pointer   "b"        "const struct ProjectedFermion *"])
+  (loop () (i [const 0] [reg size])
+     (op pointer-move () (dst-x) ([reg res-x]))
+     (load int () mask ([reg f-table] [const (offset-of F-Table mask)]))
+     <<[[A-B]] process one s-slice>>
+     <<[[A+F]] forward neighbors>>
+     <<[[A+F]] backward neighbors>>
+     (op pointer-add () (f-table) ([reg f-table] [const (size-of F-Table)]))
+     (op pointer-move () (res-x) ([reg dst-x]))))
+@
+
+<<[[A+F]] forward neighbors>>=
+(load int () U-index ([reg f-table] [const (offset-of F-Table forward-U)]))
+(op pointer-add () (s-off2) ([reg f-table] [const (offset-of F-Table forward-F)]))
+
+; XXXX A+F forward
+@
+
+<<[[A+F]] backward neighbors>>=
+; XXXX A+F backward
+@
+The off-diagonal elements require a neighbor table. Because [[qa0]] does
+not support complex compound types, we separate vectors here.
+<<[[c99/qa0]] ABF data types>>=
+(array dim-array "xdarray" int [const *dim*])
+(structure F-Table "FTable" ([mask      "mask"  int]
+                             [forward-U "upU"   int]
+                             [forward-F "upF"   dim-array]
+))
 @
 
 \section{Blue Gene}
