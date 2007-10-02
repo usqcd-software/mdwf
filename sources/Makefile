@@ -68,7 +68,7 @@ c.sources = $(q.sources) \
 
 x.sources = $(h.sources) $(c.sources) $(qi.sources)
 
-sources = $(x.sources) $(ss.sources) $(qs.sources)
+sources = $(x.sources) $(ss.sources) $(qs.sources) $(qa.sources)
 
 f.lib = libqtest.a
 
@@ -89,7 +89,7 @@ clean:
               $(noweb:%.nw=%.toc) $(qz.objects) $(f.lib) qa0.xx qa0.ss
 
 realclean: clean
-	$(RM) $(f.pdf) $(sources) test-state qa0.ss qa0
+	$(RM) $(f.pdf) $(sources) test-state qa0.ss qa0 c99/*
 
 sources: $(sources)
 
@@ -146,10 +146,10 @@ $(qi.sources:%.c=%f.o) $(qx.sources:%.c=%f.o): %f.o: %.c
 
 $(qi.sources:%.c=%f.o): $(qa.sources:%.qa0=%f.c)
 $(qi.sources:%.c=%d.o): $(qa.sources:%.qa0=%d.c)
-$(qi.sources:%.c=%f.o): $(qa.sources:%.qa0=%f.h)
-$(qi.sources:%.c=%d.o): $(qa.sources:%.qa0=%d.h)
 
 $(qz.objects): $(h.sources)
+$(qz.objects): $(qa.sources:%.qa0=%f.h)
+$(qz.objects): $(qa.sources:%.qa0=%d.h)
 
 qa0.ss: $(qs.sources) basis.ss mk-qa0.ss
 	echo '(load "mk-qa0.ss")' | $(MZSCHEME)

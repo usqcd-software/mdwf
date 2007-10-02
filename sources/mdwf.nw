@@ -1330,6 +1330,7 @@ the only [[#include]] in the sources.
 #define MARK_56409955893f4f5883198873309cf801
 #include <qop-mdwf3.h>
 <<Implementation includes>>
+<<Low level includes>>
 <<Implementation macros>>
 <<Implementation types>>
 <<Implementation of [[State]]>>
@@ -1360,6 +1361,18 @@ macro. They only need to agree with SciDAC QCD conventions about libraries.
 #endif
 @
 
+At the low level the headers are specialized on precision:
+<<Low level includes>>=
+struct SUn;
+struct Fermion;
+struct ProjectedFermion;
+#if QOP_MDWF_DEFAULT_PRECISION == 'F'
+<<Low level single precision includes>>
+#endif
+#if QOP_MDWF_DEFAULT_PRECISION == 'D'
+<<Low level double precision includes>>
+#endif
+@
 
 The [[State]] is a collection of values defining the geometry, neighbors, etc.
 <<Implementation of [[State]]>>=
@@ -1529,7 +1542,6 @@ Q(`init)(struct Q(State) **state_ptr,
     <<[[init]] initialize state>>
     <<[[init]] patch boundary>>
     <<[[init]] remove init temporaries>>
-    <<[[init]] scale fermion indices>>
     return 0;
     <<[[init]] errors>>
 #undef CHECK
@@ -1567,14 +1579,6 @@ CHECK(status,status);
 <<[[init]] patch boundary>>=
 status = patch_boundary(*state_ptr, lattice, network, node, master_p, sublattice, env);
 CHECK(status, status);
-@
-
-After the tables are initialized, let us fold in the [[Ls]] factor into fermion
-indices. We keep [[sizeof (Fermion)]] out in order to use the same table for
-[[float]] and [[double]].
-<<[[init]] scale fermion indices>>=
-scale_fermions(&(*state_ptr)->even, (*state_ptr)->Ls);
-scale_fermions(&(*state_ptr)->odd, (*state_ptr)->Ls);
 @
 
 If an error happend during [[init()]], we free everything allocated inside
@@ -1933,13 +1937,7 @@ build_layout(&state->sublattice,
 Now let us allocate neighbor tables. It is convenient to use a universal
 format both for the body and the face. This way we do not to generate two
 procedures, and, since the cost of jumps is small compared to computation
-involved, there is no noticable performance degradation. The order of elements
-in this structure must agree with the one assumed in the generated routines.
-<<Implementation types>>=
-struct neighbor {
-   <<[[neighbor]] parts>>
-};
-@
+involved, there is no noticable performance degradation.
 
 Once the [[face_size]] and [[body_size]] are computed, we can allocate the
 corresponsing arrays
@@ -2293,7 +2291,7 @@ We set the mask to zero initially:
 @
 
 <<[[neighbor]] parts>>=
-unsigned int mask;
+[mask "mask"  int]
 @
 
 There is alway a gauge up link:
@@ -2302,7 +2300,7 @@ target->body_neighbor[k].u_up = la * Q(DIM);
 @
 
 <<[[neighbor]] parts>>=
-int u_up;
+[forward-U "u_up" int]
 @
 
 Now, build all up fermion neighbors (they are on the opposite parity sublattice,
@@ -2324,7 +2322,7 @@ for (d = 0; d < Q(DIM); d++) {
 @
 
 <<[[neighbor]] parts>>=
-int f_up[Q(DIM)];
+[forward-F "f_up" dim-array]
 @
 
 External up neighbors are marked in low bits of [[mask]]:
@@ -2368,25 +2366,18 @@ target->body_neighbor[k].u_down[d] = -1;
 
 
 <<[[neighbor]] parts>>=
-int u_down[Q(DIM)];
-int f_down[Q(DIM)];
+[backward-U "u_down" dim-array]
+[backward-F "f_down" dim-array]
 @
 
 \subsection{Boundary send initialization}
-For the down sends we only need to know where to get fermions
-<<Implementation types>>=
-struct `down_pack {
-  int `f_index;
-};
-@
+For the down sends we only need to know where to get fermions. The indices are
+kept in an array of [[int]] for each direction, we do not have a special type
+for them.
+
 For the up sends we multiply by the gauge field before sending, so we need
-the fermion and the gauge field indices.
-<<Implementation types>>=
-struct `up_pack {
-  int `f_index;
-  int `u_index;
-};
-@
+the fermion and the gauge field indices. The structure [[struct up_pack]] is
+defined in the low-level [[qa0]] file.
 
 The send boundary elements reside on other parity sublattice. Once we know all
 face sizes, we can setup [[send]] components of [[eo_lattice]]. Here are the
@@ -2395,7 +2386,7 @@ components:
 int send_up_size[Q(DIM)];
 struct up_pack *`up_pack[Q(DIM)];
 int send_down_size[Q(DIM)];
-struct down_pack *`down_pack[Q(DIM)];
+int *`down_pack[Q(DIM)];
 @
 
 We reset all [[send]] sizes to zero:
@@ -2416,12 +2407,10 @@ And copy them from the local oposite parity sublattice:
    int i;
    for (i = 0; i < Q(DIM); i++) {
       eo->send_up_size[i] = oe->up_face[i];
-      eo->up_pack[i] = q(malloc)(state, eo->send_up_size[i] *
- 		                 sizeof (struct up_pack));
+      eo->up_pack[i] = q(malloc)(state, eo->send_up_size[i] * sizeof (struct up_pack));
       CHECK(eo->up_pack[i] == NULL, "Not enough space for eo.up_pack[i]");
       eo->send_down_size[i] = oe->down_face[i];
-      eo->down_pack[i] = q(malloc)(state, eo->send_down_size[i] *
-                                   sizeof (struct down_pack));
+      eo->down_pack[i] = q(malloc)(state, eo->send_down_size[i] * sizeof (int));
       CHECK(eo->down_pack[i] == NULL, "Not enough space for eo.down_pack[i]");
    }
 }
@@ -2433,7 +2422,7 @@ And copy them from the local oposite parity sublattice:
   for (i = 0; i < Q(DIM); i++) {
     printf(" %s.send_size[%d].down %5d:\n", name, i, eo->send_down_size[i]);
     for (k = 0; k < eo->send_down_size[i]; k++) {
-      printf("  [%5d]: f %5d\n", k, eo->down_pack[i][k].f_index);
+      printf("  [%5d]: f %5d\n", k, eo->down_pack[i][k]);
     }
     printf(" %s.send_size[%d].up %5d:\n", name, i, eo->send_up_size[i]);
     for (k = 0; k < eo->send_up_size[i]; k++) {
@@ -2502,7 +2491,7 @@ if (x[i] + 1 == hi[i]) {
 @
 The down pack element consists of our layout address only
 <<Record [[i]] down element>>=
-eo->down_pack[i][z_down[i]].f_index = ly;
+eo->down_pack[i][z_down[i]] = ly;
 z_down[i]++;
 @
 
@@ -2626,7 +2615,7 @@ static int
   const int *hi;
 
   for (k = 0; k < x_eo->send_down_size[dim]; k++) {
-    int p = x_oe->layout2vector[x_eo->down_pack[dim][k].f_index];
+    int p = x_oe->layout2vector[x_eo->down_pack[dim][k]];
 
     <<[[eo_patch]] construct neighbor address>>
     x[dim]--;
@@ -2704,32 +2693,6 @@ static int `eo_patch_down(struct eo_lattice *eo,
                          const int lattice[Q(DIM) + 1],
                          int dim,
                          int idx);
-@
-
-\subsection{Scale fermion indices}
-Once all tables are computed, we rescale the fermion indices by [[Ls]]:
-<<File [[finit.c]]>>=
-static void
-`scale_fermions(struct eo_lattice *eo, int Ls)
-{
-   int i, d;
-   for (i = 0; i < eo->full_size; i++) {
-      for (d = 0; d < Q(DIM); d++) {
-        eo->body_neighbor[i].f_up[d] *= Ls;
-        eo->body_neighbor[i].f_down[d] *= Ls;
-      }
-   }
-   for (d = 0; d < Q(DIM); d++) {
-     for (i = 0; i < eo->send_up_size[d]; i++)
-        eo->up_pack[d][i].f_index *= Ls;
-     for (i = 0; i < eo->send_down_size[d]; i++)
-        eo->down_pack[d][i].f_index *= Ls;
-   }
-}
-@
-
-<<Init\&fini local prototypes>>=
-static void `scale_fermions(struct eo_lattice *eo, int Ls);
 @
 
 \subsection{Communication}
@@ -3191,28 +3154,28 @@ if (xy->receive_handle)
 <<[[ApF]] start down 0-send>>=
 if (xy->send_hused) QMP_wait(xy->send_down_handle[0]);
 if (xy->send_down_size[0]) {
-  qx(proj_g0plus)(xy->send_down_buffer[0], xy->send_down_size[0], LsV, xy->down_pack[0], f_y);
+  qx(proj_g0minus)(xy->send_down_buffer[0], xy->send_down_size[0], LsV, xy->down_pack[0], f_y);
   QMP_start(xy->send_down_handle[0]);
 }
 @
 <<[[ApF]] start down 1-send>>=
 if (xy->send_hused) QMP_wait(xy->send_down_handle[1]);
 if (xy->send_down_size[1]) {
-  qx(proj_g1plus)(xy->send_down_buffer[1], xy->send_down_size[1], LsV, xy->down_pack[1], f_y);
+  qx(proj_g1minus)(xy->send_down_buffer[1], xy->send_down_size[1], LsV, xy->down_pack[1], f_y);
   QMP_start(xy->send_down_handle[1]);
 }
 @
 <<[[ApF]] start down 2-send>>=
 if (xy->send_hused) QMP_wait(xy->send_down_handle[2]);
 if (xy->send_down_size[2]) {
-  qx(proj_g2plus)(xy->send_down_buffer[2], xy->send_down_size[2], LsV, xy->down_pack[2], f_y);
+  qx(proj_g2minus)(xy->send_down_buffer[2], xy->send_down_size[2], LsV, xy->down_pack[2], f_y);
   QMP_start(xy->send_down_handle[2]);
 }
 @
 <<[[ApF]] start down 3-send>>=
 if (xy->send_hused) QMP_wait(xy->send_down_handle[3]);
 if (xy->send_down_size[3]) {
-  qx(proj_g3plus)(xy->send_down_buffer[3], xy->send_down_size[3], LsV, xy->down_pack[3], f_y);
+  qx(proj_g3minus)(xy->send_down_buffer[3], xy->send_down_size[3], LsV, xy->down_pack[3], f_y);
   QMP_start(xy->send_down_handle[3]);
 }
 @
@@ -3227,37 +3190,37 @@ xy->send_hused = 1;
 <<[[ApF]] start up 0-send>>=
 if (xy->send_hused) QMP_wait(xy->send_up_handle[0]);
 if (xy->send_up_size[0]) {
-  qx(proj_Ug0minus)(xy->send_up_buffer[0], xy->send_up_size[0], LsV, xy->up_pack[0], f_y, u);
+  qx(proj_Ucg0plus)(xy->send_up_buffer[0], xy->send_up_size[0], LsV, xy->up_pack[0], u, f_y);
   QMP_start(xy->send_up_handle[0]);
 }
 @
 <<[[ApF]] start up 1-send>>=
 if (xy->send_hused) QMP_wait(xy->send_up_handle[1]);
 if (xy->send_up_size[1]) {
-  qx(proj_Ug1minus)(xy->send_up_buffer[1], xy->send_up_size[1], LsV, xy->up_pack[1], f_y, u);
+  qx(proj_Ucg1plus)(xy->send_up_buffer[1], xy->send_up_size[1], LsV, xy->up_pack[1], u, f_y);
   QMP_start(xy->send_up_handle[1]);
 }
 @
 <<[[ApF]] start up 2-send>>=
 if (xy->send_hused) QMP_wait(xy->send_up_handle[2]);
 if (xy->send_up_size[2]) {
-  qx(proj_Ug2minus)(xy->send_up_buffer[2], xy->send_up_size[2], xy->up_pack[2], f_y, u);
+  qx(proj_Ucg2plus)(xy->send_up_buffer[2], xy->send_up_size[2], LsV, xy->up_pack[2], u, f_y);
   QMP_start(xy->send_up_handle[2]);
 }
 @
 <<[[ApF]] start up 3-send>>=
 if (xy->send_hused) QMP_wait(xy->send_up_handle[3]);
 if (xy->send_up_size[3]) {
-  qx(proj_Ug3minus)(xy->send_up_buffer[3], xy->send_up_size[3], LsV, xy->up_pack[3], f_y, u);
+  qx(proj_Ucg3plus)(xy->send_up_buffer[3], xy->send_up_size[3], LsV, xy->up_pack[3], u, f_y);
   QMP_start(xy->send_up_handle[3]);
 }
 @
 
 <<[[ApF]] compute body>>=
-qx(do_ApF)(r_x, xy->body_size, LsV, xy->body_neighbor, params->A, f_x, u, f_y, NULL);
+qx(do_ApF)(r_x, xy->body_size, LsV, xy->body_neighbor, params->A, u, f_x, f_y, NULL);
 @
 <<[[ApF]] compute face>>=
-qx(do_ApF)(r_x, xy->face_size, LsV, xy->face_neighbor, params->A, f_x, u, f_y, xy->receive_buffer);
+qx(do_ApF)(r_x, xy->face_size, LsV, xy->face_neighbor, params->A, u, f_x, f_y, xy->receive_buffer);
 @
 
 and more prototypes:
@@ -3840,26 +3803,34 @@ We also define a starting link in a sum over links:
 XXX make it better --- move includes to [[<mdwf.h>]].
 For spin projection we start with a simple file. Selection of the back end is
 done via compile-time switches.
+<<Low level single precision includes>>=
+#include <spinf.h>
+@
+<<Low level double precision includes>>=
+#include <spind.h>
+@
 <<File [[spin.c]]>>=
 #include <mdwf.h>
 #if QOP_MDWF_DEFAULT_PRECISION == 'F'
-#include <spinf.h>
 #include <spinf.c>
 #endif
 #if QOP_MDWF_DEFAULT_PRECISION == 'D'
-#include <spind.h>
 #include <spind.c>
 #endif
 @
 Compute engines for $A$, $B$, $F$, and their combinations.
+<<Low level single precision includes>>=
+#include <abff.h>
+@
+<<Low level double precision includes>>=
+#include <abfd.h>
+@
 <<File [[ABF.c]]>>=
 #include <mdwf.h>
 #if QOP_MDWF_DEFAULT_PRECISION == 'F'
-#include <abff.h>
 #include <abff.c>
 #endif
 #if QOP_MDWF_DEFAULT_PRECISION == 'D'
-#include <abfd.h>
 #include <abfd.c>
 #endif
 @
@@ -3903,11 +3874,11 @@ Backward boundaries are projected and packed for sends:
 Forward projections include multiplication by the gauge field. Since we move
 data forward along the link, the multiplication here is by $U^\dagger$.
 <<[[c99/qa0]] gauged boundary projection>>=
-(procedure up-face ([stem "proj_Ug" d p/m] count-flops)
+(procedure up-face ([stem "proj_Ucg" d p/m] count-flops)
            ([res    pointer  "res"       "struct ProjectedFermion *"]
             [size   int      "size"      "int"                      ]
             [l-v    int      "LsV"       "int"                      ]
-            [link   pointer  "up_link"   "const struct UpLink *"    ]
+            [link   pointer  "up_link"   "const struct up_pack *"   ]
             [U      pointer  "U"         "const struct SUn *"       ]
             [src    pointer  "src"       "const struct Fermion *"   ])
    (op int-mul () (src-size) ([reg l-v] [const (size-of Fermion)]))
@@ -3932,8 +3903,8 @@ data forward along the link, the multiplication here is by $U^\dagger$.
 The forward link contains [[fermion]] and [[gauge]] index measured in units
 of $L_s$ links and $SU_n$ respectively:
 <<[[c99/qa0]] spin data types>>=
-(structure up-link "UpLink" ([fermion "fermion" int]
-                             [gauge   "gauge"   int]))
+(structure up-link "up_pack" ([fermion "f_index"   int]
+                              [gauge   "u_index"   int]))
 @
 
 \subsection{Diagonal parts}
@@ -3996,8 +3967,8 @@ Here we compute $A\psi_x + F\psi_y$.
            ([res-x     pointer   "res_x"    "struct Fermion *"               ]
             [size      int       "size"     "int"                            ]
             [LsV       int       "LsV"      "int"                            ]
+            [f-table   pointer   "f_table"  "const struct neighbor *"        ]
             [a-table   pointer   "a_table"  "const struct ABTable *"         ]
-            [f-table   pointer   "f_table"  "const struct FTable *"          ]
             [U         pointer   "U"        "const struct SUn *"             ]
             [src-x     pointer   "src_x"    "const struct Fermion *"         ]
             [src-y     pointer   "src_y"    "const struct Fermion *"         ]
@@ -4039,9 +4010,9 @@ If the neighbor is inside the local volume, then project, multiply, unproject.
   (loop () (j [const 0] [reg LsV])
     (load qcd-fermion () r-forward ([reg dst-x]))
     (load qcd-fermion () s-forward ([reg F-forward]))
-    (op qcd-project ([project d plus]) (f-proj) ([reg s-forward]))
+    (op qcd-project ([project d minus]) (f-proj) ([reg s-forward]))
     (op qcd-mulh () (Uf) ([reg UU] [reg f-proj]))
-    (op qcd-unproject-add ([unproject d plus]) (zz) ([reg r-forward] [reg Uf]))
+    (op qcd-unproject-add ([unproject d minus]) (zz) ([reg r-forward] [reg Uf]))
     (store qcd-fermion () ([reg dst-x]) [reg zz])
     (op pointer-add () (dst-x) ([reg dst-x] [const (size-of Fermion)]))
     (op pointer-add () (F-forward) ([reg F-forward] [const (size-of Fermion)]))))
@@ -4058,7 +4029,7 @@ this case.
     (load qcd-fermion () r-forward ([reg dst-x]))
     (load qcd-projected-fermion () f-proj ([reg F-forward]))
     (op qcd-mulh () (Uf) ([reg UU] [reg f-proj]))
-    (op qcd-unproject-add ([unproject d plus]) (zz) ([reg r-forward] [reg Uf]))
+    (op qcd-unproject-add ([unproject d minus]) (zz) ([reg r-forward] [reg Uf]))
     (store qcd-fermion () ([reg dst-x]) [reg zz])
     (op pointer-add () (dst-x) ([reg dst-x] [const (size-of Fermion)]))
     (op pointer-add () (F-forward) ([reg F-forward] [const (size-of Projected-Fermion)]))))
@@ -4090,9 +4061,9 @@ finding the gauge link.
   (loop () (j [const 0] [reg LsV])
      (load qcd-fermion () r ([reg dst-x]))
      (load qcd-fermion () f ([reg s-addr]))
-     (op qcd-project ([project d minus]) (h) ([reg f]))
+     (op qcd-project ([project d plus]) (h) ([reg f]))
      (op qcd-mulh-conj () (Uh) ([reg UU] [reg h]))
-     (op qcd-unproject-add ([unproject d minus]) (zz) ([reg r] [reg Uh]))
+     (op qcd-unproject-add ([unproject d plus]) (zz) ([reg r] [reg Uh]))
      (store qcd-fermion () ([reg dst-x]) [reg zz])
      (op pointer-add () (s-addr) ([reg s-addr] [const (size-of Fermion)]))
      (op pointer-add () (dst-x) ([reg dst-x] [const (size-of Fermion)]))))
@@ -4107,7 +4078,7 @@ Here we do the rest, namely, unproject and accumulate the result
   (loop () (j [const 0] [reg LsV])
      (load qcd-fermion () r ([reg dst-x]))
      (load qcd-projected-fermion () Uh ([reg s-addr]))
-     (op qcd-unproject-add ([unproject d minus]) (zz) ([reg r] [reg Uh]))
+     (op qcd-unproject-add ([unproject d plus]) (zz) ([reg r] [reg Uh]))
      (store qcd-fermion () ([reg dst-x]) [reg zz])
      (op pointer-add () (s-addr) ([reg s-addr] [const (size-of Projected-Fermion)]))
      (op pointer-add () (dst-x) ([reg dst-x] [const (size-of Fermion)]))))
@@ -4117,11 +4088,8 @@ The off-diagonal elements require a neighbor table. Because [[qa0]] does
 not support complex compound types, we separate vectors here.
 <<[[c99/qa0]] ABF data types>>=
 (array dim-array "xdarray" int [const *dim*])
-(structure F-Table "FTable" ([mask        "mask"    int      ]
-                             [forward-U   "upU"     int      ]
-                             [forward-F   "upF"     dim-array]
-                             [backward-U  "downU"   dim-array]
-                             [backward-F  "downF"   dim-array]))
+(structure F-Table "neighbor" (
+   <<[[neighbor]] parts>>))
 @
 
 \section{Blue Gene}
