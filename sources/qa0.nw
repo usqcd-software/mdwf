@@ -793,7 +793,7 @@ environment passed as an argument. It returns a new environment.
          [env (ce-add-qcd-type env 'Fermion "struct Fermion"
                                '*colors* '*fermion-dim*)]
          [env (ce-add-qcd-type env 'Projected-Fermion "struct ProjectedFermion"
-                               '*colors* '*half-fermion-dim*)]
+                               '*colors* '*projected-fermion-dim*)]
          [env (ce-add-qcd-type env 'SU-n "struct SUn"
                                '*colors* '*colors*)])
      (let loop ([env env] [p* mdwf-basis])
@@ -1420,7 +1420,7 @@ Now, the store handles some types in a special way
   (case type
     [(qcd-su-n)         (q2c-store-su-n         attr* addr* value r* env)]
     [(qcd-fermion)      (q2c-store-fermion      attr* addr* value r* env)]
-    [(qcd-half-fermion) (q2c-store-half-fermion attr* addr* value r* env)]
+    [(qcd-projected-fermion) (q2c-store-projected-fermion attr* addr* value r* env)]
     [else (values (cons c r*) env)]))
 @
 So does the load. It should be the same set of types as for the store, by
@@ -1429,7 +1429,7 @@ the way.
 (define (q2c-load c attr* type output addr* r* env)
   (case type
     [(qcd-su-n)         (q2c-load-su-n         attr* output addr* r* env)]
-    [(qcd-half-fermion) (q2c-load-half-fermion attr* output addr* r* env)]
+    [(qcd-projected-fermion) (q2c-load-projected-fermion attr* output addr* r* env)]
     [(qcd-fermion)      (q2c-load-fermion      attr* output addr* r* env)]
     [(qcd-fermion-lo)   (q2c-load-fermion-lo   attr* output addr* r* env)]
     [(qcd-fermion-hi)   (q2c-load-fermion-hi   attr* output addr* r* env)]
@@ -1464,8 +1464,8 @@ For operations there is also a set of cases requiring special attention
     [(qcd-fdot-fini)      (q2c-fdot-fini       attr* output* input* r* env)]
     [(qcd-su-n-offset)    (q2c-su-n-offset     attr* output* input* r* env)]
     [(qcd-fermion-offset) (q2c-fermion-offset  attr* output* input* r* env)]
-    [(qcd-half-fermion-offset)
-                      (q2c-half-fermion-offset attr* output* input* r* env)]
+    [(qcd-projected-fermion-offset)
+                      (q2c-projected-fermion-offset attr* output* input* r* env)]
     [else (values (cons c r*) env)]))
 @
 
@@ -1485,27 +1485,27 @@ is computable from the renaming model.
 (define (q2c-load-fermion-hi attr* output addr* r* env)
   (q2c-load-xy attr* output addr* '*colors* '*fermion-dim*
                'high 'fermion r* env))
-(define (q2c-load-half-fermion attr* output addr* r* env)
-  (q2c-load-xy attr* output addr* '*colors* '*half-fermion-dim*
-               'all 'half-fermion r* env))
+(define (q2c-load-projected-fermion attr* output addr* r* env)
+  (q2c-load-xy attr* output addr* '*colors* '*projected-fermion-dim*
+               'all 'projected-fermion r* env))
 (define (q2c-store-su-n attr* addr* value r* env)
   (q2c-store-xy attr* addr* value '*colors* '*colors*
                 'gauge r* env))
 (define (q2c-store-fermion attr* addr* value r* env)
   (q2c-store-xy attr* addr* value '*colors* '*fermion-dim*
                 'fermion r* env))
-(define (q2c-store-half-fermion attr* addr* value r* env)
-  (q2c-store-xy attr* addr* value '*colors* '*half-fermion-dim*
-                'half-fermion r* env))
+(define (q2c-store-projected-fermion attr* addr* value r* env)
+  (q2c-store-xy attr* addr* value '*colors* '*projected-fermion-dim*
+                'projected-fermion r* env))
 (define (q2c-su-n-offset attr* output* input* r* env)
   (q2c-offset attr* output* input* '*colors* '*colors*
              'gauge r* env))
 (define (q2c-fermion-offset attr* output* input* r* env)
   (q2c-offset attr* output* input* '*colors* '*fermion-dim*
              'fermion r* env))
-(define (q2c-half-fermion-offset attr* output* input* r* env)
-  (q2c-offset attr* output* input* '*colors* '*half-fermion-dim*
-             'half-fermion r* env))
+(define (q2c-projected-fermion-offset attr* output* input* r* env)
+  (q2c-offset attr* output* input* '*colors* '*projected-fermion-dim*
+             'projected-fermion r* env))
 @
 
 For additions and multiplications the only difference between full and half
@@ -1518,30 +1518,30 @@ fermion is their dimension in the spinor space
   (q2c-addx attr* output* input* '*fermion-dim*
             'fermion r* env))
 (define (q2c-addh attr* output* input* r* env)
-  (q2c-addx attr* output* input* '*half-fermion-dim*
-            'half-fermion r* env))
+  (q2c-addx attr* output* input* '*projected-fermion-dim*
+            'projected-fermion r* env))
 @
 <<QCD to complex helpers>>=
 (define (q2c-mulf attr* output* input* r* env)
   (q2c-mulx attr* output* input* '*fermion-dim*
             'fermion r* env))
 (define (q2c-mulh attr* output* input* r* env)
-  (q2c-mulx attr* output* input* '*half-fermion-dim*
-            'half-fermion r* env))
+  (q2c-mulx attr* output* input* '*projected-fermion-dim*
+            'projected-fermion r* env))
 (define (q2c-mulf-conj attr* output* input* r* env)
   (q2c-mulx-conj attr* output* input* '*fermion-dim*
                  'fermion r* env))
 (define (q2c-mulh-conj attr* output* input* r* env)
-  (q2c-mulx-conj attr* output* input* '*half-fermion-dim*
-                 'half-fermion r* env))
+  (q2c-mulx-conj attr* output* input* '*projected-fermion-dim*
+                 'projected-fermion r* env))
 @
 <<QCD to complex helpers>>=
 (define (q2c-maddf attr* output* input* r* env)
   (q2c-maddx attr* output* input* '*fermion-dim*
             'fermion r* env))
 (define (q2c-maddh attr* output* input* r* env)
-  (q2c-maddx attr* output* input* '*half-fermion-dim*
-            'half-fermion r* env))
+  (q2c-maddx attr* output* input* '*projected-fermion-dim*
+            'projected-fermion r* env))
 @
 <<QCD to complex helpers>>=
 (define (q2c-scaleu attr* output* input* r* env)
@@ -1551,8 +1551,8 @@ fermion is their dimension in the spinor space
   (q2c-scalex attr* output* input* '*fermion-dim*
             'fermion r* env))
 (define (q2c-scaleh attr* output* input* r* env)
-  (q2c-scalex attr* output* input* '*half-fermion-dim*
-            'half-fermion r* env))
+  (q2c-scalex attr* output* input* '*projected-fermion-dim*
+            'projected-fermion r* env))
 @
 Operations to compute norm squared of Fermions:
 <<QCD to complex helpers>>=
@@ -2028,7 +2028,7 @@ Very much the environment, but records have different representation here.
                           (h-loop (+ h 1) (cdr op*) r* env))]))]))))
 @
 
-Build one component of the half-fermion
+Build one component of the projected fermion
 <<Projection helpers>>=
 (define (proj c h op r* env)
   (q2c-check-list op = 4 "Projection operation")
@@ -2037,7 +2037,7 @@ Build one component of the half-fermion
                 [op-1 (caddr op)] [(f-1) (cadddr op)]
                 [(a-1 env) (q2c-rename env r-a 'fermion c f-1)]
                 [cmd (binary-cmd op-0 op-1)]
-                [(r env) (q2c-rename env r-r 'half-fermion c h)])
+                [(r env) (q2c-rename env r-r 'projected-fermion c h)])
     (values (cons (make-qa0-operation attr*
                                       cmd
                                       (list (make-reg r))
@@ -2084,7 +2084,7 @@ Build one component of the half-fermion
 (define (unproj c f op r* env)
   (q2c-check-list op = 2 "Unprojection operation")
   (let-values* ([opcode (car op)] [(component) (cadr op)]
-                [(a env) (q2c-rename env r-a 'half-fermion c component)]
+                [(a env) (q2c-rename env r-a 'projected-fermion c component)]
                 [cmd (unary-cmd opcode)]
                 [(r env) (q2c-rename env r-r 'fermion c f)])
     (values (cons (make-qa0-operation attr*
@@ -2130,7 +2130,7 @@ Build one component of the half-fermion
   (q2c-check-list op = 2 "Unprojection operation")
   (let-values* ([(a env) (q2c-rename env r-a 'fermion c f)]
                 [opcode (car op)] [(component) (cadr op)]
-                [(b env) (q2c-rename env r-b 'half-fermion c component)]
+                [(b env) (q2c-rename env r-b 'projected-fermion c component)]
                 [cmd (add-cmd opcode)]
                 [(r env) (q2c-rename env r-r 'fermion c f)])
     (values (cons (make-qa0-operation attr*
@@ -2446,7 +2446,7 @@ environment and simply lookup relevant pieces here:
          [env (ce-add-const env '*colors*            3)]
          [env (ce-add-const env '*dim*               4)]
          [env (ce-add-const env '*fermion-dim*       4)]
-         [env (ce-add-const env '*half-fermion-dim*  2)])
+         [env (ce-add-const env '*projected-fermion-dim*  2)])
     (let loop ([env env] [op* op*])
       (cond
         [(null? op*)
@@ -3099,7 +3099,7 @@ The machine settings for BG/L:
          [env (ce-add-const env '*colors*            3)]
          [env (ce-add-const env '*dim*               4)]
          [env (ce-add-const env '*fermion-dim*       4)]
-         [env (ce-add-const env '*half-fermion-dim*  2)])
+         [env (ce-add-const env '*projected-fermion-dim*  2)])
     env))
 @
 

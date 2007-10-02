@@ -1,6 +1,7 @@
 NOWEAVE  = noweave -filter btdefn -index -latex -delay
 NOTANGLE = notangle -filter btdefn
 NOINDEX  = noindex
+CPIF     = cpif
 MZSCHEME = mzscheme
 MZC      = mzc
 INDENT   = indent
@@ -117,13 +118,13 @@ $(f.tex): %.tex: %.nw
 	$(NOWEAVE) $< > $@
 
 $(x.sources): mdwf.nw
-	($(NOTANGLE) $(TFLAGS) -R'File [[$@]]' -c $< >$@) || ($(RM) $@; exit 1)
+	$(NOTANGLE) $(TFLAGS) -R'File [[$@]]' -c $< | $(CPIF) $@
 
 $(qa.sources) $(ss.sources): mdwf.nw
-	($(NOTANGLE) -R'File [[$@]]' -c $< >$@) || ($(RM) $@; exit 1)
+	$(NOTANGLE) -R'File [[$@]]' -c $< | $(CPIF) $@
 
 $(qs.sources): qa0.nw
-	($(NOTANGLE) -R'File [[$@]]' -c $< >$@) || ($(RM) $@; exit 1)
+	$(NOTANGLE) -R'File [[$@]]' -c $< | $(CPIF) $@
 
 test-state: $(test.state.sources)
 	$(CC) -g -Wall -DDEBUG_INIT -I. $(INCDIRS:%=-I%) \

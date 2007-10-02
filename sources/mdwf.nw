@@ -3881,13 +3881,12 @@ maintanence.
 
 Backward boundaries are projected and packed for sends:
 <<[[c99/qa0]] simple boundary projection>>=
-(procedure down-face ([stem "proj_g" d p/m]
-                      count-flops)
+(procedure down-face ([stem "proj_g" d p/m] count-flops)
            ([res    pointer "res"         "struct ProjectedFermion *"]
-            [size   int     "size"        "int"]
-            [l-v    int     "LsV"         "int"]
-            [link   pointer "down_link"   "const int *"]
-            [src    pointer "src"         "const struct Fermion *"])
+            [size   int     "size"        "int"                      ]
+            [l-v    int     "LsV"         "int"                      ]
+            [link   pointer "down_link"   "const int *"              ]
+            [src    pointer "src"         "const struct Fermion *"   ])
    (op int-mul () (bytes-in-s) ([reg l-v] [const (size-of Fermion)]))
    (loop () (k [const 0] [reg size])
      (load int () index ([reg link]))
@@ -3898,20 +3897,19 @@ Backward boundaries are projected and packed for sends:
        (load qcd-fermion () f ([reg f-addr]))
        (op pointer-add () (f-addr) ([reg f-addr] [const (size-of Fermion)]))
        (op qcd-project ([project d p/m]) (g) ([reg f]))
-       (store qcd-half-fermion () ([reg res]) [reg g])
+       (store qcd-projected-fermion () ([reg res]) [reg g])
        (op pointer-add () (res) ([reg res] [const (size-of Projected-Fermion)])))))
 @
 Forward projections include multiplication by the gauge field. Since we move
 data forward along the link, the multiplication here is by $U^\dagger$.
 <<[[c99/qa0]] gauged boundary projection>>=
-(procedure up-face ([stem "proj_Ug" d p/m]
-                    count-flops)
+(procedure up-face ([stem "proj_Ug" d p/m] count-flops)
            ([res    pointer  "res"       "struct ProjectedFermion *"]
-            [size   int      "size"      "int"]
-            [l-v    int      "LsV"       "int"]
-            [link   pointer  "up_link"   "const struct UpLink *"]
-            [U      pointer  "U"         "const struct SUn *"]
-            [src    pointer  "src"       "const struct Fermion *"])
+            [size   int      "size"      "int"                      ]
+            [l-v    int      "LsV"       "int"                      ]
+            [link   pointer  "up_link"   "const struct UpLink *"    ]
+            [U      pointer  "U"         "const struct SUn *"       ]
+            [src    pointer  "src"       "const struct Fermion *"   ])
    (op int-mul () (src-size) ([reg l-v] [const (size-of Fermion)]))
    (loop () (k [const 0] [reg size])
      (load int () f-index ([reg link] [const (offset-of up-link fermion)]))
@@ -3927,7 +3925,7 @@ data forward along the link, the multiplication here is by $U^\dagger$.
        (op pointer-add () (f-addr) ([reg f-addr] [const (size-of Fermion)]))
        (op qcd-project ([project d p/m]) (g) ([reg f]))
        (op qcd-mulh-conj () (Ug) ([reg gauge] [reg g]))
-       (store qcd-half-fermion () ([reg res]) [reg Ug])
+       (store qcd-projected-fermion () ([reg res]) [reg Ug])
        (op pointer-add () (res) ([reg res] [const (size-of Projected-Fermion)])))))
 @
 
@@ -3942,9 +3940,9 @@ of $L_s$ links and $SU_n$ respectively:
 <<File [[c99/ABF.qa0]]>>=
 <<[[c99/qa0]] ABF data types>>
 (procedure A-B ([stem "do_AB"] count-flops)
-           ([res-x    pointer "res_x"    "struct Fermion *"]
-            [size     int     "size"     "int"]
-            [LsV      int     "LsV"      "int"]
+           ([res-x    pointer "res_x"    "struct Fermion *"      ]
+            [size     int     "size"     "int"                   ]
+            [LsV      int     "LsV"      "int"                   ]
             [a-table  pointer "a_table"  "const struct ABTable *"]
 	    [src-x    pointer "src_x"    "const struct Fermion *"])
    (op pointer-move () (dst-x) ([reg res-x]))
@@ -3984,8 +3982,8 @@ $(1+\gamma_5)/2$ and $(1-\gamma_5)/2$, and three [[double]] scales---for each
 projected piece and the central element. The order of structure elements
 is chosen to minimize [[struct ABTable]] size.
 <<[[c99/qa0]] ABF data types>>=
-(structure AB-Table "ABTable" ([lo-i      "lo"    int]
-                               [hi-i      "hi"    int]
+(structure AB-Table "ABTable" ([lo-i      "lo"    int   ]
+                               [hi-i      "hi"    int   ]
                                [alpha-c   "c"     double]
                                [alpha-lo  "c_lo"  double]
                                [alpha-hi  "c_hi"  double]))
@@ -3994,7 +3992,7 @@ is chosen to minimize [[struct ABTable]] size.
 \subsection{Dirac Operator}
 Here we compute $A\psi_x + F\psi_y$.
 <<File [[c99/ABF.qa0]]>>=
-(procedure A+F ([stem "ApF"] count-flops)
+(procedure A+F ([stem "do_ApF"] count-flops)
            ([res-x     pointer   "res_x"    "struct Fermion *"               ]
             [size      int       "size"     "int"                            ]
             [LsV       int       "LsV"      "int"                            ]
@@ -4004,6 +4002,8 @@ Here we compute $A\psi_x + F\psi_y$.
             [src-x     pointer   "src_x"    "const struct Fermion *"         ]
             [src-y     pointer   "src_y"    "const struct Fermion *"         ]
             [src-b     pointer   "b"        "const struct ProjectedFermion *"])
+  (op int-mul () (fermion-slice) ([reg LsV] [const (size-of Fermion)]))
+  (op int-mul () (projected-fermion-slice) ([reg LsV] [const (size-of Projected-Fermion)]))
   (loop () (i [const 0] [reg size])
      (op pointer-move () (dst-x) ([reg res-x]))
      (load int () mask ([reg f-table] [const (offset-of F-Table mask)]))
@@ -4016,22 +4016,112 @@ Here we compute $A\psi_x + F\psi_y$.
 
 <<[[A+F]] forward neighbors>>=
 (load int () U-index ([reg f-table] [const (offset-of F-Table forward-U)]))
+(op int-mul () (U-offset) ([reg U-index] [const (size-of SU-n)]))
+(op pointer-add () (U-forward) ([reg U] [reg U-offset]))
 (op pointer-add () (s-off2) ([reg f-table] [const (offset-of F-Table forward-F)]))
-
-; XXXX A+F forward
+(macro ([d [const 0] [const *dim*]])
+  (load qcd-su-n () UU ([reg U-forward]))
+  (op pointer-move () (dst-x) ([reg res-x]))
+  (load int () s-off ([reg s-off2]))
+  (op int-and () (m) ([reg mask] [const (shift 1 d)]))
+  (if-else [reg m]
+      <<[[A+F]] body forward>>
+      <<[[A+F]] face forward>>)
+  (op pointer-add () (U-forward) ([reg U-forward] [const (size-of SU-n)]))
+  (op pointer-add () (s-off2) ([reg s-off2] [const (size-of int)])))
 @
 
+If the neighbor is inside the local volume, then project, multiply, unproject.
+<<[[A+F]] body forward>>=
+(begin
+  (op int-mul () (s-index) ([reg s-off] [reg fermion-slice]))
+  (op pointer-add () (F-forward) ([reg src-y] [reg s-index]))
+  (loop () (j [const 0] [reg LsV])
+    (load qcd-fermion () r-forward ([reg dst-x]))
+    (load qcd-fermion () s-forward ([reg F-forward]))
+    (op qcd-project ([project d plus]) (f-proj) ([reg s-forward]))
+    (op qcd-mulh () (Uf) ([reg UU] [reg f-proj]))
+    (op qcd-unproject-add ([unproject d plus]) (zz) ([reg r-forward] [reg Uf]))
+    (store qcd-fermion () ([reg dst-x]) [reg zz])
+    (op pointer-add () (dst-x) ([reg dst-x] [const (size-of Fermion)]))
+    (op pointer-add () (F-forward) ([reg F-forward] [const (size-of Fermion)]))))
+@
+
+Otherwise, we are on the forward boundary. The projection was done before
+send, so now we multiply and unproject. Notice that our source is [[src-b]] in
+this case.
+<<[[A+F]] face forward>>=
+(begin
+  (op int-mul () (s-index) ([reg s-off] [reg projected-fermion-slice]))
+  (op pointer-add () (F-forward) ([reg src-b] [reg s-index]))
+  (loop () (j [const 0] [reg LsV])
+    (load qcd-fermion () r-forward ([reg dst-x]))
+    (load qcd-projected-fermion () f-proj ([reg F-forward]))
+    (op qcd-mulh () (Uf) ([reg UU] [reg f-proj]))
+    (op qcd-unproject-add ([unproject d plus]) (zz) ([reg r-forward] [reg Uf]))
+    (store qcd-fermion () ([reg dst-x]) [reg zz])
+    (op pointer-add () (dst-x) ([reg dst-x] [const (size-of Fermion)]))
+    (op pointer-add () (F-forward) ([reg F-forward] [const (size-of Projected-Fermion)]))))
+@
+
+The backward neighbors are very like the forward ones. The difference is in
+finding the gauge link. 
 <<[[A+F]] backward neighbors>>=
-; XXXX A+F backward
+(op pointer-add () (u-off2) ([reg f-table] [const (offset-of F-Table backward-U)]))
+(op pointer-add () (s-off2) ([reg f-table] [const (offset-of F-Table backward-F)]))
+(macro ([d [const 0] [const *dim*]])
+  (op pointer-move () (dst-x) ([reg res-x]))
+  (load int () s-off ([reg s-off2]))
+  (op int-and () (m) ([reg mask] [const (shift 1 (+ *dim* d))]))
+  (if-else [reg m]
+      <<[[A+F]] body backward>>
+      <<[[A+F]] face backward>>)
+  (op pointer-add () (u-off2) ([reg u-off2] [const (size-of int)]))
+  (op pointer-add () (s-off2) ([reg s-off2] [const (size-of int)])))
 @
+<<[[A+F]] body backward>>=
+(begin
+  (load int () u-off ([reg u-off2]))
+  (op int-mul () (u-index) ([reg u-off] [const (size-of SU-n)]))
+  (op pointer-add () (U-addr) ([reg U] [reg u-index]))
+  (load qcd-su-n () UU ([reg U-addr]))
+  (op int-mul () (s-index) ([reg s-off] [reg fermion-slice]))
+  (op pointer-add () (s-addr) ([reg src-y] [reg s-index]))
+  (loop () (j [const 0] [reg LsV])
+     (load qcd-fermion () r ([reg dst-x]))
+     (load qcd-fermion () f ([reg s-addr]))
+     (op qcd-project ([project d minus]) (h) ([reg f]))
+     (op qcd-mulh-conj () (Uh) ([reg UU] [reg h]))
+     (op qcd-unproject-add ([unproject d minus]) (zz) ([reg r] [reg Uh]))
+     (store qcd-fermion () ([reg dst-x]) [reg zz])
+     (op pointer-add () (s-addr) ([reg s-addr] [const (size-of Fermion)]))
+     (op pointer-add () (dst-x) ([reg dst-x] [const (size-of Fermion)]))))
+@
+
+On the backward face, we received projected fermion multiplied by $U^\dagger$.
+Here we do the rest, namely, unproject and accumulate the result
+<<[[A+F]] face backward>>=
+(begin
+  (op int-mul () (s-index) ([reg s-off] [reg projected-fermion-slice]))
+  (op pointer-add () (s-addr) ([reg src-b] [reg s-index]))
+  (loop () (j [const 0] [reg LsV])
+     (load qcd-fermion () r ([reg dst-x]))
+     (load qcd-projected-fermion () Uh ([reg s-addr]))
+     (op qcd-unproject-add ([unproject d minus]) (zz) ([reg r] [reg Uh]))
+     (store qcd-fermion () ([reg dst-x]) [reg zz])
+     (op pointer-add () (s-addr) ([reg s-addr] [const (size-of Projected-Fermion)]))
+     (op pointer-add () (dst-x) ([reg dst-x] [const (size-of Fermion)]))))
+@
+
 The off-diagonal elements require a neighbor table. Because [[qa0]] does
 not support complex compound types, we separate vectors here.
 <<[[c99/qa0]] ABF data types>>=
 (array dim-array "xdarray" int [const *dim*])
-(structure F-Table "FTable" ([mask      "mask"  int]
-                             [forward-U "upU"   int]
-                             [forward-F "upF"   dim-array]
-))
+(structure F-Table "FTable" ([mask        "mask"    int      ]
+                             [forward-U   "upU"     int      ]
+                             [forward-F   "upF"     dim-array]
+                             [backward-U  "downU"   dim-array]
+                             [backward-F  "downF"   dim-array]))
 @
 
 \section{Blue Gene}
