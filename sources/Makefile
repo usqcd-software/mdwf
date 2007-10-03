@@ -24,7 +24,8 @@ q.sources = error.c \
             finit.c \
             performance.c \
             memory.c \
-            state-dump.c
+            state-dump.c \
+            comm.c
 
 qx.sources = memory-g.c \
              memory-f.c \
@@ -37,6 +38,7 @@ qx.sources = memory-g.c \
              operator-ddw.c \
              operator-ddwc.c \
              op-ApF.c \
+             op-A.c \
              op-B.c
 
 qi.sources = spin.c \

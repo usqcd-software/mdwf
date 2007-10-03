@@ -2715,13 +2715,6 @@ printf("State.prec = %d\n", state->prec);
 state->prec = 0;
 @
 
-<<[[State]] cleanup>>=
-#ifndef DEBUG_INIT
-if (state->prec != 0)
-   state_comm_cleanup(state);
-#endif
-@
-
 This is needed to avoid calling [[QMP_sum_double]] on a single node machine
 <<[[State]] components>>=
 int `has_net;     /* 0 if only one node is present, 1 otherwise */
@@ -2807,7 +2800,7 @@ QMP_msghandle_t `send_down_handle[Q(DIM)];
             eo->send_up_buffer[i],
 	    eo->send_up_handle[i],
 	    eo->send_down_buffer[i],
-	    eo->send_down_buffer[i]);
+	    eo->send_down_handle[i]);
    }
 }
 @
@@ -3002,7 +2995,7 @@ qx(compute_ApF)(&state->odd, result->odd, fermion->odd, params, gauge->data, Te)
 <<DW Generic Operator allocate memory>>=
 tmp = q(allocate_eo)(state, &size, &ptr, 0, 1, 1, sizeof (struct Fermion));
 if (tmp == 0) {
-   q(setup_communication)(state, 0);
+   q(cleanup_communication)(state);
    CHECK(tmp == 0, "not enough memory");
 }
 Te = ptr;
@@ -3086,7 +3079,9 @@ QX(`DDW_operator_conjugated)(struct QX(Fermion) *result,
 \subsection{d/f routine XXX [[Q(MxM_CG)]]}
 \subsection{d/f routine XXX [[Q(MxM_SCG)]]}
 \section{XXX Middle level routines}
-\subsection{XXX A-operators}
+\subsection{Diagonal Operators}
+Here we compute $A$ and $B$, the 4-local operators. There is no communication
+and both operators are tri-diagonal in the $s$-direction.
 <<Implementation prototypes>>=
 void qx(`compute_B)(struct eo_lattice *xy,
                    struct Fermion *result_y,
@@ -3104,8 +3099,28 @@ qx(`compute_B)(struct eo_lattice *xy,
   qx(do_AB)(result_x, xy->full_size, params->LsV, params->B, f_x);
 }
 @
+
+<<Implementation prototypes>>=
+void qx(`compute_A)(struct eo_lattice *xy,
+                   struct Fermion *result_y,
+                   const struct Q(Parameters) *params,
+                   const struct Fermion *f_y);
+@
+<<File [[op-A.c]]>>=
+#include <mdwf.h>
+void
+qx(`compute_A)(struct eo_lattice *xy,
+               struct Fermion *result_x,
+               const struct Q(Parameters) *params,
+               const struct Fermion *f_x)
+{
+  qx(do_AB)(result_x, xy->full_size, params->LsV, params->A, f_x);
+}
+@
+
 \subsection{XXX F-operators}
-XXX Here is a sample F-operator routine:
+The second step in computing the Dirac operator is calculating
+$A\psi_x+F\psi_y$.
 <<Implementation prototypes>>=
 void qx(`compute_ApF)(struct eo_lattice *xy,
                      struct Fermion *result_x,
@@ -3126,9 +3141,11 @@ qx(`compute_ApF)(struct eo_lattice *xy,
                 const struct Fermion *f_y)
 {
    int LsV = params->LsV;
+   int new_send = 0;
    <<[[ApF]] start receive>>
    <<[[ApF]] start down sends>>
    <<[[ApF]] start up sends>>
+   xy->send_hused = new_send;
    <<[[ApF]] compute body>>
    <<[[ApF]] finish receive>>
    <<[[ApF]] compute face>>
@@ -3152,31 +3169,35 @@ if (xy->receive_handle)
 <<[[ApF]] start down 3-send>>
 @
 <<[[ApF]] start down 0-send>>=
-if (xy->send_hused) QMP_wait(xy->send_down_handle[0]);
 if (xy->send_down_size[0]) {
+  if (xy->send_hused) QMP_wait(xy->send_down_handle[0]);
   qx(proj_g0minus)(xy->send_down_buffer[0], xy->send_down_size[0], LsV, xy->down_pack[0], f_y);
   QMP_start(xy->send_down_handle[0]);
+  new_send = 1;
 }
 @
 <<[[ApF]] start down 1-send>>=
-if (xy->send_hused) QMP_wait(xy->send_down_handle[1]);
 if (xy->send_down_size[1]) {
+  if (xy->send_hused) QMP_wait(xy->send_down_handle[1]);
   qx(proj_g1minus)(xy->send_down_buffer[1], xy->send_down_size[1], LsV, xy->down_pack[1], f_y);
   QMP_start(xy->send_down_handle[1]);
+  new_send = 1;
 }
 @
 <<[[ApF]] start down 2-send>>=
-if (xy->send_hused) QMP_wait(xy->send_down_handle[2]);
 if (xy->send_down_size[2]) {
+  if (xy->send_hused) QMP_wait(xy->send_down_handle[2]);
   qx(proj_g2minus)(xy->send_down_buffer[2], xy->send_down_size[2], LsV, xy->down_pack[2], f_y);
   QMP_start(xy->send_down_handle[2]);
+  new_send = 1;
 }
 @
 <<[[ApF]] start down 3-send>>=
-if (xy->send_hused) QMP_wait(xy->send_down_handle[3]);
 if (xy->send_down_size[3]) {
+  if (xy->send_hused) QMP_wait(xy->send_down_handle[3]);
   qx(proj_g3minus)(xy->send_down_buffer[3], xy->send_down_size[3], LsV, xy->down_pack[3], f_y);
   QMP_start(xy->send_down_handle[3]);
+  new_send = 1;
 }
 @
 
@@ -3185,34 +3206,37 @@ if (xy->send_down_size[3]) {
 <<[[ApF]] start up 1-send>>
 <<[[ApF]] start up 2-send>>
 <<[[ApF]] start up 3-send>>
-xy->send_hused = 1;
 @
 <<[[ApF]] start up 0-send>>=
-if (xy->send_hused) QMP_wait(xy->send_up_handle[0]);
 if (xy->send_up_size[0]) {
+  if (xy->send_hused) QMP_wait(xy->send_up_handle[0]);
   qx(proj_Ucg0plus)(xy->send_up_buffer[0], xy->send_up_size[0], LsV, xy->up_pack[0], u, f_y);
   QMP_start(xy->send_up_handle[0]);
+  new_send = 1;
 }
 @
 <<[[ApF]] start up 1-send>>=
-if (xy->send_hused) QMP_wait(xy->send_up_handle[1]);
 if (xy->send_up_size[1]) {
+  if (xy->send_hused) QMP_wait(xy->send_up_handle[1]);
   qx(proj_Ucg1plus)(xy->send_up_buffer[1], xy->send_up_size[1], LsV, xy->up_pack[1], u, f_y);
   QMP_start(xy->send_up_handle[1]);
+  new_send = 1;
 }
 @
 <<[[ApF]] start up 2-send>>=
-if (xy->send_hused) QMP_wait(xy->send_up_handle[2]);
 if (xy->send_up_size[2]) {
+  if (xy->send_hused) QMP_wait(xy->send_up_handle[2]);
   qx(proj_Ucg2plus)(xy->send_up_buffer[2], xy->send_up_size[2], LsV, xy->up_pack[2], u, f_y);
   QMP_start(xy->send_up_handle[2]);
+  new_send = 1;
 }
 @
 <<[[ApF]] start up 3-send>>=
-if (xy->send_hused) QMP_wait(xy->send_up_handle[3]);
 if (xy->send_up_size[3]) {
+  if (xy->send_hused) QMP_wait(xy->send_up_handle[3]);
   qx(proj_Ucg3plus)(xy->send_up_buffer[3], xy->send_up_size[3], LsV, xy->up_pack[3], u, f_y);
   QMP_start(xy->send_up_handle[3]);
+  new_send = 1;
 }
 @
 
@@ -3240,6 +3264,79 @@ void qx(`compute_AxpFx)(struct eo_lattice *xy,
 @
 
 \section{XXX Communication}
+Here we set up and clear communication resources.
+<<File [[comm.c]]>>=
+<<Precision independent file>>
+#include <mdwf.h>
+<<Communication setup internal routines>>
+<<Communication setup interface routines>>
+@
+
+To setup communication for a give [[REAL]], the following routine is called:
+<<Implementation prototypes>>=
+int q(setup_communication)(struct Q(State) *state, int real_size);
+@
+
+All communication resources are cleaned up by the following routine:
+<<Implementation prototypes>>=
+void q(cleanup_communication)(struct Q(State) *state);
+@
+
+The implementation routines are simple. We do the requested operation on both
+even and odd halfs of the state. The cleanup is especially simple:
+<<Communication setup interface routines>>=
+void
+q(cleanup_communication)(struct Q(State) *state)
+{
+   cleanup(&state->even);
+   cleanup(&state->odd);
+}
+@
+For the setup, we avoid reallocation if the current [[real_size]] is the same as
+the new one. It is better to do the full clean up if the size has changed,
+therefore looking into the sublattices here.
+<<Communication setup interface routines>>=
+int
+q(setup_communication)(struct Q(State) *state, int real_size)
+{
+  if (state->even.real_size == real_size &&
+      state->odd.real_size == real_size)
+    return 0;
+  cleanup(&state->even);
+  cleanup(&state->odd);
+  if (setup(&state->even, real_size))
+    return 1;
+  if (setup(&state->odd, real_size)) {
+    cleanup(&state->even);
+    return 1;
+  }
+  return 0;
+}
+@
+
+<<E/O lattice pieces>>=
+int `real_size;
+@
+
+<<E/O lattice dump>>=
+printf(" %s.real_size=%d\n", name, eo->real_size);
+@
+
+<<E/O reset>>=
+eo->real_size = 0;
+@
+
+When the state is cleaned up, deallocate all communication resources:
+<<[[State]] cleanup>>=
+q(cleanup_communication)(state);
+@
+
+<<Communication setup internal routines>>=
+/* XXX communication setup internal routines */
+@
+
+%: clean up : deallocate all handles, set them to 0, deallocate all memory, set
+%  all pointers to NULL.
 
 \section{XXX Helpers}
 \subsection{d/f routine XXX [[Q(madd_fermion)]]}
