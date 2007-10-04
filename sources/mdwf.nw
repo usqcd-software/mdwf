@@ -2777,7 +2777,8 @@ state->qmp_memsize = 0;
      + eo->up_face[i] + eo->down_face[i];
 @
 
-The rest of communication state is in [[eo_lattice]]. Here we again 
+The rest of communication state is in [[eo_lattice]].
+ Here we again 
 only maintain the clean state, the actual initialization is done only when
 needed.
 
@@ -2847,12 +2848,17 @@ the communication initialization error handling cleans up all communication
 resources, we do not need to keep component handles around.
 <<E/O lattice pieces>>=
 QMP_msghandle_t `receive_handle;
-void *`receive_buffer;
+void *`receive_buffer[2*Q(DIM)];
 @
 
 <<E/O reset>>=
-eo->receive_handle = 0;
-eo->receive_buffer = 0;
+{
+  int i;
+
+  eo->receive_handle = 0;
+  for (i = 0; i < 2 * Q(DIM); i++)
+    eo->receive_buffer[i] = 0;
+}
 @
 
 <<E/O dump>>=
@@ -3331,9 +3337,147 @@ When the state is cleaned up, deallocate all communication resources:
 q(cleanup_communication)(state);
 @
 
+Let us start with the clean up procedure.
 <<Communication setup internal routines>>=
-/* XXX communication setup internal routines */
+static void
+cleanup(struct eo_lattice *xy)
+{
+  int i;
+
+  if (xy->real_size == 0)
+    return;
+
+  <<Finish sends before cleanup>>
+  <<Cleanup composite receive handle>>
+  for (i = 0; i < Q(DIM); i++) {
+    <<Communication cleanup in direction [[i]]>>
+  }
+  xy->real_size = 0;
+}
 @
+
+When the setup is complete, all receives are combined into a single handle. We
+only need to clean it up here.
+<<Cleanup composite receive handle>>=
+if (xy->receive_handle) {
+   QMP_free_msghandle(xy->receive_handle);
+}
+xy->receive_handle = NULL;
+@
+
+We may be called with outstanding sends. Let us wait here before continuing with
+the cleanup process
+<<Finish sends before cleanup>>=
+if (xy->send_hused) {
+  int i;
+  for (i = 0; i < Q(DIM); i++) {
+    if (xy->send_down_size[i])
+      QMP_wait(xy->send_down_handle[i]);
+    if (xy->send_up_size[i])
+      QMP_wait(xy->send_up_handle[i]);
+  }
+  xy->send_hused = 0;
+}
+@
+
+Releasing all resources needed for sends and receives in direction [[i]]:
+<<Communication cleanup in direction [[i]]>>=
+if (xy->send_down_size[i]) {
+  <<Free send down in [[i]]>>
+}
+if (xy->send_up_size[i]) {
+  <<Free send up in [[i]]>>
+}
+if (xy->receive_down_size[i]) {
+  <<Free receive down in [[i]]>>
+}
+if (xy->receive_up_size[i]) {
+  <<Free receive up in [[i]]>>
+}
+@
+
+Sends are simple:
+<<Free send down in [[i]]>>=
+if (xy->send_down_handle[i]) QMP_free_msghandle(xy->send_down_handle[i]);
+xy->send_down_handle[i] = NULL;
+if (xy->send_down_mh[i]) QMP_free_msgmem(xy->send_down_mh[i]);
+xy->send_down_mh[i] = NULL;
+if (xy->send_dowm_mem[i]) QMP_free_memory(xy->send_down_mem[i]);
+xy->send_down_mem[i] = NULL;
+xy->send_down_buffer[i] = NULL;
+@
+
+<<Free send up in [[i]]>>=
+if (xy->send_up_handle[i]) QMP_free_msghandle(xy->send_up_handle[i]);
+xy->send_up_handle[i] = NULL;
+if (xy->send_up_mh[i]) QMP_free_msgmem(xy->send_up_mh[i]);
+xy->send_up_mh[i] = NULL;
+if (xy->send_dowm_mem[i]) QMP_free_memory(xy->send_up_mem[i]);
+xy->send_up_mem[i] = NULL;
+xy->send_up_buffer[i] = NULL;
+@
+
+Receives may be in partially set up state here. If the creation of the
+collective handle failed, we may need to clean up individual receive handles.
+<<Free receive down in [[i]]>>=
+if (xy->receive_down_handle[i]) QMP_free_msghandle(xy->receive_down_handle[i]);
+xy->receive_down_handle[i] = NULL;
+if (xy->receive_down_mh[i]) QMP_free_msgmem(xy->receive_down_mh[i]);
+xy->receive_down_mh[i] = NULL;
+if (xy->receive_down_mem[i]) QMP_free_memory(xy->receive_down_mem[i]);
+xy->receive_down_mem[i] = NULL;
+xy->receive_buffer[i + Q(DIM)] = NULL;
+@
+
+<<Free receive up in [[i]]>>=
+if (xy->receive_up_handle[i]) QMP_free_msghandle(xy->receive_up_handle[i]);
+xy->receive_up_handle[i] = NULL;
+if (xy->receive_up_mh[i]) QMP_free_msgmem(xy->receive_up_mh[i]);
+xy->receive_up_mh[i] = NULL;
+if (xy->receive_up_mem[i]) QMP_free_memory(xy->receive_up_mem[i]);
+xy->receive_up_mem[i] = NULL;
+xy->receive_buffer[i] = NULL;
+@
+
+This is a good place to declare comminication pieces for e/o lattice:
+<<E/O lattice pieces>>=
+QMP_msghandle_t `send_up_handle[Q(DIM)];
+QMP_msghandle_t `send_down_handle[Q(DIM)];
+QMP_msghandle_t `receive_up_handle[Q(DIM)];
+QMP_msghandle_t `receive_down_handle[Q(DIM)];
+@
+
+They are initialized to [[NULL]]. Unfortunately, QMP is not clear that this is
+the right thing to do, by the way.
+<<E/O reset>>=
+{
+  int i;
+
+  for (i = 0; i < Q(DIM); i++) {
+    eo->send_up_handle[i] = NULL;
+    eo->send_down_handle[i] = NULL;
+    eo->receive_up_handle[i] = NULL;
+    eo->receive_down_handle[i] = NULL;
+  }
+}
+@
+
+For the dump, print the handles as pointers.
+<<E/O dump>>=
+{
+  int i;
+  for (i = 0; i < Q(DIM); i++)
+    printf(" %s.send_up_handle[%d]=%p\n", name, eo->send_up_handle[i]);
+  for (i = 0; i < Q(DIM); i++)
+    printf(" %s.send_down_handle[%d]=%p\n", name, eo->send_down_handle[i]);
+  for (i = 0; i < Q(DIM); i++)
+    printf(" %s.receive_up_handle[%d]=%p\n", name, eo->receive_up_handle[i]);
+  for (i = 0; i < Q(DIM); i++)
+    printf(" %s.receive_down_handle[%d]=%p\n", name, eo->receive_down_handle[i]);
+}
+@
+
+%%% XXX communication setup internal routines
 
 %: clean up : deallocate all handles, set them to 0, deallocate all memory, set
 %  all pointers to NULL.
@@ -4061,15 +4205,15 @@ is chosen to minimize [[struct ABTable]] size.
 Here we compute $A\psi_x + F\psi_y$.
 <<File [[c99/ABF.qa0]]>>=
 (procedure A+F ([stem "do_ApF"] count-flops)
-           ([res-x     pointer   "res_x"    "struct Fermion *"               ]
-            [size      int       "size"     "int"                            ]
-            [LsV       int       "LsV"      "int"                            ]
-            [f-table   pointer   "f_table"  "const struct neighbor *"        ]
-            [a-table   pointer   "a_table"  "const struct ABTable *"         ]
-            [U         pointer   "U"        "const struct SUn *"             ]
-            [src-x     pointer   "src_x"    "const struct Fermion *"         ]
-            [src-y     pointer   "src_y"    "const struct Fermion *"         ]
-            [src-b     pointer   "b"        "const struct ProjectedFermion *"])
+           ([res-x     pointer   "res_x"    "struct Fermion *"                ]
+            [size      int       "size"     "int"                             ]
+            [LsV       int       "LsV"      "int"                             ]
+            [f-table   pointer   "f_table"  "const struct neighbor *"         ]
+            [a-table   pointer   "a_table"  "const struct ABTable *"          ]
+            [U         pointer   "U"        "const struct SUn *"              ]
+            [src-x     pointer   "src_x"    "const struct Fermion *"          ]
+            [src-y     pointer   "src_y"    "const struct Fermion *"          ]
+            [src-b*    pointer   "b_ptr"    "void **"                         ])
   (op int-mul () (fermion-slice) ([reg LsV] [const (size-of Fermion)]))
   (op int-mul () (projected-fermion-slice) ([reg LsV] [const (size-of Projected-Fermion)]))
   (loop () (i [const 0] [reg size])
@@ -4120,6 +4264,7 @@ send, so now we multiply and unproject. Notice that our source is [[src-b]] in
 this case.
 <<[[A+F]] face forward>>=
 (begin
+  (load pointer () src-b ([reg src-b*] [const (* d (size-of pointer))]))
   (op int-mul () (s-index) ([reg s-off] [reg projected-fermion-slice]))
   (op pointer-add () (F-forward) ([reg src-b] [reg s-index]))
   (loop () (j [const 0] [reg LsV])
@@ -4170,6 +4315,7 @@ On the backward face, we received projected fermion multiplied by $U^\dagger$.
 Here we do the rest, namely, unproject and accumulate the result
 <<[[A+F]] face backward>>=
 (begin
+  (load pointer () src-b ([reg src-b*] [const (* (+ d *dim*) (size-of pointer))]))
   (op int-mul () (s-index) ([reg s-off] [reg projected-fermion-slice]))
   (op pointer-add () (s-addr) ([reg src-b] [reg s-index]))
   (loop () (j [const 0] [reg LsV])
