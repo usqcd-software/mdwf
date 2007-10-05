@@ -43,7 +43,8 @@ qx.sources = memory-g.c \
              op-B.c
 
 qi.sources = spin.c \
-             ABF.c
+             ABF.c \
+             simport-f.c
 
 ss.sources = basis.ss
 
@@ -57,7 +58,8 @@ qs.sources = common.ss \
              qa0.xx
 
 qa.sources = c99/spin.qa0 \
-             c99/ABF.qa0
+             c99/ABF.qa0 \
+             c99/simport-f.qa0
 
 qz.objects = $(q.sources:%.c=%.o) \
              $(qx.sources:%.c=%f.o) \

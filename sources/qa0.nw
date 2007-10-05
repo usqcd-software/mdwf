@@ -1736,10 +1736,10 @@ produce one load instruction
 	 [r1  (make-reg (new-reg))] [m1 d-n])
     (values `(,(make-qa0-operation '() 'int-add output* (list r0 r1))
               ,(make-qa0-operation '() 'int-mul (list r1)
-                                                (list c
+                                                (list f
 						      (make-c-expr-number m1)))
               ,(make-qa0-operation '() 'int-mul (list r0)
-                                                (list f
+                                                (list c
 						      (make-c-expr-number m0)))
               ,@r*)
             env)))

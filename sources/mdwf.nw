@@ -3783,6 +3783,7 @@ QX(`import_gauge)(struct QX(Gauge) **gauge_ptr,
    int *lo;
 
    <<Start timer>>
+   <<Reset [[flops]] and [[sent]]>>
    if (qx(allocate_gauge)(state, gauge_ptr) != 0) {
      <<Stop timer>>
      return 1;
@@ -3828,7 +3829,7 @@ QX(`import_fermion)(struct QX(Fermion) **fermion_ptr,
    <<Import (half)fermion prologue>>
    <<Import even part of (half)fermion>>
    <<Import odd part of fermion>>
-   <<Stop timer>>
+   <<Import (half)fermion epilogue>>
 #undef ALLOCATOR
    return 0;
 }
@@ -3841,31 +3842,68 @@ int x[Q(DIM)+1];
 struct Fermion *f;
 int *hi;
 int *lo;
+double *slice;
+int ssize;
 
+if (state == NULL)
+  return 1;
+lo = state->sublattice.lo;
+hi = state->sublattice.hi;
+Ls = state->Ls;
+ssize = Ls * Q(COLORS) * Q(FERMION_DIM) * 2 * sizeof (double);
+slice = q(malloc)(state, ssize);
+if (slice == NULL) {
+  /* XXX report error appropriately */
+  return 1;
+}
 <<Start timer>>
+<<Reset [[flops]] and [[sent]]>>
 if (ALLOCATOR(fermion_ptr, state) != 0) {
    <<Stop timer>>
    return 1;
 }
+@
 
-lo = state->sublattice.lo;
-hi = state->sublattice.hi;
-Ls = state->Ls;
+<<Import (half)fermion epilogue>>=
+q(free)(state, slice, ssize);
+<<Stop timer>>
 @
 
 <<Import even part of (half)fermion>>=
 for (f = (*fermion_ptr)->even, la = 0; la < state->even.full_size; la++, f += Ls) {
+  int c, d, s;
+  double *ss;
   p = la;
   <<Linear [[p]] to vector [[x]]>>
-  qx(import_fermion_slice)(state, f, x, reader, env);
+  for (ss = slice, s = 0; s < Ls; s++) {
+    x[Q(DIM)] = s;
+    for (d = 0; d < Q(FERMION_DIM); d++) {
+      for (c = 0; c < Q(COLORS); c++) {
+         *ss++ = reader(x, c, d, 0, env);
+         *ss++ = reader(x, c, d, 1, env);
+      }
+    }
+  }
+  qx(import_fermion_slice)(f, slice, Ls);
 }
 @
 
 <<Import odd part of fermion>>=
 for (f = (*fermion_ptr)->odd, la = 0; la < state->odd.full_size; la++, f += Ls) {
+  int c, d, s;
+  double *ss;
   p = la;
   <<Linear [[p]] to vector [[x]]>>
-  qx(import_fermion_slice)(state, f, x, reader, env);
+  for (ss = slice, s = 0; s < Ls; s++) {
+    x[Q(DIM)] = s;
+    for (d = 0; d < Q(FERMION_DIM); d++) {
+      for (c = 0; c < Q(COLORS); c++) {
+         *ss++ = reader(x, c, d, 0, env);
+         *ss++ = reader(x, c, d, 1, env);
+      }
+    }
+  }
+  qx(import_fermion_slice)(f, slice, Ls);
 }
 @
 
@@ -3886,7 +3924,7 @@ QX(`import_half_fermion)(struct QX(HalfFermion) **fermion_ptr,
 #define ALLOCATOR QX(allocate_half_fermion)
    <<Import (half)fermion prologue>>
    <<Import even part of (half)fermion>>
-   <<Stop timer>>
+   <<Import (half)fermion epilogue>>
 #undef ALLOCATOR
    return 0;
 }
@@ -3932,6 +3970,7 @@ lo = state->sublattice.lo;
 hi = state->sublattice.hi;
 Ls = state->Ls;
 <<Start timer>>
+<<Reset [[flops]] and [[sent]]>>
 @
 
 <<Export even part of (half)fermion>>=
@@ -4252,19 +4291,6 @@ QX(free_half_fermion)(struct QX(HalfFermion) **hfermion_ptr)
 \chapter{CODE GENERATION}
 This chapter contains back end specific routines. Here is what we need
 to define.
-
-Load one $s$-slice worth of the domain wall fermion.
-<<Implementation prototypes>>=
-void qx(`import_fermion_slice)(struct Q(State) *state,
-                              struct Fermion *fermion,
-                              int pos[Q(DIM)+1],
-                              double (*reader)(const int pos[Q(DIM)+1],
-                                               int color,
-                                               int dirac,
-                                               int re_im,
-                                               void *env),
-                              void *env);
-@
 
 Store one $s$-slice worth of the domain wall fermion.
 <<Implementation prototypes>>=
@@ -4600,6 +4626,45 @@ not support complex compound types, we separate vectors here.
 (array dim-array "xdarray" int [const *dim*])
 (structure F-Table "neighbor" (
    <<[[neighbor]] parts>>))
+@
+
+\subsection{Importing fermions}
+Given one $s$-slice of doubles in the canonical order, fill a corresponding part
+of the fermion.
+<<Low level single precision includes>>=
+#include <simport-ff.h>
+@
+<<Low level double precision includes>>=
+#include <simport-fd.h>
+@
+
+<<File [[simport-f.c]]>>=
+#include <mdwf.h>
+#if QOP_MDWF_DEFAULT_PRECISION == 'F'
+#include <simport-ff.c>
+#endif
+#if QOP_MDWF_DEFAULT_PRECISION == 'D'
+#include <simport-fd.c>
+#endif
+@
+
+<<File [[c99/simport-f.qa0]]>>=
+(procedure s-import-f ([stem "import_fermion_slice"])
+           ([f    pointer  "f"   "struct Fermion *"  ]
+            [cd   pointer  "d"   "const double *"    ]
+            [LsV  int      "LsV" "int"               ])
+  (loop () (s [const 0] [reg LsV])
+    (macro ([c [const 0] [const *colors*]])
+      (macro ([d [const 0] [const *fermion-dim*]])
+        (load double () v-re ([reg cd]))
+        (op pointer-add () (cd) ([reg cd] [const (size-of double)]))
+        (load double () v-im ([reg cd]))
+        (op pointer-add () (cd) ([reg cd] [const (size-of double)]))
+        (op complex () (v) ([reg v-re] [reg v-im]))
+        (op qcd-fermion-offset () (off) ([const c] [const d]))
+        (op pointer-add () (addr-cd) ([reg f] [reg off]))
+        (store COMPLEX () ([reg addr-cd]) [reg v])))
+    (op pointer-add () (f) ([reg f] [const (size-of Fermion)]))))
 @
 
 \section{Blue Gene}

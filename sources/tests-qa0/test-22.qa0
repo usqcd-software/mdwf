@@ -11,7 +11,7 @@
               ([r  pointer "res_r"  "int *"]
                [a  int     "a"      "int"   ]
                [b  int     "b"      "int"   ])
-  (op qcd-half-fermion-offset () (x) ([reg a] [reg b]))
+  (op qcd-projected-fermion-offset () (x) ([reg a] [reg b]))
   (store int () ([reg r]) [reg x]))
 
 (procedure G-dot ([stem "g_pos"])
