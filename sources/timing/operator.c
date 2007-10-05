@@ -1,7 +1,52 @@
 #include <qmp.h>
+#include <stdarg.h>
 #include <qop-mdwf3.h>
 
-int self;
+static int self;
+static int primary;
+static int mynetwork[4];
+static int mynode[4];
+
+static
+xprint(char *fmt, ...)
+{
+  char buffer[4096];
+  va_list va;
+
+  va_start(va, fmt);
+  vsprintf(buffer, fmt, va);
+  va_end(va);
+  printf("[%04d] %s\n", self, buffer);
+  
+}
+
+static void
+zprint(char *fmt, ...)
+{
+  va_list va;
+  if (primary == 0)
+    return;
+
+  va_start(va, fmt);
+  vprintf(fmt, va);
+  va_end(va);
+}
+
+static void
+show_coor(const char *name, int d, const int *dim, const int *coord)
+{
+  int i;
+  int vd[4];
+  int vc[4];
+
+  for (i = 0; i < 4; i++)
+    vd[i] = 1, vc[i] = 0;
+  for (i = 0; i < d; i++)
+    vd[i] = dim[i], vc[i] = coord[i];
+      
+  xprint("%s network: %d %d %d %d", name, vd[0], vd[1], vd[2], vd[3]);
+  xprint("%s node: %d %d %d %d", name, vc[0], vc[1], vc[2], vc[3]);
+}
 
 int
 main(int argc, char *argv[])
@@ -11,7 +56,6 @@ main(int argc, char *argv[])
   const int *network;
   const int *node;
   int i;
-  int primary;
 
   if (QMP_init_msg_passing(&argc, &argv, qt, &qt) != QMP_SUCCESS) {
     fprintf(stderr, "QMP_init() failed\n");
@@ -20,19 +64,22 @@ main(int argc, char *argv[])
 
   self = QMP_get_node_number();
   primary = QMP_is_primary_node();
-  net_dim = QMP_get_allocated_number_of_dimensions();
-  network = QMP_get_allocated_dimensions();
-  node = QMP_get_allocated_coordinates();
-  printf("[%d] machine of dimension %d, primary? %d\n", self, net_dim, primary);
-  printf("[%d] network:", self);
-  for (i = 0; i < net_dim; i++)
-    printf(" %d", network[i]);
-  printf("\n");
-  printf("[%d] node:", self);
-  for (i = 0; i < net_dim; i++)
-    printf(" %d", node[i]);
-  printf("\n");
+  for (i = 0; i < argc; i++)
+    zprint("arg[%d]=%s\n", i, argv[i]);
 
+  for (i = 0; i < 4; i++)
+    mynetwork[i] = (argc - 1) < i? 1: atoi(argv[i+1]);
+  show_coor("mynet", 4, mynetwork, mynode);
+  QMP_declare_logical_topology(mynetwork, 4);
+
+  show_coor("allocated",
+	    QMP_get_allocated_number_of_dimensions(),
+	    QMP_get_allocated_dimensions(),
+	    QMP_get_allocated_coordinates());
+  show_coor("logical",
+	    QMP_get_logical_number_of_dimensions(),
+	    QMP_get_logical_dimensions(),
+	    QMP_get_logical_coordinates());
   
   /* XXX */
   QMP_finalize_msg_passing();

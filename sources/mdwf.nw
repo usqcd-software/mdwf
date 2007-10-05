@@ -4354,18 +4354,18 @@ done via compile-time switches.
 @
 Compute engines for $A$, $B$, $F$, and their combinations.
 <<Low level single precision includes>>=
-#include <abff.h>
+#include <ABFf.h>
 @
 <<Low level double precision includes>>=
-#include <abfd.h>
+#include <ABFd.h>
 @
 <<File [[ABF.c]]>>=
 #include <mdwf.h>
 #if QOP_MDWF_DEFAULT_PRECISION == 'F'
-#include <abff.c>
+#include <ABFf.c>
 #endif
 #if QOP_MDWF_DEFAULT_PRECISION == 'D'
-#include <abfd.c>
+#include <ABFd.c>
 #endif
 @
 
