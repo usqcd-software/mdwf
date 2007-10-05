@@ -13,7 +13,6 @@ static int mynode[4];
 static double b5[128];
 static double c5[128];
 
-static
 xprint(char *fmt, ...)
 {
   char buffer[4096];
@@ -23,7 +22,7 @@ xprint(char *fmt, ...)
   vsprintf(buffer, fmt, va);
   va_end(va);
   printf("[%04d] %s\n", self, buffer);
-  
+  fflush(stdout);
 }
 
 static void

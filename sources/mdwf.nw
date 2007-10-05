@@ -3180,12 +3180,16 @@ qx(`compute_ApF)(struct Q(State) *state,
 The collective receive is started first, but only if there is more than one
 node on the machine:
 <<[[ApF]] start receive>>=
-if (xy->receive_handle)
+if (xy->receive_handle) {
+  xprint("start receive on %p", xy->receive_handle);
   QMP_start(xy->receive_handle);
+}
 @
 <<[[ApF]] finish receive>>=
-if (xy->receive_handle)
+if (xy->receive_handle) {
+  xprint("start wait on %p", xy->receive_handle);
   QMP_wait(xy->receive_handle);
+}
 @
 
 <<[[ApF]] start down sends>>=
@@ -3196,8 +3200,10 @@ if (xy->receive_handle)
 @
 <<[[ApF]] start down 0-send>>=
 if (xy->send_down_size[0]) {
+  xprint("may wait on %p d[0]", xy->send_down_handle[0]);
   if (xy->send_hused) QMP_wait(xy->send_down_handle[0]);
   qx(proj_g0minus)(xy->send_down_buffer[0], xy->send_down_size[0], LsV, xy->down_pack[0], f_y);
+  xprint("starting send on %p d[0]", xy->send_down_handle[0]);
   QMP_start(xy->send_down_handle[0]);
   state->sent += state->Ls * sizeof (struct ProjectedFermion) * xy->send_down_size[0];
   new_send = 1;
@@ -3205,8 +3211,10 @@ if (xy->send_down_size[0]) {
 @
 <<[[ApF]] start down 1-send>>=
 if (xy->send_down_size[1]) {
+  xprint("may wait on %p d[1]", xy->send_down_handle[1]);
   if (xy->send_hused) QMP_wait(xy->send_down_handle[1]);
   qx(proj_g1minus)(xy->send_down_buffer[1], xy->send_down_size[1], LsV, xy->down_pack[1], f_y);
+  xprint("starting send on %p d[1]", xy->send_down_handle[1]);
   QMP_start(xy->send_down_handle[1]);
   state->sent += state->Ls * sizeof (struct ProjectedFermion) * xy->send_down_size[1];
   new_send = 1;
@@ -3214,8 +3222,10 @@ if (xy->send_down_size[1]) {
 @
 <<[[ApF]] start down 2-send>>=
 if (xy->send_down_size[2]) {
+  xprint("may wait on %p d[2]", xy->send_down_handle[2]);
   if (xy->send_hused) QMP_wait(xy->send_down_handle[2]);
   qx(proj_g2minus)(xy->send_down_buffer[2], xy->send_down_size[2], LsV, xy->down_pack[2], f_y);
+  xprint("starting send on %p d[2]", xy->send_down_handle[2]);
   QMP_start(xy->send_down_handle[2]);
   state->sent += state->Ls * sizeof (struct ProjectedFermion) * xy->send_down_size[2];
   new_send = 1;
@@ -3223,8 +3233,10 @@ if (xy->send_down_size[2]) {
 @
 <<[[ApF]] start down 3-send>>=
 if (xy->send_down_size[3]) {
+  xprint("may wait on %p d[3]", xy->send_down_handle[3]);
   if (xy->send_hused) QMP_wait(xy->send_down_handle[3]);
   qx(proj_g3minus)(xy->send_down_buffer[3], xy->send_down_size[3], LsV, xy->down_pack[3], f_y);
+  xprint("starting send on %p d[3]", xy->send_down_handle[3]);
   QMP_start(xy->send_down_handle[3]);
   state->sent += state->Ls * sizeof (struct ProjectedFermion) * xy->send_down_size[3];
   new_send = 1;
@@ -3239,8 +3251,10 @@ if (xy->send_down_size[3]) {
 @
 <<[[ApF]] start up 0-send>>=
 if (xy->send_up_size[0]) {
+  xprint("may wait on %p u[0]", xy->send_up_handle[0]);
   if (xy->send_hused) QMP_wait(xy->send_up_handle[0]);
   qx(proj_Ucg0plus)(xy->send_up_buffer[0], xy->send_up_size[0], LsV, xy->up_pack[0], u, f_y);
+  xprint("starting send on %p u[0]", xy->send_up_handle[0]);
   QMP_start(xy->send_up_handle[0]);
   state->sent += state->Ls * sizeof (struct ProjectedFermion) * xy->send_up_size[0];
   new_send = 1;
@@ -3248,8 +3262,10 @@ if (xy->send_up_size[0]) {
 @
 <<[[ApF]] start up 1-send>>=
 if (xy->send_up_size[1]) {
+  xprint("may wait on %p u[1]", xy->send_up_handle[1]);
   if (xy->send_hused) QMP_wait(xy->send_up_handle[1]);
   qx(proj_Ucg1plus)(xy->send_up_buffer[1], xy->send_up_size[1], LsV, xy->up_pack[1], u, f_y);
+  xprint("starting send on %p u[1]", xy->send_up_handle[1]);
   QMP_start(xy->send_up_handle[1]);
   state->sent += state->Ls * sizeof (struct ProjectedFermion) * xy->send_up_size[1];
   new_send = 1;
@@ -3257,8 +3273,10 @@ if (xy->send_up_size[1]) {
 @
 <<[[ApF]] start up 2-send>>=
 if (xy->send_up_size[2]) {
+  xprint("may wait on %p u[2]", xy->send_up_handle[2]);
   if (xy->send_hused) QMP_wait(xy->send_up_handle[2]);
   qx(proj_Ucg2plus)(xy->send_up_buffer[2], xy->send_up_size[2], LsV, xy->up_pack[2], u, f_y);
+  xprint("starting send on %p u[2]", xy->send_up_handle[2]);
   QMP_start(xy->send_up_handle[2]);
   state->sent += state->Ls * sizeof (struct ProjectedFermion) * xy->send_up_size[2];
   new_send = 1;
@@ -3266,8 +3284,10 @@ if (xy->send_up_size[2]) {
 @
 <<[[ApF]] start up 3-send>>=
 if (xy->send_up_size[3]) {
+  xprint("may wait on %p u[3]", xy->send_up_handle[3]);
   if (xy->send_hused) QMP_wait(xy->send_up_handle[3]);
   qx(proj_Ucg3plus)(xy->send_up_buffer[3], xy->send_up_size[3], LsV, xy->up_pack[3], u, f_y);
+  xprint("starting send on %p u[3]", xy->send_up_handle[3]);
   QMP_start(xy->send_up_handle[3]);
   state->sent += state->Ls * sizeof (struct ProjectedFermion) * xy->send_up_size[3];
   new_send = 1;
@@ -3649,18 +3669,25 @@ if (xy->send_up_size[i]) {
    int size = real_size * 2 * Q(PROJECTED_FERMION_DIM) * Q(COLORS) *
               xy->send_up_size[i] * state->Ls;
    void *ptr;
+xprint("send_up[%d]: size=%d", i, size);
    xy->send_up_mem[i] = QMP_allocate_aligned_memory(size + CACHE_LINE_SIZE, CACHE_LINE_SIZE,
                                                     QMP_MEM_DEFAULT);
+
+xprint("send_up[%d]: mem=%p", i, xy->send_up_mem[i]);
    if (xy->send_up_mem[i] == NULL)
      goto error;
    ptr = QMP_get_memory_pointer(xy->send_up_mem[i]);
+xprint("send_up[%d]: ptr=%p", i, ptr);
    if (ptr == NULL)
      goto error;
    xy->send_up_buffer[i] = ALIGN(ptr);
+xprint("send_up[%d]: buffer=%p", i, xy->send_up_buffer[i]);
    xy->send_up_mh[i] = QMP_declare_msgmem(xy->send_up_buffer[i], size);
+xprint("send_up[%d]: mh=%p", i, xy->send_up_mh[i]);
    if (xy->send_up_mh[i] == NULL)
      goto error;
    xy->send_up_handle[i] = QMP_declare_send_relative(xy->send_up_mh[i], i, +1, 0);
+xprint("send_up[%d]: h=%p", i, xy->send_up_handle[i]);
    if (xy->send_up_handle[i] == NULL)
      goto error;
 }
@@ -3671,18 +3698,24 @@ if (xy->send_down_size[i]) {
    int size = real_size * 2 * Q(PROJECTED_FERMION_DIM) * Q(COLORS) *
               xy->send_down_size[i] * state->Ls;
    void *ptr;
+xprint("send_down[%d]: size=%d", i, size);
    xy->send_down_mem[i] = QMP_allocate_aligned_memory(size + CACHE_LINE_SIZE, CACHE_LINE_SIZE,
                                                       QMP_MEM_DEFAULT);
+xprint("send_down[%d]: mem=%p", i, xy->send_down_mem[i]);
    if (xy->send_down_mem[i] == NULL)
      goto error;
    ptr = QMP_get_memory_pointer(xy->send_down_mem[i]);
+xprint("send_down[%d]: ptr=%p", i, ptr);
    if (ptr == NULL)
      goto error;
    xy->send_down_buffer[i] = ALIGN(ptr);
+xprint("send_down[%d]: buffer=%p", i, xy->send_down_buffer[i]);
    xy->send_down_mh[i] = QMP_declare_msgmem(xy->send_down_buffer[i], size);
+xprint("send_down[%d]: mh=%p", i, xy->send_down_mh[i]);
    if (xy->send_down_mh[i] == NULL)
      goto error;
    xy->send_down_handle[i] = QMP_declare_send_relative(xy->send_down_mh[i], i, -1, 0);
+xprint("send_down[%d]: h=%p", i, xy->send_down_handle[i]);
    if (xy->send_down_handle[i] == NULL)
      goto error;
 }
@@ -3697,18 +3730,24 @@ if (xy->up_face[i]) {
   int size = real_size * 2 * Q(PROJECTED_FERMION_DIM) * Q(COLORS) *
              xy->up_face[i] * state->Ls;
   void *ptr;
+xprint("rec_up[%d]: size=%d", i, size);
   xy->receive_up_mem[i] = QMP_allocate_aligned_memory(size + CACHE_LINE_SIZE, CACHE_LINE_SIZE,
                                                       QMP_MEM_DEFAULT);
+xprint("rec_up[%d]: mem=%p", i, xy->receive_up_mem[i]);
   if (xy->receive_up_mem[i] == NULL)
     goto error;
   ptr = QMP_get_memory_pointer(xy->receive_up_mem[i]);
+xprint("rec_up[%d]: ptr=%p", i, ptr);
   if (ptr == NULL)
     goto error;
   xy->receive_buffer[i] = ALIGN(ptr);
+xprint("rec_up[%d]: buffer=%p", i, xy->receive_buffer[i]);
   xy->receive_up_mh[i] = QMP_declare_msgmem(xy->receive_buffer[i], size);
+xprint("rec_up[%d]: mh=%p", i, xy->receive_up_mh[i]);
   if (xy->receive_up_mh[i] == NULL)
     goto error;
   xy->receive_up_handle[i] = QMP_declare_receive_relative(xy->receive_up_mh[i], i, +1, 0);
+xprint("rec_up[%d]: h=%p", i, xy->receive_up_handle[i]);
   if (xy->receive_up_handle[i] == NULL)
     goto error;
   vh[k++] = xy->receive_up_handle[i];
@@ -3720,18 +3759,24 @@ if (xy->down_face[i]) {
   int size = real_size * 2 * Q(PROJECTED_FERMION_DIM) * Q(COLORS) *
              xy->down_face[i] * state->Ls;
   void *ptr;
+xprint("rec_down[%d]: size=%d", i, size);
   xy->receive_down_mem[i] = QMP_allocate_aligned_memory(size + CACHE_LINE_SIZE, CACHE_LINE_SIZE,
                                                         QMP_MEM_DEFAULT);
+xprint("rec_down[%d]: mem=%p", i, xy->receive_down_mem[i]);
   if (xy->receive_down_mem[i] == NULL)
     goto error;
   ptr = QMP_get_memory_pointer(xy->receive_down_mem[i]);
+xprint("rec_down[%d]: ptr=%p", i, ptr);
   if (ptr == NULL)
     goto error;
-  xy->receive_buffer[i] = ALIGN(ptr);
-  xy->receive_down_mh[i] = QMP_declare_msgmem(xy->receive_buffer[i], size);
+  xy->receive_buffer[i+Q(DIM)] = ALIGN(ptr);
+xprint("rec_down[%d]: buffer=%p", i, xy->receive_buffer[i+Q(DIM)]);
+  xy->receive_down_mh[i] = QMP_declare_msgmem(xy->receive_buffer[i+Q(DIM)], size);
+xprint("rec_down[%d]: mh=%p", i, xy->receive_down_mh[i]);
   if (xy->receive_down_mh[i] == NULL)
     goto error;
   xy->receive_down_handle[i] = QMP_declare_receive_relative(xy->receive_down_mh[i], i, +1, 0);
+xprint("rec_down[%d]: h=%p", i, xy->receive_down_handle[i]);
   if (xy->receive_down_handle[i] == NULL)
     goto error;
   vh[k++] = xy->receive_down_handle[i];
