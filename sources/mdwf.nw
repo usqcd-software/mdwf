@@ -2778,93 +2778,6 @@ state->qmp_memsize = 0;
 @
 
 The rest of communication state is in [[eo_lattice]].
- Here we again 
-only maintain the clean state, the actual initialization is done only when
-needed.
-
-On the send side, there are send buffers and handles for each direction for up
-and down neighbors:
-<<E/O lattice pieces>>=
-void *`send_up_buffer[Q(DIM)];
-QMP_msghandle_t `send_up_handle[Q(DIM)];
-void *`send_down_buffer[Q(DIM)];
-QMP_msghandle_t `send_down_handle[Q(DIM)];
-@
-
-<<E/O dump>>=
-{
-   int i;
-   printf(" %s send:\n", name);
-   for (i = 0; i < Q(DIM); i++) {
-     printf("  %s up buffer %p, up handle %p, down buffer %p, down handle %p\n",
-            name,
-            eo->send_up_buffer[i],
-	    eo->send_up_handle[i],
-	    eo->send_down_buffer[i],
-	    eo->send_down_handle[i]);
-   }
-}
-@
-
-Not obvious from the data type, but [[QMP_msghandle_t]] is a pointer, hence the
-[[NULL]]s.
-<<E/O reset>>=
-{
-   int i;
-   for (i = 0; i < Q(DIM); i++) {
-      eo->send_up_buffer[i] = NULL;
-      eo->send_up_handle[i] = NULL;
-      eo->send_down_buffer[i] = NULL;
-      eo->send_down_handle[i] = NULL;
-   }
-}
-@
-
-When sending, each operation is started as soon as possible, but they are all
-waited for together. To make things clearer, we keep an array of started
-send operations, [[send_handle[]]], and a counter [[send_hused]] of used space
-it it.
-<<E/O lattice pieces>>=
-QMP_msghandle_t `send_handle[2 * Q(DIM)];
-int `send_hused;
-@
-
-<<E/O dump>>=
-{
-  int i;
-  printf(" %s.send_hused=%d\n", name, eo->send_hused);
-  for (i = 0; i < eo->send_hused; i++) {
-    printf("  %s.send_handle[%d]=%p\n", name, i, eo->send_handle[i]);
-  }
-}
-@
-
-<<E/O reset>>=
-eo->send_hused = 0;
-@
-
-On the receive side, the communication is done through a aggregate handle. Since
-the communication initialization error handling cleans up all communication
-resources, we do not need to keep component handles around.
-<<E/O lattice pieces>>=
-QMP_msghandle_t `receive_handle;
-void *`receive_buffer[2*Q(DIM)];
-@
-
-<<E/O reset>>=
-{
-  int i;
-
-  eo->receive_handle = 0;
-  for (i = 0; i < 2 * Q(DIM); i++)
-    eo->receive_buffer[i] = 0;
-}
-@
-
-<<E/O dump>>=
-printf(" %s.receive_handle=%p\n", name, eo->receive_handle);
-printf(" %s.receive_buffer=%p\n", name, eo->receive_buffer);
-@
 
 
 \par XXX init\&fini communication for both double and single
@@ -3310,9 +3223,9 @@ q(setup_communication)(struct Q(State) *state, int real_size)
     return 0;
   cleanup(&state->even);
   cleanup(&state->odd);
-  if (setup(&state->even, real_size))
+  if (setup(&state->even, state, real_size))
     return 1;
-  if (setup(&state->odd, real_size)) {
+  if (setup(&state->odd, state, real_size)) {
     cleanup(&state->even);
     return 1;
   }
@@ -3388,10 +3301,10 @@ if (xy->send_down_size[i]) {
 if (xy->send_up_size[i]) {
   <<Free send up in [[i]]>>
 }
-if (xy->receive_down_size[i]) {
+if (xy->down_face[i]) {
   <<Free receive down in [[i]]>>
 }
-if (xy->receive_up_size[i]) {
+if (xy->up_face[i]) {
   <<Free receive up in [[i]]>>
 }
 @
@@ -3402,7 +3315,7 @@ if (xy->send_down_handle[i]) QMP_free_msghandle(xy->send_down_handle[i]);
 xy->send_down_handle[i] = NULL;
 if (xy->send_down_mh[i]) QMP_free_msgmem(xy->send_down_mh[i]);
 xy->send_down_mh[i] = NULL;
-if (xy->send_dowm_mem[i]) QMP_free_memory(xy->send_down_mem[i]);
+if (xy->send_down_mem[i]) QMP_free_memory(xy->send_down_mem[i]);
 xy->send_down_mem[i] = NULL;
 xy->send_down_buffer[i] = NULL;
 @
@@ -3412,7 +3325,7 @@ if (xy->send_up_handle[i]) QMP_free_msghandle(xy->send_up_handle[i]);
 xy->send_up_handle[i] = NULL;
 if (xy->send_up_mh[i]) QMP_free_msgmem(xy->send_up_mh[i]);
 xy->send_up_mh[i] = NULL;
-if (xy->send_dowm_mem[i]) QMP_free_memory(xy->send_up_mem[i]);
+if (xy->send_up_mem[i]) QMP_free_memory(xy->send_up_mem[i]);
 xy->send_up_mem[i] = NULL;
 xy->send_up_buffer[i] = NULL;
 @
@@ -3441,6 +3354,8 @@ xy->receive_buffer[i] = NULL;
 
 This is a good place to declare comminication pieces for e/o lattice:
 <<E/O lattice pieces>>=
+int `send_hused;
+QMP_msghandle_t `receive_handle;
 QMP_msghandle_t `send_up_handle[Q(DIM)];
 QMP_msghandle_t `send_down_handle[Q(DIM)];
 QMP_msghandle_t `receive_up_handle[Q(DIM)];
@@ -3453,6 +3368,8 @@ the right thing to do, by the way.
 {
   int i;
 
+  eo->send_hused = 0;
+  eo->receive_handle = NULL;
   for (i = 0; i < Q(DIM); i++) {
     eo->send_up_handle[i] = NULL;
     eo->send_down_handle[i] = NULL;
@@ -3466,21 +3383,255 @@ For the dump, print the handles as pointers.
 <<E/O dump>>=
 {
   int i;
+
+  printf(" %s.receive_handle=%p\n", name, eo->receive_handle);
+  printf(" %s.send_hused=%d\n", name, eo->send_hused);
   for (i = 0; i < Q(DIM); i++)
-    printf(" %s.send_up_handle[%d]=%p\n", name, eo->send_up_handle[i]);
+    printf(" %s.send_up_handle[%d]=%p\n", name, i, eo->send_up_handle[i]);
   for (i = 0; i < Q(DIM); i++)
-    printf(" %s.send_down_handle[%d]=%p\n", name, eo->send_down_handle[i]);
+    printf(" %s.send_down_handle[%d]=%p\n", name, i, eo->send_down_handle[i]);
   for (i = 0; i < Q(DIM); i++)
-    printf(" %s.receive_up_handle[%d]=%p\n", name, eo->receive_up_handle[i]);
+    printf(" %s.receive_up_handle[%d]=%p\n", name, i, eo->receive_up_handle[i]);
   for (i = 0; i < Q(DIM); i++)
-    printf(" %s.receive_down_handle[%d]=%p\n", name, eo->receive_down_handle[i]);
+    printf(" %s.receive_down_handle[%d]=%p\n", name, i, eo->receive_down_handle[i]);
 }
 @
 
-%%% XXX communication setup internal routines
+The memory handles are kept around so that we may free them when they are not
+needed any longer. They are also treated as pointers, though QMP is mute again
+on the issue.
+<<E/O lattice pieces>>=
+QMP_msgmem_t send_up_mh[Q(DIM)];
+QMP_msgmem_t send_down_mh[Q(DIM)];
+QMP_msgmem_t receive_up_mh[Q(DIM)];
+QMP_msgmem_t receive_down_mh[Q(DIM)];
+@
 
-%: clean up : deallocate all handles, set them to 0, deallocate all memory, set
-%  all pointers to NULL.
+<<E/O reset>>=
+{
+  int i;
+  for (i = 0; i < Q(DIM); i++) {
+    eo->send_up_mh[i] = NULL;
+    eo->send_down_mh[i] = NULL;
+    eo->receive_up_mh[i] = NULL;
+    eo->receive_down_mh[i] = NULL;
+  }
+}
+@
+
+<<E/O dump>>=
+{
+  int i;
+
+  for (i = 0; i < Q(DIM); i++)
+    printf(" %s.send_up_mh[%d]=%p\n", name, i, eo->send_up_mh[i]);
+  for (i = 0; i < Q(DIM); i++)
+    printf(" %s.send_down_mh[%d]=%p\n", name, i, eo->send_down_mh[i]);
+  for (i = 0; i < Q(DIM); i++)
+    printf(" %s.receive_up_mh[%d]=%p\n", name, i, eo->receive_up_mh[i]);
+  for (i = 0; i < Q(DIM); i++)
+    printf(" %s.receive_down_mh[%d]=%p\n", name, i, eo->receive_down_mh[i]);
+}
+@
+
+The receive memory is managed by QMP. Here are the handles to the memory
+<<E/O lattice pieces>>=
+QMP_mem_t *send_up_mem[Q(DIM)];
+QMP_mem_t *send_down_mem[Q(DIM)];
+QMP_mem_t *receive_up_mem[Q(DIM)];
+QMP_mem_t *receive_down_mem[Q(DIM)];
+@
+
+How we can really use [[NULL]] as an invalid handle.
+<<E/O reset>>=
+{
+  int i;
+
+  for (i = 0; i < Q(DIM); i++) {
+    eo->send_up_mem[i] = NULL;
+    eo->send_down_mem[i] = NULL;
+    eo->receive_up_mem[i] = NULL;
+    eo->receive_down_mem[i] = NULL;
+  }
+}
+@
+
+<<E/O dump>>=
+{
+  int i;
+
+  for (i = 0; i < Q(DIM); i++)
+    printf(" %s.send_up_mem[%d]=%p\n", name, i, eo->send_up_mem[i]);
+  for (i = 0; i < Q(DIM); i++)
+    printf(" %s.send_down_mem[%d]=%p\n", name, i, eo->send_down_mem[i]);
+  for (i = 0; i < Q(DIM); i++)
+    printf(" %s.receive_up_mem[%d]=%p\n", name, i, eo->receive_up_mem[i]);
+  for (i = 0; i < Q(DIM); i++)
+    printf(" %s.receive_down_mem[%d]=%p\n", name, i, eo->receive_down_mem[i]);
+}
+@
+
+Final pieces of memory hierarhy are send and receive buffers:
+<<E/O lattice pieces>>=
+void *send_up_buffer[Q(DIM)];
+void *send_down_buffer[Q(DIM)];
+void *receive_buffer[2*Q(DIM)];
+@
+<<E/O reset>>=
+{
+  int i;
+
+  for (i = 0; i < Q(DIM); i++) {
+    eo->send_up_buffer[i] = NULL;
+    eo->send_down_buffer[i] = NULL;
+    eo->receive_buffer[i] = NULL;
+    eo->receive_buffer[i + Q(DIM)] = NULL;
+  }
+}
+@
+
+<<E/O dump>>=
+{
+  int i;
+
+  for (i = 0; i < Q(DIM); i++)
+    printf(" %s.send_up_buffer[%d]=%p\n", name, i, eo->send_up_buffer[i]);
+  for (i = 0; i < Q(DIM); i++)
+    printf(" %s.send_down_buffer[%d]=%p\n", name, i, eo->send_down_buffer[i]);
+  for (i = 0; i < Q(DIM); i++)
+    printf(" %s.receive_up_buffer[%d]=%p\n", name, i, eo->receive_buffer[i]);
+  for (i = 0; i < Q(DIM); i++)
+    printf(" %s.receive_down_buffer[%d]=%p\n", name, i, eo->receive_buffer[i + Q(DIM)]);
+}
+@
+
+Now we can initialize the communication state.
+<<Communication setup internal routines>>=
+static int
+setup(struct eo_lattice *xy, struct Q(State) *state, int real_size)
+{
+   int i, k;
+   QMP_msghandle_t vh[2 * Q(DIM)];
+
+   for (i = 0, k = 0; i < Q(DIM); i++) {
+     <<Allocate send resources in up [[i]]>>
+     <<Allocate send resources in down [[i]]>>
+     <<Allocate receive resources in up [[i]]>>
+     <<Allocate receive resources in down [[i]]>>
+   }
+   <<Allocate combined receive handle>>
+   return 0;
+ error:
+   cleanup(xy);
+   return 1;
+}
+@
+
+<<Allocate send resources in up [[i]]>>=
+if (xy->send_up_size[i]) {
+   int size = real_size * 2 * Q(PROJECTED_FERMION_DIM) * Q(COLORS) *
+              xy->send_up_size[i] * state->Ls;
+   void *ptr;
+   xy->send_up_mem[i] = QMP_allocate_aligned_memory(size + CACHE_LINE_SIZE, CACHE_LINE_SIZE,
+                                                    QMP_MEM_DEFAULT);
+   if (xy->send_up_mem[i] == NULL)
+     goto error;
+   ptr = QMP_get_memory_pointer(xy->send_up_mem[i]);
+   if (ptr == NULL)
+     goto error;
+   xy->send_up_buffer[i] = ALIGN(ptr);
+   xy->send_up_mh[i] = QMP_declare_msgmem(xy->send_up_buffer[i], size);
+   if (xy->send_up_mh[i] == NULL)
+     goto error;
+   xy->send_up_handle[i] = QMP_declare_send_relative(xy->send_up_mh[i], i, +1, 0);
+   if (xy->send_up_handle[i] == NULL)
+     goto error;
+}
+@
+
+<<Allocate send resources in down [[i]]>>=
+if (xy->send_down_size[i]) {
+   int size = real_size * 2 * Q(PROJECTED_FERMION_DIM) * Q(COLORS) *
+              xy->send_down_size[i] * state->Ls;
+   void *ptr;
+   xy->send_down_mem[i] = QMP_allocate_aligned_memory(size + CACHE_LINE_SIZE, CACHE_LINE_SIZE,
+                                                      QMP_MEM_DEFAULT);
+   if (xy->send_down_mem[i] == NULL)
+     goto error;
+   ptr = QMP_get_memory_pointer(xy->send_down_mem[i]);
+   if (ptr == NULL)
+     goto error;
+   xy->send_down_buffer[i] = ALIGN(ptr);
+   xy->send_down_mh[i] = QMP_declare_msgmem(xy->send_down_buffer[i], size);
+   if (xy->send_down_mh[i] == NULL)
+     goto error;
+   xy->send_down_handle[i] = QMP_declare_send_relative(xy->send_down_mh[i], i, -1, 0);
+   if (xy->send_down_handle[i] == NULL)
+     goto error;
+}
+@
+
+Allocation of the receive resource is similar. We collect all receive handles
+into an array that is converted into a collective receive. If everything is ok,
+the individual handles are cleared before leaving [[setup()]]. Otherwise, they
+are cleared by the [[cleanup()]].
+<<Allocate receive resources in up [[i]]>>=
+if (xy->up_face[i]) {
+  int size = real_size * 2 * Q(PROJECTED_FERMION_DIM) * Q(COLORS) *
+             xy->up_face[i] * state->Ls;
+  void *ptr;
+  xy->receive_up_mem[i] = QMP_allocate_aligned_memory(size + CACHE_LINE_SIZE, CACHE_LINE_SIZE,
+                                                      QMP_MEM_DEFAULT);
+  if (xy->receive_up_mem[i] == NULL)
+    goto error;
+  ptr = QMP_get_memory_pointer(xy->receive_up_mem[i]);
+  if (ptr == NULL)
+    goto error;
+  xy->receive_buffer[i] = ALIGN(ptr);
+  xy->receive_up_mh[i] = QMP_declare_msgmem(xy->receive_buffer[i], size);
+  if (xy->receive_up_mh[i] == NULL)
+    goto error;
+  xy->receive_up_handle[i] = QMP_declare_receive_relative(xy->receive_up_mh[i], i, +1, 0);
+  if (xy->receive_up_handle[i] == NULL)
+    goto error;
+  vh[k++] = xy->receive_up_handle[i];
+}
+@
+
+<<Allocate receive resources in down [[i]]>>=
+if (xy->down_face[i]) {
+  int size = real_size * 2 * Q(PROJECTED_FERMION_DIM) * Q(COLORS) *
+             xy->down_face[i] * state->Ls;
+  void *ptr;
+  xy->receive_down_mem[i] = QMP_allocate_aligned_memory(size + CACHE_LINE_SIZE, CACHE_LINE_SIZE,
+                                                        QMP_MEM_DEFAULT);
+  if (xy->receive_down_mem[i] == NULL)
+    goto error;
+  ptr = QMP_get_memory_pointer(xy->receive_down_mem[i]);
+  if (ptr == NULL)
+    goto error;
+  xy->receive_buffer[i] = ALIGN(ptr);
+  xy->receive_down_mh[i] = QMP_declare_msgmem(xy->receive_buffer[i], size);
+  if (xy->receive_down_mh[i] == NULL)
+    goto error;
+  xy->receive_down_handle[i] = QMP_declare_receive_relative(xy->receive_down_mh[i], i, +1, 0);
+  if (xy->receive_down_handle[i] == NULL)
+    goto error;
+  vh[k++] = xy->receive_down_handle[i];
+}
+@
+
+<<Allocate combined receive handle>>=
+if (k) {
+  xy->receive_handle = QMP_declare_multiple(vh, k);
+  if (xy->receive_handle == NULL)
+    goto error;
+  for (i = 0; i < Q(DIM); i++) {
+     xy->receive_up_handle[i] = NULL;
+     xy->receive_down_handle[i] = NULL;
+  }
+}
+@
 
 \section{XXX Helpers}
 \subsection{d/f routine XXX [[Q(madd_fermion)]]}
