@@ -2980,15 +2980,15 @@ conjugate in the next section.
 #include <mdwf.h>
 int
 QX(`DDW_operator)(struct QX(Fermion) *result,
-                 const struct Q(Parameters) *params,
-                 const struct QX(Gauge) *gauge,
-                 const struct QX(Fermion) *fermion)
+                const struct Q(Parameters) *params,
+                const struct QX(Gauge) *gauge,
+                const struct QX(Fermion) *fermion)
 {
 #define PROC "DDW_Opearator"
   <<DW Operator prologue>>
   if (params->unit_B) {
-    qx(compute_ApF)(&state->even, result->even, fermion->even, params, gauge->data, fermion->odd);
-    qx(compute_ApF)(&state->odd, result->odd, fermion->odd, params, gauge->data, fermion->even);
+    qx(compute_ApF)(state, &state->even, result->even, fermion->even, params, gauge->data, fermion->odd);
+    qx(compute_ApF)(state, &state->odd, result->odd, fermion->odd, params, gauge->data, fermion->even);
   } else {
     <<DW Generic Operator>>
   }
@@ -3004,11 +3004,11 @@ struct Fermion *Te;
 struct Fermion *To;
 
 <<DW Generic Operator allocate memory>>
-qx(compute_B)(&state->even, To, params, fermion->odd);
-qx(compute_ApF)(&state->even, result->even, fermion->even, params, gauge->data, To);
+qx(compute_B)(state, &state->even, To, params, fermion->odd);
+qx(compute_ApF)(state, &state->even, result->even, fermion->even, params, gauge->data, To);
 
-qx(compute_B)(&state->odd, Te, params, fermion->even);
-qx(compute_ApF)(&state->odd, result->odd, fermion->odd, params, gauge->data, Te);
+qx(compute_B)(state, &state->odd, Te, params, fermion->even);
+qx(compute_ApF)(state, &state->odd, result->odd, fermion->odd, params, gauge->data, Te);
 <<DW Generic Operator free memory>>
 @
 <<DW Generic Operator allocate memory>>=
@@ -3076,16 +3076,16 @@ QX(`DDW_operator_conjugated)(struct QX(Fermion) *result,
 #define PROC "DDW_Opearator_conjugated"
   <<DW Operator prologue>>
   if (params->unit_B) {
-    qx(compute_AxpFx)(&state->even, result->even,
+    qx(compute_AxpFx)(state, &state->even, result->even,
                       fermion->even, params, gauge, fermion->odd);
 
-    qx(compute_AxpFx)(&state->odd, result->odd,
+    qx(compute_AxpFx)(state, &state->odd, result->odd,
                       fermion->odd, params, gauge, fermion->even);
   } else {
-    qx(compute_AxpBxFx)(&state->even, result->even,
+    qx(compute_AxpBxFx)(state, &state->even, result->even,
                         fermion->even, params, gauge, fermion->odd);
 
-    qx(compute_AxpBxFx)(&state->odd, result->odd,
+    qx(compute_AxpBxFx)(state, &state->odd, result->odd,
                         fermion->odd, params, gauge, fermion->even);
   }
   <<DW Operator epilogue>>
@@ -3102,7 +3102,8 @@ QX(`DDW_operator_conjugated)(struct QX(Fermion) *result,
 Here we compute $A$ and $B$, the 4-local operators. There is no communication
 and both operators are tri-diagonal in the $s$-direction.
 <<Implementation prototypes>>=
-void qx(`compute_B)(struct eo_lattice *xy,
+void qx(`compute_B)(struct Q(State) *state,
+                   struct eo_lattice *xy,
                    struct Fermion *result_y,
                    const struct Q(Parameters) *params,
                    const struct Fermion *f_y);
@@ -3110,17 +3111,19 @@ void qx(`compute_B)(struct eo_lattice *xy,
 <<File [[op-B.c]]>>=
 #include <mdwf.h>
 void
-qx(`compute_B)(struct eo_lattice *xy,
-               struct Fermion *result_x,
-               const struct Q(Parameters) *params,
-               const struct Fermion *f_x)
+qx(`compute_B)(struct Q(State) *state,
+              struct eo_lattice *xy,
+              struct Fermion *result_x,
+              const struct Q(Parameters) *params,
+              const struct Fermion *f_x)
 {
-  qx(do_AB)(result_x, xy->full_size, params->LsV, params->B, f_x);
+  state->flops += qx(do_AB)(result_x, xy->full_size, params->LsV, params->B, f_x);
 }
 @
 
 <<Implementation prototypes>>=
-void qx(`compute_A)(struct eo_lattice *xy,
+void qx(`compute_A)(struct Q(State) *state,
+                   struct eo_lattice *xy,
                    struct Fermion *result_y,
                    const struct Q(Parameters) *params,
                    const struct Fermion *f_y);
@@ -3128,12 +3131,13 @@ void qx(`compute_A)(struct eo_lattice *xy,
 <<File [[op-A.c]]>>=
 #include <mdwf.h>
 void
-qx(`compute_A)(struct eo_lattice *xy,
-               struct Fermion *result_x,
-               const struct Q(Parameters) *params,
-               const struct Fermion *f_x)
+qx(`compute_A)(struct Q(State) *state,
+              struct eo_lattice *xy,
+              struct Fermion *result_x,
+              const struct Q(Parameters) *params,
+              const struct Fermion *f_x)
 {
-  qx(do_AB)(result_x, xy->full_size, params->LsV, params->A, f_x);
+  state->flops += qx(do_AB)(result_x, xy->full_size, params->LsV, params->A, f_x);
 }
 @
 
@@ -3141,7 +3145,8 @@ qx(`compute_A)(struct eo_lattice *xy,
 The second step in computing the Dirac operator is calculating
 $A\psi_x+F\psi_y$.
 <<Implementation prototypes>>=
-void qx(`compute_ApF)(struct eo_lattice *xy,
+void qx(`compute_ApF)(struct Q(State) *state,
+                     struct eo_lattice *xy,
                      struct Fermion *result_x,
                      const struct Fermion *f_x,
                      const struct Q(Parameters) *params,
@@ -3152,7 +3157,8 @@ void qx(`compute_ApF)(struct eo_lattice *xy,
 <<File [[op-ApF.c]]>>=
 #include <mdwf.h>
 void
-qx(`compute_ApF)(struct eo_lattice *xy,
+qx(`compute_ApF)(struct Q(State) *state,
+                struct eo_lattice *xy,
                 struct Fermion *r_x,
                 const struct Fermion *f_x,
                 const struct Q(Parameters) *params,
@@ -3192,6 +3198,7 @@ if (xy->send_down_size[0]) {
   if (xy->send_hused) QMP_wait(xy->send_down_handle[0]);
   qx(proj_g0minus)(xy->send_down_buffer[0], xy->send_down_size[0], LsV, xy->down_pack[0], f_y);
   QMP_start(xy->send_down_handle[0]);
+  state->sent += state->Ls * sizeof (struct ProjectedFermion) * xy->send_down_size[0];
   new_send = 1;
 }
 @
@@ -3200,6 +3207,7 @@ if (xy->send_down_size[1]) {
   if (xy->send_hused) QMP_wait(xy->send_down_handle[1]);
   qx(proj_g1minus)(xy->send_down_buffer[1], xy->send_down_size[1], LsV, xy->down_pack[1], f_y);
   QMP_start(xy->send_down_handle[1]);
+  state->sent += state->Ls * sizeof (struct ProjectedFermion) * xy->send_down_size[1];
   new_send = 1;
 }
 @
@@ -3208,6 +3216,7 @@ if (xy->send_down_size[2]) {
   if (xy->send_hused) QMP_wait(xy->send_down_handle[2]);
   qx(proj_g2minus)(xy->send_down_buffer[2], xy->send_down_size[2], LsV, xy->down_pack[2], f_y);
   QMP_start(xy->send_down_handle[2]);
+  state->sent += state->Ls * sizeof (struct ProjectedFermion) * xy->send_down_size[2];
   new_send = 1;
 }
 @
@@ -3216,6 +3225,7 @@ if (xy->send_down_size[3]) {
   if (xy->send_hused) QMP_wait(xy->send_down_handle[3]);
   qx(proj_g3minus)(xy->send_down_buffer[3], xy->send_down_size[3], LsV, xy->down_pack[3], f_y);
   QMP_start(xy->send_down_handle[3]);
+  state->sent += state->Ls * sizeof (struct ProjectedFermion) * xy->send_down_size[3];
   new_send = 1;
 }
 @
@@ -3231,6 +3241,7 @@ if (xy->send_up_size[0]) {
   if (xy->send_hused) QMP_wait(xy->send_up_handle[0]);
   qx(proj_Ucg0plus)(xy->send_up_buffer[0], xy->send_up_size[0], LsV, xy->up_pack[0], u, f_y);
   QMP_start(xy->send_up_handle[0]);
+  state->sent += state->Ls * sizeof (struct ProjectedFermion) * xy->send_up_size[0];
   new_send = 1;
 }
 @
@@ -3239,6 +3250,7 @@ if (xy->send_up_size[1]) {
   if (xy->send_hused) QMP_wait(xy->send_up_handle[1]);
   qx(proj_Ucg1plus)(xy->send_up_buffer[1], xy->send_up_size[1], LsV, xy->up_pack[1], u, f_y);
   QMP_start(xy->send_up_handle[1]);
+  state->sent += state->Ls * sizeof (struct ProjectedFermion) * xy->send_up_size[1];
   new_send = 1;
 }
 @
@@ -3247,6 +3259,7 @@ if (xy->send_up_size[2]) {
   if (xy->send_hused) QMP_wait(xy->send_up_handle[2]);
   qx(proj_Ucg2plus)(xy->send_up_buffer[2], xy->send_up_size[2], LsV, xy->up_pack[2], u, f_y);
   QMP_start(xy->send_up_handle[2]);
+  state->sent += state->Ls * sizeof (struct ProjectedFermion) * xy->send_up_size[2];
   new_send = 1;
 }
 @
@@ -3255,26 +3268,29 @@ if (xy->send_up_size[3]) {
   if (xy->send_hused) QMP_wait(xy->send_up_handle[3]);
   qx(proj_Ucg3plus)(xy->send_up_buffer[3], xy->send_up_size[3], LsV, xy->up_pack[3], u, f_y);
   QMP_start(xy->send_up_handle[3]);
+  state->sent += state->Ls * sizeof (struct ProjectedFermion) * xy->send_up_size[3];
   new_send = 1;
 }
 @
 
 <<[[ApF]] compute body>>=
-qx(do_ApF)(r_x, xy->body_size, LsV, xy->body_neighbor, params->A, u, f_x, f_y, NULL);
+state->flops += qx(do_ApF)(r_x, xy->body_size, LsV, xy->body_neighbor, params->A, u, f_x, f_y, NULL);
 @
 <<[[ApF]] compute face>>=
-qx(do_ApF)(r_x, xy->face_size, LsV, xy->face_neighbor, params->A, u, f_x, f_y, xy->receive_buffer);
+state->flops += qx(do_ApF)(r_x, xy->face_size, LsV, xy->face_neighbor, params->A, u, f_x, f_y, xy->receive_buffer);
 @
 
 and more prototypes:
 <<Implementation prototypes>>=
-void qx(`compute_AxpBxFx)(struct eo_lattice *xy,
+void qx(`compute_AxpBxFx)(struct Q(State) *state,
+                         struct eo_lattice *xy,
                          struct Fermion *result_x,
                          const struct Fermion *f_x,
                          const struct Q(Parameters) *params,
 	     	         const struct QX(Gauge) *gauge,
                          const struct Fermion *f_y);
-void qx(`compute_AxpFx)(struct eo_lattice *xy,
+void qx(`compute_AxpFx)(struct Q(State) *state,
+                       struct eo_lattice *xy,
                        struct Fermion *result_x,
                        const struct Fermion *f_x,
                        const struct Q(Parameters) *params,
