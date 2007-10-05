@@ -4,7 +4,7 @@ QMP_CFLAGS  = $(shell $(QMP_TOP)/bin/qmp-config --cflags)
 QMP_LDFLAGS = $(shell $(QMP_TOP)/bin/qmp-config --ldflags)
 QMP_LIBS    = $(shell $(QMP_TOP)/bin/qmp-config --libs)
 CC          = gcc
-CFLAGS      = -I.. -L..
+CFLAGS      = -I.. -L.. -g
 CLIBS       = -lqtest -lm
 
 sources = operator.c

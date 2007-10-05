@@ -59,7 +59,7 @@ All memory we use will be aligned at least at the following size:
 @
 Here is a macro to align a given pointer:
 <<Implementation macros>>=
-#define `ALIGN(p) ((void *)((((ptrdiff_t)p)+ CACHE_LINE_SIZE - 1) & (CACHE_LINE_SIZE - 1)))
+#define `ALIGN(p) ((void *)((((ptrdiff_t)p)+ CACHE_LINE_SIZE - 1) & ~(CACHE_LINE_SIZE - 1)))
 @
 We will need [[<stddef.h>]] for [[ptrdiff_t]].
 <<Implementation includes>>=
@@ -2890,6 +2890,7 @@ Q(`set_generic)(struct Q(`Parameters) **param_ptr,
       return 1; /* XXX Memory management and error recording */
    }
    memset(params, 0, sizeof (struct Q(`Parameters)));
+   params->state = state; /* XXX update counter in state */
    params->unit_B = 0;
    params->LsV = state->Ls;
    <<Initialize [[params->A]]>>
@@ -4530,8 +4531,8 @@ Here we compute $A\psi_x + F\psi_y$.
   (load int () s-off ([reg s-off2]))
   (op int-and () (m) ([reg mask] [const (shift 1 d)]))
   (if-else [reg m]
-      <<[[A+F]] body forward>>
-      <<[[A+F]] face forward>>)
+      <<[[A+F]] face forward>>
+      <<[[A+F]] body forward>>)
   (op pointer-add () (U-forward) ([reg U-forward] [const (size-of SU-n)]))
   (op pointer-add () (s-off2) ([reg s-off2] [const (size-of int)])))
 @
@@ -4580,8 +4581,8 @@ finding the gauge link.
   (load int () s-off ([reg s-off2]))
   (op int-and () (m) ([reg mask] [const (shift 1 (+ *dim* d))]))
   (if-else [reg m]
-      <<[[A+F]] body backward>>
-      <<[[A+F]] face backward>>)
+      <<[[A+F]] face backward>>
+      <<[[A+F]] body backward>>)
   (op pointer-add () (u-off2) ([reg u-off2] [const (size-of int)]))
   (op pointer-add () (s-off2) ([reg s-off2] [const (size-of int)])))
 @

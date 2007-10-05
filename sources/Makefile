@@ -13,7 +13,7 @@ AR       = ar
 QA0c     = ./qa0 c99
 QA0h     = ./qa0 header
 INCDIRS  = $$HOME/QDP/qmp-2.1.7/include ./c99
-CFLAGS   = -Wall -I. $(INCDIRS:%=-I%)
+CFLAGS   = -g -Wall -I. $(INCDIRS:%=-I%)
 
 noweb = mdwf.nw qa0.nw
 
