@@ -2852,7 +2852,107 @@ struct Q(`Parameters) {
   <<[[Parameters]] components>>
 };
 @
+
+We record if [[B]] should be applied before [[F]]. The value depends on the
+M\"obius action parameters and is a simple optimization to notch up a bit 
+the speed of Shamir's fermions. We store a duplicate of [[Ls]] here because it
+is convenient. XXX It should be scaled for a number of \emph{vectors} in the
+$s$-slice, but for BG/L it is equal to [[Ls]].
+
+<<[[Parameters]] components>>=
+int unit_B;
+int LsV;
+@
+
 \subsection{XXX Generic}
+In the generic case, we are provided with arrays of $b_5$ and $c_5$ values.
+XXX these are not true parameters for MDWF but ones for test of the operator.
+
+<<File [[params.c]]>>=
+<<Precision independent file>>
+#include <mdwf.h>
+#include <string.h> /* XXX for memset */
+int 
+Q(`set_generic)(struct Q(`Parameters) **param_ptr,
+                struct Q(`State) *state,
+                const double b_5[],
+                const double c_5[],
+                double M_5,
+                double m)
+{
+   struct Q(`Parameters) *params;
+   int i;
+
+   if (state == NULL)
+     return 1;
+   params = malloc(sizeof (struct Q(`Parameters)));
+   if (params == NULL) {
+      return 1; /* XXX Memory management and error recording */
+   }
+   memset(params, 0, sizeof (struct Q(`Parameters)));
+   params->unit_B = 0;
+   params->LsV = state->Ls;
+   <<Initialize [[params->A]]>>
+   <<Initialize [[params->B]]>>
+   *param_ptr = params;
+   return 0;
+ error:
+   if (params->A)
+     free(params->A);
+   if (params->B)
+     free(params->B);
+   free(params);
+   return 1; /* XXX error recording */
+}
+@
+
+Parameters for [[A]] and [[B]] are very similar.
+<<[[Parameters]] components>>=
+struct  ABTable *A;
+struct ABTable *B;
+@
+
+XXX These are faux
+<<Initialize [[params->A]]>>=
+params->A = malloc(state->Ls * sizeof (struct ABTable));
+if (params->A == 0)
+   goto error;
+for (i = state->Ls; i--;) {
+   int ip = i + 1;
+   int im = i - 1;
+   if (ip >= state->Ls)
+     ip -= state->Ls;
+   if (im < 0)
+     im += state->Ls;
+   params->A[i].lo = im;
+   params->A[i].lo = ip;
+   params->A[i].c = 1 + b_5[i] * c_5[i];
+   params->A[i].c_lo = b_5[i] - c_5[i];
+   params->A[i].c_hi = b_5[i] + c_5[i];
+}
+@
+
+XXX faux too.
+<<Initialize [[params->B]]>>=
+params->B = malloc(state->Ls * sizeof (struct ABTable));
+if (params->B == 0)
+   goto error;
+for (i = state->Ls; i--;) {
+   int ip = i + 1;
+   int im = i - 1;
+   if (ip >= state->Ls)
+     ip -= state->Ls;
+   if (im < 0)
+     im += state->Ls;
+   params->B[i].lo = im;
+   params->B[i].lo = ip;
+   params->B[i].c = 1 - b_5[i] * c_5[i];
+   params->B[i].c_lo = b_5[i] + c_5[i]/2;
+   params->B[i].c_hi = b_5[i]/2 - c_5[i];
+}
+@
+
+
 % Q(set_generic)
 \subsection{XXX M\"obius}
 % Q(set_Moebius)
@@ -4631,14 +4731,6 @@ sublat(int lo[], int hi[], const int node[], void *env)
 }
 @
 
-
-XXX Place where it belongs
-<<[[Parameters]] components>>=
-int unit_B;
-int LsV;
-void *A;
-void *B;
-@
 
 \appendix
 \chapter{CODE CHUNKS}

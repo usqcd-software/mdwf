@@ -25,7 +25,8 @@ q.sources = error.c \
             performance.c \
             memory.c \
             state-dump.c \
-            comm.c
+            comm.c \
+            params.c
 
 qx.sources = memory-g.c \
              memory-f.c \
