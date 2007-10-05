@@ -2261,8 +2261,8 @@ static void
 		      const int network[])
 {
    int i, k, d, x[Q(DIM)], la, p;
-   int *lo = state->sublattice.lo;
-   int *hi = state->sublattice.hi;
+   const int *lo = state->sublattice.lo;
+   const int *hi = state->sublattice.hi;
 
    for (k = target->full_size; k--;) {
       <<Build neighbors for site [[k]]>>
@@ -3283,6 +3283,7 @@ even and odd halfs of the state. The cleanup is especially simple:
 void
 q(`cleanup_communication)(struct Q(State) *state)
 {
+  xprint("cleanup");
    cleanup(&state->even);
    cleanup(&state->odd);
 }
@@ -3305,6 +3306,7 @@ q(`setup_communication)(struct Q(State) *state, int real_size)
     cleanup(&state->even);
     return 1;
   }
+ xprint("setup_comm() ok");
   return 0;
 }
 @
@@ -3313,7 +3315,7 @@ q(`setup_communication)(struct Q(State) *state, int real_size)
 int `real_size;
 @
 
-<<E/O lattice dump>>=
+<<E/O dump>>=
 printf(" %s.real_size=%d\n", name, eo->real_size);
 @
 
@@ -3522,6 +3524,7 @@ setup(struct eo_lattice *xy, struct Q(State) *state, int real_size)
 {
    int i, k;
 
+   xprint("start of setup(%p)", xy);
    xy->total_sent = 0;
    for (k = 0, i = 0; i < Q(DIM); i++) {
      <<Allocate send resources in up [[i]]>>
@@ -3529,9 +3532,11 @@ setup(struct eo_lattice *xy, struct Q(State) *state, int real_size)
      <<Allocate receive resources in up [[i]]>>
      <<Allocate receive resources in down [[i]]>>
    }
+   xprint("total sent %d", xy->total_sent);
    <<Allocate combined handle>>
    return 0;
  error:
+   xprint("error in setup(%p)", xy);
    cleanup(xy);
    return 1;
 }
@@ -3543,7 +3548,7 @@ if (xy->send_up_size[i]) {
               xy->send_up_size[i] * state->Ls;
    void *ptr;
 
-   xprint("send_up[%d]: size=%d", i, size);
+   xprint("send_up[%d]: size=%d, k=%d", i, size, k);
 
    xy->mem[k] = QMP_allocate_aligned_memory(size + CACHE_LINE_SIZE,
                                             CACHE_LINE_SIZE,
@@ -3565,7 +3570,7 @@ if (xy->send_up_size[i]) {
    if (xy->mh[k] == NULL)
      goto error;
 
-   xy->tmp_h[k] = QMP_declare_send_relative(xy->mh[k], i, +1, 0);
+   xy->tmp_h[k] = QMP_declare_send_relative(xy->mh[k], i, +1, 1);
    xprint("send_up[%d]: h=%p", i, xy->tmp_h[k]);
    if (xy->tmp_h[k] == NULL)
      goto error;
@@ -3581,7 +3586,7 @@ if (xy->send_down_size[i]) {
               xy->send_down_size[i] * state->Ls;
    void *ptr;
 
-   xprint("send_down[%d]: size=%d", i, size);
+   xprint("send_down[%d]: size=%d, k=%d", i, size, k);
    xy->mem[k] = QMP_allocate_aligned_memory(size + CACHE_LINE_SIZE,
                                             CACHE_LINE_SIZE,
                                             QMP_MEM_DEFAULT);
@@ -3602,7 +3607,7 @@ if (xy->send_down_size[i]) {
    if (xy->mh[k] == NULL)
      goto error;
 
-   xy->tmp_h[k] = QMP_declare_send_relative(xy->mh[k], i, -1, 0);
+   xy->tmp_h[k] = QMP_declare_send_relative(xy->mh[k], i, -1, 1);
    xprint("send_down[%d]: h=%p", i, xy->tmp_h[k]);
    if (xy->tmp_h[k] == NULL)
      goto error;
@@ -3622,7 +3627,7 @@ if (xy->up_face[i]) {
              xy->up_face[i] * state->Ls;
   void *ptr;
 
-  xprint("rec_up[%d]: size=%d", i, size);
+  xprint("rec_up[%d]: size=%d, k=%d", i, size, k);
   xy->mem[k] = QMP_allocate_aligned_memory(size + CACHE_LINE_SIZE,
                                            CACHE_LINE_SIZE,
                                            QMP_MEM_DEFAULT);
@@ -3640,15 +3645,14 @@ if (xy->up_face[i]) {
   
   xy->mh[k] = QMP_declare_msgmem(xy->receive_buffer[i], size);
   xprint("rec_up[%d]: mh=%p", i, xy->mh[k]);
-  if (xy->mh[i] == NULL)
+  if (xy->mh[k] == NULL)
     goto error;
 
-  xy->tmp_h[k] = QMP_declare_receive_relative(xy->mh[k], i, +1, 0);
+  xy->tmp_h[k] = QMP_declare_receive_relative(xy->mh[k], i, +1, 1);
   xprint("rec_up[%d]: h=%p", i, xy->tmp_h[k]);
   if (xy->tmp_h[k] == NULL)
     goto error;
   xy->tmp_h_count = ++k;
-  xy->total_sent += size;
 }
 @
 
@@ -3658,7 +3662,7 @@ if (xy->down_face[i]) {
              xy->down_face[i] * state->Ls;
   void *ptr;
 
-  xprint("rec_down[%d]: size=%d", i, size);
+  xprint("rec_down[%d]: size=%d, k=%d", i, size, k);
   xy->mem[k] = QMP_allocate_aligned_memory(size + CACHE_LINE_SIZE,
                                            CACHE_LINE_SIZE,
                                            QMP_MEM_DEFAULT);
@@ -3679,21 +3683,23 @@ if (xy->down_face[i]) {
   if (xy->mh[k] == NULL)
     goto error;
 
-  xy->tmp_h[k] = QMP_declare_receive_relative(xy->mh[k], i, +1, 0);
+  xy->tmp_h[k] = QMP_declare_receive_relative(xy->mh[k], i, +1, 1);
   xprint("rec_down[%d]: h=%p", i, xy->tmp_h[k]);
   if (xy->tmp_h[k] == NULL)
     goto error;
   xy->tmp_h_count = ++k;
-  xy->total_sent += size;
 }
 @
 
-<<Allocate combined receive handle>>=
+<<Allocate combined handle>>=
+xprint("before combinded: k=%d, xy->tmp_h_count=%d", k, xy->tmp_h_count);
 if (k) {
   xy->handle = QMP_declare_multiple(xy->tmp_h, k);
+  xprint("master handle %p", xy->handle);
   if (xy->handle == NULL)
     goto error;
   for (i = 0; i < k; i++) {
+     xprint("packed[%d]=%p", i, xy->tmp_h[i]);
      xy->tmp_h[i] = NULL;
   }
   xy->tmp_h_count = 0;
