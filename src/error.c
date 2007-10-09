@@ -3,7 +3,7 @@
 const char *
 Q(error)(struct Q(State) *state)
 {
-  char *msg;
+  const char *msg;
 
   if (state == 0)
     return "NULL MDWF state";

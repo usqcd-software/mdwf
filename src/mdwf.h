@@ -148,4 +148,9 @@ void *q(step_odd)(struct Q(State) *state, void *aligned_ptr, size_t fsize);
 
 /* XXX  other functions */
 
+/* Cache size */
+#define CACHE_LINE_SIZE 128
+#define ALIGN(p) ((void *)((((ptrdiff_t)(p))+CACHE_LINE_SIZE-1) & \
+                           ~(CACHE_LINE_SIZE-1)))
+
 #endif /* !defined(MARK_B9BA8123_0F1A_40FD_8827_42266FE32F3E) */

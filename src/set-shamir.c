@@ -4,7 +4,6 @@ int
 Q(set_Shamir)(struct Q(Parameters) **param_ptr,
               struct Q(State) *state,
               double a_5,
-              double kappa,
               double M_5,
               double m)
 {
@@ -18,7 +17,7 @@ Q(set_Shamir)(struct Q(Parameters) **param_ptr,
 
   b = q(malloc)(state, 2 * state->Ls * sizeof (double));
   if (b == 0)
-    return q(set_error)(state, "set_Shamir(): Not enough space");
+    return q(set_error)(state, 0, "set_Shamir(): Not enough space");
   c = b + state->Ls;
   for (i = 0; i < state->Ls; i++) {
     b[i] = a_5;

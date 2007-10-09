@@ -1,0 +1,9 @@
+* state fini, ref counting
+* state init
+* gauge allocation, deallocation
+* fermion alloc etc
+* half fermions alloc etc
+* communication setup and cleanup
+* operators
+* cg
+* shifted cg

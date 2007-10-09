@@ -4,13 +4,11 @@ int
 Q(set_Borichi)(struct Q(Parameters) **param_ptr,
                struct Q(State) *state,
                double a_5,
-               double kappa,
                double M_5,
                double m)
 {
   int i;
   double *b;
-  double *c;
   int status;
 
   if (state == 0 || state->error_latched)
@@ -18,7 +16,7 @@ Q(set_Borichi)(struct Q(Parameters) **param_ptr,
 
   b = q(malloc)(state, state->Ls * sizeof (double));
   if (b == 0)
-    return q(set_error)(state, "set_Borichi(): Not enough space");
+    return q(set_error)(state, 0, "set_Borichi(): Not enough space");
   for (i = 0; i < state->Ls; i++) {
     b[i] = a_5;
   }
