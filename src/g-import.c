@@ -14,7 +14,8 @@ QX(import_gauge)(struct QX(Gauge) **gauge_ptr,
   struct QX(Gauge) *gauge;
   void *ptr;
   size_t size;
-  double vr, vi;
+  double r[Q(DIM) * Q(COLORS) * Q(COLORS) * 2];
+  double *v;
   int p, q, i, d, a, b;
   int x[Q(DIM)], dx[Q(DIM)];
 
@@ -41,15 +42,15 @@ QX(import_gauge)(struct QX(Gauge) **gauge_ptr,
       x[i] = q % dx[i] + state->sublattice.lo[i];
       q = q / dx[i];
     }
-    for (d = 0; d < Q(DIM); d++) {
+    for (v = r, d = 0; d < Q(DIM); d++) {
       for (a = 0; a < Q(COLORS); a++) {
 	for (b = 0; b < Q(COLORS); b++) {
-	  vr = - 0.5 * reader(d, x, a, b, 0, env);
-	  vi = - 0.5 * reader(d, x, a, b, 1, env);
-	  qx(set_gauge)(gauge->data, Q(DIM) * p + d, a, b, vr, vi);
+	  *v++ = -0.5 * reader(d, x, a, b, 0, env);
+	  *v++ = - 0.5 * reader(d, x, a, b, 1, env);
 	}
       }
     }
+    qx(put_gauge)(gauge->data, p, r);
   }
   return 0;
 }

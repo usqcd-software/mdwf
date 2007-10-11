@@ -33,7 +33,9 @@ p.sources = f-alloc.c \
             h-export.c \
             h-free.c \
             g-free.c \
-            g-import.c
+            g-import.c \
+            x-import.c \
+            x-export.c
 
 x.objects = $(x.sources:%.c=%.o)
 

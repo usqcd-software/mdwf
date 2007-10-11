@@ -51,6 +51,10 @@ struct eo_lattice {
   int              body_size;              /* 4-d size of the body */
   int              full_size;              /* face + body */
   int             *layout2vector;          /* 4-d layout 2 vector translation */
+  int              Ls;                     /* Ls */
+  int              lo[Q(DIM)];             /* 4-d sublattice low */
+  int              hi[Q(DIM)];             /* 4-d sublattice high */
+  int              dx[Q(DIM)];             /* 4-d sublattice extend */
   struct neighbor *body_neighbor;          /* neighbor data for the body */
   struct neighbor *face_neighbor;          /* neighbor data for the face */
   int              send_up_size[Q(DIM)];   /* 4-d send size in each up-dir */
@@ -169,9 +173,13 @@ void q(x_export)(struct eo_lattice *eo,
 				void *env),
 		 void *env);
 
-void qx(set_gauge)(struct SUn *ptr, int la, int a, int b, double vr, double vi);
 
 /* XXX  other functions */
+
+/* Back end functions */
+void qx(put_gauge)(struct SUn *ptr, int pos, const double r[]);
+void qx(put_fermion)(struct Fermion *data, int pos, int Ls, const double r[]);
+void qx(get_fermion)(double r[], const struct Fermion *data, int pos, int Ls);
 
 /* Cache size */
 #define CACHE_LINE_SIZE 128
