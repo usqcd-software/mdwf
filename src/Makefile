@@ -1,10 +1,13 @@
 # This is a working copy (MacOS)
 QMP_TOP    = $$HOME/QDP/qmp-2.1.7
 QMP_CFLAGS = $(shell $(QMP_TOP:%=%/bin/qmp-config) --cflags)
+LIMP       = faux
 CC         = gcc
-CFLAGS     = -Wall -g -I. $(QMP_CFLAGS)
+CFLAGS     = -Wall -g -I. $(QMP_CFLAGS) -I$(LIMP)
 AR         = ar
 RANLIB     = ranlib
+
+V          = 0
 
 x.sources = error.c \
             alloc-aligned.c \
@@ -18,9 +21,19 @@ x.sources = error.c \
             set-shamir.c \
             step-even.c \
             step-odd.c \
-            version.c
+            version.c \
+            fini.c
 
-p.sources =
+p.sources = f-alloc.c \
+            f-import.c \
+            f-export.c \
+            f-free.c \
+            h-alloc.c \
+            h-import.c \
+            h-export.c \
+            h-free.c \
+            g-free.c \
+            g-import.c
 
 x.objects = $(x.sources:%.c=%.o)
 
@@ -32,30 +45,46 @@ objects = $(x.objects) $(p.objects)
 headers = mdwf.h \
           qop-mdwf3.h
 
+limp.headers = 
+
 library = libqop-mdwf3.a
 
 .PHONY: all clean realclean
 
+ifeq ("$V", "0")
+   E=@echo "  "
+   C=@
+else
+   E=@echo > /dev/null
+   C=
+endif
+
 all: $(library)
 
 clean:
-	$(RM) $(objects)
+	$E RM objects
+	$C$(RM) $(objects)
 
 realclean: clean
-	$(RM) $(library)
+	$E RM library
+	$C$(RM) $(library)
 
 
 $(library): $(objects)
-	$(AR) cr $@ $<
-	$(RANLIB) $@
+	$E AR $@
+	$C$(AR) cr $@ $^
+	$C$(RANLIB) $@
 
 $(x.objects): %.o: %.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$E CC $<
+	$C$(CC) $(CFLAGS) -c -o $@ $<
 
-$(p.objects): %f.o: %.c
-	$(CC) $(CFLAGS) -DQOP_MDWF_DEFAULT_PRECISION=\'F\' -c -o $@ $<
+$(p.sources:%.c=%f.o): %f.o: %.c
+	$E CC-f $<
+	$C$(CC) $(CFLAGS) -DQOP_MDWF_DEFAULT_PRECISION=\'F\' -c -o $@ $<
 
-$(p.objects): %d.o: %.c
-	$(CC) $(CFLAGS) -DQOP_MDWF_DEFAULT_PRECISION=\'D\' -c -o $@ $<
+$(p.sources:%.c=%d.o): %d.o: %.c
+	$E CC-d $<
+	$C$(CC) $(CFLAGS) -DQOP_MDWF_DEFAULT_PRECISION=\'D\' -c -o $@ $<
 
-$(objects): $(headers)
+$(objects): $(headers) $(limp.headers:%=$(LIMP)/%)

@@ -1,9 +1,25 @@
-* state fini, ref counting
-* state init
-* gauge allocation, deallocation
-* fermion alloc etc
-* half fermions alloc etc
+done * state fini, ref counting
+*+ state init
+done * gauge allocation, deallocation
+done ** import
+done ** free
+done * fermion alloc etc
+done ** import
+done ** export
+done ** alloc
+done ** free
+done * half fermions alloc etc
+done ** import
+done ** export
+done ** alloc
+done ** free
 * communication setup and cleanup
-* operators
-* cg
-* shifted cg
+** setup
+** cleanup
+*+ operators
+*+ helpers
+*+ cg
+*+ shifted cg
+* x_export
+* x_import
+

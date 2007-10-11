@@ -7,6 +7,7 @@
 
 # include <qop-mdwf3.h>
 # include <stdlib.h>
+# include <string.h>
 # include <qmp.h>
 
 # define q(x) qop_mdwf_##x
@@ -50,8 +51,8 @@ struct eo_lattice {
   int              body_size;              /* 4-d size of the body */
   int              full_size;              /* face + body */
   int             *layout2vector;          /* 4-d layout 2 vector translation */
-  struct neighbor *face_neighbor;          /* neighbor data for the face */
   struct neighbor *body_neighbor;          /* neighbor data for the body */
+  struct neighbor *face_neighbor;          /* neighbor data for the face */
   int              send_up_size[Q(DIM)];   /* 4-d send size in each up-dir */
   struct up_pack  *up_pack[Q(DIM)];        /* 4-d (U,f) for up-face packing */
   int              send_down_size[Q(DIM)]; /* 4-d send size in each down-dir */
@@ -114,7 +115,6 @@ struct Q(State) {
 
   struct eo_lattice  even;            /* even sublattice */
   struct eo_lattice  odd;             /* odd sublattice */
-  int               *vector2layout;   /* 4-d to layout translation table */
 
   double             time_sec;        /* seconds in the last routine */
   long long          flops;           /* FLOP in the last routine */
@@ -122,9 +122,11 @@ struct Q(State) {
   long long          received;        /* bytes received in the last routine */
 
   int                Ls;              /* Ls */
+  int                volume;          /* 4-d volume */
   int                lattice[Q(DIM)]; /* 4-d lattice size */
   struct sublattice  sublattice;      /* 4-d local sublattice */
   int                node[Q(DIM)];    /* local node address */
+  int               *layout2linear;   /* Sublattice 1-d -> 4-d translation */
   int                master_p;        /* are we the master? */
 };
 
@@ -145,6 +147,29 @@ void *q(allocate_eo)(struct Q(State) *state,
 void q(free)(struct Q(State) *state, void *ptr, size_t bytes);
 void *q(step_even)(struct Q(State) *state, void *aligned_ptr, size_t fsize);
 void *q(step_odd)(struct Q(State) *state, void *aligned_ptr, size_t fsize);
+
+void q(x_import)(struct eo_lattice *eo,
+		 double r[],
+		 struct Fermion *data, 
+		 double (*reader)(const int pos[Q(DIM)+1],
+				  int color,
+				  int dirac, 
+				  int re_im,
+				  void *env),
+		 void *env);
+
+void q(x_export)(struct eo_lattice *eo,
+		 double r[],
+		 const struct Fermion *data, 
+		 void (*writer)(const int pos[Q(DIM)+1],
+				int color,
+				int dirac, 
+				int re_im,
+				double value,
+				void *env),
+		 void *env);
+
+void qx(set_gauge)(struct SUn *ptr, int la, int a, int b, double vr, double vi);
 
 /* XXX  other functions */
 
