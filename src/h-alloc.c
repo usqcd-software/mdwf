@@ -18,11 +18,13 @@ QX(allocate_half_fermion)(struct QX(HalfFermion) **hf_ptr,
   if (hf == 0)
     return q(set_error)(state, 0, "allocate_half_fermion(): not enough memory");
 
+  BEGIN_TIMING(state);
   state->used++;
   hf->state = state;
   hf->size = size;
   hf->even = even;
   *hf_ptr = hf;
+  END_TIMING(state, 0, 0, 0);
 
   return 0;
 }

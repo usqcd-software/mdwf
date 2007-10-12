@@ -16,10 +16,21 @@ done ** free
 * communication setup and cleanup
 ** setup
 ** cleanup
-*+ operators
-*+ helpers
-*+ cg
-*+ shifted cg
-* x_export
-* x_import
-
+* operators
+done ** D
+** D conjugated
+** M
+** M conjugated
+done * helpers
+done **  madd_fermion
+done **  madd_half_fermion
+done **  dot_fermion
+done **  dot_half_fermion
+done **  norm2_fermion
+done **  norm2_half_fermion
+* cg
+* shifted cg
+done * x_export
+done * x_import
+*+ faux -- empty routines
+*+ c99/qa0

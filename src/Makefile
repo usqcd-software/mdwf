@@ -35,7 +35,14 @@ p.sources = f-alloc.c \
             g-free.c \
             g-import.c \
             x-import.c \
-            x-export.c
+            x-export.c \
+            f-madd.c \
+            h-madd.c \
+            f-dot.c \
+            h-dot.c \
+            f-norm2.c \
+            h-norm2.c  \
+            op-dirac.c
 
 x.objects = $(x.sources:%.c=%.o)
 

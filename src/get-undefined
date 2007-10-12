@@ -4,4 +4,4 @@ nm -P libqop-mdwf3.a | \
  awk '/ U /{if (found[$1]==0) found[$1]=1;} \
       / T /{found[$1]=2;} \
       END{for(f in found) { if (found[f] == 1) printf "%s\n", f;}}' | \
- sort
+ sort -u

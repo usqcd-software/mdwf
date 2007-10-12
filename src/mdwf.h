@@ -173,6 +173,102 @@ void q(x_export)(struct eo_lattice *eo,
 				void *env),
 		 void *env);
 
+/* Projections */
+typedef long long (*Up_project)(struct ProjectedFermion *r,
+				int size, int Ls,
+				const struct up_pack *link,
+				const struct SUn *U,
+				const struct Fermion *f);
+typedef long long (*Down_project)(struct ProjectedFermion *r,
+				int size, int Ls,
+				const int *link,
+				const struct Fermion *f);
+long long qx(proj_g0plus)(struct ProjectedFermion *r,
+			  int size, int Ls,
+			  const int *link,
+			  const struct Fermion *f);
+long long qx(proj_g1plus)(struct ProjectedFermion *r,
+			  int size, int Ls,
+			  const int *link,
+			  const struct Fermion *f);
+long long qx(proj_g2plus)(struct ProjectedFermion *r,
+			  int size, int Ls,
+			  const int *link,
+			  const struct Fermion *f);
+long long qx(proj_g3plus)(struct ProjectedFermion *r,
+			  int size, int Ls,
+			  const int *link,
+			  const struct Fermion *f);
+long long qx(proj_g0minus)(struct ProjectedFermion *r,
+			   int size, int Ls,
+			   const int *link,
+			   const struct Fermion *f);
+long long qx(proj_g1minus)(struct ProjectedFermion *r,
+			   int size, int Ls,
+			   const int *link,
+			   const struct Fermion *f);
+long long qx(proj_g2minus)(struct ProjectedFermion *r,
+			   int size, int Ls,
+			   const int *link,
+			   const struct Fermion *f);
+long long qx(proj_g3minus)(struct ProjectedFermion *r,
+			   int size, int Ls,
+			   const int *link,
+			   const struct Fermion *f);
+long long qx(proj_Ug0plus)(struct ProjectedFermion *r,
+			   int size, int Ls,
+			   const struct up_pack *link,
+			   const struct SUn *U,
+			   const struct Fermion *f);
+long long qx(proj_Ug1plus)(struct ProjectedFermion *r,
+			   int size, int Ls,
+			   const struct up_pack *link,
+			   const struct SUn *U,
+			   const struct Fermion *f);
+long long qx(proj_Ug2plus)(struct ProjectedFermion *r,
+			   int size, int Ls,
+			   const struct up_pack *link,
+			   const struct SUn *U,
+			   const struct Fermion *f);
+long long qx(proj_Ug3plus)(struct ProjectedFermion *r,
+			   int size, int Ls,
+			   const struct up_pack *link,
+			   const struct SUn *U,
+			   const struct Fermion *f);
+long long qx(proj_Ug0minus)(struct ProjectedFermion *r,
+			    int size, int Ls,
+			    const struct up_pack *link,
+			    const struct SUn *U,
+			    const struct Fermion *f);
+long long qx(proj_Ug1minus)(struct ProjectedFermion *r,
+			    int size, int Ls,
+			    const struct up_pack *link,
+			    const struct SUn *U,
+			    const struct Fermion *f);
+long long qx(proj_Ug2minus)(struct ProjectedFermion *r,
+			    int size, int Ls,
+			    const struct up_pack *link,
+			    const struct SUn *U,
+			    const struct Fermion *f);
+long long qx(proj_Ug3minus)(struct ProjectedFermion *r,
+			    int size, int Ls,
+			    const struct up_pack *link,
+			    const struct SUn *U,
+			    const struct Fermion *f);
+
+/* A+F, A and B */
+long long qx(do_ApF)(struct Fermion *r_x,
+		     int size, int Ls,
+		     const struct ABTable *atable,
+		     const struct neighbor *neighbor,
+		     const struct SUn *U,
+		     const struct Fermion *s_x,
+		     const struct Fermion *s_y,
+		     void *rb[]);
+long long qx(do_AB)(struct Fermion *r_x,
+		    int size, int Ls,
+		    const struct ABTable *atable,
+		    const struct Fermion *s_x);
 
 /* XXX  other functions */
 
@@ -180,6 +276,33 @@ void q(x_export)(struct eo_lattice *eo,
 void qx(put_gauge)(struct SUn *ptr, int pos, const double r[]);
 void qx(put_fermion)(struct Fermion *data, int pos, int Ls, const double r[]);
 void qx(get_fermion)(double r[], const struct Fermion *data, int pos, int Ls);
+long long qx(madd_fermion)(struct Fermion *r,
+			   int size, int Ls,
+			   const struct Fermion *a,
+			   double s,
+			   const struct Fermion *b);
+long long qx(dot_fermion)(double *v_r, double *v_i,
+			  int size, int Ls,
+			  const struct Fermion *a,
+			  const struct Fermion *b);
+long long qx(norm2_fermion)(double *v_r,
+			    int size, int Ls,
+			    const struct Fermion *a);
+
+/* Timing */
+#define BEGIN_TIMING(s)
+#define END_TIMING(s, f, snd, rcv)
+
+/* Argument checking */
+#define DECLARE_STATE struct Q(State) *state = NULL
+#define CHECK_ARG0(n) do { if ((n) == 0) return 1;	\
+    state = (n)->state; } while (0)
+#define CHECK_ARGn(n,f) do { if ((n) == 0)				\
+      return q(set_error)(state, 0, f "(): NULL argument");		\
+    if ((n)->state != state)						\
+      return q(set_error)(state, 0, f "(): geometry mismatch"); } while (0)
+#define CHECK_POINTER(n,f) do { if ((n) == 0)				\
+      return q(set_error)(state, 0, f "(): NULL argument"); } while (0)
 
 /* Cache size */
 #define CACHE_LINE_SIZE 128

@@ -28,6 +28,8 @@ QX(import_gauge)(struct QX(Gauge) **gauge_ptr,
 			      Q(DIM) * state->volume * sizeof (struct SUn));
   if (gauge == 0)
     return q(set_error)(state, 0, "import_gauge(): not enough memory");
+
+  BEGIN_TIMING(state);
   state->used++;
   gauge->state = state;
   gauge->size = size;
@@ -52,5 +54,6 @@ QX(import_gauge)(struct QX(Gauge) **gauge_ptr,
     }
     qx(put_gauge)(gauge->data, p, r);
   }
+  END_TIMING(state, 0, 0, 0);
   return 0;
 }
