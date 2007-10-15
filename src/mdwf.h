@@ -61,6 +61,8 @@ struct eo_lattice {
   struct up_pack  *up_pack[Q(DIM)];        /* 4-d (U,f) for up-face packing */
   int              send_down_size[Q(DIM)]; /* 4-d send size in each down-dir */
   int             *down_pack[Q(DIM)];      /* 4-d (f) for down-face packing */
+  int              receive_up_size[Q(DIM)]; /* 4-d (U,f) up receive size */
+  int              receive_down_size[Q(DIM)]; /* 4-d (f) down receive size */
   int              real_size;              /* 0, 4 or 8 */ 
   int              h_valid;                /* is .handle valid? */
   QMP_msghandle_t  handle;                 /* global send&receive handle */
@@ -130,8 +132,9 @@ struct Q(State) {
   int                lattice[Q(DIM)]; /* 4-d lattice size */
   struct sublattice  sublattice;      /* 4-d local sublattice */
   int                node[Q(DIM)];    /* local node address */
-  int               *layout2linear;   /* Sublattice 1-d -> 4-d translation */
+  int                network[Q(DIM)]; /* the network geometry */
   int                master_p;        /* are we the master? */
+  int               *layout2vector;   /* Sublattice 1-d -> 4-d translation */
 };
 
 /* Implementation functions */
@@ -149,6 +152,7 @@ void *q(allocate_eo)(struct Q(State) *state,
 		     size_t hdr_size, int even_count, int odd_count,
 		     size_t f_size);
 void q(free)(struct Q(State) *state, void *ptr, size_t bytes);
+void q(cleanup_state)(struct Q(State) *state);
 void *q(step_even)(struct Q(State) *state, void *aligned_ptr, size_t fsize);
 void *q(step_odd)(struct Q(State) *state, void *aligned_ptr, size_t fsize);
 
@@ -308,5 +312,16 @@ long long qx(norm2_fermion)(double *v_r,
 #define CACHE_LINE_SIZE 128
 #define ALIGN(p) ((void *)((((ptrdiff_t)(p))+CACHE_LINE_SIZE-1) & \
                            ~(CACHE_LINE_SIZE-1)))
+
+/* Backend controled structure sizes */
+void q(sizeof_neighbor)(int *);
+void q(sizeof_up_pack)(int *);
+void q(set_neighbor)(struct neighbor *n, int p,
+		     int m,
+		     const int f_up[Q(DIM)], int u_up,
+		     const int f_down[Q(DIM)], const int u_down[Q(DIM)]);
+void q(fix_neighbor_f_up)(struct neighbor *n, int p, int f_up, int d);
+void q(fix_neighbor_f_down)(struct neighbor *n, int p, int f_down, int d);
+void q(fix_neighbor_u_down)(struct neighbor *n, int p, int u_down, int d);
 
 #endif /* !defined(MARK_B9BA8123_0F1A_40FD_8827_42266FE32F3E) */

@@ -1,5 +1,7 @@
 done * state fini, ref counting
-*+ state init
+done *+ state init
+** eo_init1
+** eo_init2
 done * gauge allocation, deallocation
 done ** import
 done ** free

@@ -22,6 +22,7 @@ x.sources = error.c \
             step-even.c \
             step-odd.c \
             version.c \
+            init.c \
             fini.c
 
 p.sources = f-alloc.c \

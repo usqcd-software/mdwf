@@ -40,7 +40,7 @@ QX(import_gauge)(struct QX(Gauge) **gauge_ptr,
     dx[i] = state->sublattice.hi[i] - state->sublattice.lo[i];
 
   for (p = 0; p < state->volume; p++) {
-    for (q = state->layout2linear[p], i = 0; i < Q(DIM); i++) {
+    for (q = state->layout2vector[p], i = 0; i < Q(DIM); i++) {
       x[i] = q % dx[i] + state->sublattice.lo[i];
       q = q / dx[i];
     }
