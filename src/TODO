@@ -1,7 +1,5 @@
 done * state fini, ref counting
 done *+ state init
-** eo_init1
-** eo_init2
 done * gauge allocation, deallocation
 done ** import
 done ** free
@@ -15,9 +13,9 @@ done ** import
 done ** export
 done ** alloc
 done ** free
-* communication setup and cleanup
-** setup
-** cleanup
+done * communication setup and cleanup
+done ** setup
+done ** cleanup
 * operators
 done ** D
 ** D conjugated

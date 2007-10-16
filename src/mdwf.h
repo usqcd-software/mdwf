@@ -146,7 +146,7 @@ int q(v2l)(const int x[Q(DIM)], const struct local *local);
 
 /* Implementation functions */
 int q(setup_comm)(struct Q(State) *state, int real_size);
-void q(free_comm)(struct Q(State) *state);
+int q(free_comm)(struct Q(State) *state);
 
 int q(set_error)(struct Q(State) *state, int fatal, const char *error);
 

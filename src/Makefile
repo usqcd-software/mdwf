@@ -23,7 +23,9 @@ x.sources = error.c \
             step-odd.c \
             version.c \
             init.c \
-            fini.c
+            fini.c \
+            comm-setup.c \
+            comm-free.c
 
 p.sources = f-alloc.c \
             f-import.c \
