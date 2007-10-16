@@ -1,11 +1,10 @@
 # This is a working copy (MacOS)
-QMP_TOP    = $$HOME/QDP/qmp-2.1.7
+
+CONFIG     = macosx
+TOP        = .
 QMP_CFLAGS = $(shell $(QMP_TOP:%=%/bin/qmp-config) --cflags)
-LIMP       = faux
-CC         = gcc
-CFLAGS     = -Wall -g -I. $(QMP_CFLAGS) -I$(LIMP)
-AR         = ar
-RANLIB     = ranlib
+
+include config/$(CONFIG)
 
 V          = 0
 
