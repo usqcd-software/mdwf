@@ -37,9 +37,10 @@ struct ProjectedFermion {
 };
 
 /* Internal types */
-struct sublattice {
+struct local {
   int lo[Q(DIM)];
   int hi[Q(DIM)];
+  int dx[Q(DIM)];
 };
 
 /* structs neighbor and up_pack are defined by qa0 */
@@ -50,11 +51,11 @@ struct eo_lattice {
   int              face_size;              /* 4-d size of the face */
   int              body_size;              /* 4-d size of the body */
   int              full_size;              /* face + body */
-  int             *layout2vector;          /* 4-d layout 2 vector translation */
+  int             *lx2v;                   /* 4-d layout 2 vector translation */
+  int             *v2lx;                   /* only for init */
   int              Ls;                     /* Ls */
-  int              lo[Q(DIM)];             /* 4-d sublattice low */
-  int              hi[Q(DIM)];             /* 4-d sublattice high */
-  int              dx[Q(DIM)];             /* 4-d sublattice extend */
+  struct local    *local;                  /* points to state.local */
+
   struct neighbor *body_neighbor;          /* neighbor data for the body */
   struct neighbor *face_neighbor;          /* neighbor data for the face */
   int              send_up_size[Q(DIM)];   /* 4-d send size in each up-dir */
@@ -63,6 +64,7 @@ struct eo_lattice {
   int             *down_pack[Q(DIM)];      /* 4-d (f) for down-face packing */
   int              receive_up_size[Q(DIM)]; /* 4-d (U,f) up receive size */
   int              receive_down_size[Q(DIM)]; /* 4-d (f) down receive size */
+
   int              real_size;              /* 0, 4 or 8 */ 
   int              h_valid;                /* is .handle valid? */
   QMP_msghandle_t  handle;                 /* global send&receive handle */
@@ -130,12 +132,17 @@ struct Q(State) {
   int                Ls;              /* Ls */
   int                volume;          /* 4-d volume */
   int                lattice[Q(DIM)]; /* 4-d lattice size */
-  struct sublattice  sublattice;      /* 4-d local sublattice */
+  struct local       local;           /* 4-d local sublattice */
   int                node[Q(DIM)];    /* local node address */
   int                network[Q(DIM)]; /* the network geometry */
   int                master_p;        /* are we the master? */
-  int               *layout2vector;   /* Sublattice 1-d -> 4-d translation */
+  int               *lx2v;            /* Sublattice 1-d -> 4-d translation */
+  int               *v2lx;            /* Only for init */
 };
+
+/* layout translation */
+void q(l2v)(int x[Q(DIM)], const struct local *local, int p);
+int q(v2l)(const int x[Q(DIM)], const struct local *local);
 
 /* Implementation functions */
 int q(setup_comm)(struct Q(State) *state, int real_size);
@@ -316,12 +323,13 @@ long long qx(norm2_fermion)(double *v_r,
 /* Backend controled structure sizes */
 void q(sizeof_neighbor)(int *);
 void q(sizeof_up_pack)(int *);
+int q(get_up_pack_f)(const struct up_pack *, int p);
+void q(set_up_pack)(struct up_pack *up, int p, int f, int u);
 void q(set_neighbor)(struct neighbor *n, int p,
 		     int m,
 		     const int f_up[Q(DIM)], int u_up,
 		     const int f_down[Q(DIM)], const int u_down[Q(DIM)]);
 void q(fix_neighbor_f_up)(struct neighbor *n, int p, int f_up, int d);
 void q(fix_neighbor_f_down)(struct neighbor *n, int p, int f_down, int d);
-void q(fix_neighbor_u_down)(struct neighbor *n, int p, int u_down, int d);
 
 #endif /* !defined(MARK_B9BA8123_0F1A_40FD_8827_42266FE32F3E) */

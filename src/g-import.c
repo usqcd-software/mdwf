@@ -16,8 +16,8 @@ QX(import_gauge)(struct QX(Gauge) **gauge_ptr,
   size_t size;
   double r[Q(DIM) * Q(COLORS) * Q(COLORS) * 2];
   double *v;
-  int p, q, i, d, a, b;
-  int x[Q(DIM)], dx[Q(DIM)];
+  int p, d, a, b;
+  int x[Q(DIM)];
 
   if (state == 0 || state->error_latched)
     return 1;
@@ -36,14 +36,8 @@ QX(import_gauge)(struct QX(Gauge) **gauge_ptr,
   gauge->data = ptr;
   *gauge_ptr = gauge;
 
-  for (i = 0; i < Q(DIM); i++)
-    dx[i] = state->sublattice.hi[i] - state->sublattice.lo[i];
-
   for (p = 0; p < state->volume; p++) {
-    for (q = state->layout2vector[p], i = 0; i < Q(DIM); i++) {
-      x[i] = q % dx[i] + state->sublattice.lo[i];
-      q = q / dx[i];
-    }
+    q(l2v)(x, &state->local, state->lx2v[p]);
     for (v = r, d = 0; d < Q(DIM); d++) {
       for (a = 0; a < Q(COLORS); a++) {
 	for (b = 0; b < Q(COLORS); b++) {
