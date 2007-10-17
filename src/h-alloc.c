@@ -8,8 +8,11 @@ QX(allocate_half_fermion)(struct QX(HalfFermion) **hf_ptr,
   void *even;
   size_t size;
 
-  if (state == 0 || state->error_latched)
+  if (state == NULL || state->error_latched)
     return 1;
+
+  if (hf_ptr == NULL)
+    return q(set_error)(state, 0, "allocate_half_fermion(): NULL pointer");
 
   *hf_ptr = NULL;
   hf = q(allocate_eo)(state, &size, &even,

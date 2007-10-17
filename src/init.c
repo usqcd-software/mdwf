@@ -45,7 +45,7 @@ build_packs(struct eo_lattice   *eo,
       if (state->network[d] == 1)
 	continue;
       if (x[d] == local->lo[d]) {
-	eo->down_pack[d][z_down[d]++] = p;
+	q(set_down_pack)(eo->down_pack[d], z_down[d]++, p);
       }
       if (x[d] + 1 == local->hi[d]) {
 	q(set_up_pack)(eo->up_pack[d], z_up[d]++,
@@ -187,13 +187,15 @@ eo_init(struct eo_lattice        *eo,
 	struct Q(State)          *state)
 {
   int ns;
+  int bs;
   int us;
+  int ds;
   int d;
 
 #define CHECK(cond, msg) do { if (cond) return msg; } while (0)
 
-  q(sizeof_neighbor)(&ns);
-  q(sizeof_up_pack)(&us);
+  q(sizeof_neighbor)(&ns, eo->full_size);
+  q(sizeof_neighbor)(&bs, eo->body_size);
 
   eo->Ls = state->Ls;
   eo->local = &state->local;
@@ -201,19 +203,20 @@ eo_init(struct eo_lattice        *eo,
   CHECK(eo->lx2v == NULL, "E/O->lx2v allocation failed");
   eo->v2lx = q(malloc)(state, state->volume * sizeof(int));
   CHECK(eo->v2lx == NULL, "E/O->v2lx allocation failed");
-  eo->body_neighbor = q(malloc) (state, eo->full_size * ns);
+  eo->body_neighbor = q(malloc) (state, ns);
   CHECK(eo->body_neighbor == NULL, "E/O neighbor allocation failed");
-  eo->face_neighbor = (struct neighbor*)(((char *)eo->body_neighbor)
-					 + eo->body_size * ns);
+  eo->face_neighbor = (struct neighbor*)(((char *)eo->body_neighbor) + bs);
   for (d = 0; d < Q(DIM); d++) {
     eo->send_up_size[d] = oe->receive_up_size[d];
     if (eo->send_up_size[d]) {
-      eo->up_pack[d] = q(malloc) (state, eo->send_up_size[d] * us);
+      q(sizeof_up_pack)(&us, eo->send_up_size[d]);
+      eo->up_pack[d] = q(malloc)(state, us);
       CHECK(eo->up_pack[d] == NULL, "Not enough space for eo.up_pack[i]");
     }
     eo->send_down_size[d] = oe->receive_down_size[d];
     if (eo->send_down_size[d]) {
-      eo->down_pack[d] = q(malloc) (state, eo->send_down_size[d] * sizeof(int));
+      q(sizeof_down_pack)(&ds, eo->send_down_size[d]);
+      eo->down_pack[d] = q(malloc)(state, ds);
       CHECK(eo->down_pack[d] == NULL, "Not enough space for eo.down_pack[i]");
     }
   }
@@ -303,14 +306,15 @@ eo_patch_up(struct eo_lattice *eo,
 	    const int lattice[Q(DIM)+1],
 	    int dim)
 {
-  int p, la;
+  int p, la, dp;
   int down_size = x_eo->send_down_size[dim];
   const struct local *local = &state->local;
   const struct local *x_local = &x_state->local;
   int x[Q(DIM)];
 
   for (p = 0; p < down_size; p++) {
-    q(l2v)(x, x_local, x_oe->lx2v[x_eo->down_pack[dim][p]]);
+    q(get_down_pack_f)(&dp, eo->down_pack[dim], p);
+    q(l2v)(x, x_local, x_oe->lx2v[dp]);
     x[dim]--;
     if (x[dim] < 0) x[dim] = lattice[dim] - 1;
     la = q(v2l)(x, local);
@@ -327,14 +331,15 @@ eo_patch_down(struct eo_lattice *eo,
 	      const int lattice[Q(DIM)+1],
 	      int dim)
 {
-  int p, la;
+  int p, la, up;
   int up_size = x_eo->send_up_size[dim];
   const struct local *local = &state->local;
   const struct local *x_local = &x_state->local;
   int x[Q(DIM)];
 
   for (p = 0; p < up_size; p++) {
-    q(l2v)(x, x_local, x_oe->lx2v[q(get_up_pack_f)(x_eo->up_pack[dim], p)]);
+    q(get_up_pack_f)(&up, x_eo->up_pack[dim], p);
+    q(l2v)(x, x_local, x_oe->lx2v[up]);
     x[dim]++;
     if (x[dim] == lattice[dim]) x[dim] = 0;
     la = q(v2l)(x, local);
@@ -459,7 +464,7 @@ Q(init)(struct Q(State) **state_ptr,
 
 error:
   q(cleanup_state)(state);
-  q(set_error) (state, 1, status);
+  q(set_error)(state, 1, status);
   return 1;
 #undef CHECK
 }

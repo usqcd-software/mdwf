@@ -18,14 +18,18 @@ QX(import_gauge)(struct QX(Gauge) **gauge_ptr,
   double *v;
   int p, d, a, b;
   int x[Q(DIM)];
+  int us;
 
-  if (state == 0 || state->error_latched)
+  if (state == NULL || state->error_latched)
     return 1;
 
+  if (gauge_ptr == NULL)
+    return q(set_error)(state, 0, "import_gauge(): NULL pointer");
+
   *gauge_ptr = NULL;
+  qx(sizeof_gauge)(&us, state->volume);
   gauge = q(allocate_aligned)(state, &size, &ptr,
-			      sizeof (struct QX(Gauge)),
-			      Q(DIM) * state->volume * sizeof (struct SUn));
+			      sizeof (struct QX(Gauge)), us);
   if (gauge == 0)
     return q(set_error)(state, 0, "import_gauge(): not enough memory");
 

@@ -23,18 +23,10 @@
 #  define REAL float
 # endif
 
-/* QCD types (qa0 assumes these definitions) */
-struct SUn {
-  REAL _Complex u[Q(COLORS) * Q(COLORS)];
-};
-
-struct Fermion {
-  REAL _Complex u[Q(COLORS) * Q(FERMION_DIM)];
-};
-
-struct ProjectedFermion {
-  REAL _Complex u[Q(COLORS) * Q(PROJECTED_FERMION_DIM)];
-};
+/* QCD types (qa0 controls these definitions) */
+struct SUn;
+struct Fermion;
+struct ProjectedFermion;
 
 /* Internal types */
 struct local {
@@ -46,6 +38,7 @@ struct local {
 /* structs neighbor and up_pack are defined by qa0 */
 struct neighbor;
 struct up_pack;
+struct down_pack;
 
 struct eo_lattice {
   int              face_size;              /* 4-d size of the face */
@@ -61,7 +54,7 @@ struct eo_lattice {
   int              send_up_size[Q(DIM)];   /* 4-d send size in each up-dir */
   struct up_pack  *up_pack[Q(DIM)];        /* 4-d (U,f) for up-face packing */
   int              send_down_size[Q(DIM)]; /* 4-d send size in each down-dir */
-  int             *down_pack[Q(DIM)];      /* 4-d (f) for down-face packing */
+  struct down_pack *down_pack[Q(DIM)];      /* 4-d (f) for down-face packing */
   int              receive_up_size[Q(DIM)]; /* 4-d (U,f) up receive size */
   int              receive_down_size[Q(DIM)]; /* 4-d (f) down receive size */
 
@@ -106,9 +99,8 @@ struct ABTable;
 
 struct Q(Parameters) {
   struct Q(State) *state;
-  size_t size;
   struct ABTable *ATable;
-  struct ABTable *BTable;  /* NULL if B = 1 */
+  struct ABTable *BTable;
   /* XXX */
 };
 
@@ -185,101 +177,101 @@ void q(x_export)(struct eo_lattice *eo,
 		 void *env);
 
 /* Projections */
-typedef long long (*Up_project)(struct ProjectedFermion *r,
-				int size, int Ls,
-				const struct up_pack *link,
-				const struct SUn *U,
-				const struct Fermion *f);
-typedef long long (*Down_project)(struct ProjectedFermion *r,
-				int size, int Ls,
-				const int *link,
-				const struct Fermion *f);
-long long qx(proj_g0plus)(struct ProjectedFermion *r,
-			  int size, int Ls,
-			  const int *link,
-			  const struct Fermion *f);
-long long qx(proj_g1plus)(struct ProjectedFermion *r,
-			  int size, int Ls,
-			  const int *link,
-			  const struct Fermion *f);
-long long qx(proj_g2plus)(struct ProjectedFermion *r,
-			  int size, int Ls,
-			  const int *link,
-			  const struct Fermion *f);
-long long qx(proj_g3plus)(struct ProjectedFermion *r,
-			  int size, int Ls,
-			  const int *link,
-			  const struct Fermion *f);
-long long qx(proj_g0minus)(struct ProjectedFermion *r,
-			   int size, int Ls,
-			   const int *link,
-			   const struct Fermion *f);
-long long qx(proj_g1minus)(struct ProjectedFermion *r,
-			   int size, int Ls,
-			   const int *link,
-			   const struct Fermion *f);
-long long qx(proj_g2minus)(struct ProjectedFermion *r,
-			   int size, int Ls,
-			   const int *link,
-			   const struct Fermion *f);
-long long qx(proj_g3minus)(struct ProjectedFermion *r,
-			   int size, int Ls,
-			   const int *link,
-			   const struct Fermion *f);
-long long qx(proj_Ug0plus)(struct ProjectedFermion *r,
-			   int size, int Ls,
-			   const struct up_pack *link,
-			   const struct SUn *U,
-			   const struct Fermion *f);
-long long qx(proj_Ug1plus)(struct ProjectedFermion *r,
-			   int size, int Ls,
-			   const struct up_pack *link,
-			   const struct SUn *U,
-			   const struct Fermion *f);
-long long qx(proj_Ug2plus)(struct ProjectedFermion *r,
-			   int size, int Ls,
-			   const struct up_pack *link,
-			   const struct SUn *U,
-			   const struct Fermion *f);
-long long qx(proj_Ug3plus)(struct ProjectedFermion *r,
-			   int size, int Ls,
-			   const struct up_pack *link,
-			   const struct SUn *U,
-			   const struct Fermion *f);
-long long qx(proj_Ug0minus)(struct ProjectedFermion *r,
-			    int size, int Ls,
-			    const struct up_pack *link,
-			    const struct SUn *U,
-			    const struct Fermion *f);
-long long qx(proj_Ug1minus)(struct ProjectedFermion *r,
-			    int size, int Ls,
-			    const struct up_pack *link,
-			    const struct SUn *U,
-			    const struct Fermion *f);
-long long qx(proj_Ug2minus)(struct ProjectedFermion *r,
-			    int size, int Ls,
-			    const struct up_pack *link,
-			    const struct SUn *U,
-			    const struct Fermion *f);
-long long qx(proj_Ug3minus)(struct ProjectedFermion *r,
-			    int size, int Ls,
-			    const struct up_pack *link,
-			    const struct SUn *U,
-			    const struct Fermion *f);
+typedef unsigned int (*Up_project)(struct ProjectedFermion *r,
+				   int size, int Ls,
+				   const struct up_pack *link,
+				   const struct SUn *U,
+				   const struct Fermion *f);
+typedef unsigned int (*Down_project)(struct ProjectedFermion *r,
+				     int size, int Ls,
+				     const struct down_pack *link,
+				     const struct Fermion *f);
+unsigned int qx(proj_g0plus)(struct ProjectedFermion *r,
+			     int size, int Ls,
+			     const struct down_pack *link,
+			     const struct Fermion *f);
+unsigned int qx(proj_g1plus)(struct ProjectedFermion *r,
+			     int size, int Ls,
+			     const struct down_pack *link,
+			     const struct Fermion *f);
+unsigned int qx(proj_g2plus)(struct ProjectedFermion *r,
+			     int size, int Ls,
+			     const struct down_pack *link,
+			     const struct Fermion *f);
+unsigned int qx(proj_g3plus)(struct ProjectedFermion *r,
+			     int size, int Ls,
+			     const struct down_pack *link,
+			     const struct Fermion *f);
+unsigned int qx(proj_g0minus)(struct ProjectedFermion *r,
+			      int size, int Ls,
+			      const struct down_pack *link,
+			      const struct Fermion *f);
+unsigned int qx(proj_g1minus)(struct ProjectedFermion *r,
+			      int size, int Ls,
+			      const struct down_pack *link,
+			      const struct Fermion *f);
+unsigned int qx(proj_g2minus)(struct ProjectedFermion *r,
+			      int size, int Ls,
+			      const struct down_pack *link,
+			      const struct Fermion *f);
+unsigned int qx(proj_g3minus)(struct ProjectedFermion *r,
+			      int size, int Ls,
+			      const struct down_pack *link,
+			      const struct Fermion *f);
+unsigned int qx(proj_Ug0plus)(struct ProjectedFermion *r,
+			      int size, int Ls,
+			      const struct up_pack *link,
+			      const struct SUn *U,
+			      const struct Fermion *f);
+unsigned int qx(proj_Ug1plus)(struct ProjectedFermion *r,
+			      int size, int Ls,
+			      const struct up_pack *link,
+			      const struct SUn *U,
+			      const struct Fermion *f);
+unsigned int qx(proj_Ug2plus)(struct ProjectedFermion *r,
+			      int size, int Ls,
+			      const struct up_pack *link,
+			      const struct SUn *U,
+			      const struct Fermion *f);
+unsigned int qx(proj_Ug3plus)(struct ProjectedFermion *r,
+			      int size, int Ls,
+			      const struct up_pack *link,
+			      const struct SUn *U,
+			      const struct Fermion *f);
+unsigned int qx(proj_Ug0minus)(struct ProjectedFermion *r,
+			       int size, int Ls,
+			       const struct up_pack *link,
+			       const struct SUn *U,
+			       const struct Fermion *f);
+unsigned int qx(proj_Ug1minus)(struct ProjectedFermion *r,
+			       int size, int Ls,
+			       const struct up_pack *link,
+			       const struct SUn *U,
+			       const struct Fermion *f);
+unsigned int qx(proj_Ug2minus)(struct ProjectedFermion *r,
+			       int size, int Ls,
+			       const struct up_pack *link,
+			       const struct SUn *U,
+			       const struct Fermion *f);
+unsigned int qx(proj_Ug3minus)(struct ProjectedFermion *r,
+			       int size, int Ls,
+			       const struct up_pack *link,
+			       const struct SUn *U,
+			       const struct Fermion *f);
 
 /* A+F, A and B */
-long long qx(do_ApF)(struct Fermion *r_x,
-		     int size, int Ls,
-		     const struct ABTable *atable,
-		     const struct neighbor *neighbor,
-		     const struct SUn *U,
-		     const struct Fermion *s_x,
-		     const struct Fermion *s_y,
-		     void *rb[]);
-long long qx(do_AB)(struct Fermion *r_x,
-		    int size, int Ls,
-		    const struct ABTable *atable,
-		    const struct Fermion *s_x);
+unsigned int qx(do_ApF)(struct Fermion *r_x,
+			int size, int Ls,
+			const struct ABTable *atable,
+			const struct neighbor *neighbor,
+			const struct SUn *U,
+			const struct Fermion *s_x,
+			const struct Fermion *s_y,
+			void *rb[]);
+unsigned int qx(do_AB)(struct Fermion *r_x,
+		       int size, int Ls,
+		       const struct ABTable *atable,
+		       const struct Fermion *s_x);
 
 /* XXX  other functions */
 
@@ -287,18 +279,18 @@ long long qx(do_AB)(struct Fermion *r_x,
 void qx(put_gauge)(struct SUn *ptr, int pos, const double r[]);
 void qx(put_fermion)(struct Fermion *data, int pos, int Ls, const double r[]);
 void qx(get_fermion)(double r[], const struct Fermion *data, int pos, int Ls);
-long long qx(madd_fermion)(struct Fermion *r,
-			   int size, int Ls,
-			   const struct Fermion *a,
-			   double s,
-			   const struct Fermion *b);
-long long qx(dot_fermion)(double *v_r, double *v_i,
-			  int size, int Ls,
-			  const struct Fermion *a,
-			  const struct Fermion *b);
-long long qx(norm2_fermion)(double *v_r,
-			    int size, int Ls,
-			    const struct Fermion *a);
+unsigned int qx(madd_fermion)(struct Fermion *r,
+			      int size, int Ls,
+			      const struct Fermion *a,
+			      double s,
+			      const struct Fermion *b);
+unsigned int qx(dot_fermion)(double *v_r, double *v_i,
+			     int size, int Ls,
+			     const struct Fermion *a,
+			     const struct Fermion *b);
+unsigned int qx(norm2_fermion)(double *v_r,
+			       int size, int Ls,
+			       const struct Fermion *a);
 
 /* Timing */
 #define BEGIN_TIMING(s)
@@ -321,9 +313,17 @@ long long qx(norm2_fermion)(double *v_r,
                            ~(CACHE_LINE_SIZE-1)))
 
 /* Backend controled structure sizes */
-void q(sizeof_neighbor)(int *);
-void q(sizeof_up_pack)(int *);
-int q(get_up_pack_f)(const struct up_pack *up, int p);
+void q(sizeof_neighbor)(int *ptr, int volume);
+void q(sizeof_up_pack)(int *ptr, int volume);
+void q(sizeof_down_pack)(int *ptr, int volume);
+void q(sizeof_ABTable)(int *ptr, int Ls);
+void qx(sizeof_fermion)(int *ptr, int volume, int Ls);
+void qx(sizeof_projected_fermion)(int *ptr, int volume, int Ls);
+void qx(sizeof_gauge)(int *ptr, int volume);
+
+void q(get_down_pack_f)(int *ptr, const struct down_pack *up, int p);
+void q(get_up_pack_f)(int *ptr, const struct up_pack *up, int p);
+void q(set_down_pack)(struct down_pack *up, int p, int f);
 void q(set_up_pack)(struct up_pack *up, int p, int f, int u);
 void q(set_neighbor)(struct neighbor *n, int p,
 		     int m,
@@ -331,5 +331,8 @@ void q(set_neighbor)(struct neighbor *n, int p,
 		     const int f_down[Q(DIM)], const int u_down[Q(DIM)]);
 void q(fix_neighbor_f_up)(struct neighbor *n, int p, int f_up, int d);
 void q(fix_neighbor_f_down)(struct neighbor *n, int p, int f_down, int d);
+void q(set_ABTable)(struct ABTable *t,
+		    int i, int ip, int im,
+		    double v, double vp, double vm);
 
 #endif /* !defined(MARK_B9BA8123_0F1A_40FD_8827_42266FE32F3E) */

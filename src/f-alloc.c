@@ -8,9 +8,12 @@ QX(allocate_fermion)(struct QX(Fermion) **fermion_ptr,
   void *even;
   size_t size;
 
-  if (state == 0 || state->error_latched)
+  if (state == NULL || state->error_latched)
     return 1;
 
+  if (fermion_ptr == NULL)
+    return q(set_error)(state, 0, "allocate_fermion(): NULL pointer");
+  
   *fermion_ptr = NULL;
   fermion = q(allocate_eo)(state, &size, &even,
 			   sizeof (struct QX(Fermion)), 1, 1,

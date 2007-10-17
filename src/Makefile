@@ -18,6 +18,7 @@ x.sources = error.c \
             set-chiu.c \
             set-moebius.c \
             set-shamir.c \
+            set-generic.c \
             step-even.c \
             step-odd.c \
             version.c \

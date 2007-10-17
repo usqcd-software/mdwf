@@ -12,8 +12,11 @@ Q(set_Shamir)(struct Q(Parameters) **param_ptr,
   double *c;
   int status;
 
-  if (state == 0 || state->error_latched)
+  if (state == NULL || state->error_latched)
     return 1;
+
+  if (param_ptr == NULL)
+    return q(set_error)(state, 0, "set_Shamir(): NULL pointer");
 
   b = q(malloc)(state, 2 * state->Ls * sizeof (double));
   if (b == 0)

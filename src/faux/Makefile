@@ -20,15 +20,23 @@ x.sources = do_AB.c \
             proj_g2minus.c \
             proj_g3minus.c \
             put_fermion.c \
-            put_gauge.c
+            put_gauge.c \
+            sizeof_gauge.c \
+            sizeof_fermion.c \
+            sizeof_pfermion.c
 
 sources = fix_neighbor_f_down.c \
           fix_neighbor_f_up.c \
+          get_down_pack_f.c \
           get_up_pack_f.c \
           set_neighbor.c \
+          set_down_pack.c \
           set_up_pack.c \
+          set_abtable.c \
           sizeof_neighbor.c \
-          sizeof_up_pack.c
+          sizeof_up_pack.c \
+          sizeof_down_pack.c \
+          sizeof_abtable.c 
 
 headers = $(TOP)/mdwf.h \
           $(TOP)/qop-mdwf3.h
