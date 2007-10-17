@@ -56,8 +56,6 @@ objects = $(x.objects) $(p.objects)
 headers = mdwf.h \
           qop-mdwf3.h
 
-limp.headers = 
-
 library = libqop-mdwf3.a
 
 .PHONY: all clean realclean
@@ -71,15 +69,17 @@ else
 endif
 
 all: $(library)
+	$C$(MAKE) -C $(LIMP) 'V=$V' 'CONFIG=$(CONFIG)' 'library=$(library)' $@
 
 clean:
 	$E RM objects
 	$C$(RM) $(objects)
+	$C$(MAKE) -C $(LIMP) 'V=$V' 'CONFIG=$(CONFIG)' 'library=$(library)' $@
 
 realclean: clean
 	$E RM library
 	$C$(RM) $(library)
-
+	$C$(MAKE) -C $(LIMP) 'V=$V' 'CONFIG=$(CONFIG)' 'library=$(library)' $@
 
 $(library): $(objects)
 	$E AR $@

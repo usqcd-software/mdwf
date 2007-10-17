@@ -32,9 +32,10 @@ done **  norm2_half_fermion
 * shifted cg
 done * x_export
 done * x_import
-*+ faux -- empty routines
+done *+ faux -- empty routines
 *+ c99/qa0
 
+LIMP functions:
 ** qx(do_AB)
 ** qx(do_ApF)
 ** qx(dot_fermion)

@@ -323,7 +323,7 @@ long long qx(norm2_fermion)(double *v_r,
 /* Backend controled structure sizes */
 void q(sizeof_neighbor)(int *);
 void q(sizeof_up_pack)(int *);
-int q(get_up_pack_f)(const struct up_pack *, int p);
+int q(get_up_pack_f)(const struct up_pack *up, int p);
 void q(set_up_pack)(struct up_pack *up, int p, int f, int u);
 void q(set_neighbor)(struct neighbor *n, int p,
 		     int m,
