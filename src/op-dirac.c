@@ -32,11 +32,8 @@ qx(compute_ApFB)(struct Q(State) *state,
   int Ls = state->Ls;
   int i;
 
-  if (By) {
-    *flops += qx(do_AB)(By, yx->full_size, Ls, params->BTable, s_y);
-  } else {
-    By = (struct Fermion *)s_y;
-  }
+  *flops += qx(do_AB)(By, yx->full_size, Ls, params->BTable, s_y);
+
   for (i = 0; i < Q(DIM); i++) {
     if (xy->send_up_size[i])
       *flops += (up_project[i])(xy->send_up_buf[i],
@@ -79,6 +76,10 @@ QX(DDW_operator)(struct QX(Fermion) *result,
   size_t s = 0;
   void *t = NULL;
   void *ptr = NULL;
+  int e_size;
+  int o_size;
+  int size;
+  int f_size;
 
   CHECK_ARG0(result);
   CHECK_ARGn(params, "DDW_operator");
@@ -88,17 +89,15 @@ QX(DDW_operator)(struct QX(Fermion) *result,
   if (q(setup_comm)(state, sizeof (REAL)))
     return q(set_error)(state, 0, "DDW_operator(): communication setup failed");
 
-  if (params->BTable != 0) {
-    size_t e_size = state->even.full_size;
-    size_t o_size = state->odd.full_size;
-    size_t size = e_size > o_size? e_size: o_size;
-    void *ptr = q(allocate_aligned)(state, &s, &t,
-				    0,
-				    2 * Q(FERMION_DIM) * Q(COLORS)
-				    * state->Ls * size);
-    if (ptr == 0)
-      return q(set_error)(state, 0, "DDW_operator(): not enough memory");
-  }
+  e_size = state->even.full_size;
+  o_size = state->odd.full_size;
+  size = e_size > o_size? e_size: o_size;
+  qx(sizeof_fermion)(&f_size, size, state->Ls);
+
+  ptr = q(allocate_aligned)(state, &s, &t, 0, f_size);
+  if (ptr == 0)
+    return q(set_error)(state, 0, "DDW_operator(): not enough memory");
+
   BEGIN_TIMING(state);
   qx(compute_ApFB)(state, &state->even, &state->odd, params,
 		   result->even, gauge->data, fermion->even, fermion->odd, t,
@@ -108,9 +107,7 @@ QX(DDW_operator)(struct QX(Fermion) *result,
 		   &flops, &sent, &received);
   END_TIMING(state, flops, sent, received);
 
-  if (ptr) {
-    q(free)(state, ptr, s);
-  }
+  q(free)(state, ptr, s);
 
   return 0;
-}
+}	
