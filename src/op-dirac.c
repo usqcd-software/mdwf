@@ -32,8 +32,9 @@ qx(compute_ApFB)(struct Q(State) *state,
   int Ls = state->Ls;
   int i;
 
-  if (xy->hr_valid)
-    QMP_start(xy->hr);
+  for (i = 0; i < xy->hrt_count; i++) {
+    QMP_start(xy->hrt[i]);
+  }
 
   *flops += qx(do_AB)(By, yx->full_size, Ls, params->BTable, s_y);
 
@@ -56,8 +57,8 @@ qx(compute_ApFB)(struct Q(State) *state,
 		       params->ATable, xy->body_neighbor,
 		       U, s_x, By, NULL);
 
-  if (xy->hr_valid)
-    QMP_wait(xy->hr);
+  if (xy->hrt_count)
+    QMP_wait_all(xy->hrt, xy->hrt_count);
 
   *flops += qx(do_ApF)(r_x, xy->body_size, Ls,
 		       params->ATable, xy->face_neighbor,

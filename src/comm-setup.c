@@ -105,13 +105,6 @@ eo_comm(struct eo_lattice *eo, struct Q(State) *state, int real_size)
       eo->total_receive += size;
     }
   }
-  if (eo->hrt_count > 0) {
-    eo->hr = QMP_declare_multiple(eo->hrt, eo->hrt_count);
-    if (eo->hr == NULL)
-      return 1;
-    eo->hrt_count = 0;
-    eo->hr_valid = 1;
-  }
   eo->real_size = real_size;
   return 0;
 }

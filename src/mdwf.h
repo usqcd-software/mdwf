@@ -59,8 +59,6 @@ struct eo_lattice {
   int              receive_down_size[Q(DIM)]; /* 4-d (f) down receive size */
 
   int              real_size;              /* 0, 4 or 8 */ 
-  int              hr_valid;               /* is .hr valid? */
-  QMP_msghandle_t  hr;                     /* combined receive handle */
   QMP_msghandle_t  hrt[2*Q(DIM)];          /* transitory receive handles */
   int              hrt_count;              /* length of .hrt so far */
   QMP_msghandle_t  hs_up[Q(DIM)];          /* send up handles */

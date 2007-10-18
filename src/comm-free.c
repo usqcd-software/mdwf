@@ -8,10 +8,6 @@ eo_free(struct eo_lattice *eo, struct Q(State) *state)
   if (eo->real_size == 0)
     return;
 
-  if (eo->hr_valid)
-    QMP_free_msghandle(eo->hr);
-  eo->hr_valid = 0;
-
   for (k = eo->hrt_count; k--;)
     QMP_free_msghandle(eo->hrt[k]);
   eo->hrt_count = 0;
