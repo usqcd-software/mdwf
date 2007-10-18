@@ -17,7 +17,7 @@ sources = ../src/qop-mdwf3.h \
 
 f.tex = $(noweb:%.nw=%.tex)
 f.dvi = $(noweb:%.nw=%.dvi)
-f.pdf = $(noweb:%.nw=%.pdf)
+f.pdf = $(noweb:%.nw=../doc/%.pdf)
 
 .PHONY: all clean realclean 
 
@@ -36,8 +36,8 @@ sources: $(sources)
 pdf: $(f.pdf)
 
 ###
-$(f.pdf): %.pdf: %.dvi
-	$(DVIPDFM) $<
+$(f.pdf): ../doc/%.pdf: %.dvi
+	$(DVIPDFM) -o $@ $<
 
 $(f.dvi): %.dvi: %.tex
 	$(LATEX) $<

@@ -38,9 +38,13 @@ realclean: clean
 
 $(programs): %: %.o
 	$E LD $@
-	$C$(CC) $(CFLAGS) $(QMP_LDFLAGS) -L$(TOP) -o $@ $^ \
+	$C$(CC) $(CFLAGS) $(QMP_LDFLAGS) -L$(TOP) -o $@ $< \
               -l$(library) $(QMP_LIBS)
 
 $(objects): %.o: %.c
 	$E CC $@
-	$C$(CC) $(CFLAGS) $(QMP_CFLAGS) -c -o $@ $^
+	$C$(CC) $(CFLAGS) $(QMP_CFLAGS) -c -o $@ $<
+
+$(objects): ../mdwf.h ../qop-mdwf3.h
+
+$(programs): ../lib$(library).a

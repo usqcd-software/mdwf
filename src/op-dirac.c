@@ -32,32 +32,39 @@ qx(compute_ApFB)(struct Q(State) *state,
   int Ls = state->Ls;
   int i;
 
+  if (xy->hr_valid)
+    QMP_start(xy->hr);
+
   *flops += qx(do_AB)(By, yx->full_size, Ls, params->BTable, s_y);
 
   for (i = 0; i < Q(DIM); i++) {
-    if (xy->send_up_size[i])
+    if (xy->send_up_size[i]) {
       *flops += (up_project[i])(xy->send_up_buf[i],
 				xy->send_up_size[i], Ls,
 				xy->up_pack[i], U, By);
-    if (xy->send_down_size[i])
+      QMP_start(xy->hs_up[i]);
+    }
+    if (xy->send_down_size[i]) {
       *flops += (down_project[i])(xy->send_down_buf[i],
 				  xy->send_down_size[i], Ls,
 				  xy->down_pack[i], By);
+      QMP_start(xy->hs_down[i]);
+    }
   }
 
-  if (xy->h_valid)
-    QMP_start(xy->handle);
-  
   *flops += qx(do_ApF)(r_x, xy->body_size, Ls,
 		       params->ATable, xy->body_neighbor,
 		       U, s_x, By, NULL);
 
-  if (xy->h_valid)
-    QMP_wait(xy->handle);
+  if (xy->hr_valid)
+    QMP_wait(xy->hr);
 
   *flops += qx(do_ApF)(r_x, xy->body_size, Ls,
 		       params->ATable, xy->face_neighbor,
 		       U, s_x, By, xy->receive_buf);
+
+  if (xy->hsv_count)
+    QMP_wait_all(xy->hsv, xy->hsv_count);
 
   *sent += xy->total_send;
   *received += xy->total_receive;

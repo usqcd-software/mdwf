@@ -20,7 +20,8 @@
 \title{M\"obius Domain Wall Fermions Implementation}
 \author{Andrew Pochinsky}
 \catcode`\$=11
-\date{$Id$}
+\date{$Id$\\
+WORKING COPY}
 \catcode`\$=3
 
 \begin{document}
@@ -299,7 +300,7 @@ B_{oo}(x,x') & = & \left\{c_5(s)\left[P_{+}\delta_{s,s'+1}
                 +P_{-}\delta_{s,s'-1}
        -mP_{-}\delta_{s,L_s-1}\delta_{s',0}\right]+
        b_5(s)\delta_{s,s'}\right\}\delta_{x,x'},\\
-F_{oe}(x,x') &=-\frac{1}{2}&\delta_{s,s'}
+F_{oe}(x,x') &=&-\frac{\delta_{s,s'}}{2}
             \sum_{\mu=0}^{3}\left[(1-\gamma_\mu)U_\mu(x)\delta_{x,x'-\hat\mu}
          +(1+\gamma_\mu)U_\mu^{\dagger}(x-\hat\mu)\delta_{x,x'+\hat\mu}\right],
 \end{eqnarray}
@@ -729,18 +730,20 @@ provide enough information to uniquely identify library's version. Since
 there are many features packed into the library, a human-readable string is
 returned.
 <<Interface functions>>=
-const char *QOP_MDWF_version(void);
+const char *`QOP_MDWF_version(void);
 @
 
 \section{Performance monitoring}
 Each interface function records its exectution time and number of floating point
 operations in the [[State]] structure. These numbers are accessed via the
-following function. Only data on the current node is recorded.
+following function. Only data on the current node is recorded. The function
+returns [[0]] if performance counters are updated.
 <<Interface functions>>=
-void QOP_MDWF_performance(double *time_sec,
-                          long long *flops,
-                          long long *sent,
-                          struct QOP_MDWF_State *state);
+int `QOP_MDWF_performance(double *time_sec,
+                         long long *flops,
+                         long long *sent,
+                         long long *receive,
+                         struct QOP_MDWF_State *state);
 @
 
 \section{Initialization}
@@ -1352,7 +1355,12 @@ Also, the macros
 #define `QOP_MDWF_norm2_half_fermion QOP_D3_MDWF_norm2_half_fermion
 @
 
-\par XXX do we need [[norm2]]?
+\chapter{CHANGES}
+\begin{tabular}{|l|l|l|}
+\hline
+October 9, 2007 & avp & Initial version. \\
+\hline
+\end{tabular}
 
 \appendix
 \chapter{CODE CHUNKS}

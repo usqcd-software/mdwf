@@ -15,6 +15,14 @@ static double b5[128];
 static double c5[128];
 
 void
+zflush(void)
+{
+  if (primary == 0)
+    return;
+  fflush(stdout);
+}
+
+void
 xprint(char *fmt, ...)
 {
   char buffer[4096];
@@ -111,6 +119,7 @@ report_perf(const char *name, struct QOP_MDWF_State *state)
 	 "[%g %lld %lld %lld]\n",
 	 name, 1e-6 * flops/sec, 1e-6 * send/sec, 1e-6 * receive/sec,
 	 sec, flops, send, receive);
+  zflush();
 }
 
 static int
