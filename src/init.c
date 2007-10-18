@@ -150,13 +150,16 @@ walker(struct Q(State)  *state,
       return;
 
     state->v2lx[la] = *index;
-    state->lx2v[*index++] = la;    
+    state->lx2v[*index] = la;
+    *index += 1;
     if (parity & 1) {
       state->odd.v2lx[la] = *o_idx;
-      state->odd.lx2v[*o_idx++] = la;
+      state->odd.lx2v[*o_idx] = la;
+      *o_idx += 1;
     } else {
       state->even.v2lx[la] = *e_idx;
-      state->even.lx2v[*e_idx++] = la;
+      state->even.lx2v[*e_idx] = la;
+      *e_idx += 1;
     }
   }
 }
@@ -257,27 +260,27 @@ state_init(struct Q(State)  *state,
 
   for (la = 0; la < v; la++) {
     q(l2v)(x, &state->local, la);
-    for (parity = face = 0, d = 0; d < Q(DIM); d++) {
+    for (parity = 0, d = 0; d < Q(DIM); d++) {
       parity += x[d];
-      eo = (parity & 1) ? &state->odd : &state->even;
-      for (face = 0, d = 0; d < Q(DIM); d++) {
-	if (network[d] > 1) {
-	  if (x[d] == state->local.lo[d]) {
-	    face = 1;
-	    eo->receive_down_size[d]++;
-	  }
-	  if (x[d] == state->local.hi[d] - 1) {
-	    face = 1;
-	    eo->receive_up_size[d]++;
-	  }
+    }
+    eo = (parity & 1) ? &state->odd : &state->even;
+    for (face = 0, d = 0; d < Q(DIM); d++) {
+      if (network[d] > 1) {
+	if (x[d] == state->local.lo[d]) {
+	  face = 1;
+	  eo->receive_down_size[d]++;
 	}
-	if (face)
-	  eo->face_size++;
-	else
-	  eo->body_size++;
-	eo->full_size++;
+	if (x[d] == state->local.hi[d] - 1) {
+	  face = 1;
+	  eo->receive_up_size[d]++;
+	}
       }
     }
+    if (face)
+      eo->face_size++;
+    else
+      eo->body_size++;
+    eo->full_size++;
   }
   
   msg = eo_init(&state->even, &state->odd, state);

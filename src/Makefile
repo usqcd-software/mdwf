@@ -71,16 +71,19 @@ endif
 
 all: $(library)
 	$C$(MAKE) -C $(LIMP) 'V=$V' 'CONFIG=$(CONFIG)' 'library=$(library)' $@
+	$C$(MAKE) -C tests 'V=$V' 'CONFIG=$(CONFIG)' $@
 
 clean:
 	$E RM objects
 	$C$(RM) $(objects)
 	$C$(MAKE) -C $(LIMP) 'V=$V' 'CONFIG=$(CONFIG)' 'library=$(library)' $@
+	$C$(MAKE) -C tests 'V=$V' 'CONFIG=$(CONFIG)' $@
 
 realclean: clean
 	$E RM library
 	$C$(RM) $(library)
 	$C$(MAKE) -C $(LIMP) 'V=$V' 'CONFIG=$(CONFIG)' 'library=$(library)' $@
+	$C$(MAKE) -C tests 'V=$V' 'CONFIG=$(CONFIG)' $@
 
 $(library): $(objects)
 	$E AR $@

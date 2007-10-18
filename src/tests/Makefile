@@ -9,7 +9,8 @@ QMP_LIBS    = $(shell $(QMP_TOP:%=%/bin/qmp-config) --libs)
 
 include $(TOP)/config/$(CONFIG)
 
-tests = operator.c
+tests = operator.c \
+        state.c
 
 objects = $(tests:%.c=%.o)
 
@@ -37,7 +38,6 @@ realclean: clean
 
 $(programs): %: %.o
 	$E LD $@
-	$C$(MAKE) -C ..
 	$C$(CC) $(CFLAGS) $(QMP_LDFLAGS) -L$(TOP) -o $@ $^ \
               -l$(library) $(QMP_LIBS)
 
