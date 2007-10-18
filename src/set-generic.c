@@ -24,7 +24,7 @@ Q(set_generic)(struct Q(Parameters) **params_ptr,
   if (params_ptr == NULL)
     return q(set_error)(state, 0, "set_generic(): NULL pointer");
 
-  params_ptr = NULL;
+  *params_ptr = NULL;
   params = q(malloc)(state, sizeof (struct Q(Parameters)));
   CHECK(params, "set_generic(): Not enough memory for parameters");
 

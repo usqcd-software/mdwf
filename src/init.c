@@ -261,13 +261,15 @@ state_init(struct Q(State)  *state,
       parity += x[d];
       eo = (parity & 1) ? &state->odd : &state->even;
       for (face = 0, d = 0; d < Q(DIM); d++) {
-	if (x[d] == state->local.lo[d]) {
-	  face = 1;
-	  eo->receive_down_size[d]++;
-	}
-	if (x[d] == state->local.hi[d] - 1) {
-	  face = 1;
-	  eo->receive_up_size[d]++;
+	if (network[d] > 1) {
+	  if (x[d] == state->local.lo[d]) {
+	    face = 1;
+	    eo->receive_down_size[d]++;
+	  }
+	  if (x[d] == state->local.hi[d] - 1) {
+	    face = 1;
+	    eo->receive_up_size[d]++;
+	  }
 	}
 	if (face)
 	  eo->face_size++;
@@ -285,6 +287,9 @@ state_init(struct Q(State)  *state,
 
   state->v2lx = q(malloc) (state, state->volume * sizeof(int));
   CHECK(state->v2lx == 0, "Not enough memory for state->vector2layout");
+
+  state->lx2v = q(malloc) (state, state->volume * sizeof(int));
+  CHECK(state->lx2v == 0, "Not enough memory for state->layout2vector");
 
   build_layout(state);
 

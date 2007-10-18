@@ -1,14 +1,14 @@
 #include <mdwf.h>
 
 /* Conservative version with contained communications */
-Up_project up_project[Q(DIM)] = {
+static Up_project up_project[Q(DIM)] = {
   qx(proj_Ug0plus),
   qx(proj_Ug1plus),
   qx(proj_Ug2plus),
   qx(proj_Ug3plus)
 };
 
-Down_project down_project[Q(DIM)] = {
+static Down_project down_project[Q(DIM)] = {
   qx(proj_g0minus),
   qx(proj_g1minus),
   qx(proj_g2minus),

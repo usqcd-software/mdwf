@@ -8,7 +8,7 @@ q(allocate_aligned)(struct Q(State) *state,
   size_t total_size = hdr_size + bulk_size + CACHE_LINE_SIZE - 1;
   void *ptr;
 
-  if (state == 0 || size == 0 || aligned_ptr == 0 || *aligned_ptr == 0)
+  if (state == NULL || size == NULL || aligned_ptr == NULL)
     return NULL;
   ptr = q(malloc)(state, total_size);
   if (ptr == NULL) {
