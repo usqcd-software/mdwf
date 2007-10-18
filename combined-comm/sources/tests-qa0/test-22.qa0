@@ -1,0 +1,22 @@
+; dot product of two fermions
+
+(procedure F-dot ([stem "f_pos"])
+              ([r  pointer "res_r"  "int *"]
+               [a  int     "a"      "int"   ]
+               [b  int     "b"      "int"   ])
+  (op qcd-fermion-offset () (x) ([reg a] [reg b]))
+  (store int () ([reg r]) [reg x]))
+
+(procedure H-dot ([stem "h_pos"])
+              ([r  pointer "res_r"  "int *"]
+               [a  int     "a"      "int"   ]
+               [b  int     "b"      "int"   ])
+  (op qcd-projected-fermion-offset () (x) ([reg a] [reg b]))
+  (store int () ([reg r]) [reg x]))
+
+(procedure G-dot ([stem "g_pos"])
+              ([r  pointer "res_r"  "int *"]
+               [a  int     "a"      "int"   ]
+               [b  int     "b"      "int"   ])
+  (op qcd-su-n-offset () (x) ([reg a] [reg b]))
+  (store int () ([reg r]) [reg x]))

@@ -1,0 +1,54 @@
+;; projections
+(array x-spinor        "x_Spinor"   COMPLEX       (const *fermion-dim*))
+(array x-half-spinor   "x_HSpinor"  COMPLEX       (const (/ *fermion-dim* 2)))
+(array x-fermion       "x_Fermion"  x-spinor      (const *colors*))
+(array x-half-fermion  "x_HFermion" x-half-spinor (const *colors*))
+(array x-gauge         "x_SU3"      COMPLEX       (const (* *colors* *colors*)))
+
+(structure s-down-data "sd_data" ([offset    "offset" int]))
+(structure s-up-data "su_data" ([f-offset    "f_offset" int]
+                                [u-offset    "u_offset" int]))
+
+(repeat ([d (const 0) (const *DIM*)]
+         [p/m (plus minus)])
+  (procedure s-down ([stem "shift_down" d p/m]
+                       count-flops)
+              ([size   int       "size"    "int"                      ]
+               [Ls     int       "ls"      "int"                      ]
+               [res    pointer   "result"  "struct ProjectedFermion *"]
+               [index pointer    "index"   "struct sd_data *"         ]
+               [src    pointer   "source"  "struct Fermion *"         ])
+   (loop () (i [const 0] [reg size])
+     (load int () s-index ([reg index]))
+     (op mul-int () (s-offset) ([reg s-index] [const (size-of x-fermion)]))
+     (loop () (s [const 0] [reg Ls])
+       (load x-fermion () s ([reg src] [reg s-offset]))
+       (op spin-project ([sign p/m] [direction d]) (r) ([reg s])) 
+       (store x-half-fermion () ([reg res]) [reg r])
+       (op add-int () (s-offset) ([reg s-offset] [const (size-of x-fermion)]))
+       (op add-int () (res) ([reg res] [const (size-of x-half-fermion)])))
+     (op add-int () (index) ([reg index] [const (size-of s-down-data)]))))
+
+  (procedure shift-up ([stem "shift_up" d p/m]
+                      count-flops)
+              ([size   int       "size"   "int"                      ]
+               [Ls     int       "ls"     "int"                      ]
+               [res    pointer   "result" "struct ProjectedFermion *"]
+               [index  pointer   "index"  "struct sd_data *"         ]
+               [U      pointer   "U"      "struct SU3 *"             ]
+               [src    pointer   "source" "struct Fermion *"         ])
+   (loop () (i [const 0] [reg size])
+     (load int () s-index ([reg index] [const (offset-of s-up-data f-offset)]))
+     (load int () u-index ([reg index] [const (offset-of s-up-data u-offset)]))
+     (op mul-int () (s-offset) ([reg s-index] [const (size-of x-fermion)]))
+     (op mul-int () (u-offset) ([reg u-index] [const (size-of x-gauge)]))
+     (load x-gauge () uuu ([reg U] [reg u-offset]))
+     (loop () (s [const 0] [reg Ls])
+       (load x-fermion () s ([reg src] [reg s-offset]))
+       (op spin-project ([sign p/m] [direction d]) (xx) ([reg s]))
+       (op mul-su3-half-conj () (r) ([reg uuu] [reg xx]))
+       (store x-half-fermion () ([reg res]) [reg r])
+       (op add-int () (s-offset) ([reg s-offset] [const (size-of x-fermion)]))
+       (op add-int () (res) ([reg res] [const (size-of x-half-fermion)])))
+     (op add-int () (index) ([reg index] [const (size-of s-up-data)]))))
+)

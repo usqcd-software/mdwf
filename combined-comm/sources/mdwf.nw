@@ -1,0 +1,4780 @@
+\documentclass[twoside,openright]{report}
+\usepackage{noweb}
+\noweboptions{externalindex,longchunks,longxref}
+\usepackage[boxed]{algorithm2e}
+\usepackage{epsfig}
+\usepackage{color}
+\definecolor{darkblue}{cmyk}{1,1,0,0.7}
+\usepackage[dvipdfm,colorlinks=true,linkcolor=darkblue]{hyperref}
+\newcommand{\note}[1]{$[\![$NB: #1$]\!]$}
+\setlength{\parindent}{0pt}
+\setlength{\topmargin}{-40pt}
+\setlength{\oddsidemargin}{-16pt}
+\setlength{\evensidemargin}{-16pt}
+\setlength{\textwidth}{522pt}
+\setlength{\textheight}{680pt}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+\newcommand{\Cee}{\texttt{C}}
+
+\title{M\"obius Domain Wall Fermions Implementation}
+\author{Andrew Pochinsky}
+\catcode`\$=11
+\date{$Id$}
+\catcode`\$=3
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}\hbox{}
+\vfill
+\copyright 2007 Massachusetts Institute of Technology
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+\pagebreak
+
+\tableofcontents
+\pagebreak
+\chapter{INTRODUCTION}
+\par XXX restrictions etc.
+All memory we use will be aligned at least at the following size:
+<<Implementation macros>>=
+#define `CACHE_LINE_SIZE 128
+@
+Here is a macro to align a given pointer:
+<<Implementation macros>>=
+#define `ALIGN(p) ((void *)((((ptrdiff_t)p)+ CACHE_LINE_SIZE - 1) & ~(CACHE_LINE_SIZE - 1)))
+@
+We will need [[<stddef.h>]] for [[ptrdiff_t]].
+<<Implementation includes>>=
+#include <stddef.h>
+@
+
+\chapter{PHYSICS}
+The Domain Wall Fermion Dirac operator is defined by
+\begin{equation}
+\left\langle\bar\psi|D_{DW}|\psi\right\rangle =
+  \sum_{x,x'}\bar\psi(x)D_{DW}(x,x')\psi(x'),
+\end{equation}
+where
+\begin{eqnarray}
+D_{DW}(x,x')  &= &D_{+}^{(s)}(x,x')\delta_{s,s'}\nonumber\\
+    & & + D_{-}^{(s)}(x,x')P_{+}\delta_{s,s'+1}
+       -mD_{-}^{(s)}(x,x')P_{+}\delta_{s,0}\delta_{s',L_s-1} \nonumber\\
+   & &  + D_{-}^{(s)}(x,x')P_{-}\delta_{s,s'-1} 
+       -mD_{-}^{(s)}(x,x')P_{-}\delta_{s,L_s-1}\delta_{s',0} \label{D_DW},\\
+P_{+}&=&\frac{1+\gamma_5}{2},\\
+P_{-}&=&\frac{1-\gamma_5}{2},\\
+D_{+}^{(s)}(x,x')&=&b_5(s)D_W(x,x')+1,\\
+D_{-}^{(s)}(x,x')&=&c_5(s)D_W(x,x')-1,
+\end{eqnarray}
+and
+\begin{equation}
+D_W(x,x')=(4+M_5)\delta_{x,x'}
+ -\frac{1}{2}\sum_{\mu=0}^{3}
+    \left[(1-\gamma_\mu)U_\mu(x)\delta_{x,x'-\hat\mu}
+         +(1+\gamma_\mu)U_\mu^{\dagger}(x-\hat\mu)\delta_{x,x'+\hat\mu}\right]
+\end{equation}
+is the standard Wilson action.
+
+\section{Gamma Matrices}
+We use the same $\gamma$-matrix basis as Chroma to simplify conversion between
+two codes. The choice below could be changed with a few modifications to the
+rest of the code, if $\gamma_5$ is kept diagonal, and one of other
+$\gamma$-matrices has all nonzero entries equal to $+1$.
+
+In the $\gamma$-basis defined below one has
+\begin{equation}
+\gamma_5 = \gamma_0 \gamma_1 \gamma_2 \gamma_3 = \sigma_3 \otimes 1 =
+           \left(\begin{array}{cc}
+             1 & 0 \\
+             0 & -1
+           \end{array}\right) =
+           \left(\begin{array}{cccc}
+             1 & 0 & 0 & 0\\
+             0 & 1 & 0 & 0\\
+             0 & 0 &-1 & 0\\
+             0 & 0 & 0 &-1
+           \end{array}\right)
+\end{equation}
+Fragments for $\gamma_\mu$ below are not the most fool-proof, but they should do
+for now.
+
+\pagebreak
+\begin{equation}
+\gamma_0 = -\sigma_2 \otimes \sigma_1  =
+           \left(\begin{array}{cc}
+                0&i\sigma_1\\
+                -i\sigma_1&0
+             \end{array}\right) = 
+           \left(\begin{array}{cccc}
+                                 0&0&0&i\\
+                                 0&0&i&0\\
+                                 0&-i&0&0\\
+                                 -i&0&0&0
+                           \end{array}\right)\\
+\end{equation}
+<<Project $(1+\gamma_0)$>>=
+((project 0 plus) . ((plus-one 0 plus-i 3)
+	             (plus-one 1 plus-i 2)))
+@
+<<Unproject $(1+\gamma_0)$>>=
+((unproject 0 plus) . ((plus-one 0)
+                       (plus-one 1)
+		       (minus-i 1)
+		       (minus-i 0)))
+@
+<<Project $(1-\gamma_0)$>>=
+((project 0 minus) . ((plus-one 0 minus-i 3)
+   	              (plus-one 1 minus-i 2)))
+@
+<<Unproject $(1-\gamma_0)$>>=
+((unproject 0 minus) . ((plus-one 0)
+	     	        (plus-one 1)
+		        (plus-i 1)
+		        (plus-i 0)))
+@
+
+\pagebreak
+\begin{equation}
+\gamma_1 = \sigma_2 \otimes \sigma_2  = 
+           \left(\begin{array}{cc}
+                  0 & -i\sigma_2\\
+                  i\sigma_2 & 0
+                 \end{array}\right) = 
+           \left(\begin{array}{cccc}
+                                 0&0&0&-1\\
+                                 0&0&1&0\\
+                                 0&1&0&0\\
+                                 -1&0&0&0
+                           \end{array}\right)\\
+\end{equation}
+<<Project $(1+\gamma_1)$>>=
+((project 1 plus) . ((plus-one 0 minus-one 3)
+	   	     (plus-one 1 plus-one 2)))
+@
+<<Unproject $(1+\gamma_1)$>>=
+((unproject 1 plus) . ((plus-one 0)
+	     	       (plus-one 1)
+		       (plus-one 1)
+		       (minus-one 0)))
+@
+<<Project $(1-\gamma_1)$>>=
+((project 1 minus) . ((plus-one 0 plus-one 3)
+	   	      (plus-one 1 minus-one 2)))
+@
+<<Unproject $(1-\gamma_1)$>>=
+((unproject 1 minus) . ((plus-one 0)
+	     	        (plus-one 1)
+		        (minus-one 1)
+		        (plus-one 0)))
+@
+
+\pagebreak
+\begin{equation}
+\gamma_2 = -\sigma_2 \otimes \sigma_3  = 
+           \left(\begin{array}{cc}
+                   0 & i\sigma_3\\
+                 -i\sigma_3&0
+                 \end{array}\right) = 
+           \left(\begin{array}{cccc}
+                                 0&0&i&0\\
+                                 0&0&0&-i\\
+                                 -i&0&0&0\\
+                                 0&i&0&0
+                           \end{array}\right)\\
+\end{equation}
+<<Project $(1+\gamma_2)$>>=
+((project 2 plus) . ((plus-one 0 plus-i 2)
+	   	     (plus-one 1 minus-i 3)))
+@
+<<Unproject $(1+\gamma_2)$>>=
+((unproject 2 plus) . ((plus-one 0)
+	     	       (plus-one 1)
+		       (minus-i 0)
+		       (plus-i 1)))
+@
+<<Project $(1-\gamma_2)$>>=
+((project 2 minus) . ((plus-one 0 minus-i 2)
+	   	      (plus-one 1 plus-i 3)))
+@
+<<Unproject $(1-\gamma_2)$>>=
+((unproject 2 minus) . ((plus-one 0)
+	     	        (plus-one 1)
+		        (plus-i 0)
+		        (minus-i 1)))
+@
+
+\pagebreak
+\begin{equation}
+\gamma_3 = \sigma_1 \otimes 1 =
+           \left(\begin{array}{cc}
+                  0 & 1\\
+                  1 & 0
+                 \end{array}\right) = 
+           \left(\begin{array}{cccc}
+                                 0&0&1&0\\
+                                 0&0&0&1\\
+                                 1&0&0&0\\
+                                 0&1&0&0
+                           \end{array}\right)\\
+\end{equation}
+<<Project $(1+\gamma_3)$>>=
+((project 3 plus) . ((plus-one 0 plus-one 2)
+	   	     (plus-one 1 plus-one 3)))
+@
+<<Unproject $(1+\gamma_3)$>>=
+((unproject 3 plus) . ((plus-one 0)
+	     	       (plus-one 1)
+		       (plus-one 0)
+		       (plus-one 1)))
+@
+This is our starting point in sums over directions
+<<Start $\mu$ sum>>=
+(define mdwf-start-sum-dimension 3)
+(define mdwf-start-sum-direction 'plus)
+@
+
+<<Project $(1-\gamma_3)$>>=
+((project 3 minus) . ((plus-one 0 minus-one 2)
+	   	      (plus-one 1 minus-one 3)))
+@
+<<Unproject $(1-\gamma_3)$>>=
+((unproject 3 minus) . ((plus-one 0)
+	     	        (plus-one 1)
+		        (minus-one 0)
+		        (minus-one 1)))
+@
+\pagebreak\section{Preconditioning}
+We use four dimensional preconditioner to improve convergence of the CG.
+Following Kostas Orginos, let us color the lattice sites according to the
+parity of $x_0+x_1+x_2+x_3$. Then we can rewrite $D_{DW}$ from Eq.~(\ref{D_DW})
+as follows:
+\begin{equation}\label{EO-form}
+D_{DW}=\left(\begin{array}{cc}
+A_{oo} & F_{oe}B_{ee}\\
+F_{eo}B_{oo} & A_{ee}
+\end{array}\right),
+\end{equation}
+where
+\begin{eqnarray}
+A_{oo}(x,x') & = &\left\{(c_5(s)(M_5+4)-1)\left[P_{+}\delta_{s,s'+1}
+       - mP_{+}\delta_{s,0}\delta_{s',L_s-1}
+              +P_{-}\delta_{s,s'-1}
+       -mP_{-}\delta_{s,L_s-1}\delta_{s',0}\right]\right.\nonumber\\
+      && \left.+(b_5(s)(M_5+4)+1)\delta_{s,s'}\right\}\delta_{x,x'},\\
+B_{oo}(x,x') & = & -\left\{\frac{c_5(s)}{2}\left[P_{+}\delta_{s,s'+1}
+     - mP_{+}\delta_{s,0}\delta_{s',L_s-1}
+                +P_{-}\delta_{s,s'-1}
+       -mP_{-}\delta_{s,L_s-1}\delta_{s',0}\right]+
+       \frac{b_5(s)}{2}\delta_{s,s'}\right\}\delta_{x,x'},\\
+F_{oe}(x,x') &=&\delta_{s,s'}
+            \sum_{\mu=0}^{3}\left[(1-\gamma_\mu)U_\mu(x)\delta_{x,x'-\hat\mu}
+         +(1+\gamma_\mu)U_\mu^{\dagger}(x-\hat\mu)\delta_{x,x'+\hat\mu}\right],
+\end{eqnarray}
+and similary for other parity components. (On the LHS $x$ and $x'$ are 5-d
+indices, hereafter spinor and color indices are suppressed but presumed.)
+
+Let us rewrite Eq.~(\ref{EO-form}) as follows:
+\begin{equation}
+D_{DW}=
+\left(\begin{array}{cc}
+I_{oo} & 0\\
+F_{eo}B_{oo}A_{oo}^{-1} & A_{ee}B_{ee}^{-1}
+\end{array}\right)
+\left(\begin{array}{cc}
+A_{oo} & F_{oe}\\
+0 & I_{ee}-B_{ee}A_{ee}^{-1}F_{eo}B_{oo}A_{oo}^{-1}F_{oe}
+\end{array}\right)
+\left(\begin{array}{cc}
+I_{oo} & 0\\
+0 & B_{ee}
+\end{array}\right).
+\end{equation}
+
+To solve the equation
+\[
+D_{DW}\psi=
+\left(\begin{array}{cc}
+A_{oo} & F_{oe}B_{ee}\\
+F_{eo}B_{oo} & A_{ee}
+\end{array}\right)
+\left(\begin{array}{c}\psi_e\\\psi_o\end{array}\right) =
+   \left(\begin{array}{c}\eta_e\\\eta_o\end{array}\right),
+\]
+one performs the following steps:
+\begin{enumerate}
+\item Compute
+\[
+\phi_o = B_{ee}A_{ee}^{-1}\left(\eta_o - F_{eo}B_{oo}A_{oo}^{-1}\eta_e\right).
+\]
+\item Use $M=I_{ee}-B_{ee}A_{ee}^{-1}F_{eo}B_{oo}A_{oo}^{-1}F_{oe}$ in the
+following.
+\item Compute
+\[
+\varphi_o = M^{\dagger}\phi_o.
+\]
+where $M^\dagger=I_{ee}-\left(F_{oe}\right)^\dagger
+\left(A_{oo}^{-1}\right)^\dagger
+\left(B_{oo}\right)^\dagger
+\left(F_{eo}\right)^\dagger
+\left(A_{ee}^{-1}\right)^\dagger
+\left(B_{ee}\right)^\dagger$.
+\item Solve
+\[
+M^{\dagger}M\xi_o = \varphi_o
+\]
+for $\xi_o$ using Alg.~\ref{real}.
+\item Compute
+\begin{eqnarray*}
+\psi_e &=& A_{oo}^{-1}\left(\eta_e-F_{oe}\xi_o\right),\\
+\psi_o &=& B_{ee}^{-1}\xi_o.
+\end{eqnarray*}
+\end{enumerate}
+
+\section{Inverting $A$ and $B$}
+Note that $A$ and $B$ have the following form:
+\begin{eqnarray}
+A(x,x') &=& \left[A_{+}(s,s')P_{+}+A_{-}(s,s')P_{-}\right]\delta_{x,x'}\\
+B(x,x') &=& \left[B_{+}(s,s')P_{+}+B_{-}(s,s')P_{-}\right]\delta_{x,x'}
+\end{eqnarray}
+where
+\begin{eqnarray}
+\label{A+}
+A_{+}(s,s') & = &u_\alpha(s)\delta_{s,s'+1}
+                  +v_\alpha(s)\delta_{s,0}\delta_{s',L_s-1}
+                  +w_\alpha(s)\delta_{s,s'},\\
+\label{A-}
+A_{-}(s,s') & = &u_\alpha(s)\delta_{s,s'-1}
+                  +v_\alpha(s)\delta_{s,L_s-1}\delta_{s',0}
+                  +w_\alpha(s)\delta_{s,s'},\\
+\label{B+}
+B_{+}(s,s') & = &u_\beta(s)\delta_{s,s'+1}
+                  +v_\beta(s)\delta_{s,0}\delta_{s',L_s-1}
+                  +w_\beta(s)\delta_{s,s'},\\
+\label{B-}
+B_{-}(s,s') & = &u_\beta(s)\delta_{s,s'-1}
+                  +v_\beta(s)\delta_{s,L_s-1}\delta_{s',0}
+                  +w_\beta(s)\delta_{s,s'};
+\end{eqnarray}
+and
+\begin{eqnarray}
+u_\alpha(s) &=&c_5(s)(M_5+4)-1,\\
+v_\alpha(s)  &=&-mu_\alpha(s),\\
+w_\alpha(s) &=&b_5(s)(M_5+4)+1,\\
+u_\beta(s) &=&-c_5(s)/2,\\
+v_\beta(s)  &=&-mu_\beta(s),\\
+w_\beta(s) &=&-b_5(s)/2.
+\end{eqnarray}
+
+This allows us to invert $A$ and $B$ as follows.
+
+For $A_{+}$ one has (formulae for $B_{+}$ are obtained by replacing
+$\alpha$ with $\beta$, see Eqs.~(\ref{A+}) and~(\ref{B+})):
+\begin{equation}
+A_{+} = A_{L+} A_{X+} = A_{Y+} A_{L+} = 
+\left(\begin{array}{cccccc}
+ w_\alpha(0) & 0 & 0 & \cdots & 0 & -m u_\alpha(0)\\
+ u_\alpha(1) & w_\alpha(1) & 0 & \cdots & 0 & 0\\
+ 0 & u_\alpha(2) & w_\alpha(2) & \cdots & 0 & 0\\
+ \vdots & \vdots & \vdots & \ddots & \vdots & \vdots \\
+ 0 & 0 & 0 & \cdots & w_\alpha(L_s-2) & 0\\
+ 0 & 0 & 0 & \cdots & u_\alpha(L_s-1) & w_\alpha(L_s-1)
+\end{array}\right),
+\end{equation}
+\begin{equation}
+A_{L+} =
+\left(\begin{array}{cccccc}
+ w_\alpha(0) & 0 & 0 & \cdots & 0 & 0\\
+ u_\alpha(1) & w_\alpha(1) & 0 & \cdots & 0 & 0\\
+ 0 & u_\alpha(2) & w_\alpha(2) & \cdots & 0 & 0\\
+ \vdots & \vdots & \vdots & \ddots & \vdots & \vdots  \\
+ 0 & 0 & 0 & \cdots & w_\alpha(L_s-2) & 0\\
+ 0 & 0 & 0 & \cdots & u_\alpha(L_s-1) & w_\alpha(L_s-1)
+\end{array}\right),
+\end{equation}
+\begin{equation}
+A_{X+} =
+\left(\begin{array}{cccccc}
+1 & 0 & 0 & \cdots & 0 & -m\frac{u_\alpha(0)}{w_\alpha(0)}\\
+0 & 1 & 0 & \cdots & 0 &
+   m\frac{u_\alpha(0)u_\alpha(1)}{w_\alpha(0)w_\alpha(1)}\\
+0 & 0 & 1 & \cdots & 0 &
+ -m\frac{u_\alpha(0)u_\alpha(1)u_\alpha(2)}{w_\alpha(0)w_\alpha(1)w_\alpha(2)}\\
+\vdots & \vdots & \vdots& \ddots & \vdots & \vdots \\
+0 & 0 & 0 & \cdots & 1 &
+ m \prod_{k=0}^{L_s-2}\left(-\frac{u_\alpha(k)}{w_\alpha(k)}\right) \\
+0 & 0 & 0 & \cdots & 0 &
+ 1 + m \prod_{k=0}^{L_s-1}\left(-\frac{u_\alpha(k)}{w_\alpha(k)}\right) \\
+\end{array}\right),
+\end{equation}
+\begin{equation}
+A_{Y+} =
+\left(\begin{array}{ccccc}
+1
+  -\frac{mu_\alpha(0)}{w_\alpha(L_s-1)}
+           \prod_{k=1}^{L_s-1}\left(-\frac{u_\alpha(k)}{w_\alpha(k-1)}\right)
+ &
+  -\frac{mu_\alpha(0)}{w_\alpha(L_s-1)}
+           \prod_{k=2}^{L_s-1}\left(-\frac{u_\alpha(k)}{w_\alpha(k-1)}\right)
+ & \cdots
+ & -\frac{mu_\alpha(0)}{w_\alpha(L_s-1)}\frac{-u_\alpha(L_s-1)}{w_\alpha(L_s-2)}
+ & -\frac{mu_\alpha(0)}{w_\alpha(L_s-1)}\\
+0 & 1 & \cdots & 0 & 0 \\
+\vdots & \vdots& \ddots & \vdots & \vdots \\
+0 & 0 & \cdots & 1 & 0 \\
+0 & 0 & \cdots & 0 & 1 
+\end{array}\right),
+\end{equation}
+%R_{A+}(s,s')&=&\delta_{s,s'}+m\delta_{s',L_s-1}\prod_{k=0}^{s}\left(
+%     -\frac{u_\alpha(k)}{w_\alpha(k)}
+%     \right).
+%
+%It is convenient to present recursive definitions of $R_{A+}$ and its inverse
+%\begin{eqnarray}
+%\left(R_{A+}\right)_{kl} &=&\left\{\begin{array}{ll}
+%\delta_{kl}, & l < L_s-1\\
+%-m\frac{u_\alpha(0)}{w_\alpha(0)}, & k=0,\quad l=L_s-1\\
+%\delta_{kl}-\frac{u_\alpha(k)}{w_\alpha(k)}\left(R_{A+}\right)_{k-1,l}, &
+%            k>0,\quad l=L_s-1
+%\end{array}\right.,\\
+%\left(R_{A+}^{-1}\right)_{kl} &=&\left\{\begin{array}{ll}
+%\delta_{kl}, & l < L_s-1\\
+%1/\left(R_{A+}\right)_{kl}, & k=L_s-1, \quad l=L_s-1\\
+%-\left(R_{A+}\right)_{kl}/\left(R_{A+}\right)_{ll}, & k
+%               < L_s-1,\quad l=L_s-1
+%\end{array}\right..
+%\end{eqnarray}
+%
+%Note that $L_{A+}$ is lower triangular and therefore computing
+% $L_{A+}^{-1}\psi$ is easy.
+
+\pagebreak
+For $A_{-}$ we have the following (once again, $B_{-}$ is similar.)
+\begin{equation}
+A_{-} = A_{L-} A_{X-} = A_{Y-} A_{L-} = 
+\left(\begin{array}{cccccc}
+ w_\alpha(0) & u_\alpha(0) & 0 & \cdots & 0 & 0\\
+ 0 & w_\alpha(1) & u_\alpha(1) & \cdots & 0 & 0\\
+ 0 & 0 & w_\alpha(2) & \cdots & 0 & 0\\
+ \vdots & \vdots & \vdots & \ddots & \vdots & \vdots \\
+ 0 & 0 & 0 & \cdots & w_\alpha(L_s-2) & u_\alpha(L_s-2)\\
+ -mu_\alpha(L_s-1) & 0 & 0 & \cdots & 0 & w_\alpha(L_s-1)
+\end{array}\right),
+\end{equation}
+\begin{equation}
+A_{L-} =
+\left(\begin{array}{cccccc}
+ w_\alpha(0) & u_\alpha(0) & 0 & \cdots & 0 & 0\\
+ 0 & w_\alpha(1) & u_\alpha(1) & \cdots & 0 & 0\\
+ 0 & 0 & w_\alpha(2) & \cdots & 0 & 0\\
+ \vdots & \vdots & \vdots & \ddots & \vdots & \vdots \\
+ 0 & 0 & 0 & \cdots & w_\alpha(L_s-2) & u_\alpha(L_s-2)\\
+ 0 & 0 & 0 & \cdots & 0 & w_\alpha(L_s-1)
+\end{array}\right),
+\end{equation}
+\begin{equation}
+A_{X-} = \left(\begin{array}{cccccc}
+1+m\prod_{k=0}^{L_s-1}\left(-\frac{u_\alpha(k)}{w_\alpha(k)}\right)
+   & 0 & 0 &\cdots& 0 & 0 \\
+m\prod_{k=1}^{L_s-1}\left(-\frac{u_\alpha(k)}{w_\alpha(k)}\right)
+   & 1 & 0 &\cdots& 0 & 0 \\
+m\prod_{k=2}^{L_s-1}\left(-\frac{u_\alpha(k)}{w_\alpha(k)}\right)
+   & 0 & 1 &\cdots& 0 & 0 \\
+\vdots & \vdots & \vdots & \ddots & \vdots & \vdots \\
+m\frac{u_\alpha(L_s-2)u_\alpha(L_s-1)}{w_\alpha(L_s-2)w_\alpha(L_s-1)}
+   & 0 & 0 &\cdots& 1 & 0 \\
+-m\frac{u_\alpha(L_s-1)}{w_\alpha(L_s-1)}
+   & 0 & 0 &\cdots& 0 & 1
+\end{array}\right),
+\end{equation}
+\begin{equation}
+A_{Y-} = \left(\begin{array}{ccccc}
+1 & 0 & \cdots & 0 & 0 \\
+0 & 1 & \cdots & 0 & 0 \\
+\vdots & \vdots & \ddots & \vdots & \vdots \\
+0 & 0 & \cdots & 1 & 0 \\
+-\frac{mu_\alpha(L_s-1)}{w_\alpha(0)} &
+-\frac{mu_\alpha(L_s-1)}{w_\alpha(0)}\frac{u_\alpha(0)}{w_\alpha(1)} &
+\cdots &
+-\frac{mu_\alpha(L_s-1)}{w_\alpha(0)}\prod_{k=0}^{L_s-3}
+     \frac{u_\alpha(k)}{w_\alpha(k+1)} &
+1-\frac{mu_\alpha(L_s-1)}{w_\alpha(0)}\prod_{k=0}^{L_s-2}
+     \frac{u_\alpha(k)}{w_\alpha(k+1)}
+\end{array}\right),
+\end{equation}
+%R_{A-}(s,s')&=&\delta_{s,s'}+
+%   (-1)^{L_s-1-s}\left(\frac{v_\alpha\prod_{k=s}^{L_s-2}u_\alpha(k)}
+%                  {\prod_{k=s}^{L_s-1}w_\alpha(k)}\right)
+%   \delta_{s',0}.
+%
+%Recurisive formulae for $R_{A-}$ and $R_{A-}^{-1}$ are
+%\begin{eqnarray}
+%\left(R_{A-}\right)_{kl} &=&\left\{\begin{array}{ll}
+%\delta_{kl},&l>0\\
+%\frac{v_\alpha}{w_\alpha(k)},&k=L_s-1,\quad l=0\\
+%\delta_{kl}-\frac{u_\alpha(k)}{w_\alpha(k)}\left(R_{A-}\right)_{k+1,l},&
+%   k<L_s-1,\quad l=0
+%\end{array}\right.,\\
+%\left(R_{A-}^{-1}\right)_{kl} &=&\left\{\begin{array}{ll}
+%\delta_{kl},& l > 0\\
+%1/\left(R_{A-}\right)_{kl},& k=0,\quad l=0\\
+%-\left(R_{A-}\right)_{kl}/\left(R_{A-}\right)_{ll},&
+%   k>0,\quad l=0
+%\end{array}\right..
+%\end{eqnarray}
+%
+%This time, $L_{A-}$ is upper triangular and computing $L_{A-}^{-1}\psi$
+%is simple.
+
+\section{Combinations of $A$ and $B$}
+With the notations above one can write other $s$-pieces we need:
+\begin{eqnarray}
+A^{-1} & = & A_{X+}^{-1}A_{L+}^{-1}P_{+}+A_{X-}^{-1}A_{L-}^{-1}P_{-}\\
+A^{-1} & = & A_{L+}^{-1}A_{Y+}^{-1}P_{+}+A_{L-}^{-1}A_{Y-}^{-1}P_{-}\\
+B^{-1} & = & B_{X+}^{-1}B_{L+}^{-1}P_{+}+B_{X-}^{-1}B_{L-}^{-1}P_{-}\\
+B^{-1} & = & B_{L+}^{-1}B_{Y+}^{-1}P_{+}+B_{L-}^{-1}B_{Y-}^{-1}P_{-}\\
+A_{+} & = & A_{L+} A_{X+} \\
+A_{+} & = & A_{Y+} A_{L+} \\
+A_{-} & = & A_{L-} A_{X-} \\
+A_{-} & = & A_{Y-} A_{L-} \\
+B_{+} & = & B_{L+} B_{X+} \\
+B_{+} & = & B_{Y+} B_{L+} \\
+B_{-} & = & B_{L-} B_{X-} \\
+B_{-} & = & B_{Y-} B_{L-} \\
+A^\dagger &=& A_{+}^\dagger P_{+}+ A_{-}^\dagger P_{-}\\
+B^\dagger &=& B_{+}^\dagger P_{+}+ B_{-}^\dagger P_{-}\\
+\end{eqnarray}
+
+\chapter{ALGORITHMS}
+In this chapter we assume that $A=M^\dagger M$.
+\section{Conjugate gradient}
+The equation
+\[
+   A x = b
+\]
+can be solve by the conjugate gradient method if the condition number of A is
+small enough.
+\incmargin{20pt}
+\begin{algorithm}
+\SetKwData{Input}{input}
+\KwIn{$M$, the matrix}
+\KwIn{$b$, the right hand side of the linear equation}
+\KwIn{$x_0$, an initial guess}
+\KwIn{$n$, the maximum number of iterations}
+\KwIn{$\epsilon$, required precision}
+\KwOut{$x$, approximate solution}
+\KwOut{$\rho$, final residue}
+\KwOut{$k$, number of iterations used}
+\SetKw{Break}{break}
+\dontprintsemicolon
+\Begin{
+  $x\leftarrow x_0$\;
+  $p\leftarrow r\leftarrow b - M^{\dagger}Mx$\;
+  $\rho\leftarrow\langle r,r\rangle$\;
+  $k\leftarrow 0$\;
+  \While{$\rho>\epsilon$ or $k < n$}{
+    $z\leftarrow Mp$\;
+    $q\leftarrow M^{\dagger}z$\;
+    $\alpha\leftarrow \rho/\langle z,z\rangle$\;
+    $r\leftarrow r-\alpha q$\;
+    $x\leftarrow x+\alpha p$\;
+    $\gamma\leftarrow \langle r,r\rangle$\;
+    \If{$\gamma<\epsilon$}{$\rho\leftarrow\gamma$\; \Break}
+    $\beta\leftarrow\gamma/\rho$\;
+    $\rho\leftarrow\gamma$\;
+    $p\leftarrow r+\beta p$\;
+    $k\leftarrow k+1$\;
+  }
+  \Return {$x$, $\rho$, $k$}.
+}
+\caption{\label{real}Conjugate Gradient Solver.}
+\end{algorithm}
+\decmargin{20pt}
+
+\section{Shifted Conjugate Gradient}
+We also need the ability to solve equations $(A+\sigma_n I)x_n = b$
+for several $\sigma_n$ and the same RHS $b$. It is possible to do this with
+little extra work because Krylov's spaces of $A$ and $A+\sigma_n I$ are the
+same. We assume that the solution of $Ax=b$ is also needed and that all
+ $\sigma_n>0$. Under these assumptions the following algorithm could be used.
+
+For the details of the algorithm see van~der~Eshof and Sleijpen,~2003.
+
+Notice that SCG always starts with $x_0=0$.
+
+\incmargin{20pt}
+\begin{algorithm}
+\SetKwData{Input}{input}
+\KwIn{$M$, the matrix}
+\KwIn{$\sigma[m]$, the vector of shifts}
+\KwIn{$b$, the right hand side}
+\KwIn{$n$, the maximal number of iterations}
+\KwIn{$\epsilon$, required precision for $\sigma=0$}
+\KwOut{$x[m]$, vector of approximate solutions}
+\KwOut{$x$, approximate solution for $\sigma=0$}
+\KwOut{$\rho$, final residue for $\sigma=0$}
+\KwOut{$k$, number of iterations used}
+\SetKw{Break}{break}
+\dontprintsemicolon
+\Begin{
+  $k\leftarrow 0$\;
+  $x\leftarrow 0$\;
+  $r \leftarrow p \leftarrow b$\;
+  $\rho \leftarrow \langle r,r \rangle$\;
+  $\alpha_{-1}\leftarrow 1$\;
+  $\beta_{-1}\leftarrow 1$\;
+  \lForEach{$i$}{$x[i]\leftarrow 0$\;}
+  \lForEach{$i$}{$p[i]\leftarrow r$\;}
+  \lForEach{$i$}{$\delta_{-1}[i]\leftarrow\delta_{0}[i]\leftarrow 1$\;}
+  \While{$k < n$}{
+    $q\leftarrow M^\dagger M p$\;
+    $\alpha\leftarrow \rho/\langle q,p\rangle$\;
+    $x\leftarrow x + \alpha * p$\;
+    \lForEach{$i$}{$\delta_{1}[i]\leftarrow \delta_{0}[i]*(1+\alpha*\sigma[i])+
+               \alpha*\beta_{-1}*(\delta_{0}[i]-\delta_{-1}[i])/\alpha_{-1}$\;}
+    \lForEach{$i$}{$x[i]\leftarrow x[i] + (\alpha / \delta_1[i]) * p[i]$\;}
+    $r\leftarrow r - \alpha * q$\;
+    $\gamma \leftarrow \langle r,r \rangle$\;
+    $\beta\leftarrow\gamma/\rho$\;
+    $\rho\leftarrow\gamma$\;
+    \lIf{$\rho<\epsilon$}{\Break\;}
+    $p\leftarrow r + \beta * p$\;
+    \lForEach{$i$}{$p[i]\leftarrow r+(\beta*\delta_0[i]/\delta_{1}[i])*p[i]$\;}
+    \lForEach{$i$}{$\delta_{-1}[i]\leftarrow\delta_{0}[i]$\;}
+    \lForEach{$i$}{$\delta_{0}[i]\leftarrow\delta_{1}[i]$\;}
+    $\beta_{-1}\leftarrow\beta$\;
+    $\alpha_{-1}\leftarrow\alpha$\;
+    $k\leftarrow k+1$\;
+  }
+  \Return {$x[m]$,$x$, $\rho$, $k$}.
+}
+\caption{\label{shifted}Shifted Conjugate Gradient Solver.}
+\end{algorithm}
+\decmargin{20pt}
+
+\chapter{INTERFACE}
+The MDWF interface is fully functional to isolate users of the code from
+implementation details. Several types defined in the interface provide help
+with typechecking.
+<<File [[qop-mdwf3.h]]>>=
+#ifndef QOP_MDWF_0bd50d0caeec4311a0d7c183032c43c2
+#define `QOP_MDWF_0bd50d0caeec4311a0d7c183032c43c2
+<<Interface macros>>
+<<Interface types>>
+<<Interface functions>>
+#if defined(QOP_MDWF_DEFAULT_PRECISION) && (QOP_MDWF_DEFAULT_PRECISION == 'F')
+<<Single precision defaults>>
+#endif
+#if defined(QOP_MDWF_DEFAULT_PRECISION) && (QOP_MDWF_DEFAULT_PRECISION == 'D')
+<<Double precision defaults>>
+#endif
+#endif
+@
+
+\section{Magic numbers}
+The numbers below are provided as names for magic numbers in the code. They can
+not be safely changed.
+
+First, the dimension is always four:
+<<Interface macros>>=
+#define `QOP_MDWF_DIM 4
+@
+
+Next, the number of components in the Dirac fermion and the projected fermion
+<<Interface macros>>=
+#define `QOP_MDWF_FERMION_DIM 4
+#define `QOP_MDWF_PROJECTED_FERMION_DIM 2
+@
+
+We work only with $SU(3)$
+<<Interface macros>>=
+#define `QOP_MDWF_COLORS 3
+@
+
+\section{Library version}
+The following function returns a version of the library. The goal is to
+provide enough information to uniquely identify library's version. Since
+there are many features packed into the library, a human-readable string is
+returned.
+<<Interface functions>>=
+const char *QOP_MDWF_version(void);
+@
+
+\section{Performance monitoring}
+Each interface function records its exectution time and number of floating point
+operations in the [[State]] structure. These numbers are accessed via the
+following function. Only data on the current node is recorded.
+<<Interface functions>>=
+void QOP_MDWF_performance(double *time_sec,
+                          long long *flops,
+                          long long *sent,
+                          struct QOP_MDWF_State *state);
+@
+
+\section{Initialization}
+All library state is incapsulated into an opaque structure. We do not need
+to expose any components of the structure to the user.
+<<Interface types>>=
+struct `QOP_MDWF_State;
+@
+
+We also need an opaque type for parameters of the domain wall action.
+<<Interface types>>=
+struct `QOP_MDWF_Parameters;
+@
+
+The library initialization routine creates the starte structure and fills it
+with necessary information. It returns [[0]] if successful and a non-zero value
+otherwise. In any case [[state_ptr]] is set to some value suitable for other
+library functions.
+<<Interface functions>>=
+int `QOP_MDWF_init(struct QOP_MDWF_State **state_ptr,
+                  const int lattice[QOP_MDWF_DIM + 1],
+                  const int network[QOP_MDWF_DIM],
+		  const int node[QOP_MDWF_DIM],
+	          int master_p,
+                  void (*sublattice)(int lo[],
+	                             int hi[],
+                                     const int node[],
+                                     void *env),
+                  void *env);
+@
+Arguments of [[init()]] are
+\begin{itemize}
+\item[\texttt{state\_ptr}] points to the [[State]] to be set.
+\item[\texttt{lattice}] 5--d lattice geometry. $L_s$ is [[lattice[4]]].
+\item[\texttt{network}] 4--d network geometry. Each element should be positive.
+\item[\texttt{node}] 4--d address of this node.
+\item[\texttt{master\_p}] is zero on the master node, nonzero otherwise.
+\item[\texttt{sublattice}] Function giving sublattice dimensions on an arbitrary node.
+\item[\texttt{env}] Common environment for [[sublattice()]].
+\end{itemize}
+
+When [[QOP_MDWF_init()]] returns, [[*state_ptr]] will point to a valid
+state of the library (if any error occurs during initialization, the
+error will be stored in [[*ptr]]. The [[lattice[]]] provides the total
+lattice size, and [[sublattice]] is a pointer to a function that given
+a node number [[node]] and the dimention index [[dim]] returns in
+[[lo]] and [[hi]] the sublattice coordinates local to the [[node]], in
+effect saying that the local sublattice starts at [[x[dim]=lo]] and
+ends at [[x[dim]=hi-1]].
+
+It is possible to call [[QOP_MDWF_init()]] multiple times with different
+arguments. The library does not require that the lattice size and layout agree
+in different calls.
+
+\section{Cleanup}
+When the state is no longer needed it should be closed by the following function
+<<Interface functions>>=
+void `QOP_MDWF_fini(struct QOP_MDWF_State **state_ptr);
+@
+It is an error to use [[*state_ptr]] after it was closed. To help in error
+detection this function sets [[*state_ptr]] to [[NULL]]. All library functions
+check if the state they are passed is [[NULL]] and abort if it is.
+
+\section{Errors}
+When something goes wrong in the library, a library function will return some
+non-zero value and store the error code in the library state. The error codes
+are accessible as human-readable strings via the following function:
+<<Interface functions>>=
+const char *`QOP_MDWF_error(struct QOP_MDWF_State *state);
+@
+Note that the first error will be latched until [[QOP_MDWF_error()]] is called.
+This is a design choice made to help in pinpointing the origin of the problem
+when something goes wrong intead of reporting spiritious errors if multiple
+calls to the library are made before an error is checked for. If there is no
+error, [[QOP_MDWF_error()]] returns [[NULL]]. The function could be called
+multiple times, it does not reset the error code, instead it marks in the state
+that the error was reported thus allowing latching another error.
+
+\section{Parameter setting}
+Following functions set parameters of the MDWF into the state. These functions
+allocate [[QOP_MDWF_Parameters]] structure.
+<<Interface functions>>=
+int `QOP_MDWF_set_generic(struct QOP_MDWF_Parameters **param_ptr,
+                         struct QOP_MDWF_State *state,
+                         const double b_5[],
+                         const double c_5[],
+                         double M_5,
+                         double m);
+@
+
+As a convenience, specialized setups are provided as well.
+For M\"obius fermions, $b_5(s) + c_5(s)=\kappa$:
+<<Interface functions>>=
+int `QOP_MDWF_set_Moebius(struct QOP_MDWF_Parameters **param_ptr,
+                         struct QOP_MDWF_State *state,
+                         const double b_5[],
+                         double kappa,
+                         double M_5,
+                         double m);
+@
+
+For Shamir fermions, $b_5(s)=a_5$, $c_5=0$:
+<<Interface functions>>=
+int `QOP_MDWF_set_Shamir(struct QOP_MDWF_Parameters **param_ptr,
+                        struct QOP_MDWF_State *state,
+                        double a_5,
+                        double M_5,
+                        double m);
+@
+
+For Bori\c ci, $b_5(s)=c_5(s)=a_5$:
+<<Interface functions>>=
+int `QOP_MDWF_set_Borichi(struct QOP_MDWF_Parameters **param_ptr,
+                         struct QOP_MDWF_State *state,
+                         double a_5,
+                         double M_5,
+                         double m);
+@
+
+For Neff, $b_5(s)-c_5(s)=a_5$, $b_5(s)-c_5(s)=\kappa$:
+<<Interface functions>>=
+int `QOP_MDWF_set_Neff(struct QOP_MDWF_Parameters **param_ptr,
+                      struct QOP_MDWF_State *state,
+                      double a_5,
+                      double kappa,
+                      double M_5,
+                      double m);
+@
+We also provide a corresponding destructor for [[QOP_MDWF_Parameters]]. This
+function will write [[NULL]] back to the pointer to help in bug detection.
+<<Interface functions>>=
+void `QOP_MDWF_free_parameters(struct QOP_MDWF_Parameters **param_ptr);
+@
+
+\section{Gauge}
+Any gauge field should be imported into the library format before it could
+be used. To keep the interface as general as possible, we use a query function
+approach for inport. There are two versions of [[QOP_MDWF_import_gauge]], one
+for double precision, another for single precision.
+<<Interface functions>>=
+int `QOP_F3_MDWF_import_gauge(struct QOP_F3_MDWF_Gauge **gauge_ptr,
+                             struct QOP_MDWF_State *state,
+                             double (*reader)(int dir,
+                                              const int pos[4],
+                                              int a,
+                                              int b,
+                                              int re_im,
+                                              void *env),
+                             void *env);
+int `QOP_D3_MDWF_import_gauge(struct QOP_D3_MDWF_Gauge **gauge_ptr,
+                             struct QOP_MDWF_State *state,
+                             double (*reader)(int dir,
+                                              const int pos[4],
+                                              int a,
+                                              int b,
+                                              int re_im,
+                                              void *env),
+			     void *env);
+@
+The [[reader()]] points to a function that provides a value of the gauge field
+at a given point on the lattice, e.g., it returns the value of
+[[U[dir][pos][a][b].re]] for [[re_im==0]] and 
+[[U[dir][pos][a][b].im]] for [[re_im==1]]. If will be called only for [[pos]] in
+a local sublattice. The [[reader()]] function is passed the [[env]] parameter
+that may be used to access the guage field from the outer space.  The [[env]]
+parameter is not used by [[import_gauge()]] functions for any other purpose.
+
+If the function succeeds then the [[*gauge_ptr]] will be initialized to a value
+that may be passed to other library functions. If something goes wrong,
+[[*gauge_ptr]] will be set to [[NULL]].
+
+Here are corresponding opaque types:
+<<Interface types>>=
+struct `QOP_F3_MDWF_Gauge;
+struct `QOP_D3_MDWF_Gauge;
+@
+
+We also need a couple of destructors for gauge fields. For convenience, they
+will accept [[NULL]] intead of a valid gauge field.
+<<Interface functions>>=
+void `QOP_F3_MDWF_free_gauge(struct QOP_F3_MDWF_Gauge **gauge_ptr);
+void `QOP_D3_MDWF_free_gauge(struct QOP_D3_MDWF_Gauge **gauge_ptr);
+@
+
+Here are macros defining default values for gauge field types and functions:
+<<Single precision defaults>>=
+#define `QOP_MDWF_import_gauge QOP_F3_MDWF_import_gauge
+#define `QOP_MDWF_free_gauge QOP_F3_MDWF_free_gauge
+#define `QOP_MDWF_Gauge QOP_F3_MDWF_Gauge
+@
+<<Double precision defaults>>=
+#define `QOP_MDWF_import_gauge QOP_D3_MDWF_import_gauge
+#define `QOP_MDWF_free_gauge QOP_D3_MDWF_free_gauge
+#define `QOP_MDWF_Gauge QOP_D3_MDWF_Gauge
+@
+
+\section{Fermions}
+Unlike the gauge field, fermions are provided with a richer set of functions.
+In addition to import and destruction, they could be created empty and exported.
+<<Interface functions>>=
+int `QOP_F3_MDWF_import_fermion(struct QOP_F3_MDWF_Fermion **fermion_ptr,
+                               struct QOP_MDWF_State *state,
+                               double (*reader)(const int pos[5],
+                                                int color,
+                                                int dirac,
+                                                int re_im,
+                                                void *env),
+                               void *env);
+int `QOP_D3_MDWF_import_fermion(struct QOP_D3_MDWF_Fermion **fermion_ptr,
+                               struct QOP_MDWF_State *state,
+                               double (*reader)(const int pos[5],
+                                                int color,
+                                                int dirac,
+                                                int re_im,
+                                                void *env),
+                               void *env);
+@
+The [[reader()]] points to a function that provides a value of the fermion field
+at a given point on the lattice, e.g., it returns the value of
+[[F[pos][color][dirac].re]] for [[re_im==0]] and 
+[[F[pos][color][dirac].im]] for [[re_im==1]].
+If will be called only for [[pos]] in
+a local sublattice. The [[env]] parameter
+is passed blindly to the [[reader()]] without any interpretation whatsoever. It
+could be used to access the fermion field from the outer space or for any other
+purpose.
+
+If the function succeeds then the [[*fermion_ptr]] will be initialized to a
+value that may be passed to other library functions. If something goes wrong,
+[[*fermion_ptr]] will be set to [[NULL]].
+
+Here are corresponding opaque types:
+<<Interface types>>=
+struct `QOP_F3_MDWF_Fermion;
+struct `QOP_D3_MDWF_Fermion;
+@
+
+One may also need to create a fermion field without any useful initial value.
+For convenience, we provide functions to do that
+<<Interface functions>>=
+int `QOP_F3_MDWF_allocate_fermion(struct QOP_F3_MDWF_Fermion **fermion_ptr,
+                                 struct QOP_MDWF_State *state);
+int `QOP_D3_MDWF_allocate_fermion(struct QOP_D3_MDWF_Fermion **fermion_ptr,
+                                 struct QOP_MDWF_State *state);
+@
+
+Unlike the gauge fields, fermions need a way to be exported back to the user.
+We also use a functional interface to provide indexing.
+<<Interface functions>>=
+int `QOP_F3_MDWF_export_fermion(void (*writer)(const int pos[5],
+                                              int color,
+                                              int dirac,
+                                              int re_im,
+                                              double value,
+                                              void *env),
+                               void *env,
+                               const struct QOP_F3_MDWF_Fermion *fermion);
+int `QOP_D3_MDWF_export_fermion(void (*writer)(const int pos[5],
+                                              int color,
+                                              int dirac,
+                                              int re_im,
+                                              double value,
+                                              void *env),
+                               void *env,
+                               const struct QOP_D3_MDWF_Fermion *fermion);
+@
+
+We also need a couple of destructors for fermion fields. For convenience, they
+will accept [[NULL]] intead of a valid fermion field.
+<<Interface functions>>=
+void `QOP_F3_MDWF_free_fermion(struct QOP_F3_MDWF_Fermion **fermion_ptr);
+void `QOP_D3_MDWF_free_fermion(struct QOP_D3_MDWF_Fermion **fermion_ptr);
+@
+
+Finally, macros for prefered precision
+<<Single precision defaults>>=
+#define `QOP_MDWF_import_fermion QOP_F3_MDWF_import_fermion
+#define `QOP_MDWF_export_fermion QOP_F3_MDWF_export_fermion
+#define `QOP_MDWF_allocate_fermion QOP_F3_MDWF_allocate_fermion
+#define `QOP_MDWF_free_fermion QOP_F3_MDWF_free_fermion
+#define `QOP_MDWF_Fermion QOP_F3_MDWF_Fermion
+@
+<<Double precision defaults>>=
+#define `QOP_MDWF_import_fermion QOP_D3_MDWF_import_fermion
+#define `QOP_MDWF_export_fermion QOP_D3_MDWF_export_fermion
+#define `QOP_MDWF_allocate_fermion QOP_D3_MDWF_allocate_fermion
+#define `QOP_MDWF_free_fermion QOP_D3_MDWF_free_fermion
+#define `QOP_MDWF_Fermion QOP_D3_MDWF_Fermion
+@
+
+\section{Preconditioned fermions}
+We also need preconditioned fermions. They exist in parallel to full fermions
+but the exact relation is not specified.
+Unlike the gauge field, fermions are provided with a richer set of functions.
+In addition to import and destruction, they could be created empty and exported.
+<<Interface functions>>=
+int `QOP_F3_MDWF_import_half_fermion(struct QOP_F3_MDWF_HalfFermion **hfermion_ptr,
+                                    struct QOP_MDWF_State *state,
+                                    double (*reader)(const int pos[5],
+                                                     int color,
+                                                     int dirac,
+                                                     int re_im,
+                                                     void *env),
+                                    void *env);
+int `QOP_D3_MDWF_import_half_fermion(struct QOP_D3_MDWF_HalfFermion **hfermion_ptr,
+                                    struct QOP_MDWF_State *state,
+                                    double (*reader)(const int pos[5],
+                                                     int color,
+                                                     int dirac,
+                                                     int re_im,
+                                                     void *env),
+                                    void *env);
+@
+The [[reader()]] points to a function that provides a value of the
+preconditioned fermion field
+at a given point on the lattice, e.g., it returns the value of
+[[F[pos][color][dirac].re]] for [[re_im==0]] and 
+[[F[pos][color][dirac].im]] for [[re_im==1]].
+If will be called only for [[pos]] in
+a local sublattice. The [[env]] parameter
+is passed blindly to the [[reader()]] without any interpretation whatsoever. It
+could be used to access the half fermion in the calling layer.
+
+If the function succeeds then the [[*hfermion_ptr]] will be initialized to a
+value that may be passed to other library functions. If something goes wrong,
+[[*hfermion_ptr]] will be set to [[NULL]].
+
+Here are corresponding opaque types:
+<<Interface types>>=
+struct `QOP_F3_MDWF_HalfFermion;
+struct `QOP_D3_MDWF_HalfFermion;
+@
+
+One may also need to create a fermion field without any useful initial value.
+For convenience, we provide functions to do that
+<<Interface functions>>=
+int `QOP_F3_MDWF_allocate_half_fermion(struct QOP_F3_MDWF_HalfFermion **hfermion_ptr,
+                                      struct QOP_MDWF_State *state);
+int `QOP_D3_MDWF_allocate_half_fermion(struct QOP_D3_MDWF_HalfFermion **hfermion_ptr,
+                                      struct QOP_MDWF_State *state);
+@
+
+Preconditioned fermions may be exported back to the user.
+We also use a functional interface to provide indexing.
+<<Interface functions>>=
+int `QOP_F3_MDWF_export_half_fermion(void (*writer)(const int pos[5],
+                                                   int color,
+                                                   int dirac,
+                                                   int re_im,
+                                                   double value,
+                                                   void *env),
+                                   void *env,
+                                   const struct QOP_F3_MDWF_HalfFermion *hfermion);
+int `QOP_D3_MDWF_export_half_fermion(void (*writer)(const int pos[5],
+                                                   int color,
+                                                   int dirac,
+                                                   int re_im,
+                                                   double value,
+                                                   void *env),
+                                   void *env,
+                                   const struct QOP_D3_MDWF_HalfFermion *hfermion);
+@
+
+We also need a couple of destructors for fermion fields. For convenience, they
+will accept [[NULL]] intead of a valid fermion field.
+<<Interface functions>>=
+void `QOP_F3_MDWF_free_half_fermion(struct QOP_F3_MDWF_HalfFermion **hfermion_ptr);
+void `QOP_D3_MDWF_free_half_fermion(struct QOP_D3_MDWF_HalfFermion **hfermion_ptr);
+@
+
+Finally, macros for prefered precision
+<<Single precision defaults>>=
+#define `QOP_MDWF_import_half_fermion QOP_F3_MDWF_import_half_fermion
+#define `QOP_MDWF_export_half_fermion QOP_F3_MDWF_export_half_fermion
+#define `QOP_MDWF_allocate_half_fermion QOP_F3_MDWF_allocate_half_fermion
+#define `QOP_MDWF_free_half_fermion QOP_F3_MDWF_free_half_fermion
+#define `QOP_MDWF_HalfFermion QOP_F3_MDWF_HalfFermion
+@
+<<Double precision defaults>>=
+#define `QOP_MDWF_import_half_fermion QOP_D3_MDWF_import_half_fermion
+#define `QOP_MDWF_export_half_fermion QOP_D3_MDWF_export_half_fermion
+#define `QOP_MDWF_allocate_half_fermion QOP_D3_MDWF_allocate_half_fermion
+#define `QOP_MDWF_free_half_fermion QOP_D3_MDWF_free_half_fermion
+#define `QOP_MDWF_HalfFermion QOP_D3_MDWF_HalfFermion
+@
+
+\section{Dirac Operator}
+We provide both normal and conjugated Dirac Operator for the full fermion as
+well as the precondition operator and its conjugate both in single and double
+precision.
+<<Interface functions>>=
+int `QOP_F3_MDWF_DDW_operator(struct QOP_F3_MDWF_Fermion *result,
+                             const struct QOP_MDWF_Parameters *params,
+	 		     const struct QOP_F3_MDWF_Gauge *gauge,
+		 	     const struct QOP_F3_MDWF_Fermion *fermion);
+int `QOP_D3_MDWF_DDW_operator(struct QOP_D3_MDWF_Fermion *result,
+			     const struct QOP_MDWF_Parameters *params,
+                             const struct QOP_D3_MDWF_Gauge *gauge,
+			     const struct QOP_D3_MDWF_Fermion *fermion);
+@
+<<Interface functions>>=
+int `QOP_F3_MDWF_DDW_operator_conjugated(struct QOP_F3_MDWF_Fermion *result,
+	 	                        const struct QOP_MDWF_Parameters *params,
+                                        const struct QOP_F3_MDWF_Gauge *gauge,
+		 	                const struct QOP_F3_MDWF_Fermion *fermion);
+int `QOP_D3_MDWF_DDW_operator_conjugated(struct QOP_D3_MDWF_Fermion *result,
+                                        const struct QOP_MDWF_Parameters *params,
+                                        const struct QOP_D3_MDWF_Gauge *gauge,
+			                const struct QOP_D3_MDWF_Fermion *fermion);
+@
+<<Interface functions>>=
+int `QOP_F3_MDWF_M_operator(struct QOP_F3_MDWF_HalfFermion *result,
+	  	           const struct QOP_MDWF_Parameters *params,
+                           const struct QOP_F3_MDWF_Gauge *gauge,
+		 	   const struct QOP_F3_MDWF_HalfFermion *fermion);
+int `QOP_D3_MDWF_M_operator(struct QOP_D3_MDWF_HalfFermion *result,
+	 	           const struct QOP_MDWF_Parameters *params,
+                           const struct QOP_D3_MDWF_Gauge *gauge,
+			   const struct QOP_D3_MDWF_HalfFermion *fermion);
+@
+<<Interface functions>>=
+int `QOP_F3_MDWF_M_operator_conjugated(struct QOP_F3_MDWF_HalfFermion *result,
+	  	                      const struct QOP_MDWF_Parameters *params,
+                                      const struct QOP_F3_MDWF_Gauge *gauge,
+			              const struct QOP_F3_MDWF_HalfFermion *fermion);
+int `QOP_D3_MDWF_M_operator_conjugated(struct QOP_D3_MDWF_HalfFermion *result,
+	   	                      const struct QOP_MDWF_Parameters *params,
+                                      const struct QOP_D3_MDWF_Gauge *gauge,
+			              const struct QOP_D3_MDWF_HalfFermion *fermion);
+@
+
+Also the default precision macros
+<<Single precision defaults>>=
+#define `QOP_MDWF_DDW_operator QOP_F3_MDWF_DDW_operator
+#define `QOP_MDWF_DDW_operator_conjugated QOP_F3_MDWF_DDW_operator_conjugated
+#define `QOP_MDWF_M_operator QOP_F3_MDWF_M_operator
+#define `QOP_MDWF_M_operator_conjugated QOP_F3_MDWF_M_operator_conjugated
+@
+<<Double precision defaults>>=
+#define `QOP_MDWF_DDW_operator QOP_D3_MDWF_DDW_operator
+#define `QOP_MDWF_DDW_operator_conjugated QOP_D3_MDWF_DDW_operator_conjugated
+#define `QOP_MDWF_M_operator QOP_D3_MDWF_M_operator
+#define `QOP_MDWF_M_operator_conjugated QOP_D3_MDWF_M_operator_conjugated
+@
+
+\section{Solvers}
+We provide three solvers for the Dirac operator.
+
+First, the convenience routine to solve $D_{DW}\psi=\eta$. At most
+[[max_iterations]] are performed, the CG stops when the iterative precontioned
+residue becomes $\epsilon$ or less. The initial guess $\chi_0$ is used as a
+starting point for the CG.
+
+<<Interface functions>>=
+int `QOP_F3_MDWF_DDW_CG(struct QOP_F3_MDWF_Fermion *result,
+                       int *out_iterations,
+                       double *out_epsilon,
+                       const struct QOP_MDWF_Parameters *params,
+                       const struct QOP_F3_MDWF_Fermion *chi_0,
+                       const struct QOP_F3_MDWF_Gauge *gauge,
+                       const struct QOP_F3_MDWF_Fermion *rhs,
+                       int max_iteration,
+                       double epsilon);
+int `QOP_D3_MDWF_DDW_CG(struct QOP_D3_MDWF_Fermion *result,
+                       int *out_iterations,
+                       double *out_epsilon,
+                       const struct QOP_MDWF_Parameters *params,
+                       const struct QOP_D3_MDWF_Fermion *x_0,
+                       const struct QOP_D3_MDWF_Gauge *gauge,
+                       const struct QOP_D3_MDWF_Fermion *rhs,
+                       int max_iteration,
+                       double epsilon);
+@
+
+We also expose the preconditioned hermitian solver for
+$M^\dagger M\psi_o=\phi_o$. In this case the CG starts from $\psi_o=0$.
+<<Interface functions>>=
+int `QOP_F3_MDWF_MxM_CG(struct QOP_F3_MDWF_HalfFermion *result,
+                       int *out_iterations,
+                       double *out_epsilon,
+                       const struct QOP_MDWF_Parameters *params,
+                       const struct QOP_F3_MDWF_Gauge *gauge,
+                       const struct QOP_F3_MDWF_HalfFermion *rhs,
+                       int max_iteration,
+                       double epsilon);
+int `QOP_D3_MDWF_MxM_CG(struct QOP_D3_MDWF_HalfFermion *result,
+                       int *out_iterations,
+                       double *out_epsilon,
+                       const struct QOP_MDWF_Parameters *params,
+                       const struct QOP_D3_MDWF_Gauge *gauge,
+                       const struct QOP_D3_MDWF_HalfFermion *rhs,
+                       int max_iteration,
+                       double epsilon);
+@
+
+The last solver is the SCG for multiple $\sigma_n$. We only need it to solve for
+$M^\dagger M$. Here [[m]] should be positive and all $\sigma_n >0$.
+<<Interface functions>>=
+int `QOP_F3_MDWF_MxM_SCG(struct QOP_F3_MDWF_HalfFermion *result,
+                        struct QOP_F3_MDWF_HalfFermion *res_sigma[],
+                        int *out_iterations,
+                        double *out_epsilon,
+                        const struct QOP_MDWF_Parameters *params,
+                        const struct QOP_F3_MDWF_Gauge *gauge,
+                        int m,
+			const double sigma[],
+                        const struct QOP_F3_MDWF_HalfFermion *rhs,
+                        int max_iteration,
+                        double epsilon);
+int `QOP_D3_MDWF_MxM_SCG(struct QOP_D3_MDWF_HalfFermion *result,
+                        struct QOP_D3_MDWF_HalfFermion *res_sigma[],
+                        int *out_iterations,
+                        double *out_epsilon,
+                        const struct QOP_MDWF_Parameters *params,
+                        const struct QOP_D3_MDWF_Gauge *gauge,
+                        int m,
+			const double sigma[],
+                        const struct QOP_D3_MDWF_HalfFermion *rhs,
+                        int max_iteration,
+                        double epsilon);
+@
+
+Again, macros
+<<Single precision defaults>>=
+#define `QOP_MDWF_DDW_CG QOP_F3_MDWF_DDW_CG
+#define `QOP_MDWF_MxM_CG QOP_F3_MDWF_MxM_CG
+#define `QOP_MDWF_MxM_SCG QOP_F3_MDWF_MxM_SCG
+@
+<<Double precision defaults>>=
+#define `QOP_MDWF_DDW_CG QOP_D3_MDWF_DDW_CG
+#define `QOP_MDWF_MxM_CG QOP_D3_MDWF_MxM_CG
+#define `QOP_MDWF_MxM_SCG QOP_D3_MDWF_MxM_SCG
+@
+
+\section{Helper routines}
+To avoid excessive export and import calls, we provide the following linear
+algebra on full and preconditioned fermions.
+\[
+r\leftarrow a + \alpha b
+\]
+<<Interface functions>>=
+int `QOP_F3_MDWF_madd_fermion(struct QOP_F3_MDWF_Fermion *r,
+                             const struct QOP_F3_MDWF_Fermion *a,
+                             double alpha,
+                             const struct QOP_F3_MDWF_Fermion *b);
+int `QOP_D3_MDWF_madd_fermion(struct QOP_D3_MDWF_Fermion *r,
+                             const struct QOP_D3_MDWF_Fermion *a,
+                             double alpha,
+                             const struct QOP_D3_MDWF_Fermion *b);
+int `QOP_F3_MDWF_madd_half_fermion(struct QOP_F3_MDWF_HalfFermion *r,
+                                  const struct QOP_F3_MDWF_HalfFermion *a,
+                                  double alpha,
+                                  const struct QOP_F3_MDWF_HalfFermion *b);
+int `QOP_D3_MDWF_madd_half_fermion(struct QOP_D3_MDWF_HalfFermion *r,
+                                  const struct QOP_D3_MDWF_HalfFermion *a,
+                                  double alpha,
+                                  const struct QOP_D3_MDWF_HalfFermion *b);
+@
+\[
+  \alpha \leftarrow \langle a,b\rangle
+\]
+<<Interface functions>>=
+int `QOP_F3_MDWF_dot_fermion(double *r_re,
+                            double *r_im,
+                            const struct QOP_F3_MDWF_Fermion *a,
+                            const struct QOP_F3_MDWF_Fermion *b);
+int `QOP_D3_MDWF_dot_fermion(double *r_re,
+                            double *r_im,
+                            const struct QOP_D3_MDWF_Fermion *a,
+                            const struct QOP_D3_MDWF_Fermion *b);
+int `QOP_F3_MDWF_dot_half_fermion(double *r_re,
+                                 double *r_im,
+                                 const struct QOP_F3_MDWF_HalfFermion *a,
+                                 const struct QOP_F3_MDWF_HalfFermion *b);
+int `QOP_D3_MDWF_dot_half_fermion(double *r_re,
+                                 double *r_im,
+                                 const struct QOP_D3_MDWF_HalfFermion *a,
+                                 const struct QOP_D3_MDWF_HalfFermion *b);
+@
+
+Also, the macros
+<<Single precision defaults>>=
+#define `QOP_MDWF_madd_fermion QOP_F3_MDWF_madd_fermion
+#define `QOP_MDWF_madd_half_fermion QOP_F3_MDWF_madd_half_fermion
+#define `QOP_MDWF_dot_fermion QOP_F3_MDWF_dot_fermion
+#define `QOP_MDWF_dot_half_fermion QOP_F3_MDWF_dot_half_fermion
+@
+<<Double precision defaults>>=
+#define `QOP_MDWF_madd_fermion QOP_D3_MDWF_madd_fermion
+#define `QOP_MDWF_madd_half_fermion QOP_D3_MDWF_madd_half_fermion
+#define `QOP_MDWF_dot_fermion QOP_D3_MDWF_dot_fermion
+#define `QOP_MDWF_dot_half_fermion QOP_D3_MDWF_dot_half_fermion
+@
+
+\par XXX do we need [[norm2]]?
+
+\chapter{IMPLEMENTATION}
+The implementation's internal header is included in all source files. It is
+the only [[#include]] in the sources.
+<<File [[mdwf.h]]>>=
+#ifndef MARK_56409955893f4f5883198873309cf801
+#define MARK_56409955893f4f5883198873309cf801
+#include <qop-mdwf3.h>
+<<Implementation includes>>
+<<Low level includes>>
+<<Implementation macros>>
+<<Implementation types>>
+<<Implementation of [[State]]>>
+<<Implementation prototypes>>
+#endif
+@
+All exported symbols are generated by the following macro. It should agree with
+definitions in the interface, of course.
+<<Implementation macros>>=
+#define Q(x) QOP_MDWF_##x
+#if QOP_MDWF_DEFAULT_PRECISION == 'F'
+#define QX(x) QOP_F3_MDWF_##x
+#endif
+#if QOP_MDWF_DEFAULT_PRECISION == 'D'
+#define QX(x) QOP_D3_MDWF_##x
+#endif
+@
+
+The global symbols that are not part of the interface are generated by this
+macro. They only need to agree with SciDAC QCD conventions about libraries.
+<<Implementation macros>>=
+#define q(x) qop_MDWF_##x
+#if QOP_MDWF_DEFAULT_PRECISION == 'F'
+#define qx(x) qop_F3_MDWF_##x
+#endif
+#if QOP_MDWF_DEFAULT_PRECISION == 'D'
+#define qx(x) qop_D3_MDWF_##x
+#endif
+@
+
+At the low level the headers are specialized on precision:
+<<Low level includes>>=
+struct SUn;
+struct Fermion;
+struct ProjectedFermion;
+#if QOP_MDWF_DEFAULT_PRECISION == 'F'
+<<Low level single precision includes>>
+#endif
+#if QOP_MDWF_DEFAULT_PRECISION == 'D'
+<<Low level double precision includes>>
+#endif
+@
+
+The [[State]] is a collection of values defining the geometry, neighbors, etc.
+<<Implementation of [[State]]>>=
+struct Q(`State) {
+  <<[[State]] components>>
+};
+@
+
+We need to provide two precision, but in most cases it is possible to express
+the required functionality independent of the target precision. We start with
+defining [[REAL]] depending on the default precision
+<<Implementation includes>>=
+#include <complex.h>
+@
+
+<<Implementation macros>>=
+#if QOP_MDWF_DEFAULT_PRECISION == 'F'
+#define `REAL float
+#endif
+#if QOP_MDWF_DEFAULT_PRECISION == 'D'
+#define `REAL double
+#endif
+@
+
+Some files do not depend on precision, the following definition will help
+with typos:
+<<Precision independent file>>=
+#define QOP_MDWF_DEFAULT_PRECISION 'D'
+@
+
+Other types are now easy to define. Let us start with underlying arrays. First
+the $SU_3$ matrix. We only 
+<<Implementation types>>=
+struct SUn {
+  REAL complex u[Q(COLORS)][Q(COLORS)];
+};
+@
+
+Now, a fermion and a projected fermion. The order of indices must agree with the
+assembly code.
+<<Implementation types>>=
+struct Fermion { /* XXX check the order of indices here */
+  REAL complex f[Q(FERMION_DIM)][Q(COLORS)];
+};
+struct ProjectedFermion { /* XXX check the order of indices here */
+  REAL complex f[Q(PROJECTED_FERMION_DIM)][Q(COLORS)];
+};
+@
+
+The interface types have pointers back to the [[State]], so that we can check
+for geometry conflicts. This also require that deallocation of [[State]] is
+delayed until all fields are deallocated.
+
+<<[[State]] components>>=
+int `used; /* number of fields allocated with this state */
+@
+
+<<[[State]] dump>>=
+printf("State.used = %d\n", state->used);
+@
+
+Initially there is no fields allocated.
+<<[[State]] cleanup>>=
+state->used = 1;
+@
+
+To keep the data properly aligned, se always create a header with a pointer to
+the actual data.
+
+<<Implementation types>>=
+struct QX(`Gauge) {
+  struct Q(State) *state;
+  size_t size;
+  struct SUn *data;
+};
+@
+
+<<Implementation types>>=
+struct QX(`Fermion) {
+  struct Q(State) *state;
+  size_t size;
+  struct Fermion *even;
+  struct Fermion *odd;
+};
+@
+
+The [[HalfFermion]] contains a full Dirac fermion on half the lattice.
+<<Implementation types>>=
+struct QX(`HalfFermion) {
+  struct Q(State) *state;
+  size_t size;
+  struct Fermion *even;
+};
+@
+
+\section{Error reporting}
+Let us start with the error reporting function. We may be given the
+[[NULL]] pointer, it could happen if the [[init]] failed early on (or after
+[[fini]], but we do not distinguish these two cases). If there is no error, a
+[[NULL]] is returned, otherwise the current error string from the [[State]] is
+our result. We reset error recording in this call.
+
+<<File [[error.c]]>>=
+<<Precision independent file>>
+#include <mdwf.h>
+const char *
+Q(`error)(struct Q(State) *state)
+{
+  if (state == NULL)
+    return "Failed initialization";
+  if (!state->fatal)  
+    state->record = 1;
+  return state->error;
+}
+@
+
+We will need the current definition of [[NULL]], hence:
+<<Implementation includes>>=
+#include <stdlib.h>
+@
+
+All error recording is done with [[set_error()]]. It checks if the error should
+be recorded and sets the new error message if permitted. This mechanism is also
+used to clear read error.
+<<Implementation prototypes>>=
+void q(`set_error)(struct Q(State) *state, const char *error);
+@
+
+The implementation is simple, all magic happens in error reading code.
+<<File [[error.c]]>>=
+void
+q(`set_error)(struct Q(State) *state, const char *error)
+{
+   if ((state == 0) || (state->record == 0) || (state->fatal))
+      return;
+   state->error = error;
+   if (error)
+      state->record = 0;
+}
+@
+
+\section{Initialization}
+Initialization chunks are placed together with the cleanup chunks below, here
+we put together the [[init()]] and [[fini()]].
+<<File [[finit.c]]>>=
+<<Precision independent file>>
+#include <mdwf.h>
+<<Init\&fini local prototypes>>
+@
+
+<<File [[finit.c]]>>=
+int
+Q(`init)(struct Q(State) **state_ptr,
+        const int lattice[Q(DIM) + 1],
+        const int network[Q(DIM)],
+        const int node[Q(DIM)],
+	int master_p,
+        void (*sublattice)(int lo[], int hi[], const int node[], void *env),
+        void *env)
+{
+    char *status;
+#define CHECK(cond,message) do  {if (cond) { status = message; goto error; } } while (0)
+    if (state_ptr == 0)
+       return 1;
+    <<[[init]] allocate state>>
+    <<Check constraints>>
+    <<[[init]] initialize state>>
+    <<[[init]] patch boundary>>
+    <<[[init]] remove init temporaries>>
+    return 0;
+    <<[[init]] errors>>
+#undef CHECK
+}
+
+<<[[init]] allocate state>>=
+*state_ptr = q(malloc)(NULL, sizeof (struct Q(State)));
+if (*state_ptr == 0)
+  return 1;
+@
+
+All lattice dimensions should be even and the network size should be less than
+lattice in all directions.
+<<Check constraints>>=
+CHECK(lattice[0] % 1 != 0, "Lattice dimension X is not even");
+CHECK(lattice[1] % 1 != 0, "Lattice dimension Y is not even");
+CHECK(lattice[2] % 1 != 0, "Lattice dimension Z is not even");
+CHECK(lattice[3] % 1 != 0, "Lattice dimension T is not even");
+CHECK(lattice[0] < network[0], "Network is too large in X");
+CHECK(lattice[1] < network[1], "Network is too large in Y");
+CHECK(lattice[2] < network[2], "Network is too large in Z");
+CHECK(lattice[3] < network[3], "Network is too large in T");
+CHECK(network[0] < 1, "Network is too small in X");
+CHECK(network[1] < 1, "Network is too small in Y");
+CHECK(network[2] < 1, "Network is too small in Z");
+CHECK(network[3] < 1, "Network is too small in T");
+@
+
+<<[[init]] initialize state>>=
+state_reset(*state_ptr);
+status = state_init(*state_ptr, lattice, network, node, master_p, sublattice, env);
+CHECK(status,status);
+@
+
+<<[[init]] patch boundary>>=
+status = patch_boundary(*state_ptr, lattice, network, node, master_p, sublattice, env);
+CHECK(status, status);
+@
+
+If an error happend during [[init()]], we free everything allocated inside
+[[State]] and set a fatal error explaining the problem:
+<<[[init]] errors>>=
+error:
+ state_finalize(*state_ptr);
+ q(set_error)(*state_ptr, status);
+ (*state_ptr)->fatal = 1;
+ return 1;
+@
+
+Start with making unused state without an error.
+<<[[State]] cleanup>>=
+state->record = 1;
+state->fatal = 0;
+state->error = NULL;
+@
+
+<<[[State]] components>>=
+int `record;          /* allow error recording */
+int `fatal;           /* last error was fatal and can not be cleared */
+const char *`error;   /* error message */
+@
+
+<<[[State]] dump>>=
+printf("State error: record=%d, fatal=%d, error=%s\n",
+       state->record,
+       state->fatal,
+       state->error == NULL? "NULL": state->error);
+@
+
+Finalization could be called with a [[NULL]] pointer or with a pointer in use.
+<<File [[finit.c]]>>=
+void
+Q(`fini)(struct Q(State) **state_ptr)
+{
+    struct Q(State) *state;
+
+    if ((state_ptr == 0) || (*state_ptr == 0))
+       return;
+    state = *state_ptr;
+    *state_ptr = NULL;
+    state->used--;
+    if (state->used != 0)
+       return;
+    state_finalize(state);
+    q(free)(NULL, state, sizeof (struct Q(State)));
+    return;
+}
+@
+
+The extend of lattice in the $s$-direction is recorder in [[Ls]]:
+<<[[State]] components>>=
+int `Ls;  /* Extend in the s-direction */
+@
+
+<<[[State]] cleanup>>=
+state->Ls = 0;
+@
+
+<<[[State]] initialize>>=
+state->Ls = lattice[Q(DIM)];
+@
+
+<<[[State]] dump>>=
+printf("state.Ls = %d\n", state->Ls);
+@
+
+We need to know coordinates of our sublattice. Given our [[node]] and
+[[sublattice()]], the task is easy. We will need to know sublattice coordinates
+of our neighbors as well, so we define [[struct sublattice]] first:
+<<Implementation types>>=
+struct `sublattice {
+  int `lo[Q(DIM)]; /* first position inside on the left */
+  int `hi[Q(DIM)]; /* first position outside on the right */
+};
+@
+
+We need our local sublattice in [[State]] for import\&export routines:
+<<[[State]] components>>=
+struct sublattice `sublattice;  /* sublattice start and end */
+@
+
+<<[[State]] dump>>=
+{
+   int i;
+   printf("State sublattice:\n");
+   for (i = 0; i < Q(DIM); i++) {
+      printf("  [%d]: lo %3d, hi %3d\n",
+             i,
+             state->sublattice.lo[i],
+             state->sublattice.hi[i]);
+   }
+}
+@
+
+There is no need to rest or finilize [[sublattice]], only initialization is
+required:
+<<[[State]] initialize>>=
+sublattice(state->sublattice.lo, state->sublattice.hi, node, env);
+@
+
+Next, let us compute local 4-volume.
+<<[[State]] components>>=
+int `volume;  /* local 4-volume */
+@
+
+<<[[State]] dump>>=
+printf("State volume %d sites\n", state->volume);
+@
+
+<<[[State]] initialize>>=
+{
+   int i, v;
+   for (v = 1, i = 0; i < Q(DIM); i++)
+      v *= state->sublattice.hi[i] - state->sublattice.lo[i];
+   state->volume = v;
+}
+@
+
+Next, let us compute even and odd sizes and send sizes for all faces. Let us
+define an [[eo_lattice]] structure to keep all even/odd pieces together.
+<<Implementation types>>=
+struct `eo_lattice {
+  <<E/O lattice pieces>>
+};
+@
+
+There are two [[eo_lattice]] structure in the [[State]]. We use the 
+``destination'' naming: [[even]] describes geometry required for computing
+ $X_{oe}\psi_o$, [[odd]]---for computing $X_{eo}\psi_e$.
+
+<<[[State]] components>>=
+struct eo_lattice `even; /* even sublattice */
+struct eo_lattice `odd;  /* odd sublattice */
+@
+
+<<[[State]] dump>>=
+dump_eo("even", &state->even, &state->odd, state);
+dump_eo("odd", &state->odd, &state->even, state);
+@
+
+Resetting [[eo_lattice]] puts some reasonable values everywhere:
+<<[[State]] cleanup>>=
+eo_reset(&state->even);
+eo_reset(&state->odd);
+@
+
+Finalization is similar, we do it in both [[even]] and [[odd]]:
+<<[[State]] finalize>>=
+eo_finalize(&state->even, state);
+eo_finalize(&state->odd, state);
+@
+
+To compute the send sizes we go through the sublattice and count various types
+of sites.
+<<[[State]] initialize>>=
+<<E/O compute sizes>>
+@
+<<E/O compute sizes>>=
+{
+   int i, p, la, x[Q(DIM)], parity;
+   struct eo_lattice *eo;
+   int *lo = state->sublattice.lo;
+   int *hi = state->sublattice.hi;
+
+   for (la = state->volume; la--;) {
+      p = la;
+      <<Linear [[p]] to vector [[x]]>>
+      <<Compute [[parity]]>>
+      eo = (parity & 1)? &state->odd: &state->even;
+      <<E/O count sites>>
+   }
+}
+@
+
+Once the sizes are computed, we can start initializing sublattices:
+<<[[State]] initialize>>=
+{
+   char *msg;
+
+   msg = eo_init(&state->even, &state->odd, state);
+   CHECK(msg, msg);
+   msg = eo_init(&state->odd, &state->even, state);
+   CHECK(msg, msg);
+}
+@
+
+Each sublattice knows about its face and body sizes, its full size and
+send up and down sizes for each direction:
+<<E/O lattice pieces>>=
+int `face_size;
+int `body_size;
+int `full_size;
+int `up_face[Q(DIM)];
+int `down_face[Q(DIM)];
+@
+
+<<E/O dump>>=
+printf(" %s.face_size=%6d\n", name, eo->face_size);
+printf(" %s.body_size=%6d\n", name, eo->body_size);
+printf(" %s.full_size=%6d\n", name, eo->full_size);
+{
+  int i;
+  for (i = 0; i < Q(DIM); i++) {
+    printf(" %s.face[%d]: up %6d, down %6d\n",
+           name, i, eo->up_face[i], eo->down_face[i]);
+  }
+}
+@
+
+They are all set to zero at reset
+<<E/O reset>>=
+eo->face_size = eo->body_size = eo->full_size = 0;
+{
+   int i;
+   for (i = 0; i < Q(DIM); i++)
+     eo->up_face[i] = eo->down_face[i] = 0;
+}
+@
+
+To count sites on the sublattice, first decide if we are on the face and add
+to the corresponding count
+<<E/O count sites>>=
+{
+   int fs;
+   for (fs = 0, i = 0; i < Q(DIM); i++) {
+     if (network[i] == 1)
+        continue;
+     if (x[i] == lo[i]) {
+        fs = 1;
+        eo->down_face[i]++;
+     }
+     if (x[i] == hi[i] - 1) {
+        fs = 1;
+        eo->up_face[i]++;
+     }
+   }
+   if (fs)
+     eo->face_size++;
+   else
+     eo->body_size++;
+   eo->full_size++;
+}
+@
+
+To be able to import and export fermion fields, we need translation tables
+between our internal layout and the standard lattice coordinates. It is
+sufficient to keep [[layout2vector]] tables only.
+<<E/O lattice pieces>>=
+int *`layout2vector;
+@
+
+<<E/O dump>>=
+{
+   if (eo->layout2vector == NULL) {
+     printf(" %s.layout2vector is NULL\n", name);
+   } else {
+     int i, k;
+     int *lo = state->sublattice.lo;
+     int *hi = state->sublattice.hi;
+     int x[Q(DIM)];
+
+     printf(" %s.layou2vector of %d elements at %p:\n",
+            name, eo->full_size, eo->layout2vector);
+     for (k = 0; k < eo->full_size; k++) {
+       int p = eo->layout2vector[k];
+       printf("  %s.layout2vector[%5d]: %6d: ",
+              name, k, p);
+       <<Linear [[p]] to vector [[x]]>>
+       for (i = 0; i < Q(DIM); i++)
+          printf(" %3d", x[i]);
+       printf("\n");
+     }
+   }
+}
+@
+
+<<E/O reset>>=
+eo->layout2vector = NULL;
+@
+
+<<E/O finalize>>=
+q(free)(state, eo->layout2vector, eo->full_size * sizeof (int));
+eo->layout2vector = NULL;
+@
+
+The inverse table, [[vector2layout]] is only needed while constructing the
+neighbor tables. Though it does not live bejond [[init()]], we allocate it
+in [[State]] to simplify memory management.
+<<[[State]] components>>=
+int *`vector2layout; /* linearized vector 4-address -> layout conversion */
+@
+
+<<[[State]] dump>>=
+{
+   if (state->vector2layout == NULL) {
+      printf("State vector2layout is NULL\n");
+   } else {
+      int i, k;
+      int *lo = state->sublattice.lo;
+      int *hi = state->sublattice.hi;
+      int x[Q(DIM)];
+
+      printf("State vector2layout of %d elements:\n", state->volume);
+      for (k = 0; k < state->volume; k++) {
+         int lx = state->vector2layout[k];
+         int p = k;
+         printf(" [%5d]: %5d %s[%5d] :", k, lx, lx & 1? "o": "e", lx >> 1);
+         <<Linear [[p]] to vector [[x]]>>
+         for (i = 0; i < Q(DIM); i++)
+            printf(" %3d", x[i]);
+	 printf("\n");
+      }
+   }
+}
+@
+
+<<[[State]] cleanup>>=
+state->vector2layout = NULL;
+@
+
+<<[[State]] finalize>>=
+q(free)(state, state->vector2layout, state->volume * sizeof (int));
+state->vector2layout = NULL;
+@
+
+We save one recursive pass over the sublattice if we allocate [[vector2layout]]
+now. 
+<<[[State]] initialize>>=
+state->vector2layout = q(malloc)(state, state->volume * sizeof (int));
+@
+
+Once the table initialization is node, we do not need [[vecto2layout]].
+<<[[init]] remove init temporaries>>=
+q(free)(*state_ptr, (*state_ptr)->vector2layout, (*state_ptr)->volume * sizeof (int));
+(*state_ptr)->vector2layout = NULL;
+@
+
+It is time now to allocate the sublattice [[layout2vector]]:
+<<E/O initialize>>=
+eo->layout2vector = q(malloc)(state, eo->full_size * sizeof (int));
+CHECK(eo->layout2vector == NULL, "E/O allocation failed");
+@
+We are ready to construct layout tables now. Since we will need the tables for
+our neighbors, it is convenient to abstract the construction into a procedure.
+<<[[State]] initialize>>=
+build_layout(&state->sublattice,
+	     network,
+             state->vector2layout,
+             state->even.layout2vector,
+             state->odd.layout2vector);
+@
+
+Now let us allocate neighbor tables. It is convenient to use a universal
+format both for the body and the face. This way we do not to generate two
+procedures, and, since the cost of jumps is small compared to computation
+involved, there is no noticable performance degradation.
+
+Once the [[face_size]] and [[body_size]] are computed, we can allocate the
+corresponsing arrays
+<<E/O lattice pieces>>=
+struct neighbor *`face_neighbor;
+struct neighbor *`body_neighbor;
+@
+
+<<E/O dump>>=
+dump_neighbors(name, "body", eo->body_neighbor, 0, eo->body_size, eo, oe, state);
+dump_neighbors(name, "face", eo->face_neighbor, eo->body_size, eo->face_size, eo, oe, state);
+@
+
+Initialy they are set to [[NULL]] to simplify error recovery
+<<E/O reset>>=
+eo->face_neighbor = NULL;
+eo->body_neighbor = NULL;
+@
+We allocate only [[body_neighbor]] of [[full_size]], and make [[face_neighbor]]
+point into an appropriate place in it.
+<<E/O initialize>>=
+eo->body_neighbor = q(malloc)(state, eo->full_size * sizeof (struct neighbor));
+CHECK(eo->body_neighbor == NULL, "E/O neighbor allocation failed");
+eo->face_neighbor = eo->body_neighbor + eo->body_size;
+@
+If they were allocated, we need to free them:
+<<E/O finalize>>=
+q(free)(state, eo->body_neighbor, eo->full_size * sizeof (struct neighbor));
+eo->body_neighbor = NULL;
+eo->face_neighbor = NULL;
+@
+
+At this point we have valid layout/vector local translations and allocated
+neighbor tables. We construct local neighbor pointers for all sites now. Once
+these calls are done, the only uninitialized piece of [[struct neighbor]] will
+be indices to receive buffers.
+<<[[State]] initialize>>=
+build_local_neighbors(&state->even, state, network);
+build_local_neighbors(&state->odd, state, network);
+@
+
+\subsection{State reset}
+Here we reset all components of the [[State]]. It is mostly writing zeros
+everywhere, but not necessaraly. We use the reset more than once, hence
+a procedure.
+<<File [[finit.c]]>>=
+static void
+`state_reset(struct Q(State) *state)
+{
+  <<[[State]] cleanup>>
+}
+@
+<<Init\&fini local prototypes>>=
+static void `state_reset(struct Q(State) *state);
+@
+
+\subsection{State initialization}
+Same is true for state initialization:
+<<File [[finit.c]]>>=
+static char *
+`state_init(struct Q(State) *state,
+           const int lattice[Q(DIM) + 1],
+           const int network[Q(DIM)],
+           const int node[Q(DIM)],
+	   int master_p,
+           void (*sublattice)(int lo[],
+                              int hi[],
+	   	  	      const int node[],
+                              void *env),
+           void *env)
+{
+#define CHECK(cond,message) do { if (cond) return message; } while (0)
+  <<[[State]] initialize>>
+  return 0;
+#undef CHECK
+}
+@
+<<Init\&fini local prototypes>>=
+static char *`state_init(struct Q(State) *state,
+                        const int lattice[Q(DIM) + 1],
+                        const int network[Q(DIM)],
+                        const int node[Q(DIM)],
+	                int master_p,
+                        void (*sublattice)(int lo[],
+                                           int hi[],
+  	   	    	                   const int node[],
+                                           void *env),
+                        void *env);
+@
+
+\subsection{State cleanup}
+<<File [[finit.c]]>>=
+static void
+`state_finalize(struct Q(State) *state)
+{
+  <<[[State]] finalize>>
+}
+@
+<<Init\&fini local prototypes>>=
+static void `state_finalize(struct Q(State) *state);
+@
+
+\subsection{E/O reset}
+<<File [[finit.c]]>>=
+static void
+`eo_reset(struct eo_lattice *eo)
+{
+   <<E/O reset>>
+}
+@
+
+<<Init\&fini local prototypes>>=
+static void `eo_reset(struct eo_lattice *eo);
+@
+
+\subsection{E/O initialization}
+Initialization of even/odd sublattice structure requires the other parity
+component as well as the [[State]] structure.
+
+<<File [[finit.c]]>>=
+static char *
+`eo_init(struct eo_lattice *eo,
+        const struct eo_lattice *oe, 
+        struct Q(State) *state)
+{
+#define CHECK(cond, msg) do { if (cond) return msg; } while (0)
+   <<E/O initialize>>
+   return 0;
+#undef CHECK
+}
+@
+
+<<Init\&fini local prototypes>>=
+static char * `eo_init(struct eo_lattice *eo,
+                      const struct eo_lattice *oe, 
+                      struct Q(State) *state);
+@
+
+\subsection{E/O cleanup}
+<<File [[finit.c]]>>=
+static void
+`eo_finalize(struct eo_lattice *eo,
+             struct Q(State) *state)
+{
+   <<E/O finalize>>
+}
+@
+
+<<Init\&fini local prototypes>>=
+static void `eo_finalize(struct eo_lattice *eo, struct Q(State) *state);
+@
+
+\subsection{Constructing layout}
+To make better use of caches, MDWF uses cache oblivious layout. It is
+constructed here by recursively bisecting the lagest sublattice until a single
+site remains. The resulting walk order is our layout. The general bisection
+layout is illustrated on figure~\ref{layout-fig}. Note that in our case the face
+sites are treated differently from the body sites if a neighbor exists.
+\begin{figure}\label{layout-fig}
+\begin{center}
+\epsfig{file=pics/oblivious.eps, width=288pt}
+\end{center}
+\caption{Cache oblivious layout in two dimensions. Letters define sequence of
+bisections, numbers in the zoom-out provide the resulting layout detail.}
+\end{figure}
+Because faces and the
+body of the sublattice are treated differently in the rest of the code, here two
+passes are done---the first one walks through the body and the second through
+the face sites. No distinction between different faces is make.
+<<Init\&fini local prototypes>>=
+static void `build_layout(struct sublattice *sublattice, const int network[],
+                         int *v2l, int *e_l2v, int *o_l2v);
+static void `walker(const int left[], int lo[], int hi[], const int right[],
+                   const int network[], int face_p,
+                   int *v2l, int *v2l_idx,
+                   int *e_l2v, int *e_l2v_idx,
+                   int *o_l2v, int *o_l2v_idx);
+@
+The top level walker prepares for and  start recursive walks. Not much stack
+is needed, for instance, $32^4$ sublattice would require the call stack only 20
+elements deep.
+<<File [[finit.c]]>>=
+static void
+`build_layout(struct sublattice *sublattice, const int network[],
+             int *v2l, int *e_l2v, int *o_l2v)
+{
+  <<[[build_layout]] locals>>
+
+  <<Construct [[left]] and [[right]]>>
+  walker(sublattice->lo, left, right, sublattice->hi, network, 0 /* BODY */,
+         v2l, &v2l_index, e_l2v, &e_index, o_l2v, &o_index);
+  walker(sublattice->lo, left, right, sublattice->hi, network, 1 /* FACE */,
+         v2l, &v2l_index, e_l2v, &e_index, o_l2v, &o_index);
+}
+@
+The face and body walks modify [[lo]] and [[hi]] boundaries, so we need to
+copy them from [[sublattice]]:
+<<[[build_layout]] locals>>=
+int i;
+int v2l_index = 0;
+int o_index = 0;
+int e_index = 0;
+int left[Q(DIM)];
+int right[Q(DIM)];
+@
+<<Construct [[left]] and [[right]]>>=
+for (i = 0;i < Q(DIM); i++) {
+  left[i] = sublattice->lo[i];
+  right[i] = sublattice->hi[i];
+}
+@
+
+Walking the body and the face are similar to each other.
+<<File [[finit.c]]>>=
+static void
+`walker(const int lo[], int left[], int right[], const int hi[],
+       const int network[], int face_p,
+       int *v2l, int *v2l_x,
+       int *el2v, int *el2v_x,
+       int *ol2v, int *ol2v_x)
+{
+  <<Walker locals>>
+  <<Find the largest extend>>
+  if (e > 1) {
+    <<Walker descend>>
+  } else {
+    int *x = left;
+    <<Vector [[x]] to linear [[lb]]>>
+    <<Compute [[face]]>>
+    if (face != face_p)
+       return;
+    <<Compute [[parity]]>>
+    if (parity & 1)
+       xl2v = ol2v, xl2v_x = ol2v_x;       
+    else
+       xl2v = el2v, xl2v_x = el2v_x;       
+    <<Walk on the sublattice>>
+  }
+}
+@
+
+<<Walker locals>>=
+int *xl2v;
+int *xl2v_x;
+@
+
+Largest extend is just that, the largest value of [[e=hi[i] - lo[i]]] and the
+associated value of the index [[b=i]].
+<<Find the largest extend>>=
+for (b = 0, e = right[0] - left[0], i = 1; i < Q(DIM); i++) {
+   int g = right[i] - left[i];
+   if (g > e) e = g, b = i; 
+}
+@
+
+<<Walker locals>>=
+int e, b, i;
+@
+
+To descend a walker, let us go to the left side and then to the right side.
+<<Walker descend>>=
+int dl = left[b];
+int dr = right[b];
+right[b] = dl + e/2;
+walker(lo, left, right, hi, network, face_p, 
+       v2l, v2l_x, el2v, el2v_x, ol2v, ol2v_x);
+left[b] = right[b]; right[b] = dr;
+walker(lo, left, right, hi, network, face_p,
+       v2l, v2l_x, el2v, el2v_x, ol2v, ol2v_x);
+left[b] = dl;
+@
+
+Now we can compute parity of the point and check if it is on the boundary
+
+<<Compute [[parity]]>>=
+for (parity = 0, i = 0; i < Q(DIM); i++) {
+  parity += x[i];
+}
+@
+
+<<Compute [[face]]>>=
+for (face = 0, i = 0; i < Q(DIM); i++) {
+  if (network[i] > 1) {
+    if ((x[i] == lo[i]) || (x[i] + 1 == hi[i]))
+      face = 1;
+  }
+}
+@
+
+<<Walker locals>>=
+int face;    /* indicator if left[] is on the boundary */
+int parity;  /* parity of left[] */
+int lb;      /* sublattice linear address of left[] */
+@
+
+Walking on the sublattice consists of marking the next point in the layout at
+[[xl2v[*xl2v_x]]], storing [[*xl2v_x]] at [[v2l[lb]]] and advancing it:
+<<Walk on the sublattice>>=
+index = *xl2v_x;
+xl2v[index] = lb;
+v2l[lb] = index * 2 + (parity & 1);
+*xl2v_x = index + 1;
+@
+
+<<Walker locals>>=
+int index; /* index on the sublattice */
+@
+
+\subsection{Building body neighbors}
+Here we fill the neighbor table with local information. All pieces that are not
+known at this stage are set to [[-1]].
+<<Init\&fini local prototypes>>=
+static void `build_local_neighbors(struct eo_lattice *target,
+                                  const struct Q(State) *state,
+				  const int network[]);
+@
+<<File [[finit.c]]>>=
+static void
+`build_local_neighbors(struct eo_lattice *target,
+                      const struct Q(State) *state,
+		      const int network[])
+{
+   int i, k, d, x[Q(DIM)], la, p;
+   const int *lo = state->sublattice.lo;
+   const int *hi = state->sublattice.hi;
+
+   for (k = target->full_size; k--;) {
+      <<Build neighbors for site [[k]]>>
+   }
+}
+@
+
+First, extract our linear address and build the 4-d vector out of it.
+<<Build neighbors for site [[k]]>>=
+p = la = target->layout2vector[k];
+<<Linear [[p]] to vector [[x]]>>
+@
+
+A chunk to unpack a linear address. This chunk must agree with [[<<Vector [[x]] to linear [[lb]]>>]]
+<<Linear [[p]] to vector [[x]]>>=
+for (i = Q(DIM); i--;) {
+   int di = hi[i] - lo[i];
+   x[i] = lo[i] + p % di;
+   p = p / di;
+}
+@
+
+We set the mask to zero initially:
+<<Build neighbors for site [[k]]>>=
+ target->body_neighbor[k].mask = 0;
+@
+
+<<[[neighbor]] parts>>=
+[mask "mask"  int]
+@
+
+There is alway a gauge up link:
+<<Build neighbors for site [[k]]>>=
+target->body_neighbor[k].u_up = la * Q(DIM);
+@
+
+<<[[neighbor]] parts>>=
+[forward-U "u_up" int]
+@
+
+Now, build all up fermion neighbors (they are on the opposite parity sublattice,
+by the way), or mark a bit if we are on the up boundary and the network exists.
+<<Build neighbors for site [[k]]>>=
+for (d = 0; d < Q(DIM); d++) {
+   x[d] += 1;
+   if ((network[d] > 1) && (x[d] == hi[d])) {
+     <<Mark [[f_up[d]]] as external>>
+   } else {
+     int lb;
+     if (x[d] == hi[d]) x[d] = 0;
+     <<Vector [[x]] to linear [[lb]]>>
+     if (x[d] == 0) x[d] = hi[d];
+     target->body_neighbor[k].f_up[d] = state->vector2layout[lb] >> 1;
+   }
+   x[d] -= 1;
+}
+@
+
+<<[[neighbor]] parts>>=
+[forward-F "f_up" dim-array]
+@
+
+External up neighbors are marked in low bits of [[mask]]:
+<<Mark [[f_up[d]]] as external>>=
+target->body_neighbor[k].mask |= 1 << d;
+target->body_neighbor[k].f_up[d] = -1;
+@
+
+Converting from the vector to linear should agree with
+[[<<Linear [[p]] to vector [[x]]>>]].
+<<Vector [[x]] to linear [[lb]]>>=
+for (lb = 0, i = 0; i < Q(DIM); i++) {
+  lb = lb * (hi[i] - lo[i]) + x[i] - lo[i];
+}
+@
+
+Next we build down neighbors both for the gauge and fermions.
+<<Build neighbors for site [[k]]>>=
+for (d = 0; d < Q(DIM); d++) {
+   x[d] -= 1;
+   if ((network[d] > 1) && (x[d] < lo[d])) {
+      <<Mark [[f_down[d]]] as external>>
+   } else {
+      int lb;
+      if (x[d] < 0) x[d] = hi[d] - 1;
+      <<Vector [[x]] to linear [[lb]]>>
+      if (x[d] == hi[d] - 1) x[d] = -1;
+      target->body_neighbor[k].f_down[d] = state->vector2layout[lb] >> 1;
+      target->body_neighbor[k].u_down[d] = lb * Q(DIM) + d;
+   }
+   x[d] += 1;
+}
+@
+
+External down neighbors are marks in high bits of [[mask]],
+<<Mark [[f_down[d]]] as external>>=
+target->body_neighbor[k].mask |= 1 << (d + Q(DIM));
+target->body_neighbor[k].f_down[d] = -1;
+target->body_neighbor[k].u_down[d] = -1;
+@
+
+
+<<[[neighbor]] parts>>=
+[backward-U "u_down" dim-array]
+[backward-F "f_down" dim-array]
+@
+
+\subsection{Boundary send initialization}
+For the down sends we only need to know where to get fermions. The indices are
+kept in an array of [[int]] for each direction, we do not have a special type
+for them.
+
+For the up sends we multiply by the gauge field before sending, so we need
+the fermion and the gauge field indices. The structure [[struct up_pack]] is
+defined in the low-level [[qa0]] file.
+
+The send boundary elements reside on other parity sublattice. Once we know all
+face sizes, we can setup [[send]] components of [[eo_lattice]]. Here are the
+components:
+<<E/O lattice pieces>>=
+int send_up_size[Q(DIM)];
+struct up_pack *`up_pack[Q(DIM)];
+int send_down_size[Q(DIM)];
+int *`down_pack[Q(DIM)];
+@
+
+We reset all [[send]] sizes to zero:
+<<E/O reset>>=
+{
+  int i;
+  for (i = 0; i < Q(DIM); i++) {
+    eo->send_up_size[i] = 0;
+    eo->send_down_size[i] = 0;
+    eo->up_pack[i] = NULL;
+    eo->down_pack[i] = NULL;
+  }
+}
+@
+And copy them from the local oposite parity sublattice:
+<<E/O initialize>>=
+{
+   int i;
+   for (i = 0; i < Q(DIM); i++) {
+      eo->send_up_size[i] = oe->up_face[i];
+      eo->up_pack[i] = q(malloc)(state, eo->send_up_size[i] * sizeof (struct up_pack));
+      CHECK(eo->up_pack[i] == NULL, "Not enough space for eo.up_pack[i]");
+      eo->send_down_size[i] = oe->down_face[i];
+      eo->down_pack[i] = q(malloc)(state, eo->send_down_size[i] * sizeof (int));
+      CHECK(eo->down_pack[i] == NULL, "Not enough space for eo.down_pack[i]");
+   }
+}
+@
+
+<<E/O dump>>=
+{
+  int i, k;
+  for (i = 0; i < Q(DIM); i++) {
+    printf(" %s.send_size[%d].down %5d:\n", name, i, eo->send_down_size[i]);
+    for (k = 0; k < eo->send_down_size[i]; k++) {
+      printf("  [%5d]: f %5d\n", k, eo->down_pack[i][k]);
+    }
+    printf(" %s.send_size[%d].up %5d:\n", name, i, eo->send_up_size[i]);
+    for (k = 0; k < eo->send_up_size[i]; k++) {
+      printf("  [%5d]: f %5d, u %5d\n", k,
+             eo->up_pack[i][k].f_index,
+             eo->up_pack[i][k].u_index);
+    }
+  }
+}
+@
+
+Next step in [[State]] initialization is filling [[pack]]'s. We will need to
+compute [[pack]]'s for our neighbors to determine receive buffer orders, so
+the [[pack]] computations are done with a couple of procedures.
+<<[[State]] initialize>>=
+build_packs(&state->even, &state->odd, state, network);
+build_packs(&state->odd, &state->even, state, network);
+@
+
+To build [[pack]]s, we walk through the other parity sublattice and look
+for boundary elements.
+<<File [[finit.c]]>>=
+static void
+`build_packs(struct eo_lattice *eo,
+             struct eo_lattice *oe,
+             struct Q(State) *state,
+             const int network[Q(DIM)])
+{
+   int i;
+   int ly;
+   int x[Q(DIM)];
+   int z_up[Q(DIM)];
+   int z_down[Q(DIM)];
+   int *lo = state->sublattice.lo;
+   int *hi = state->sublattice.hi;
+
+   <<Zero current indices>>
+   for (ly = oe->body_size; ly < oe->full_size; ly++) {
+     int la = oe->layout2vector[ly];
+     int p = la;
+     <<Linear [[p]] to vector [[x]]>>
+     for (i = 0; i < Q(DIM); i++) {
+       <<Collect [[i]] send element>>
+     }
+   }
+}
+@
+
+<<Zero current indices>>=
+for (i = 0; i < Q(DIM); i++) {
+  z_up[i] = z_down[i] = 0;
+}
+@
+
+There could be some directions without neighbors, skip them. Otherwise, record
+appropriate boundary if present:
+<<Collect [[i]] send element>>=
+if (network[i] == 1)
+  continue;
+if (x[i] == lo[i]) {
+  <<Record [[i]] down element>>
+}
+if (x[i] + 1 == hi[i]) {
+  <<Record [[i]] up element>>
+}
+@
+The down pack element consists of our layout address only
+<<Record [[i]] down element>>=
+eo->down_pack[i][z_down[i]] = ly;
+z_down[i]++;
+@
+
+For the up pack element we record the gauge offset as well:
+<<Record [[i]] up element>>=
+eo->up_pack[i][z_up[i]].f_index = ly;
+eo->up_pack[i][z_up[i]].u_index = la * Q(DIM) + i;
+z_up[i]++;
+@
+
+Finally, the prototype:
+<<Init\&fini local prototypes>>=
+static void `build_packs(struct eo_lattice *eo,
+                        struct eo_lattice *oe,
+                        struct Q(State) *state,
+                        const int network[Q(DIM)]);
+@
+
+\subsection{Patch boundary elements}
+The final element of the [[State]] initialization is fixing the neighrbor tables
+elements that refer to receive buffers. We go through directions and translate
+the received boundary.
+<<File [[finit.c]]>>=
+static char *
+`patch_boundary(struct Q(State) *state,
+               const int lattice[Q(DIM) + 1],
+               const int network[Q(DIM)],
+               const int node[Q(DIM)],
+               int master_p,
+               void (*sublattice)(int lo[], int hi[], const int node[], void *env),
+               void *env)
+{
+  int le, lo;
+  int i;
+  int n[Q(DIM)];
+  struct Q(State) x_state;
+  char *status;
+
+#define CHECK(cond,msg) do { if (cond) return msg;} while (0)
+  for (i = 0; i < Q(DIM); i++)
+    n[i] = node[i];
+  for (le = lo = 0, i = 0; i < Q(DIM); i++) {
+    if (network[i] == 1)
+      continue;
+    <<[[patch]] down neighbor in [[i]]>>
+  }
+  for (i = 0; i < Q(DIM); i++) {
+    if (network[i] == 1)
+      continue;
+    <<[[patch]] up neighbor in [[i]]>>
+  }
+#undef CHECK
+  return NULL;
+}
+@
+
+<<Init\&fini local prototypes>>=
+static char *`patch_boundary(struct Q(State) *state,
+                            const int lattice[Q(DIM) + 1],
+                            const int network[Q(DIM)],
+                            const int node[Q(DIM)],
+                            int master_p,
+                            void (*sublattice)(int lo[],
+                                               int hi[],
+                                               const int node[],
+                                               void *env),
+                            void *env);
+@
+
+Up and down neighbors are almost identical:
+<<[[patch]] up neighbor in [[i]]>>=
+n[i]++;
+if (n[i] == network[i]) n[i] = 0;
+<<[[patch]] prepare [[x_state]]>>
+le = eo_patch_up(&state->even, state, &x_state.even, &x_state.odd, &x_state, lattice, i, le);
+lo = eo_patch_up(&state->odd, state, &x_state.odd, &x_state.even, &x_state, lattice, i, lo);
+<<[[patch]] clean up [[x_state]]>>
+n[i]--;
+if (n[i] < 0) n[i] = network[i] - 1;
+@
+
+<<[[patch]] down neighbor in [[i]]>>=
+n[i]--;
+if (n[i] < 0) n[i] = network[i] - 1;
+<<[[patch]] prepare [[x_state]]>>
+le = eo_patch_down(&state->even, state, &x_state.even, &x_state.odd, &x_state, lattice, i, le);
+lo = eo_patch_down(&state->odd, state, &x_state.odd, &x_state.even, &x_state, lattice, i, lo);
+<<[[patch]] clean up [[x_state]]>>
+n[i]++;
+if (n[i] == network[i]) n[i] = 0;
+@
+
+We prepare a [[State]] of the neighboring node in [[x_state]]:
+<<[[patch]] prepare [[x_state]]>>=
+state_reset(&x_state);
+status = state_init(&x_state, lattice, network, n, master_p, sublattice, env);
+CHECK(status, "neighbor state init failed");
+@
+
+Cleanup of [[x_state]] simply frees all memory allocated into it.
+<<[[patch]] clean up [[x_state]]>>=
+state_finalize(&x_state);
+@
+
+Two patches are required---one for the up-neighbor and another for the
+down-neighbor. Let us start with the up-neighbor.
+<<File [[finit.c]]>>=
+static int
+`eo_patch_up(struct eo_lattice *eo,
+            const struct Q(State) *state,
+            const struct eo_lattice *x_eo,
+            const struct eo_lattice *x_oe,
+            const struct Q(State) *x_state,
+            const int lattice[Q(DIM) + 1],
+            int dim,
+            int idx)
+{
+  int k, i, ly, lb;
+  int x[Q(DIM)];
+  const int *lo;
+  const int *hi;
+
+  for (k = 0; k < x_eo->send_down_size[dim]; k++) {
+    int p = x_oe->layout2vector[x_eo->down_pack[dim][k]];
+
+    <<[[eo_patch]] construct neighbor address>>
+    x[dim]--;
+    if (x[dim] < 0) x[dim] = lattice[dim] - 1;
+    <<[[eo_patch]] construct patch address>>
+    eo->body_neighbor[ly].f_up[dim] = idx;
+    idx++;
+  }
+  return idx;
+}
+@
+
+<<[[eo_patch]] construct neighbor address>>=
+lo = x_state->sublattice.lo;
+hi = x_state->sublattice.hi;
+<<Linear [[p]] to vector [[x]]>>
+@
+
+<<[[eo_patch]] construct patch address>>=
+lo = state->sublattice.lo;
+hi = state->sublattice.hi;
+<<Vector [[x]] to linear [[lb]]>>
+ly = state->vector2layout[lb] >> 1;
+@
+
+<<Init\&fini local prototypes>>=
+static int `eo_patch_up(struct eo_lattice *eo,
+                       const struct Q(State) *state,
+                       const struct eo_lattice *x_eo,
+                       const struct eo_lattice *x_oe,
+                       const struct Q(State) *x_state,
+                       const int lattice[Q(DIM) + 1],
+                       int dim,
+                       int idx);
+
+@
+
+Now, the down-neighbor:
+<<File [[finit.c]]>>=
+static int
+`eo_patch_down(struct eo_lattice *eo,
+              const struct Q(State) *state,
+              const struct eo_lattice *x_eo,
+              const struct eo_lattice *x_oe,
+              const struct Q(State) *x_state,
+              const int lattice[Q(DIM) + 1],
+              int dim,
+              int idx)
+{
+  int k, i, ly, lb;
+  int x[Q(DIM)];
+  const int *lo;
+  const int *hi;
+
+  for (k = 0; k < x_eo->send_up_size[dim]; k++) {
+    int p = x_oe->layout2vector[x_eo->up_pack[dim][k].f_index];
+
+    <<[[eo_patch]] construct neighbor address>>
+    x[dim]++;
+    if (x[dim] == lattice[dim]) x[dim] = 0;
+    <<[[eo_patch]] construct patch address>>
+    eo->body_neighbor[ly].f_down[dim] = idx;
+    idx++;
+  }
+  return idx;
+}
+@
+
+<<Init\&fini local prototypes>>=
+static int `eo_patch_down(struct eo_lattice *eo,
+                         const struct Q(State) *state,
+                         const struct eo_lattice *x_eo,
+                         const struct eo_lattice *x_oe,
+                         const struct Q(State) *x_state,
+                         const int lattice[Q(DIM) + 1],
+                         int dim,
+                         int idx);
+@
+
+\subsection{Communication}
+Here we initialize the communication part of the code. We will need the QMP
+prototypes:
+<<Implementation includes>>=
+#include <qmp.h>
+@
+Communication initialization is postponed until the communication is really
+needed. Here we only reset and free QMP resources if they were allocated.
+<<[[State]] components>>=
+int `prec;        /* last used precision, 0,4 or 8 */
+@
+
+<<[[State]] dump>>=
+printf("State.prec = %d\n", state->prec);
+@
+
+<<[[State]] cleanup>>=
+state->prec = 0;
+@
+
+This is needed to avoid calling [[QMP_sum_double]] on a single node machine
+<<[[State]] components>>=
+int `has_net;     /* 0 if only one node is present, 1 otherwise */
+@
+
+<<[[State]] dump>>=
+printf("State.has_net = %s\n", state->has_net ? "yes": "no");
+@
+
+<<[[State]] cleanup>>=
+state->has_net = 0;
+@
+
+<<[[State]] initialize>>=
+{
+  int i;
+  for (i = 0; i < Q(DIM); i++) {
+     if (network[i] == 1)
+       continue;
+     state->has_net = 1;
+     break;
+  }
+}
+@
+
+Next, compute the amount of space needed for communication buffers. We fold
+even with odd and float with double to save space. [[QMP]] documents are not
+specific if this is an allowed approach, but on SciDAC software talks the issue
+had been raised and the concensus was that this is OK.
+<<[[State]] components>>=
+int `qmp_memsize; /* number of Ls half fermions in communication buffers */
+@
+
+<<[[State]] dump>>=
+printf("State.qmp_memsize = %d * Ls * HF\n", state->qmp_memsize);
+@
+
+<<[[State]] cleanup>>=
+state->qmp_memsize = 0;
+@
+
+<<[[State]] initialize>>=
+{
+  int i, es, os;
+  struct eo_lattice *eo;
+  int *xs;
+  
+  for (es = os = 0, i = 0; i < Q(DIM); i++) {
+    eo = &state->even; xs = &es;
+    <<Collect I/O sizes for direction [[i]]>>
+    eo = &state->odd; xs = &os;
+    <<Collect I/O sizes for direction [[i]]>>
+  }
+  state->qmp_memsize = es > os ? es: os;
+}
+@
+
+<<Collect I/O sizes for direction [[i]]>>=
+*xs += eo->send_up_size[i] + eo->send_down_size[i]
+     + eo->up_face[i] + eo->down_face[i];
+@
+
+The rest of communication state is in [[eo_lattice]].
+
+
+\par XXX init\&fini communication for both double and single
+
+\par XXX initialization pieces
+\par XXX allocate send and receive buffers
+\par XXX initialize QMP structures
+
+\section{Performance monitoring}
+We use [[gettimeofday()]] to record time stamps and count floating point
+operations by hand.
+<<Implementation includes>>=
+#include <sys/time.h>
+@
+
+<<[[State]] components>>=
+struct timeval `t0, `t1; /* start and end times of the last MDWF call */
+long long `flops;        /* last call floating point operations */
+long long `sent;         /* bytes sent during the last call */
+@
+
+<<[[State]] dump>>=
+printf("State.t0 = %d.%06d\n", (int)(state->t0.tv_sec), (int)(state->t0.tv_usec));
+printf("State.t1 = %d.%06d\n", (int)(state->t1.tv_sec), (int)(state->t1.tv_usec));
+printf("State.flops=%lld\n", state->flops);
+printf("State.sent=%lld\n", state->sent);
+@
+
+<<[[State]] cleanup>>=
+state->t0.tv_sec =
+state->t1.tv_sec =
+state->t0.tv_usec =
+state->t1.tv_usec = 0;
+state->flops = 0;
+state->sent = 0;
+@
+
+<<Reset [[flops]] and [[sent]]>>=
+state->flops = 0;
+state->sent = 0;
+@
+
+<<File [[performance.c]]>>=
+<<Precision independent file>>
+#include <mdwf.h>
+void
+Q(`performance)(double *time_sec,
+                long long *flops,
+                long long *sent,
+                struct Q(State) *state)
+{
+  *time_sec = state->t1.tv_sec - state->t0.tv_sec +
+              1e-6 * (state->t1.tv_usec - state->t0.tv_usec);
+  *flops = state->flops;
+  *sent = state->sent;
+}
+@
+
+Handy chunks to start and stop the stopwatch.
+<<Start timer>>=
+   gettimeofday(&state->t0, NULL);
+@
+
+<<Stop timer>>=
+   gettimeofday(&state->t1, NULL);
+@
+
+\section{XXX Parameter setting}
+<<Implementation types>>=
+struct Q(`Parameters) {
+  struct Q(State) *state;
+  <<[[Parameters]] components>>
+};
+@
+
+We record if [[B]] should be applied before [[F]]. The value depends on the
+M\"obius action parameters and is a simple optimization to notch up a bit 
+the speed of Shamir's fermions. We store a duplicate of [[Ls]] here because it
+is convenient. XXX It should be scaled for a number of \emph{vectors} in the
+$s$-slice, but for BG/L it is equal to [[Ls]].
+
+<<[[Parameters]] components>>=
+int `unit_B;
+int `LsV;
+@
+
+\subsection{XXX Generic}
+In the generic case, we are provided with arrays of $b_5$ and $c_5$ values.
+XXX these are not true parameters for MDWF but ones for test of the operator.
+
+<<File [[params.c]]>>=
+<<Precision independent file>>
+#include <mdwf.h>
+#include <string.h> /* XXX for memset */
+int 
+Q(`set_generic)(struct Q(`Parameters) **param_ptr,
+                struct Q(`State) *state,
+                const double b_5[],
+                const double c_5[],
+                double M_5,
+                double m)
+{
+   struct Q(`Parameters) *params;
+   int i;
+
+   if (state == NULL)
+     return 1;
+   params = malloc(sizeof (struct Q(`Parameters)));
+   if (params == NULL) {
+      return 1; /* XXX Memory management and error recording */
+   }
+   memset(params, 0, sizeof (struct Q(`Parameters)));
+   params->state = state; /* XXX update counter in state */
+   params->unit_B = 0;
+   params->LsV = state->Ls;
+   <<Initialize [[params->A]]>>
+   <<Initialize [[params->B]]>>
+   *param_ptr = params;
+   return 0;
+ error:
+   if (params->A)
+     free(params->A);
+   if (params->B)
+     free(params->B);
+   free(params);
+   return 1; /* XXX error recording */
+}
+@
+
+Parameters for [[A]] and [[B]] are very similar.
+<<[[Parameters]] components>>=
+struct  ABTable *A;
+struct ABTable *B;
+@
+
+XXX These are faux
+<<Initialize [[params->A]]>>=
+params->A = malloc(state->Ls * sizeof (struct ABTable));
+if (params->A == 0)
+   goto error;
+for (i = state->Ls; i--;) {
+   int ip = i + 1;
+   int im = i - 1;
+   if (ip >= state->Ls)
+     ip -= state->Ls;
+   if (im < 0)
+     im += state->Ls;
+   params->A[i].lo = im;
+   params->A[i].lo = ip;
+   params->A[i].c = 1 + b_5[i] * c_5[i];
+   params->A[i].c_lo = b_5[i] - c_5[i];
+   params->A[i].c_hi = b_5[i] + c_5[i];
+}
+@
+
+XXX faux too.
+<<Initialize [[params->B]]>>=
+params->B = malloc(state->Ls * sizeof (struct ABTable));
+if (params->B == 0)
+   goto error;
+for (i = state->Ls; i--;) {
+   int ip = i + 1;
+   int im = i - 1;
+   if (ip >= state->Ls)
+     ip -= state->Ls;
+   if (im < 0)
+     im += state->Ls;
+   params->B[i].lo = im;
+   params->B[i].lo = ip;
+   params->B[i].c = 1 - b_5[i] * c_5[i];
+   params->B[i].c_lo = b_5[i] + c_5[i]/2;
+   params->B[i].c_hi = b_5[i]/2 - c_5[i];
+}
+@
+
+
+% Q(set_generic)
+\subsection{XXX M\"obius}
+% Q(set_Moebius)
+\subsection{XXX Shamir}
+% Q(set_Shamir)
+\subsection{XXX Bori\c ci}
+% Q(set_Borichi)
+\subsection{XXX Neff}
+% Q(set_Neff)
+
+\section{XXX Version}
+% Q(version)
+
+\section{XXX Dirac Operators}
+In this section we compute varios forms of the domain wall operator. For various
+reasons we need to provide the full operator, its hermitian conjudate, the
+preconditioned operator and its conjugate. Notice that the solver proper
+works with $A=M^\dagger M$. Both single and double precision versions are
+provided.
+
+\subsection{Dirac Domain Wall Operator}
+Here we compute the full Dirac operator. Some parts will be reused for the
+conjugate in the next section.
+<<File [[operator-ddw.c]]>>=
+#include <mdwf.h>
+int
+QX(`DDW_operator)(struct QX(Fermion) *result,
+                const struct Q(Parameters) *params,
+                const struct QX(Gauge) *gauge,
+                const struct QX(Fermion) *fermion)
+{
+#define PROC "DDW_Opearator"
+  <<DW Operator prologue>>
+  if (params->unit_B) {
+    qx(compute_ApF)(state, &state->even, result->even, fermion->even, params, gauge->data, fermion->odd);
+    qx(compute_ApF)(state, &state->odd, result->odd, fermion->odd, params, gauge->data, fermion->even);
+  } else {
+    <<DW Generic Operator>>
+  }
+  <<DW Operator epilogue>>
+}
+@
+The generic operator does not assume that $B$ is trivial:
+<<DW Generic Operator>>=
+void *tmp;
+void *ptr;
+size_t size;
+struct Fermion *Te;
+struct Fermion *To;
+
+<<DW Generic Operator allocate memory>>
+qx(compute_B)(state, &state->even, To, params, fermion->odd);
+qx(compute_ApF)(state, &state->even, result->even, fermion->even, params, gauge->data, To);
+
+qx(compute_B)(state, &state->odd, Te, params, fermion->even);
+qx(compute_ApF)(state, &state->odd, result->odd, fermion->odd, params, gauge->data, Te);
+<<DW Generic Operator free memory>>
+@
+<<DW Generic Operator allocate memory>>=
+tmp = q(allocate_eo)(state, &size, &ptr, 0, 1, 1, sizeof (struct Fermion));
+if (tmp == 0) {
+   q(cleanup_communication)(state);
+   CHECK(tmp == 0, "not enough memory");
+}
+Te = ptr;
+To = q(step_even_field)(state, Te, sizeof (struct Fermion));
+@
+
+<<DW Generic Operator free memory>>=
+q(free)(state, tmp, size);
+@
+
+Here is the prologue:
+<<DW Operator prologue>>=
+<<Argument check macros begin>>
+struct Q(State) *state = 0;
+
+CHECK_ARG0(result);
+CHECK_ARG(params);
+CHECK_ARG(gauge);
+CHECK_ARG(fermion);
+CHECK(fermion == result, "input and output overlap");
+
+if (q(setup_communication)(state, sizeof (REAL)))
+  return 1;
+<<Start timer>>
+<<Reset [[flops]] and [[sent]]>>
+@
+And the epilogue:
+<<DW Operator epilogue>>=
+<<Stop timer>>
+return 0;
+<<Argument check macros end>>
+@
+<<Argument check macros begin>>=
+#define CHECK_ARG0(a) do { \
+  if ((a) == 0) return 1; else state = (a)->state; \
+  if (state->record == 0) return 1; } while (0)
+#define CHECK(cond,msg) do { \
+  if (cond) { q(set_error)(state, PROC "(): " msg); return 1; } } while (0)
+#define CHECK_ARG(a) do { \
+  CHECK((a)==0, "NULL" #a); \
+  CHECK((a)->state != state, #a "geometry mismatch"); } while (0)
+@
+
+<<Argument check macros end>>=
+#undef CHECK_ARG
+#undef CHECK_ARG0
+#undef CHECK
+#undef PROC
+@
+\subsection{Conjugated Dirac Domain Wall operator}
+<<File [[operator-ddwc.c]]>>=
+#include <mdwf.h>
+int
+QX(`DDW_operator_conjugated)(struct QX(Fermion) *result,
+                            const struct Q(Parameters) *params,
+                            const struct QX(Gauge) *gauge,
+                            const struct QX(Fermion) *fermion)
+{
+#define PROC "DDW_Opearator_conjugated"
+  <<DW Operator prologue>>
+  if (params->unit_B) {
+    qx(compute_AxpFx)(state, &state->even, result->even,
+                      fermion->even, params, gauge, fermion->odd);
+
+    qx(compute_AxpFx)(state, &state->odd, result->odd,
+                      fermion->odd, params, gauge, fermion->even);
+  } else {
+    qx(compute_AxpBxFx)(state, &state->even, result->even,
+                        fermion->even, params, gauge, fermion->odd);
+
+    qx(compute_AxpBxFx)(state, &state->odd, result->odd,
+                        fermion->odd, params, gauge, fermion->even);
+  }
+  <<DW Operator epilogue>>
+}
+@
+\subsection{d/f routine XXX [[Q(M_operator)]]}
+\subsection{d/f routine XXX [[Q(M_operator_conjugated)]]}
+\section{XXX Solvers}
+\subsection{d/f routine XXX [[Q(DDW_CG)]]}
+\subsection{d/f routine XXX [[Q(MxM_CG)]]}
+\subsection{d/f routine XXX [[Q(MxM_SCG)]]}
+\section{XXX Middle level routines}
+\subsection{Diagonal Operators}
+Here we compute $A$ and $B$, the 4-local operators. There is no communication
+and both operators are tri-diagonal in the $s$-direction.
+<<Implementation prototypes>>=
+void qx(`compute_B)(struct Q(State) *state,
+                   struct eo_lattice *xy,
+                   struct Fermion *result_y,
+                   const struct Q(Parameters) *params,
+                   const struct Fermion *f_y);
+@
+<<File [[op-B.c]]>>=
+#include <mdwf.h>
+void
+qx(`compute_B)(struct Q(State) *state,
+              struct eo_lattice *xy,
+              struct Fermion *result_x,
+              const struct Q(Parameters) *params,
+              const struct Fermion *f_x)
+{
+  state->flops += qx(do_AB)(result_x, xy->full_size, params->LsV, params->B, f_x);
+}
+@
+
+<<Implementation prototypes>>=
+void qx(`compute_A)(struct Q(State) *state,
+                   struct eo_lattice *xy,
+                   struct Fermion *result_y,
+                   const struct Q(Parameters) *params,
+                   const struct Fermion *f_y);
+@
+<<File [[op-A.c]]>>=
+#include <mdwf.h>
+void
+qx(`compute_A)(struct Q(State) *state,
+              struct eo_lattice *xy,
+              struct Fermion *result_x,
+              const struct Q(Parameters) *params,
+              const struct Fermion *f_x)
+{
+  state->flops += qx(do_AB)(result_x, xy->full_size, params->LsV, params->A, f_x);
+}
+@
+
+\subsection{XXX F-operators}
+The second step in computing the Dirac operator is calculating
+$A\psi_x+F\psi_y$.
+<<Implementation prototypes>>=
+void qx(`compute_ApF)(struct Q(State) *state,
+                     struct eo_lattice *xy,
+                     struct Fermion *result_x,
+                     const struct Fermion *f_x,
+                     const struct Q(Parameters) *params,
+		     const struct SUn *u,
+                     const struct Fermion *f_y);
+@
+
+<<File [[op-ApF.c]]>>=
+#include <mdwf.h>
+void
+qx(`compute_ApF)(struct Q(State) *state,
+                struct eo_lattice *xy,
+                struct Fermion *r_x,
+                const struct Fermion *f_x,
+                const struct Q(Parameters) *params,
+                const struct SUn *u,
+                const struct Fermion *f_y)
+{
+   int LsV = params->LsV;
+
+   <<[[ApF]] compute up send buffers>>
+   <<[[ApF]] compute down send buffers>>
+   <<[[ApF]] start communication>>
+   <<[[ApF]] compute body>>
+   <<[[ApF]] finish communication>>
+   <<[[ApF]] compute face>>
+}
+@
+The collective send/receive is started here. This is not the most optimal
+starting for it, but BG/L QMP is broken
+node on the machine:
+<<[[ApF]] start communication>>=
+if (xy->handle) {
+  xprint("starting send/receive on %p", xy->handle);
+  QMP_start(xy->handle);
+}
+@
+<<[[ApF]] finish communication>>=
+if (xy->handle) {
+  xprint("waiting on %p", xy->handle);
+  QMP_wait(xy->handle);
+  state->sent += xy->total_sent;
+}
+@
+
+<<[[ApF]] compute down send buffers>>=
+<<[[ApF]] begin define down send>>
+ApF_DOWN_SEND(0)
+ApF_DOWN_SEND(1)
+ApF_DOWN_SEND(2)
+ApF_DOWN_SEND(3)
+<<[[ApF]] end define down send>>
+@
+<<[[ApF]] begin define down send>>=
+#define ApF_DOWN_SEND(i) \
+   if (xy->send_down_size[i]) { \
+     state->flops += qx(proj_g##i##minus)(xy->send_down_buffer[i], \
+                           xy->send_down_size[i], LsV, xy->down_pack[i], f_y); \
+  }
+@
+<<[[ApF]] end define down send>>=
+#undef ApF_DOWN_SEND
+@
+
+<<[[ApF]] compute up send buffers>>=
+<<[[ApF]] begin define up send>>
+ApF_UP_SEND(0)
+ApF_UP_SEND(1)
+ApF_UP_SEND(2)
+ApF_UP_SEND(3)
+<<[[ApF]] end define up send>>
+@
+
+<<[[ApF]] begin define up send>>=
+#define ApF_UP_SEND(i) \
+  if (xy->send_up_size[i]) { \
+    state->flops += qx(proj_Ucg##i##plus)(xy->send_up_buffer[i], \
+                            xy->send_up_size[i], LsV, xy->up_pack[i], u, f_y); \
+  }
+@
+
+<<[[ApF]] end define up send>>=
+#undef ApF_UP_SEND
+@
+
+<<[[ApF]] compute body>>=
+state->flops += qx(do_ApF)(r_x, xy->body_size, LsV, xy->body_neighbor, params->A, u, f_x, f_y, NULL);
+@
+<<[[ApF]] compute face>>=
+state->flops += qx(do_ApF)(r_x, xy->face_size, LsV, xy->face_neighbor, params->A, u, f_x, f_y, xy->receive_buffer);
+@
+
+and more prototypes:
+<<Implementation prototypes>>=
+void qx(`compute_AxpBxFx)(struct Q(State) *state,
+                         struct eo_lattice *xy,
+                         struct Fermion *result_x,
+                         const struct Fermion *f_x,
+                         const struct Q(Parameters) *params,
+	     	         const struct QX(Gauge) *gauge,
+                         const struct Fermion *f_y);
+void qx(`compute_AxpFx)(struct Q(State) *state,
+                       struct eo_lattice *xy,
+                       struct Fermion *result_x,
+                       const struct Fermion *f_x,
+                       const struct Q(Parameters) *params,
+	    	       const struct QX(Gauge) *gauge,
+                       const struct Fermion *f_y);
+@
+
+\section{XXX Communication}
+Here we set up and clear communication resources.
+<<File [[comm.c]]>>=
+<<Precision independent file>>
+#include <mdwf.h>
+<<Communication setup internal routines>>
+<<Communication setup interface routines>>
+@
+
+To setup communication for a give [[REAL]], the following routine is called:
+<<Implementation prototypes>>=
+int q(`setup_communication)(struct Q(State) *state, int real_size);
+@
+
+All communication resources are cleaned up by the following routine:
+<<Implementation prototypes>>=
+void q(`cleanup_communication)(struct Q(State) *state);
+@
+
+The implementation routines are simple. We do the requested operation on both
+even and odd halfs of the state. The cleanup is especially simple:
+<<Communication setup interface routines>>=
+void
+q(`cleanup_communication)(struct Q(State) *state)
+{
+  xprint("cleanup");
+   cleanup(&state->even);
+   cleanup(&state->odd);
+}
+@
+For the setup, we avoid reallocation if the current [[real_size]] is the same as
+the new one. It is better to do the full clean up if the size has changed,
+therefore looking into the sublattices here.
+<<Communication setup interface routines>>=
+int
+q(`setup_communication)(struct Q(State) *state, int real_size)
+{
+  if (state->even.real_size == real_size &&
+      state->odd.real_size == real_size)
+    return 0;
+  cleanup(&state->even);
+  cleanup(&state->odd);
+  if (setup(&state->even, state, real_size))
+    return 1;
+  if (setup(&state->odd, state, real_size)) {
+    cleanup(&state->even);
+    return 1;
+  }
+ xprint("setup_comm() ok");
+  return 0;
+}
+@
+
+<<E/O lattice pieces>>=
+int `real_size;
+@
+
+<<E/O dump>>=
+printf(" %s.real_size=%d\n", name, eo->real_size);
+@
+
+<<E/O reset>>=
+eo->real_size = 0;
+@
+
+When the state is cleaned up, deallocate all communication resources:
+<<[[State]] cleanup>>=
+q(cleanup_communication)(state);
+@
+
+Let us start with the clean up procedure.
+<<Communication setup internal routines>>=
+static void
+`cleanup(struct eo_lattice *xy)
+{
+  int i;
+
+  if (xy->real_size == 0)
+    return;
+
+  <<Cleanup composite communication handle>>
+  <<Cleanup dangling send \& receive handles>>
+  <<Cleanup memory handles>>
+  <<Cleanup QMP memory>>
+  <<Nullify buffers>>
+  xy->real_size = 0;
+}
+@
+
+When the setup is complete, all receives are combined into a single handle. We
+only need to clean it up here.
+<<Cleanup composite communication handle>>=
+if (xy->handle) {
+   QMP_free_msghandle(xy->handle);
+}
+xy->handle = NULL;
+@
+
+There could be allocated send and receive handles that were not consumed
+by the global handle. This happens if something had gone wrong while
+initializing.
+<<Cleanup dangling send \& receive handles>>=
+for (i = xy->tmp_h_count; i--;) {
+  QMP_free_msghandle(xy->tmp_h[i]);
+  xy->tmp_h[i] = NULL;
+}
+xy->tmp_h_count = 0;
+@
+
+Send \& receive handles were constructed from memory handles. Let us free them
+now. We assume that [[NULL]] is an invalid memory handle. The QMP specs are
+silent about this.
+<<Cleanup memory handles>>=
+for (i = 0; i < 4 * Q(DIM); i++) {
+  if (xy->mh[i] == NULL)
+    continue;
+  QMP_free_msgmem(xy->mh[i]);
+  xy->mh[i] = NULL;  
+}
+@
+
+All QMP memory needs special handling while freeing:
+<<Cleanup QMP memory>>=
+for (i = 0; i < 4 * Q(DIM); i++) {
+  if (xy->mem[i] == NULL)
+    continue;
+  QMP_free_memory(xy->mem[i]);
+  xy->mem[i] = NULL;
+}
+@
+
+To be on a safe side, we write [[NULL]]'s into every buffer that was associated
+with QMP memory.
+<<Nullify buffers>>=
+for (i = 0; i < Q(DIM); i++) {
+  xy->send_up_buffer[i] = NULL;
+  xy->send_down_buffer[i] = NULL;
+  xy->receive_buffer[i] = NULL;
+  xy->receive_buffer[i + Q(DIM)] = NULL;
+}
+@
+
+This is a good place to declare comminication pieces for e/o lattice:
+<<E/O lattice pieces>>=
+QMP_msghandle_t `handle;
+QMP_msghandle_t `tmp_h[4*Q(DIM)]; /* send+receive in plus+minus */
+int `tmp_h_count;
+@
+
+They are initialized to [[NULL]]. Unfortunately, QMP is not clear that this is
+the right thing to do, by the way.
+<<E/O reset>>=
+{
+  int i;
+
+  eo->handle = NULL;
+  eo->tmp_h_count = 0;
+  for (i = 0; i < 4* Q(DIM); i++) {
+    eo->tmp_h[i] = NULL;
+  }
+}
+@
+
+For the dump, print the handles as pointers.
+<<E/O dump>>=
+{
+  int i;
+
+  printf(" %s.handle=%p, tmp_h_count=%d\n", name, eo->handle, eo->tmp_h_count);
+  for (i = 0; i < eo->tmp_h_count; i++)
+    printf(" %s.tmp_h[%d]=%p\n", name, i, eo->tmp_h[i]);
+}
+@
+
+The memory handles are kept around so that we may free them when they are not
+needed any longer. They are also treated as pointers, though QMP is mute again
+on the issue.
+<<E/O lattice pieces>>=
+QMP_msgmem_t `mh[4 * Q(DIM)];
+@
+
+<<E/O reset>>=
+{
+  int i;
+  for (i = 0; i < 4 * Q(DIM); i++) {
+    eo->mh[i] = NULL;
+  }
+}
+@
+
+<<E/O dump>>=
+{
+  int i;
+
+  for (i = 0; i < 4 * Q(DIM); i++)
+    printf(" %s.mh[%d]=%p\n", name, i, eo->mh[i]);
+}
+@
+
+The receive memory is managed by QMP. Here are the handles to the memory
+<<E/O lattice pieces>>=
+QMP_mem_t *`mem[4 * Q(DIM)];
+@
+
+How we can really use [[NULL]] as an invalid handle.
+<<E/O reset>>=
+{
+  int i;
+
+  for (i = 0; i < 4 * Q(DIM); i++) {
+    eo->mem[i] = NULL;
+  }
+}
+@
+
+<<E/O dump>>=
+{
+  int i;
+
+  for (i = 0; i < 4 * Q(DIM); i++)
+    printf(" %s.mem[%d]=%p\n", name, i, eo->mem[i]);
+}
+@
+
+Final pieces of memory hierarhy are send and receive buffers:
+<<E/O lattice pieces>>=
+void *`send_up_buffer[Q(DIM)];
+void *`send_down_buffer[Q(DIM)];
+void *`receive_buffer[2*Q(DIM)];
+int `total_sent;
+@
+<<E/O reset>>=
+{
+  int i;
+
+  for (i = 0; i < Q(DIM); i++) {
+    eo->send_up_buffer[i] = NULL;
+    eo->send_down_buffer[i] = NULL;
+    eo->receive_buffer[i] = NULL;
+    eo->receive_buffer[i + Q(DIM)] = NULL;
+  }
+}
+@
+
+<<E/O dump>>=
+{
+  int i;
+
+  for (i = 0; i < Q(DIM); i++)
+    printf(" %s.send_up_buffer[%d]=%p\n", name, i, eo->send_up_buffer[i]);
+  for (i = 0; i < Q(DIM); i++)
+    printf(" %s.send_down_buffer[%d]=%p\n", name, i, eo->send_down_buffer[i]);
+  for (i = 0; i < Q(DIM); i++)
+    printf(" %s.receive_up_buffer[%d]=%p\n", name, i, eo->receive_buffer[i]);
+  for (i = 0; i < Q(DIM); i++)
+    printf(" %s.receive_down_buffer[%d]=%p\n", name, i, eo->receive_buffer[i + Q(DIM)]);
+}
+@
+
+Now we can initialize the communication state.
+<<Communication setup internal routines>>=
+static int
+setup(struct eo_lattice *xy, struct Q(State) *state, int real_size)
+{
+   int i, k;
+
+   xprint("start of setup(%p)", xy);
+   xy->total_sent = 0;
+   for (k = 0, i = 0; i < Q(DIM); i++) {
+     <<Allocate send resources in up [[i]]>>
+     <<Allocate send resources in down [[i]]>>
+     <<Allocate receive resources in up [[i]]>>
+     <<Allocate receive resources in down [[i]]>>
+   }
+   xprint("total sent %d", xy->total_sent);
+   <<Allocate combined handle>>
+   return 0;
+ error:
+   xprint("error in setup(%p)", xy);
+   cleanup(xy);
+   return 1;
+}
+@
+
+<<Allocate send resources in up [[i]]>>=
+if (xy->send_up_size[i]) {
+   int size = real_size * 2 * Q(PROJECTED_FERMION_DIM) * Q(COLORS) *
+              xy->send_up_size[i] * state->Ls;
+   void *ptr;
+
+   xprint("send_up[%d]: size=%d, k=%d", i, size, k);
+
+   xy->mem[k] = QMP_allocate_aligned_memory(size + CACHE_LINE_SIZE,
+                                            CACHE_LINE_SIZE,
+                                            QMP_MEM_DEFAULT);
+   xprint("send_up[%d]: mem=%p", i, xy->mem[k]);
+   if (xy->mem[k] == NULL)
+     goto error;
+
+   ptr = QMP_get_memory_pointer(xy->mem[k]);
+   xprint("send_up[%d]: ptr=%p", i, ptr);
+   if (ptr == NULL)
+     goto error;
+
+   xy->send_up_buffer[i] = ALIGN(ptr);
+   xprint("send_up[%d]: buffer=%p", i, xy->send_up_buffer[i]);
+
+   xy->mh[k] = QMP_declare_msgmem(xy->send_up_buffer[i], size);
+   xprint("send_up[%d]: mh=%p", i, xy->mh[k]);
+   if (xy->mh[k] == NULL)
+     goto error;
+
+   xy->tmp_h[k] = QMP_declare_send_relative(xy->mh[k], i, +1, 1);
+   xprint("send_up[%d]: h=%p", i, xy->tmp_h[k]);
+   if (xy->tmp_h[k] == NULL)
+     goto error;
+
+   xy->tmp_h_count = ++k;
+   xy->total_sent += size;
+}
+@
+
+<<Allocate send resources in down [[i]]>>=
+if (xy->send_down_size[i]) {
+   int size = real_size * 2 * Q(PROJECTED_FERMION_DIM) * Q(COLORS) *
+              xy->send_down_size[i] * state->Ls;
+   void *ptr;
+
+   xprint("send_down[%d]: size=%d, k=%d", i, size, k);
+   xy->mem[k] = QMP_allocate_aligned_memory(size + CACHE_LINE_SIZE,
+                                            CACHE_LINE_SIZE,
+                                            QMP_MEM_DEFAULT);
+   xprint("send_down[%d]: mem=%p", i, xy->mem[k]);
+   if (xy->mem[k] == NULL)
+     goto error;
+
+   ptr = QMP_get_memory_pointer(xy->mem[k]);
+   xprint("send_down[%d]: ptr=%p", i, ptr);
+   if (ptr == NULL)
+     goto error;
+
+   xy->send_down_buffer[i] = ALIGN(ptr);
+   xprint("send_down[%d]: buffer=%p", i, xy->send_down_buffer[i]);
+
+   xy->mh[k] = QMP_declare_msgmem(xy->send_down_buffer[i], size);
+   xprint("send_down[%d]: mh=%p", i, xy->mh[k]);
+   if (xy->mh[k] == NULL)
+     goto error;
+
+   xy->tmp_h[k] = QMP_declare_send_relative(xy->mh[k], i, -1, 1);
+   xprint("send_down[%d]: h=%p", i, xy->tmp_h[k]);
+   if (xy->tmp_h[k] == NULL)
+     goto error;
+
+   xy->tmp_h_count = ++k;
+   xy->total_sent += size;
+}
+@
+
+Allocation of the receive resource is similar. We collect all receive handles
+into an array that is converted into a collective receive. If everything is ok,
+the individual handles are cleared before leaving [[setup()]]. Otherwise, they
+are cleared by the [[cleanup()]].
+<<Allocate receive resources in up [[i]]>>=
+if (xy->up_face[i]) {
+  int size = real_size * 2 * Q(PROJECTED_FERMION_DIM) * Q(COLORS) *
+             xy->up_face[i] * state->Ls;
+  void *ptr;
+
+  xprint("rec_up[%d]: size=%d, k=%d", i, size, k);
+  xy->mem[k] = QMP_allocate_aligned_memory(size + CACHE_LINE_SIZE,
+                                           CACHE_LINE_SIZE,
+                                           QMP_MEM_DEFAULT);
+  xprint("rec_up[%d]: mem=%p", i, xy->mem[k]);
+  if (xy->mem[k] == NULL)
+    goto error;
+
+  ptr = QMP_get_memory_pointer(xy->mem[k]);
+  xprint("rec_up[%d]: ptr=%p", i, ptr);
+  if (ptr == NULL)
+    goto error;
+
+  xy->receive_buffer[i] = ALIGN(ptr);
+  xprint("rec_up[%d]: buffer=%p", i, xy->receive_buffer[i]);
+  
+  xy->mh[k] = QMP_declare_msgmem(xy->receive_buffer[i], size);
+  xprint("rec_up[%d]: mh=%p", i, xy->mh[k]);
+  if (xy->mh[k] == NULL)
+    goto error;
+
+  xy->tmp_h[k] = QMP_declare_receive_relative(xy->mh[k], i, +1, 1);
+  xprint("rec_up[%d]: h=%p", i, xy->tmp_h[k]);
+  if (xy->tmp_h[k] == NULL)
+    goto error;
+  xy->tmp_h_count = ++k;
+}
+@
+
+<<Allocate receive resources in down [[i]]>>=
+if (xy->down_face[i]) {
+  int size = real_size * 2 * Q(PROJECTED_FERMION_DIM) * Q(COLORS) *
+             xy->down_face[i] * state->Ls;
+  void *ptr;
+
+  xprint("rec_down[%d]: size=%d, k=%d", i, size, k);
+  xy->mem[k] = QMP_allocate_aligned_memory(size + CACHE_LINE_SIZE,
+                                           CACHE_LINE_SIZE,
+                                           QMP_MEM_DEFAULT);
+  xprint("rec_down[%d]: mem=%p", i, xy->mem[k]);
+  if (xy->mem[k] == NULL)
+    goto error;
+
+  ptr = QMP_get_memory_pointer(xy->mem[k]);
+  xprint("rec_down[%d]: ptr=%p", i, ptr);
+  if (ptr == NULL)
+    goto error;
+
+  xy->receive_buffer[i+Q(DIM)] = ALIGN(ptr);
+  xprint("rec_down[%d]: buffer=%p", i, xy->receive_buffer[i+Q(DIM)]);
+
+  xy->mh[k] = QMP_declare_msgmem(xy->receive_buffer[i+Q(DIM)], size);
+  xprint("rec_down[%d]: mh=%p", i, xy->mh[k]);
+  if (xy->mh[k] == NULL)
+    goto error;
+
+  xy->tmp_h[k] = QMP_declare_receive_relative(xy->mh[k], i, +1, 1);
+  xprint("rec_down[%d]: h=%p", i, xy->tmp_h[k]);
+  if (xy->tmp_h[k] == NULL)
+    goto error;
+  xy->tmp_h_count = ++k;
+}
+@
+
+<<Allocate combined handle>>=
+xprint("before combinded: k=%d, xy->tmp_h_count=%d", k, xy->tmp_h_count);
+if (k) {
+  xy->handle = QMP_declare_multiple(xy->tmp_h, k);
+  xprint("master handle %p", xy->handle);
+  if (xy->handle == NULL)
+    goto error;
+  for (i = 0; i < k; i++) {
+     xprint("packed[%d]=%p", i, xy->tmp_h[i]);
+     xy->tmp_h[i] = NULL;
+  }
+  xy->tmp_h_count = 0;
+}
+@
+
+\section{XXX Helpers}
+\subsection{d/f routine XXX [[Q(madd_fermion)]]}
+\subsection{d/f routine XXX [[Q(madd_half_fermion)]]}
+\subsection{d/f routine XXX [[Q(dot_fermion)]]}
+\subsection{d/f routine XXX [[Q(dot_half_fermion)]]}
+
+\section{Import}
+For import there is a pseudo-issue of efficiency. In MDWF we always walk through
+the inner represenation in the most efficient manner. The call-backs allow us
+to remain blissfully ignorant about the outside data layout.
+\subsection{Gauge field}
+This is the easiest import we have. The gauge field is stored in a natural way
+(four $SU_3$ matrices per lattice site) and require no special tricks.
+<<File [[import-g.c]]>>=
+#include <mdwf.h>
+int
+QX(`import_gauge)(struct QX(Gauge) **gauge_ptr,
+                 struct Q(State) *state,
+                 double (*reader)(int dir,
+                                  const int pos[Q(DIM)],
+                                  int a,
+                                  int b,
+                                  int re_im,
+                                  void *env),
+                 void *env)
+{
+   int a, b, p, la, i, d;
+   int x[Q(DIM)];
+   struct SUn *u;
+   REAL ur, ui;
+   int *hi;
+   int *lo;
+
+   <<Start timer>>
+   <<Reset [[flops]] and [[sent]]>>
+   if (qx(allocate_gauge)(state, gauge_ptr) != 0) {
+     <<Stop timer>>
+     return 1;
+   }
+
+   lo = state->sublattice.lo;
+   hi = state->sublattice.hi;
+   for (u = (*gauge_ptr)->data, la = 0; la < state->volume; la++) {
+     p = la;
+     <<Linear [[p]] to vector [[x]]>>
+     for (d = 0; d < Q(DIM); d++, u++) {
+       for (a = 0; a < Q(COLORS); a++) {
+         for (b = 0; b < Q(COLORS); b++) {
+           ur = (*reader)(d, x, a, b, 0, env);
+           ui = (*reader)(d, x, a, b, 1, env);
+           u->u[a][b] = ur + I * ui; /* hail C99! */
+         }
+       }
+     }
+   }
+   <<Stop timer>>
+   return 0;
+}
+@
+
+\subsection{Fermion}
+For fermions we postpone the definition of the 5-d slice layout to the low level
+import routine. It will cost as an additional function call per 4-d lattice,
+which is small overhead compared to the call-back. Here we walk local 4-d only:
+<<File [[import-f.c]]>>=
+#include <mdwf.h>
+int
+QX(`import_fermion)(struct QX(Fermion) **fermion_ptr,
+                   struct Q(State) *state,
+                   double (*reader)(const int pos[Q(DIM)+1],
+                                    int color,
+                                    int dirac,
+                                    int re_im,
+                                    void *env),
+                   void *env)
+{
+#define ALLOCATOR QX(allocate_fermion)
+   <<Import (half)fermion prologue>>
+   <<Import even part of (half)fermion>>
+   <<Import odd part of fermion>>
+   <<Import (half)fermion epilogue>>
+#undef ALLOCATOR
+   return 0;
+}
+@
+
+<<Import (half)fermion prologue>>=
+int la, p, i;
+int Ls;
+int x[Q(DIM)+1];
+struct Fermion *f;
+int *hi;
+int *lo;
+double *slice;
+int ssize;
+
+if (state == NULL)
+  return 1;
+lo = state->sublattice.lo;
+hi = state->sublattice.hi;
+Ls = state->Ls;
+ssize = Ls * Q(COLORS) * Q(FERMION_DIM) * 2 * sizeof (double);
+slice = q(malloc)(state, ssize);
+if (slice == NULL) {
+  /* XXX report error appropriately */
+  return 1;
+}
+<<Start timer>>
+<<Reset [[flops]] and [[sent]]>>
+if (ALLOCATOR(fermion_ptr, state) != 0) {
+   <<Stop timer>>
+   return 1;
+}
+@
+
+<<Import (half)fermion epilogue>>=
+q(free)(state, slice, ssize);
+<<Stop timer>>
+@
+
+<<Import even part of (half)fermion>>=
+for (f = (*fermion_ptr)->even, la = 0; la < state->even.full_size; la++, f += Ls) {
+  int c, d, s;
+  double *ss;
+  p = la;
+  <<Linear [[p]] to vector [[x]]>>
+  for (ss = slice, s = 0; s < Ls; s++) {
+    x[Q(DIM)] = s;
+    for (d = 0; d < Q(FERMION_DIM); d++) {
+      for (c = 0; c < Q(COLORS); c++) {
+         *ss++ = reader(x, c, d, 0, env);
+         *ss++ = reader(x, c, d, 1, env);
+      }
+    }
+  }
+  qx(import_fermion_slice)(f, slice, Ls);
+}
+@
+
+<<Import odd part of fermion>>=
+for (f = (*fermion_ptr)->odd, la = 0; la < state->odd.full_size; la++, f += Ls) {
+  int c, d, s;
+  double *ss;
+  p = la;
+  <<Linear [[p]] to vector [[x]]>>
+  for (ss = slice, s = 0; s < Ls; s++) {
+    x[Q(DIM)] = s;
+    for (d = 0; d < Q(FERMION_DIM); d++) {
+      for (c = 0; c < Q(COLORS); c++) {
+         *ss++ = reader(x, c, d, 0, env);
+         *ss++ = reader(x, c, d, 1, env);
+      }
+    }
+  }
+  qx(import_fermion_slice)(f, slice, Ls);
+}
+@
+
+\subsection{Half Fermion}
+For half-fermions, we only need to import even part:
+<<File [[import-h.c]]>>=
+#include <mdwf.h>
+int
+QX(`import_half_fermion)(struct QX(HalfFermion) **fermion_ptr,
+                        struct Q(State) *state,
+                        double (*reader)(const int pos[Q(DIM)+1],
+                                         int color,
+                                         int dirac,
+                                         int re_im,
+                                         void *env),
+                        void *env)
+{
+#define ALLOCATOR QX(allocate_half_fermion)
+   <<Import (half)fermion prologue>>
+   <<Import even part of (half)fermion>>
+   <<Import (half)fermion epilogue>>
+#undef ALLOCATOR
+   return 0;
+}
+@
+
+\section{Export}
+We export only fermions. The code at this level is very similar to the
+corresponding import routines.
+<<File [[export-f.c]]>>=
+#include <mdwf.h>
+int
+Q(`export_fermion)(void (*writer)(const int pos[5],
+                                 int color,
+                                 int dirac,
+                                 int re_im,
+                                 double value,
+                                 void *env),
+                   void *env,
+                   const struct QX(Fermion) *fermion)
+{
+   <<Export (half)fermion prologue>>
+   <<Export even part of (half)fermion>>
+   <<Export odd part of fermion>>
+   <<Stop timer>>
+   return 0;
+}
+@
+
+<<Export (half)fermion prologue>>=
+struct Q(State) *state;
+int la, p, i;
+int x[Q(DIM)+1];
+const int *lo;
+const int *hi;
+const struct Fermion *f;
+int Ls;
+
+if (fermion == NULL)
+  return 1;
+
+state = fermion->state;
+lo = state->sublattice.lo;
+hi = state->sublattice.hi;
+Ls = state->Ls;
+<<Start timer>>
+<<Reset [[flops]] and [[sent]]>>
+@
+
+<<Export even part of (half)fermion>>=
+for (f = fermion->even, la = 0; la < state->even.full_size; la++, f += Ls) {
+  p = la;
+  <<Linear [[p]] to vector [[x]]>>
+  qx(export_fermion_slice)(state, f, x, writer, env);
+}
+@
+
+<<Export odd part of fermion>>=
+for (f = fermion->odd, la = 0; la < state->odd.full_size; la++, f += Ls) {
+  p = la;
+  <<Linear [[p]] to vector [[x]]>>
+  qx(export_fermion_slice)(state, f, x, writer, env);
+}
+@
+
+\subsection{Half Fermion}
+<<File [[export-h.c]]>>=
+#include <mdwf.h>
+int
+Q(`export_half_fermion)(void (*writer)(const int pos[5],
+                                      int color,
+                                      int dirac,
+                                      int re_im,
+                                      double value,
+                                      void *env),
+                       void *env,
+                       const struct QX(HalfFermion) *fermion)
+{
+   <<Export (half)fermion prologue>>
+   <<Export even part of (half)fermion>>
+   <<Stop timer>>
+   return 0;
+}
+@
+
+
+\section{Memory management}
+Though we use [[malloc()]] and [[free()]], it is convenient to abstract them.
+<<Implementation prototypes>>=
+void *q(`malloc)(struct Q(State) *state, size_t bytes);
+void q(`free)(struct Q(State) *state, void *ptr, size_t bytes);
+void *q(`allocate_aligned)(struct Q(State) *state,
+                          size_t *size, void **aligned_ptr,
+                          size_t hdr_size, size_t bulk_size);
+void *q(`allocate_eo)(struct Q(State) *state,
+                     size_t *size, void **aligned_ptr,
+                     size_t hdr_size, int even_count, int odd_count, size_t fsize);
+void *q(`step_even_field)(struct Q(State) *state, void *ptr, size_t fsize);
+void *q(`step_odd_field)(struct Q(State) *state, void *ptr, size_t fsize);
+@
+
+The implementation is simple:
+<<File [[memory.c]]>>=
+<<Precision independent file>>
+#include <mdwf.h>
+<<Memory functions>>
+@
+
+Each [[malloc]] records the current allocated size in its first argument if
+it is not [[NULL]]. We also keep track of maximal memory ever requested.
+<<Memory functions>>=
+void *
+q(`malloc)(struct Q(State) *state, size_t bytes)
+{
+   void *ptr = malloc(bytes);
+   if (ptr == NULL)
+     return NULL;
+   if (state) {
+      state->allocated += bytes;
+      if (state->allocated > state->max_allocated)
+        state->max_allocated = state->allocated;
+   }
+   return ptr;
+}
+@
+Freeing memory also keeps track of memory use. We allow this function to be
+called with a [[NULL]] pointer.
+<<Memory functions>>=
+void
+q(`free)(struct Q(State) *state, void *ptr, size_t size)
+{
+   if (ptr == NULL)
+     return;
+   if (state == NULL)
+     return;
+   state->allocated -= size;
+}
+@
+
+\subsection{Aligned Allocator}
+We often need a memory block aligned at [[CACHE_LINE_SIZE]]. It all cases we also need a header which is normally aligned. Our strategy is to allocate one block of memory with sufficient slack. Here is a corresponding allocator.
+<<Memory functions>>=
+void *
+q(`allocate_aligned)(struct Q(State) *state,
+                    size_t *size, void **aligned_ptr,
+                    size_t hdr_size, size_t bulk_size)
+{
+   size_t total_size = hdr_size + bulk_size + 2 * (CACHE_LINE_SIZE - 1);
+   void *p = q(malloc)(state, total_size);
+   if (p == 0) {
+     *size = 0;
+     *aligned_ptr = NULL;
+   } else {
+     *size = total_size;
+     *aligned_ptr = ALIGN(p + hdr_size);
+   }
+   return p;
+}
+@
+
+We often need to allocate a number of even and odd parts of a fermion. Here are
+three handy functions:
+<<Memory functions>>=
+void *
+q(`allocate_eo)(struct Q(State) *state,
+               size_t *size, void **aligned_ptr,
+               size_t hdr_size, int even_count, int odd_count, size_t fsize)
+{
+#define HFSIZE(n) ((n) * state->Ls * fsize)
+  size_t total_size = hdr_size
+                    + HFSIZE(even_count * state->even.full_size)
+                    + HFSIZE(odd_count * state->odd.full_size)
+                    + (even_count + odd_count + 1) * (CACHE_LINE_SIZE - 1);
+  void *p = q(malloc)(state, total_size);
+  if (p == 0) {
+    *size = 0;
+    *aligned_ptr = 0;
+  } else {
+    *size = total_size;
+    *aligned_ptr = ALIGN(p + hdr_size);
+  }
+  return p;
+#undef HFSIZE
+}
+@
+
+<<Memory functions>>=
+void *
+q(`step_even_field)(struct Q(State) *state, void *ptr, size_t fsize)
+{
+  size_t size = state->even.full_size * state->Ls * fsize;
+  return ALIGN(ptr + size);
+}
+
+void *
+q(`step_odd_field)(struct Q(State) *state, void *ptr, size_t fsize)
+{
+  size_t size = state->odd.full_size * state->Ls * fsize;
+  return ALIGN(ptr + size);
+}
+@
+
+Two extra fields are needed in the [[State]]:
+<<[[State]] components>>=
+unsigned int allocated;     /* currently allocated bytes */
+unsigned int max_allocated; /* maximal allocated bytes */
+@
+<<[[State]] cleanup>>=
+state->allocated = 0;
+state->max_allocated = 0;
+@
+<<[[State]] dump>>=
+printf("state.allocated     = %d\n", state->allocated);
+printf("state.max_allocated = %d\n", state->max_allocated);
+@
+
+\subsection{Gauge Allocator}
+The gauge allocation is an internal routine, but it is a good start for MDWF
+memory management routines. Though we do not need the data to be aligned beyond
+the usual double, let us make it align anyway.
+<<File [[memory-g.c]]>>=
+#include <mdwf.h>
+int
+qx(allocate_gauge)(struct Q(State) *state, struct QX(Gauge) **gauge_ptr)
+{
+  struct QX(Gauge) *g;
+  void *ptr;
+  size_t size;
+
+  <<Begin interface routine>>
+  *gauge_ptr = NULL;
+  g = q(allocate_aligned)(state, &size, &ptr, sizeof (struct QX(Gauge)),
+                          state->volume * Q(DIM) * sizeof (struct SUn));
+  CHECK0(g == NULL, "not enough memory for gauge field");
+  state->used++;
+  g->state = state;
+  g->size = size;
+  g->data = ptr;
+  *gauge_ptr = g;
+  return 0;
+  <<End interface routine>>
+}
+@
+
+Most of the interface routines start with checking that [[State]] is good:
+<<Begin interface routine>>=
+if ((state == NULL) || (state->record == 0))
+  return 1;
+#define CHECK(cond, msg, er) do { if (cond) { q(set_error(state, msg)); goto er; } } while (0)
+#define CHECK0(cond, msg) do { if (cond) { q(set_error(state, msg)); return 1; } } while (0)
+@
+<<End interface routine>>=
+#undef CHECK
+#undef CHECK0
+@
+
+The deallocator is simple
+<<File [[memory-g.c]]>>=
+void
+QX(free_gauge)(struct QX(Gauge) **gauge_ptr)
+{
+   struct Q(State) *state;
+   if ((gauge_ptr == NULL) || (*gauge_ptr == NULL))
+     return;
+   state = (*gauge_ptr)->state;
+   q(free)(state, *gauge_ptr, (*gauge_ptr)->size);
+   Q(fini)(&state);
+   *gauge_ptr = NULL;
+}
+@
+
+<<Implementation prototypes>>=
+int qx(allocate_gauge)(struct Q(State) *state, struct QX(Gauge) **gauge_ptr);
+@
+
+\subsection{Fermoon Allocator}
+Full fermions are a bit tricky---we want both [[even]] and [[odd]] parts to be
+aligned, which costs an extra [[CACHE_LINE_SIZE]] in the allocation.
+<<File [[memory-f.c]]>>=
+#include <mdwf.h>
+int
+QX(`allocate_fermion)(struct QX(Fermion) **fermion_ptr,
+                     struct Q(State) *state)
+{
+  struct QX(Fermion) *f;
+  void *ptr;
+  size_t size;
+
+  <<Begin interface routine>>
+  *fermion_ptr = NULL;
+  f = q(allocate_eo)(state, &size, &ptr, sizeof (struct QX(Fermion)),
+                     1, 1, sizeof (struct Fermion));
+  CHECK0(f == NULL, "not enough memory for full fermion field");
+  state->used++;
+  f->state = state;
+  f->size = size;
+  f->even = ptr;
+  f->odd = q(step_even_field)(state, ptr, sizeof (struct Fermion));
+  *fermion_ptr = f;
+  return 0;
+  <<End interface routine>>
+}
+@
+
+The deallocator is simple
+<<File [[memory-h.c]]>>=
+#include <mdwf.h>
+void
+QX(free_fermion)(struct QX(Fermion) **fermion_ptr)
+{
+   struct Q(State) *state;
+   if ((fermion_ptr == NULL) || (*fermion_ptr == NULL))
+     return;
+   state = (*fermion_ptr)->state;
+   q(free)(state, *fermion_ptr, (*fermion_ptr)->size);
+   Q(fini)(&state);
+   *fermion_ptr = NULL;
+}
+@
+
+\subsection{Half Fermion Allocator}
+The half fermion allocator is the easiest:
+<<File [[memory-h.c]]>>=
+#include <mdwf.h>
+int
+QX(`allocate_half_fermion)(struct QX(HalfFermion) **hfermion_ptr,
+                          struct Q(State) *state)
+{
+  struct QX(HalfFermion) *h;
+  void *ptr;
+  size_t size;
+
+  <<Begin interface routine>>
+  *hfermion_ptr = NULL;
+  h = q(allocate_eo)(state, &size, &ptr, sizeof (struct QX(HalfFermion)),
+                     1, 0, sizeof (struct Fermion));
+  CHECK0(h == NULL, "not enough memory for half fermion field");
+  state->used++;
+  h->state = state;
+  h->size = size;
+  h->even = ptr;
+  *hfermion_ptr = h;
+  return 0;
+  <<End interface routine>>
+}
+@
+
+The deallocator is simple
+<<File [[memory-h.c]]>>=
+void
+QX(free_half_fermion)(struct QX(HalfFermion) **hfermion_ptr)
+{
+   struct Q(State) *state;
+   if ((hfermion_ptr == NULL) || (*hfermion_ptr == NULL))
+     return;
+   state = (*hfermion_ptr)->state;
+   q(free)(state, *hfermion_ptr, (*hfermion_ptr)->size);
+   Q(fini)(&state);
+   *hfermion_ptr = NULL;
+}
+@
+
+
+
+\chapter{CODE GENERATION}
+This chapter contains back end specific routines. Here is what we need
+to define.
+
+Store one $s$-slice worth of the domain wall fermion.
+<<Implementation prototypes>>=
+void qx(`export_fermion_slice)(struct Q(State) *state,
+                              const struct Fermion *fermion,
+                              int pos[Q(DIM)+1],
+                              void (*writer)(const int pos[5],
+                                             int color,
+                                             int dirac,
+                                             int re_im,
+                                             double value,
+                                             void *env),
+                              void *env);
+@
+
+Now let us collect the $\gamma$-matrix projections and reconstructions. We
+put them all together into [[mdwf-basis]] as an a list of pairs with keys
+of the form [[(<op> <dir> <sign>)]].
+<<File [[basis.ss]]>>=
+(define mdwf-basis '(
+  <<Project $(1+\gamma_0)$>>
+  <<Project $(1+\gamma_1)$>>
+  <<Project $(1+\gamma_2)$>>
+  <<Project $(1+\gamma_3)$>>
+  <<Project $(1-\gamma_0)$>>
+  <<Project $(1-\gamma_1)$>>
+  <<Project $(1-\gamma_2)$>>
+  <<Project $(1-\gamma_3)$>>
+  <<Unproject $(1+\gamma_0)$>>
+  <<Unproject $(1+\gamma_1)$>>
+  <<Unproject $(1+\gamma_2)$>>
+  <<Unproject $(1+\gamma_3)$>>
+  <<Unproject $(1-\gamma_0)$>>
+  <<Unproject $(1-\gamma_1)$>>
+  <<Unproject $(1-\gamma_2)$>>
+  <<Unproject $(1-\gamma_3)$>>))
+@
+We also define a starting link in a sum over links:
+<<File [[basis.ss]]>>=
+  <<Start $\mu$ sum>>
+@
+
+\section{XXX Back-end interface}
+XXX make it better --- move includes to [[<mdwf.h>]].
+For spin projection we start with a simple file. Selection of the back end is
+done via compile-time switches.
+<<Low level single precision includes>>=
+#include <spinf.h>
+@
+<<Low level double precision includes>>=
+#include <spind.h>
+@
+<<File [[spin.c]]>>=
+#include <mdwf.h>
+#if QOP_MDWF_DEFAULT_PRECISION == 'F'
+#include <spinf.c>
+#endif
+#if QOP_MDWF_DEFAULT_PRECISION == 'D'
+#include <spind.c>
+#endif
+@
+Compute engines for $A$, $B$, $F$, and their combinations.
+<<Low level single precision includes>>=
+#include <ABFf.h>
+@
+<<Low level double precision includes>>=
+#include <ABFd.h>
+@
+<<File [[ABF.c]]>>=
+#include <mdwf.h>
+#if QOP_MDWF_DEFAULT_PRECISION == 'F'
+#include <ABFf.c>
+#endif
+#if QOP_MDWF_DEFAULT_PRECISION == 'D'
+#include <ABFd.c>
+#endif
+@
+
+\section{C99}
+This section contains all low level routines for the C99 target. We still use
+[[qa0]] to generate the code, because it simplifies code verification and
+maintanence.
+
+\subsection{Boundary spin projection}
+<<File [[c99/spin.qa0]]>>=
+<<[[c99/qa0]] spin data types>>
+(repeat ([d (const 0) (const *dim*)]
+         [p/m (plus minus)])
+   <<[[c99/qa0]] simple boundary projection>>
+   <<[[c99/qa0]] gauged boundary projection>>
+)
+@
+
+Backward boundaries are projected and packed for sends:
+<<[[c99/qa0]] simple boundary projection>>=
+(procedure down-face ([stem "proj_g" d p/m] count-flops)
+           ([res    pointer "res"         "struct ProjectedFermion *"]
+            [size   int     "size"        "int"                      ]
+            [l-v    int     "LsV"         "int"                      ]
+            [link   pointer "down_link"   "const int *"              ]
+            [src    pointer "src"         "const struct Fermion *"   ])
+   (op int-mul () (bytes-in-s) ([reg l-v] [const (size-of Fermion)]))
+   (loop () (k [const 0] [reg size])
+     (load int () index ([reg link]))
+     (op pointer-add () (link) ([reg link] [const (size-of int)]))
+     (op int-mul () (src-off) ([reg bytes-in-s] [reg index]))
+     (op pointer-add () (f-addr) ([reg src] [reg src-off]))
+     (loop () (j [const 0] [reg l-v])
+       (load qcd-fermion () f ([reg f-addr]))
+       (op pointer-add () (f-addr) ([reg f-addr] [const (size-of Fermion)]))
+       (op qcd-project ([project d p/m]) (g) ([reg f]))
+       (store qcd-projected-fermion () ([reg res]) [reg g])
+       (op pointer-add () (res) ([reg res] [const (size-of Projected-Fermion)])))))
+@
+Forward projections include multiplication by the gauge field. Since we move
+data forward along the link, the multiplication here is by $U^\dagger$.
+<<[[c99/qa0]] gauged boundary projection>>=
+(procedure up-face ([stem "proj_Ucg" d p/m] count-flops)
+           ([res    pointer  "res"       "struct ProjectedFermion *"]
+            [size   int      "size"      "int"                      ]
+            [l-v    int      "LsV"       "int"                      ]
+            [link   pointer  "up_link"   "const struct up_pack *"   ]
+            [U      pointer  "U"         "const struct SUn *"       ]
+            [src    pointer  "src"       "const struct Fermion *"   ])
+   (op int-mul () (src-size) ([reg l-v] [const (size-of Fermion)]))
+   (loop () (k [const 0] [reg size])
+     (load int () f-index ([reg link] [const (offset-of up-link fermion)]))
+     (load int () U-index ([reg link] [const (offset-of up-link gauge)]))
+     (op pointer-add () (link) ([reg link] [const (size-of up-link)]))
+     (op int-mul () (f-offset) ([reg f-index] [reg src-size]))
+     (op int-mul () (U-offset) ([reg U-index] [const (size-of SU-n)]))
+     (op pointer-add () (f-addr) ([reg src] [reg f-offset]))
+     (op pointer-add () (U-addr) ([reg U] [reg U-offset]))
+     (load qcd-su-n () gauge ([reg U-addr]))
+     (loop () (j [const 0] [reg l-v])
+       (load qcd-fermion () f ([reg f-addr]))
+       (op pointer-add () (f-addr) ([reg f-addr] [const (size-of Fermion)]))
+       (op qcd-project ([project d p/m]) (g) ([reg f]))
+       (op qcd-mulh-conj () (Ug) ([reg gauge] [reg g]))
+       (store qcd-projected-fermion () ([reg res]) [reg Ug])
+       (op pointer-add () (res) ([reg res] [const (size-of Projected-Fermion)])))))
+@
+
+The forward link contains [[fermion]] and [[gauge]] index measured in units
+of $L_s$ links and $SU_n$ respectively:
+<<[[c99/qa0]] spin data types>>=
+(structure up-link "up_pack" ([fermion "f_index"   int]
+                              [gauge   "u_index"   int]))
+@
+
+\subsection{Diagonal parts}
+<<File [[c99/ABF.qa0]]>>=
+<<[[c99/qa0]] ABF data types>>
+(procedure A-B ([stem "do_AB"] count-flops)
+           ([res-x    pointer "res_x"    "struct Fermion *"      ]
+            [size     int     "size"     "int"                   ]
+            [LsV      int     "LsV"      "int"                   ]
+            [a-table  pointer "a_table"  "const struct ABTable *"]
+	    [src-x    pointer "src_x"    "const struct Fermion *"])
+   (op pointer-move () (dst-x) ([reg res-x]))
+   (loop () (i [const 0] [reg size])
+     <<[[A-B]] process one s-slice>>))
+@
+
+<<[[A-B]] process one s-slice>>=
+(op pointer-move () (a-k) ([reg a-table]))
+(loop () (k [const 0] [reg LsV])
+  <<[[A-B]] process one point>>
+  (op pointer-add () (a-k) ([reg a-k] [const (size-of AB-Table)]))
+  (op pointer-add () (dst-x) ([reg dst-x] [const (size-of Fermion)]))
+  (op pointer-add () (src-x) ([reg src-x] [const (size-of Fermion)])))
+@
+
+<<[[A-B]] process one point>>=
+(load int () lo-i ([reg a-k] [const (offset-of AB-Table lo-i)]))
+(load int () hi-i ([reg a-k] [const (offset-of AB-Table hi-i)]))
+(load double () c-zz ([reg a-k] [const (offset-of AB-Table alpha-c)]))
+(load double () c-lo ([reg a-k] [const (offset-of AB-Table alpha-lo)]))
+(load double () c-hi ([reg a-k] [const (offset-of AB-Table alpha-hi)]))
+(op int-mul () (lo-off) ([reg lo-i] [const (size-of Fermion)]))
+(op int-mul () (hi-off) ([reg hi-i] [const (size-of Fermion)]))
+(op pointer-add () (s-lo) ([reg src-x] [reg lo-off]))
+(op pointer-add () (s-hi) ([reg src-x] [reg hi-off]))
+(load qcd-fermion () f-zz ([reg src-x]))
+(load qcd-fermion-lo () f-lo ([reg s-lo]))
+(load qcd-fermion-hi () f-hi ([reg s-hi]))
+(op qcd-scalef () (r-z) ([reg c-zz] [reg f-zz]))
+(op qcd-madd-lohi () (v) ([reg r-z] [reg c-lo] [reg f-lo] [reg c-hi] [reg f-hi]))
+(store qcd-fermion () ([reg dst-x]) [reg v])
+@
+
+The diagonal parts expect offsets from the curernt position for
+$(1+\gamma_5)/2$ and $(1-\gamma_5)/2$, and three [[double]] scales---for each
+projected piece and the central element. The order of structure elements
+is chosen to minimize [[struct ABTable]] size.
+<<[[c99/qa0]] ABF data types>>=
+(structure AB-Table "ABTable" ([lo-i      "lo"    int   ]
+                               [hi-i      "hi"    int   ]
+                               [alpha-c   "c"     double]
+                               [alpha-lo  "c_lo"  double]
+                               [alpha-hi  "c_hi"  double]))
+@
+
+\subsection{Dirac Operator}
+Here we compute $A\psi_x + F\psi_y$.
+<<File [[c99/ABF.qa0]]>>=
+(procedure A+F ([stem "do_ApF"] count-flops)
+           ([res-x     pointer   "res_x"    "struct Fermion *"                ]
+            [size      int       "size"     "int"                             ]
+            [LsV       int       "LsV"      "int"                             ]
+            [f-table   pointer   "f_table"  "const struct neighbor *"         ]
+            [a-table   pointer   "a_table"  "const struct ABTable *"          ]
+            [U         pointer   "U"        "const struct SUn *"              ]
+            [src-x     pointer   "src_x"    "const struct Fermion *"          ]
+            [src-y     pointer   "src_y"    "const struct Fermion *"          ]
+            [src-b*    pointer   "b_ptr"    "void **"                         ])
+  (op int-mul () (fermion-slice) ([reg LsV] [const (size-of Fermion)]))
+  (op int-mul () (projected-fermion-slice) ([reg LsV] [const (size-of Projected-Fermion)]))
+  (loop () (i [const 0] [reg size])
+     (op pointer-move () (dst-x) ([reg res-x]))
+     (load int () mask ([reg f-table] [const (offset-of F-Table mask)]))
+     <<[[A-B]] process one s-slice>>
+     <<[[A+F]] forward neighbors>>
+     <<[[A+F]] backward neighbors>>
+     (op pointer-add () (f-table) ([reg f-table] [const (size-of F-Table)]))
+     (op pointer-move () (res-x) ([reg dst-x]))))
+@
+
+<<[[A+F]] forward neighbors>>=
+(load int () U-index ([reg f-table] [const (offset-of F-Table forward-U)]))
+(op int-mul () (U-offset) ([reg U-index] [const (size-of SU-n)]))
+(op pointer-add () (U-forward) ([reg U] [reg U-offset]))
+(op pointer-add () (s-off2) ([reg f-table] [const (offset-of F-Table forward-F)]))
+(macro ([d [const 0] [const *dim*]])
+  (load qcd-su-n () UU ([reg U-forward]))
+  (op pointer-move () (dst-x) ([reg res-x]))
+  (load int () s-off ([reg s-off2]))
+  (op int-and () (m) ([reg mask] [const (shift 1 d)]))
+  (if-else [reg m]
+      <<[[A+F]] face forward>>
+      <<[[A+F]] body forward>>)
+  (op pointer-add () (U-forward) ([reg U-forward] [const (size-of SU-n)]))
+  (op pointer-add () (s-off2) ([reg s-off2] [const (size-of int)])))
+@
+
+If the neighbor is inside the local volume, then project, multiply, unproject.
+<<[[A+F]] body forward>>=
+(begin
+  (op int-mul () (s-index) ([reg s-off] [reg fermion-slice]))
+  (op pointer-add () (F-forward) ([reg src-y] [reg s-index]))
+  (loop () (j [const 0] [reg LsV])
+    (load qcd-fermion () r-forward ([reg dst-x]))
+    (load qcd-fermion () s-forward ([reg F-forward]))
+    (op qcd-project ([project d minus]) (f-proj) ([reg s-forward]))
+    (op qcd-mulh () (Uf) ([reg UU] [reg f-proj]))
+    (op qcd-unproject-add ([unproject d minus]) (zz) ([reg r-forward] [reg Uf]))
+    (store qcd-fermion () ([reg dst-x]) [reg zz])
+    (op pointer-add () (dst-x) ([reg dst-x] [const (size-of Fermion)]))
+    (op pointer-add () (F-forward) ([reg F-forward] [const (size-of Fermion)]))))
+@
+
+Otherwise, we are on the forward boundary. The projection was done before
+send, so now we multiply and unproject. Notice that our source is [[src-b]] in
+this case.
+<<[[A+F]] face forward>>=
+(begin
+  (load pointer () src-b ([reg src-b*] [const (* d (size-of pointer))]))
+  (op int-mul () (s-index) ([reg s-off] [reg projected-fermion-slice]))
+  (op pointer-add () (F-forward) ([reg src-b] [reg s-index]))
+  (loop () (j [const 0] [reg LsV])
+    (load qcd-fermion () r-forward ([reg dst-x]))
+    (load qcd-projected-fermion () f-proj ([reg F-forward]))
+    (op qcd-mulh () (Uf) ([reg UU] [reg f-proj]))
+    (op qcd-unproject-add ([unproject d minus]) (zz) ([reg r-forward] [reg Uf]))
+    (store qcd-fermion () ([reg dst-x]) [reg zz])
+    (op pointer-add () (dst-x) ([reg dst-x] [const (size-of Fermion)]))
+    (op pointer-add () (F-forward) ([reg F-forward] [const (size-of Projected-Fermion)]))))
+@
+
+The backward neighbors are very like the forward ones. The difference is in
+finding the gauge link. 
+<<[[A+F]] backward neighbors>>=
+(op pointer-add () (u-off2) ([reg f-table] [const (offset-of F-Table backward-U)]))
+(op pointer-add () (s-off2) ([reg f-table] [const (offset-of F-Table backward-F)]))
+(macro ([d [const 0] [const *dim*]])
+  (op pointer-move () (dst-x) ([reg res-x]))
+  (load int () s-off ([reg s-off2]))
+  (op int-and () (m) ([reg mask] [const (shift 1 (+ *dim* d))]))
+  (if-else [reg m]
+      <<[[A+F]] face backward>>
+      <<[[A+F]] body backward>>)
+  (op pointer-add () (u-off2) ([reg u-off2] [const (size-of int)]))
+  (op pointer-add () (s-off2) ([reg s-off2] [const (size-of int)])))
+@
+<<[[A+F]] body backward>>=
+(begin
+  (load int () u-off ([reg u-off2]))
+  (op int-mul () (u-index) ([reg u-off] [const (size-of SU-n)]))
+  (op pointer-add () (U-addr) ([reg U] [reg u-index]))
+  (load qcd-su-n () UU ([reg U-addr]))
+  (op int-mul () (s-index) ([reg s-off] [reg fermion-slice]))
+  (op pointer-add () (s-addr) ([reg src-y] [reg s-index]))
+  (loop () (j [const 0] [reg LsV])
+     (load qcd-fermion () r ([reg dst-x]))
+     (load qcd-fermion () f ([reg s-addr]))
+     (op qcd-project ([project d plus]) (h) ([reg f]))
+     (op qcd-mulh-conj () (Uh) ([reg UU] [reg h]))
+     (op qcd-unproject-add ([unproject d plus]) (zz) ([reg r] [reg Uh]))
+     (store qcd-fermion () ([reg dst-x]) [reg zz])
+     (op pointer-add () (s-addr) ([reg s-addr] [const (size-of Fermion)]))
+     (op pointer-add () (dst-x) ([reg dst-x] [const (size-of Fermion)]))))
+@
+
+On the backward face, we received projected fermion multiplied by $U^\dagger$.
+Here we do the rest, namely, unproject and accumulate the result
+<<[[A+F]] face backward>>=
+(begin
+  (load pointer () src-b ([reg src-b*] [const (* (+ d *dim*) (size-of pointer))]))
+  (op int-mul () (s-index) ([reg s-off] [reg projected-fermion-slice]))
+  (op pointer-add () (s-addr) ([reg src-b] [reg s-index]))
+  (loop () (j [const 0] [reg LsV])
+     (load qcd-fermion () r ([reg dst-x]))
+     (load qcd-projected-fermion () Uh ([reg s-addr]))
+     (op qcd-unproject-add ([unproject d plus]) (zz) ([reg r] [reg Uh]))
+     (store qcd-fermion () ([reg dst-x]) [reg zz])
+     (op pointer-add () (s-addr) ([reg s-addr] [const (size-of Projected-Fermion)]))
+     (op pointer-add () (dst-x) ([reg dst-x] [const (size-of Fermion)]))))
+@
+
+The off-diagonal elements require a neighbor table. Because [[qa0]] does
+not support complex compound types, we separate vectors here.
+<<[[c99/qa0]] ABF data types>>=
+(array dim-array "xdarray" int [const *dim*])
+(structure F-Table "neighbor" (
+   <<[[neighbor]] parts>>))
+@
+
+\subsection{Importing fermions}
+Given one $s$-slice of doubles in the canonical order, fill a corresponding part
+of the fermion.
+<<Low level single precision includes>>=
+#include <simport-ff.h>
+@
+<<Low level double precision includes>>=
+#include <simport-fd.h>
+@
+
+<<File [[simport-f.c]]>>=
+#include <mdwf.h>
+#if QOP_MDWF_DEFAULT_PRECISION == 'F'
+#include <simport-ff.c>
+#endif
+#if QOP_MDWF_DEFAULT_PRECISION == 'D'
+#include <simport-fd.c>
+#endif
+@
+
+<<File [[c99/simport-f.qa0]]>>=
+(procedure s-import-f ([stem "import_fermion_slice"])
+           ([f    pointer  "f"   "struct Fermion *"  ]
+            [cd   pointer  "d"   "const double *"    ]
+            [LsV  int      "LsV" "int"               ])
+  (loop () (s [const 0] [reg LsV])
+    (macro ([c [const 0] [const *colors*]])
+      (macro ([d [const 0] [const *fermion-dim*]])
+        (load double () v-re ([reg cd]))
+        (op pointer-add () (cd) ([reg cd] [const (size-of double)]))
+        (load double () v-im ([reg cd]))
+        (op pointer-add () (cd) ([reg cd] [const (size-of double)]))
+        (op complex () (v) ([reg v-re] [reg v-im]))
+        (op qcd-fermion-offset () (off) ([const c] [const d]))
+        (op pointer-add () (addr-cd) ([reg f] [reg off]))
+        (store COMPLEX () ([reg addr-cd]) [reg v])))
+    (op pointer-add () (f) ([reg f] [const (size-of Fermion)]))))
+@
+
+\section{Blue Gene}
+\par XXX gamma matrix descriptions -> bg/l code
+\chapter{INTERFACE EXAMPLES}
+\section{QDP/C}
+\par XXX test code, aka example for QDP
+%\section{Chroma}
+\chapter{TEST CODE}
+This chapter contains code for internal testing. It is probably of no interest
+to the user, but is invaluable for reasoning about correctness of the
+implementation.
+\section{Dumping the state structure}
+All the details of the [[State]] are printed in a nice format here.
+<<File [[state-dump.c]]>>=
+<<Precision independent file>>
+#include <mdwf.h>
+#include <stdio.h>
+@
+First, dump the neighbor table:
+<<File [[state-dump.c]]>>=
+static void
+dump_neighbors(const char *name, const char *fb,
+               struct neighbor *nb, int start, int size,
+               struct eo_lattice *eo, struct eo_lattice *oe,
+               struct Q(State) *state)
+{
+   int k, i;
+   int m; 
+   printf("  Neighbor table %s %s, %d elements\n", name, fb, size);
+   if (nb == 0) {
+      printf("    Empty table\n");
+   } else {
+      for (k = 0; k < size; k++) {
+         printf("   [%5d]:", k);
+         m = nb[k].mask;
+         for (i = 0; i < Q(DIM); i++)
+            printf("%c", (m & (1 << i))? 'x': '.');
+         printf("-");
+         for (i = 0; i < Q(DIM); i++)
+            printf("%c", (m & (1 << (Q(DIM) + i)))? 'x': '.');
+      printf(" s %5d", k + start);
+      printf(" uu %5d", nb[k].u_up);
+      printf(" fu");
+      for (i = 0; i < Q(DIM); i++)
+         printf(" %5d", nb[k].f_up[i]);
+      printf(" ud");
+      for (i = 0; i < Q(DIM); i++)
+         printf(" %5d", nb[k].u_down[i]);
+      printf(" fd");
+      for (i = 0; i < Q(DIM); i++)
+         printf(" %5d", nb[k].f_down[i]);
+      printf("\n");
+      }
+   }
+}
+@
+
+Next, an internal procedure to dump an E/O sublattice:
+<<File [[state-dump.c]]>>=
+static void
+`dump_eo(const char *name,
+         struct eo_lattice *eo,
+         struct eo_lattice *oe,
+         struct Q(State) *state)
+{
+  printf("State.%s:\n", name);
+  <<E/O dump>>
+  printf("end-of-state.%s\n", name);
+}
+@
+
+Now, dump the full [[State]] structure:
+<<File [[state-dump.c]]>>=
+void
+Q(`dump_state)(struct Q(State) *state)
+{
+  printf("Dump of State at %p:\n", state);
+  if (state != NULL) {
+    <<[[State]] dump>>
+  }
+  printf("End of state dump\n\n");
+}
+@
+
+<<Implementation prototypes>>=
+void Q(`dump_state)(struct Q(State) *state);
+@
+
+The test driver is simple:
+<<File [[test-state.c]]>>=
+<<Precision independent file>>
+#include <mdwf.h>
+#include <stdio.h>
+#include <stdlib.h>
+<<[[test-state]] locals>>
+<<[[test-state]] helper routines>>
+int
+main(int argc, char *argv[])
+{
+   struct Q(State) *state;
+   int status;
+
+   <<Read [[test-state]] arguments>>
+   status = Q(init)(&state, lattice, network, node, 0, sublat, NULL);
+   printf("init status=%d\n", status);
+   Q(dump_state)(state);
+   return 0;
+}
+@
+
+<<Read [[test-state]] arguments>>=
+if (argc != 14) {
+  fprintf(stderr, "usage: test-state Lx Ly Lz Lt Ls Nx Ny Nz Nt X Y Z T\n");
+  return 1;
+}
+{
+   int i;
+
+   for (i = 0; i < 5; i++)
+      lattice[i] = atoi(argv[i + 1]);
+   for (i = 0; i < 4; i++) {
+      network[i] = atoi(argv[i + 6]);
+      node[i] = atoi(argv[i + 10]);
+   }
+}
+@
+
+<<[[test-state]] locals>>=
+static int lattice[5];
+static int node[4];
+static int network[4];
+@
+
+<<[[test-state]] helper routines>>=
+static void
+sublat(int lo[], int hi[], const int node[], void *env)
+{
+   int i;
+  
+   for (i = 0; i < 4; i++) {
+     lo[i] = (lattice[i] * node[i]) / network[i];
+     hi[i] = (lattice[i] * (node[i] + 1)) / network[i];
+   }
+}
+@
+
+
+\appendix
+\chapter{CODE CHUNKS}
+\nowebchunks
+\pagebreak
+\chapter{SYMBOLS}
+\nowebindex
+
+\end{document}

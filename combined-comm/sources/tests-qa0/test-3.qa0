@@ -1,0 +1,29 @@
+(array x-spinor "x_Spinor" COMPLEX (const 4))
+(array x-fermion "x_Fermion" x-spinor (const *colors*))
+(structure AB-data "AB_data" ([u-offset    "u_offset" int]
+                              [d-offset    "d_offset" int]
+                              [u-scale     "u_scale" double]
+                              [z-scale     "z_scale" double]
+                              [d-scale     "d_scale" double]))
+
+(structure qq-data "qq_data" ([u-offset    "u_offset" int]
+                              [u-scale     "u_scale" double]
+                              [d-offset    "d_offset" int]
+                              [d-scale     "d_scale" double]
+                              [z-scale     "z_scale" double]))
+                             
+
+(procedure AB ([stem "AB"] count-flops)
+              ([size   int       "size"   "int"             ]
+               [Ls     int       "ls"     "int"             ]
+               [res    pointer   "result" "struct Fermion *"]
+               [matrix pointer   "matrix" "struct AB_data *"]
+               [src    pointer   "source" "struct Fermion *"])
+   (loop () (i [const 0] [reg size])
+     (op move ([type pointer]) (m) ([reg matrix]))
+     (loop () (s [const 0] [reg Ls])
+       ; ...
+       (op add ([type pointer]) (res) ([reg res] [const (size-of x-fermion)]))
+       (op add ([type pointer]) (src) ([reg res] [const (size-of x-fermion)]))
+       (op add ([type pointer]) (m) ([reg m] [const (size-of AB-data)])))))
+

@@ -1,0 +1,10 @@
+- 1. Allocation for communication
+- 2. Parameter setting for random
+- 3. Timing
+- 4. Import for timing
+- 5. Timing test
+. 6. Run, run, run. 4^4, 6^4, 8^8. 1, 32, 64, 128, 256, 512, 1024. single, double
+7. Move 1/2 to U.
+8. add MDWF_DEBUG with varargs
+9. Down with noweb?
+a. THE PROBLEM: if an extend is larger than 2 in any direction, it does not work
