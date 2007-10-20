@@ -9,8 +9,8 @@ LATEX    = latex
 DVIPDFM  = dvipdfm
 #TFLAGS   = -L'\#line %L "%F"%N'
 
-noweb = mdwf.nw
-# qa0.nw
+noweb = mdwf.nw \
+        qa0.nw
 
 sources = ../src/qop-mdwf3.h \
           ../utils/basis.ss
