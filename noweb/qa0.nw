@@ -276,6 +276,50 @@ The procedure will have \nonterminal{C type} as its return type. The values of
 
 A procedure can not have both [[count-flops]] and [[return]] attributes.
 
+\section{CONSTANT OPERATIONS}
+\begin{grammar}
+\terminal{(}\terminal{size-of} $T$\terminal{)}
+\end{grammar}
+Computes size of  type $T$.
+
+\begin{grammar}
+\terminal{(}\terminal{offset-of} $T$ $f$\terminal{)}
+\end{grammar}
+Computes offset of field $f$ in type $T$.
+
+\begin{grammar}
+\terminal{(}\terminal{+} $a$ $b$\any\terminal{)}
+\end{grammar}
+Computes $a+b\ldots$.
+\begin{grammar}
+\terminal{(}\terminal{-} $a$ $b$\any\terminal{)}
+\end{grammar}
+Computes $a-b\ldots$.
+\begin{grammar}
+\terminal{(}\terminal{*} $a$ $b$\any\terminal{)}
+\end{grammar}
+Computes $a*b\ldots$.
+\begin{grammar}
+\terminal{(}\terminal{=} $a$\oneplus\terminal{)}
+\end{grammar}
+If all arguments are equal, evaluates to $1$, otherwise to $0$.
+\begin{grammar}
+\terminal{(}\terminal{shift} $a$ $b$\terminal{)}
+\end{grammar}
+Computes $\left\lfloor2^ba\right\rfloor$.
+\begin{grammar}
+\terminal{(}\terminal{and} $a$\any\terminal{)}
+\end{grammar}
+Evaluates to $1$ is all arguments are non-zero, and to $0$ otherwise.
+\begin{grammar}
+\terminal{(}\terminal{or} $a$\any\terminal{)}
+\end{grammar}
+Evaluates to $1$ is any argument is non-zero, and to $0$ otherwise.
+\begin{grammar}
+\terminal{(}\terminal{not} $a$\terminal{)}
+\end{grammar}
+Evaluates to $1$ is $a=0$ and to $0$ otherwise.
+
 \section{OPERATIONS}
 In the following, non-terminal suffices denote implied types:
 \begin{center}
@@ -285,6 +329,7 @@ $f$ & single precision floating point \\
 $d$ & double precision floating point \\
 $c$ & double precision complex number \\
 $p$ & pointer \\
+$x$, $y$, $z$, $q$ & unspecifiend types used for reductions \\
 $F$ & QCD fermion \\
 $l$ & a lower half of QCD fermion \\
 $h$ & an upper half of QCD fermion \\
@@ -1083,9 +1128,6 @@ Compute $r\leftarrow a$.
 \terminal{)}
 \end{grammar}
 Compute $r\leftarrow - a$.
-
-
-
 
 \subsection{Pointer operations}
 \begin{grammar}
