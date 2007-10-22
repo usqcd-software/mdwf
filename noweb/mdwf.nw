@@ -252,7 +252,7 @@ This is our starting point in sums over directions
 Now let us collect the $\gamma$-matrix projections and reconstructions. We
 put them all together into [[mdwf-basis]] as an a list of pairs with keys
 of the form [[(<op> <dir> <sign>)]].
-<<File [[../utils/basis.ss]]>>=
+<<Scheme definitions>>=
 (define mdwf-basis '(
   <<Project $(1+\gamma_0)$>>
   <<Project $(1+\gamma_1)$>>
@@ -273,8 +273,19 @@ of the form [[(<op> <dir> <sign>)]].
 @
 
 We also define a starting link in a sum over links:
-<<File [[../utils/basis.ss]]>>=
+<<Scheme definitions>>=
 <<Start $\mu$ sum>>
+@
+
+Here is a module for PLT:
+<<File [[../utils/basis.ss]]>>=
+(module basis
+        mzscheme
+   (provide mdwf-basis
+            mdwf-start-sum-dimension
+            mdwf-start-sum-direction)
+   <<Scheme definitions>>
+)
 @
 
 \pagebreak\section{Preconditioning}

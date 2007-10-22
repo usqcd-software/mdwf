@@ -35,6 +35,12 @@ done * x_import
 done *+ faux -- empty routines
 *+ c99/qa0
 
+* QA0:
+** PLT on BG/L fen
+** modules
+** precision (in)dependent names
+
+
 LIMP functions:
 ** qx(do_AB)
 ** qx(do_ApF)
