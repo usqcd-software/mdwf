@@ -100,7 +100,7 @@ QX(DDW_operator)(struct QX(Fermion) *result,
   e_size = state->even.full_size;
   o_size = state->odd.full_size;
   size = e_size > o_size? e_size: o_size;
-  qx(sizeof_fermion)(&f_size, size, state->Ls);
+  f_size = qx(sizeof_fermion)(size, state->Ls);
 
   ptr = q(allocate_aligned)(state, &s, &t, 0, f_size);
   if (ptr == 0)

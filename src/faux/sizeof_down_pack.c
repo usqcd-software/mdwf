@@ -1,6 +1,6 @@
 #include <mdwf.h>
-void q(sizeof_down_pack)(int *p, int volume)
+int q(sizeof_down_pack)(int volume)
 {
-  *p =4 * volume;
+  return 4 * volume;
 }
 

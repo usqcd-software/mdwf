@@ -315,13 +315,13 @@ unsigned int qx(norm2_fermion)(double *v_r,
                            ~(CACHE_LINE_SIZE-1)))
 
 /* Backend controled structure sizes */
-void q(sizeof_neighbor)(int *ptr, int volume);
-void q(sizeof_up_pack)(int *ptr, int volume);
-void q(sizeof_down_pack)(int *ptr, int volume);
-void q(sizeof_ABTable)(int *ptr, int Ls);
-void qx(sizeof_fermion)(int *ptr, int volume, int Ls);
-void qx(sizeof_projected_fermion)(int *ptr, int volume, int Ls);
-void qx(sizeof_gauge)(int *ptr, int volume);
+int q(sizeof_neighbor)(int volume);
+int q(sizeof_up_pack)(int volume);
+int q(sizeof_down_pack)(int volume);
+int q(sizeof_ABTable)(int Ls);
+int qx(sizeof_fermion)(int volume, int Ls);
+int qx(sizeof_projected_fermion)(int volume, int Ls);
+int qx(sizeof_gauge)(int volume);
 
 void q(get_down_pack_f)(int *ptr, const struct down_pack *up, int p);
 void q(get_up_pack_f)(int *ptr, const struct up_pack *up, int p);

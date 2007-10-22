@@ -189,16 +189,11 @@ eo_init(struct eo_lattice        *eo,
 	const struct eo_lattice  *oe,
 	struct Q(State)          *state)
 {
-  int ns;
-  int bs;
-  int us;
-  int ds;
+  int ns = q(sizeof_neighbor)(eo->full_size);
+  int bs = q(sizeof_neighbor)(eo->body_size);
   int d;
 
 #define CHECK(cond, msg) do { if (cond) return msg; } while (0)
-
-  q(sizeof_neighbor)(&ns, eo->full_size);
-  q(sizeof_neighbor)(&bs, eo->body_size);
 
   eo->Ls = state->Ls;
   eo->local = &state->local;
@@ -212,13 +207,13 @@ eo_init(struct eo_lattice        *eo,
   for (d = 0; d < Q(DIM); d++) {
     eo->send_up_size[d] = oe->receive_up_size[d];
     if (eo->send_up_size[d]) {
-      q(sizeof_up_pack)(&us, eo->send_up_size[d]);
+      int us = q(sizeof_up_pack)(eo->send_up_size[d]);
       eo->up_pack[d] = q(malloc)(state, us);
       CHECK(eo->up_pack[d] == NULL, "Not enough space for eo.up_pack[i]");
     }
     eo->send_down_size[d] = oe->receive_down_size[d];
     if (eo->send_down_size[d]) {
-      q(sizeof_down_pack)(&ds, eo->send_down_size[d]);
+      int ds = q(sizeof_down_pack)(eo->send_down_size[d]);
       eo->down_pack[d] = q(malloc)(state, ds);
       CHECK(eo->down_pack[d] == NULL, "Not enough space for eo.down_pack[i]");
     }

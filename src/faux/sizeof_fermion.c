@@ -1,5 +1,5 @@
 #include <mdwf.h>
-void qx(sizeof_fermion)(int *p, int volume, int ls)
+int qx(sizeof_fermion)(int volume, int ls)
 {
-  *p = 4 * volume * ls;
+  return 4 * volume * ls;
 }

@@ -1,5 +1,5 @@
 #include <mdwf.h>
-void q(sizeof_neighbor)(int *p, int volume)
+int q(sizeof_neighbor)(int volume)
 {
-  *p = 4 * volume;
+  return 4 * volume;
 }

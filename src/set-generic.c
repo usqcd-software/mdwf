@@ -28,7 +28,7 @@ Q(set_generic)(struct Q(Parameters) **params_ptr,
   params = q(malloc)(state, sizeof (struct Q(Parameters)));
   CHECK(params, "set_generic(): Not enough memory for parameters");
 
-  q(sizeof_ABTable)(&abs, state->Ls);
+  abs = q(sizeof_ABTable)(state->Ls);
   params->ATable = q(malloc)(state, abs);
   CHECK(params->ATable, "set_generic(): Not enough memory for A table");
   u = c_5[0]*(M_5 + 4) - 1;

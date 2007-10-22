@@ -1,5 +1,5 @@
 #include <mdwf.h>
-void q(sizeof_ABTable)(int *p, int Ls)
+int q(sizeof_ABTable)(int Ls)
 {
-  *p = 4 * Ls;
+  return 4 * Ls;
 }

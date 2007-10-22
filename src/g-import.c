@@ -27,7 +27,7 @@ QX(import_gauge)(struct QX(Gauge) **gauge_ptr,
     return q(set_error)(state, 0, "import_gauge(): NULL pointer");
 
   *gauge_ptr = NULL;
-  qx(sizeof_gauge)(&us, state->volume);
+  us = qx(sizeof_gauge)(state->volume);
   gauge = q(allocate_aligned)(state, &size, &ptr,
 			      sizeof (struct QX(Gauge)), us);
   if (gauge == 0)

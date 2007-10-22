@@ -1,5 +1,5 @@
 #include <mdwf.h>
-void qx(sizeof_gauge)(int *p, int volume)
+int qx(sizeof_gauge)(int volume)
 {
-  *p = 4 * volume;
+  return 4 * volume;
 }
