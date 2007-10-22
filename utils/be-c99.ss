@@ -5,6 +5,7 @@
    (require "cenv.ss")
    (require "attr.ss")
    (require "backend.ss")
+   (require "cheader.ss")
    (require "parser.ss")
 
    (provide machine-c99-32)
@@ -101,6 +102,7 @@
 			code* env)
        (let ([cf? (attr-search attr* 'count-flops
 			       (lambda (v) #t) (lambda () #f))]
+	     [rv (attr-search attr* 'return (lambda (v*) v*) (lambda () #f))]
 	     [counter (new-var)])
 	 (emit-proc-decl cf? attr* name arg-c-name* arg-c-type* env)
 	 (printf "{~%")
@@ -108,14 +110,21 @@
 	 (emit-variables env)
 	 (emit-param* arg-name* arg-c-name* env)
 	 (emit-code* 1 code* env cf? counter 0)
-	 (if cf? (do-emit 1 "return ~a;" counter))
-	 (printf "}~%~%")
-	 ))
+	 (cond
+	  [(and cf? rv) (error 'qa0-c99
+			       "both count-flops and return attributes in ~a"
+			       name)]
+	  [cf? (do-emit 1 "return ~a;" counter)]
+	  [rv (if (< (length rv) 1)
+		  (error 'qa0-c99 "return without name, ~a, in ~a" rv name))
+	      (do-emit 1 "return ~a;"
+		       (preemit-output (make-reg (user-reg (car rv))) env))])
+	 (printf "}~%~%")))
      (define (emit-proc-decl count-flops? attr* name
 			     arg-c-name* arg-c-type* env)
-       (printf "~a~%~a" (if count-flops? "int" "void")
-	       (build-proc-name
-		(attr-lookup attr* 'stem "missing stem in proc ~a" name) env))
+       (printf "~a~%~a"
+	       (build-proc-type name attr* env)
+	       (build-proc-name name attr* env))
        (if (null? arg-c-name*) (printf "(void)~%")
 	   (begin (printf "(")
 		  (let loop ([name* arg-c-name*] [type* arg-c-type*])
@@ -263,16 +272,18 @@
 	 (complex-dot-add         3 "~a = ~a + conj(~a) * ~a;"         8)
 	 (complex-dot-fini        1 "~a = ~a;"                         0)))
      (define (emit-op l name output* input* env flops)
-       (let ([inx* (if (eq? name 'complex-norm-add)
-		       (list (car input*) (cadr input*) (cadr input*))
-		       input*)])
+       (let* ([inx* (if (eq? name 'complex-norm-add)
+			(list (car input*) (cadr input*) (cadr input*))
+			input*)]
+	      [out* (map (lambda (out) (preemit-output out env)) output*)]
+	      [inx* (map (lambda (in) (preemit-input in env)) inx*)])
 	 (cond
 	  [(assq name op-table)
 	   => (lambda (op-rec)
 		(let ([i-count (cadr op-rec)]
 		      [fmt (caddr op-rec)]
 		      [f-count (cadddr op-rec)])
-		  (do-emit-op l name output* input* inx* i-count fmt
+		  (do-emit-op l name output* input* out* inx* i-count fmt
 			      flops f-count)))]
 	  [else (error 'c99-emit "UNKNOWN op ~a, out* ~a, in* ~a"
 		       name output* input*)])))
@@ -280,10 +291,11 @@
        (if (not (= size (length p*)))
 	   (error 'c99-backend "Illformed operation: ~a <- ~a ~a"
 		  out* name in*)))
-     (define (do-emit-op l name out* in* inx* in-count fmt flops more-flops)
+     (define (do-emit-op l name out* in* outx* inx* in-count
+			 fmt flops more-flops)
        (check-* name in* out* out* 1)
        (check-* name in* out* in* in-count)
-       (apply do-emit l fmt (car out*) inx*)
+       (apply do-emit l fmt (car outx*) inx*)
        (+ flops more-flops))
      (variant-case qa0
        [qa0-top (decl*) (let loop ([decl* decl*])

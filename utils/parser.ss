@@ -4,7 +4,9 @@
    (require "ast.ss")
    (require "cenv.ss")
    (provide parse-qa0-file
-	    build-proc-name)
+	    user-reg)
+
+   (define (user-reg name) (string->symbol (format "_~a" name)))
    (define (parse-qa0-file file-name)
      (define (check-list msg in cmp min-size)
        (if (not (list? in))
@@ -209,7 +211,6 @@
 	 [(const) (parse-const-expr in)]
 	 [else (error 'parse-qa0 "Internal error in parse-input")]))
      (define (parse-reg name) (make-reg (user-reg name)))
-     (define (user-reg name) (string->symbol (format "_~a" name)))
      (define (parse-load f)
        (check-list "load" f = 5)
        (let ([type (cadr f)]
@@ -308,16 +309,4 @@
        (let loop ([s-expr (read f)] [ast (empty-ast)])
 	 (cond
 	  [(eof-object? s-expr) ast]
-	  [else (loop (read f) (parse-top s-expr ast))]))))
-   (define (build-proc-name stem* env)
-     (let ([prefix (ce-lookup env 'proc-prefix "missing proc-prefix in CE")]
-	   [colors (ce-lookup-x env 'const '*colors* "missing *colors* in CE")]
-	   [prec   (ce-lookup env 'prec-letter "missing prec-letter in CE")]
-	   [infix  (ce-lookup env 'proc-infix "missing proc-infix in CE")])
-       (let loop ([r (format "~a~a~a~a" prefix prec colors infix)]
-		  [stem* stem*])
-	 (cond
-	  [(null? stem*) (format "~a~a" r
-				 (ce-lookup env 'proc-suffix
-					    "missing proc-suffix in CE"))]
-	  [else (loop (format "~a~a" r (car stem*)) (cdr stem*))])))))
+	  [else (loop (read f) (parse-top s-expr ast))])))))

@@ -10,19 +10,19 @@
      (define (ce-start-env machine real)
        (let* ([env (ce-empty-env)]
 	      [env (machine env)]
-	      [env (ce-bind env 'proc-prefix "qop_")]
-	      [env (ce-bind env 'proc-infix "_MDWF_")]
+	      [env (ce-bind env 'proc-prefix "qop")]
+	      [env (ce-bind env 'proc-infix "mdwf")]
 	      [env (ce-bind env 'proc-suffix "")]
 	      [env
 	       (case real
 		 [(double)
-		  (let* ([env (ce-bind env 'prec-letter  "D")]
+		  (let* ([env (ce-bind env 'prec-letter  "d")]
 			 [env (ce-add-alias env 'REAL    'double)]
 			 [env (ce-add-alias env 'COMPLEX 'complex-double)]
 			 [env (ce-add-alias env 'VECTOR  'vector-double)])
 		    env)]
 		 [(float)
-		  (let* ([env (ce-bind env 'prec-letter  "F")]
+		  (let* ([env (ce-bind env 'prec-letter  "f")]
 			 [env (ce-add-alias env 'REAL    'float)]
 			 [env (ce-add-alias env 'COMPLEX 'complex-float)]
 			 [env (ce-add-alias env 'VECTOR  'vector-float)])

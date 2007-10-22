@@ -43,5 +43,5 @@ parser.o:     common.ss ast.ss cenv.ss
 q2complex.o:  common.ss ast.ss cenv.ss attr.ss
 qa0print.o:   common.ss ast.ss
 backend.o:    cenv.ss
-be-c99.o:     common.ss ast.ss cenv.ss attr.ss parser.ss
-cheader.o:    common.ss ast.ss cenv.ss attr.ss parser.ss
+be-c99.o:     common.ss ast.ss cenv.ss attr.ss cheader.ss
+cheader.o:    common.ss ast.ss cenv.ss attr.ss

@@ -6,7 +6,22 @@
                ([a int     "a" "int"            ]
                 [b double  "b" "double"         ]
                 [c pointer "c" "some_array_type"])
-   (op add () (x) ([reg a] [const 1] [const foo]))
+   (op int-add () (x) ([reg a] [const 1]))
+   (op int-add () (x) ([reg x] [const foo]))
    (load int () xxx ([reg a] [const (+ foo 1)]))
+   (op double-mul () (z) ([reg b] [reg b]))
    (store double () ([reg x] [const (size-of int)]) [reg b])
+   (store double () ([reg x] [const 17]) [reg z])
+   (store int () ([reg a]) [const foo]))
+
+(procedure p-y ([stem "foo"] prec&color)
+               ([a int     "a" "int"            ]
+                [b double  "b" "double"         ]
+                [c pointer "c" "some_array_type"])
+   (op int-add () (x) ([reg a] [const 1]))
+   (op int-add () (x) ([reg x] [const foo]))
+   (load int () xxx ([reg a] [const (+ foo 1)]))
+   (op double-mul () (z) ([reg b] [reg b]))
+   (store double () ([reg x] [const (size-of int)]) [reg b])
+   (store double () ([reg x] [const 17]) [reg z])
    (store int () ([reg a]) [const foo]))

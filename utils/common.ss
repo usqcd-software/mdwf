@@ -6,7 +6,8 @@
 	   variant-type
 	   variant-case
 	   let-values*)
-	   
+
+  (define dbg-port (current-output-port))
   (define *verbose?* #f)
   (define (progress-report fmt . args)
     (if *verbose?*
@@ -14,9 +15,9 @@
 	       (apply printf format args)
 	       (printf "...~%"))))
   (define (dbg . msg)
-    (display "D:")
-    (for-each (lambda (x) (display " ") (write x)) msg)
-    (newline)
+    (display "D:" dbg-port)
+    (for-each (lambda (x) (display " " dbg-port) (write x dbg-port)) msg)
+    (newline dbg-port)
     #f)
   (define-syntax assert
     (lambda (x)
