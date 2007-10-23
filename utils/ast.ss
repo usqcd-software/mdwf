@@ -2,6 +2,7 @@
         mzscheme
    (require "common.ss")
    (define-variant qa0-top (decl*))
+   (define-variant qa0-verbose (target* data*))
    (define-variant qa0-alias (old-name new-name))
    (define-variant qa0-const (name value))
    (define-variant qa0-struct (name c-name

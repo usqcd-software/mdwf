@@ -18,6 +18,8 @@
 	[qa0-proc (attr* name arg-name* arg-type* arg-c-name* arg-c-type* code*)
           (print-proc level attr* name
 		      arg-name* arg-type* arg-c-name* arg-c-type* code*)]
+        [qa0-verbose (target* data*)
+	  (print-verbose level target* data*)]
 	[qa0-repeat-list (id value* body*)
           (print-repeat-list level id value* body*)]
 	[qa0-repeat-range (id low high body*)
@@ -26,6 +28,16 @@
        (do ([i 0 (+ i 1)])
 	   [(= i level)]
 	 (printf "  ")))
+     (define (print-verbose level target* data*)
+       (print-start level)
+       (printf "Verbose (~a) cases:~%" (length target*))
+       (do ([target* target* (cdr target*)]
+	    [data* data* (cdr data*)])
+	   [(null? target*)]
+	 (print-start (+ 1 level))
+	 (printf "~a: ~s~%" (car target) (car data*)))
+       (print-start level)
+       (printf "end(verbose)~%"))
      (define (print-alias level old-name new-name)
        (print-start level)
        (printf "Alias of ~a is ~a~%" old-name new-name))

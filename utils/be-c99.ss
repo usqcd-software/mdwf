@@ -7,6 +7,7 @@
    (require "backend.ss")
    (require "cheader.ss")
    (require "parser.ss")
+   (require "verbose.ss")
 
    (provide machine-c99-32)
    
@@ -95,6 +96,8 @@
 			arg-name* arg-type*
 			arg-c-name* arg-c-type*
 			code* env))]
+	 [qa0-verbose (target* data*)
+	    (process-verbose 'c99 target* data*)]
 	 [else #t]))
      (define (emit-proc attr* name
 			arg-name* arg-type*

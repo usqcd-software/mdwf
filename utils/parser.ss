@@ -77,7 +77,27 @@
 	      (make-qa0-top (append decl* (list (parse-structure s-expr))))]
 	     [(repeat procedure)
 	      (make-qa0-top (append decl* (parse-repeat s-expr)))]
+	     [(include)
+              (make-qa0-top (append decl* (parse-include s-expr)))]
+	     [(verbose)
+	      (make-qa0-top (append decl* (list (parse-verbose s-expr))))]
 	     [else (error 'parse-qa0 "Unknown form:~%~a~%" s-expr)])]))
+     (define (parse-include s-expr)
+       (check-list "include form" s-expr = 2)
+       (check-string "include file name" (cadr s-expr))
+       (let ([f (open-input-file (cadr s-expr))])
+	 (let loop ([r (read f)] [ast (empty-ast)])
+	   (cond
+	    [(eof-object? r) (close-input-port f) (qa0-top->decl* ast)]
+	    [else (loop (read f) (parse-top r ast))]))))
+     (define (parse-verbose s-expr)
+       (check-list "verbose form" s-expr >= 1)
+       (map (lambda (x)
+	      (check-list "verbose case" x = 2)
+	      (check-name "verbose target" (car x))
+	      (check-string "verbose data" (cadr x)))
+	    (cdr s-expr))
+       (make-qa0-verbose (map car (cdr s-expr)) (map cadr (cdr s-expr))))
      (define (parse-alias s-expr)
        (check-list "top level alias" s-expr = 3)
        (check-name "alias new name" s-expr (cadr s-expr))

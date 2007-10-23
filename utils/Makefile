@@ -10,6 +10,7 @@ sources = ast.ss \
           q2complex.ss \
           cheader.ss \
           qa0print.ss \
+          verbose.ss \
           backend.ss \
           be-c99.ss
 
@@ -43,5 +44,5 @@ parser.o:     common.ss ast.ss cenv.ss
 q2complex.o:  common.ss ast.ss cenv.ss attr.ss
 qa0print.o:   common.ss ast.ss
 backend.o:    cenv.ss
-be-c99.o:     common.ss ast.ss cenv.ss attr.ss cheader.ss
-cheader.o:    common.ss ast.ss cenv.ss attr.ss
+be-c99.o:     common.ss ast.ss cenv.ss attr.ss cheader.ss verbose.ss
+cheader.o:    common.ss ast.ss cenv.ss attr.ss verbose.ss

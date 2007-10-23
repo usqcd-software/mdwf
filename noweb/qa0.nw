@@ -46,12 +46,36 @@ Here we define the grammar for QA. We start with the file level constructs:
   \also\nonterminal{constant}\\
   \also\nonterminal{structure}\\
   \also\nonterminal{array}\\
+  \also\nonterminal{verbose} \\
+  \also\nonterminal{include} \\
   \also\nonterminal{top level macro}\\
 \nonterminal{top level macro}\is\nonterminal{procedure}\\
   \also\terminal{(} \terminal{repeat}
          \terminal{(} \nonterminal{iterator}\any \terminal{)}
          \nonterminal{top level macro}\oneplus \terminal{)}\\
 \end{grammar}
+
+The \nonterminal{include} directive inserts the contents of the file into the
+input.
+\begin{grammar}
+\nonterminal{include}\is\terminal{(}\terminal{include} \nonterminal{file}
+  \terminal{)}\\
+\nonterminal{file}\is\nonterminal{string}
+\end{grammar}
+
+
+The \nonterminal{verbose} directive allows one to include literals into
+various outputs:
+\begin{grammar}
+\nonterminal{verbose}\is\terminal{(}\terminal{verbose}
+   \nonterminal{verbose case}\oneplus\terminal{)} \\
+\nonterminal{verbose case}\is\terminal{(}
+   \nonterminal{target} \nonterminal{verbose value} \terminal{)} \\
+\nonterminal{target}\is\nonterminal{symbol}\\
+\nonterminal{verbose data}\is\nonterminal{string}
+\end{grammar}
+The \nonterminal{target} selects the back-end that will see the corresponding
+\nonterminal{vebose data}.
 
 There are two kinds of iterators. One is an enumeration, another is loop-like
 \begin{grammar}
@@ -247,6 +271,15 @@ It is possible to use quare brackets [[[]]] instead if parentheses [[()]] in
 any place as long as the closing backet matches the open one.
 Also, [[;]] starts a commnet upto the end of line.
 
+\section{TARGETS}
+The following targets are supported:
+\begin{itemize}
+\item[\terminal{c-header}] The header file for C.
+\item[\terminal{c99}] The programming language C as defined in ISO/IEC 9989.
+\item[\terminal{xlc/bgl}] IBM's XLC compiler for BG/L with intrinsics.
+\item[\terminal{bgl}] BG/L assembler.
+\end{itemize}
+
 \section{PROCEDURE ATTRIBUTES}
 The following procedure attributes are understood:
 
@@ -264,6 +297,16 @@ name.
 
 If present, the floating point operations in the procedure will be counted and
 returned as an [[unsigned int]] result.
+
+
+\begin{grammar}
+\terminal{(} \terminal{return} \nonterminal{name}
+    \nonterminal{type} \nonterminal{C type}\terminal{)}
+\end{grammar}
+Specifies that the procedure returns the final value of register
+\nonterminal{name} and has \nonterminal{C type} as the return type. Value of
+\nonterminal{type} is used to generate appropriate low level code and should
+match \nonterminal{C type}.
 
 \begin{grammar}
 \terminal{(}\terminal{return} \nonterminal{output} \nonterminal{type name}

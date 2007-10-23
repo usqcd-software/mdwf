@@ -59,7 +59,8 @@
 	 [qa0-repeat-list (id value* body*)
   	   (cf-repeat-list id value* body* out* env)]
 	 [qa0-repeat-range (id low high body*)
-           (cf-repeat-range id low high body* out* env)]))
+           (cf-repeat-range id low high body* out* env)]
+	 [qa0-verbose () (cf-verbose ast out* env)]))
      (define (cf-alias old new out* env)
        (values out* (ce-add-alias env new old)))
      (define (cf-const name value out* env)
@@ -112,18 +113,22 @@
 						   out* env-x))])))]))))
      (define (cf-repeat ast out* env)
        (let-values* ([(out* env)
-		      (variant-case ast
-  		        [qa0-proc (attr* name
-				   arg-name* arg-type* arg-c-name* arg-c-type*
-				   code*)
-			  (cf-proc attr* name
-				   arg-name* arg-type* arg-c-name* arg-c-type*
-				   code* out* env)]
-			[qa0-repeat-list (id value* body*)
- 			  (cf-repeat-list id value* body* out* env)]
-			[qa0-repeat-range (id low high body*)
-                          (cf-repeat-range id low high body* out* env)])])
-		    out*))
+		        (variant-case ast
+	    	          [qa0-proc (attr* name
+				     arg-name* arg-type*
+				     arg-c-name* arg-c-type*
+				     code*)
+			    (cf-proc attr* name
+				     arg-name* arg-type*
+				     arg-c-name* arg-c-type*
+				     code* out* env)]
+			  [qa0-repeat-list (id value* body*)
+	                    (cf-repeat-list id value* body* out* env)]
+			  [qa0-repeat-range (id low high body*)
+		            (cf-repeat-range id low high body* out* env)])])
+         out*))
+     (define (cf-verbose ast out* env)
+       (values (cons ast out*) env))
      (define (cf-attr attr env)
        (variant-case attr
          [qa0-attr (name value*)
