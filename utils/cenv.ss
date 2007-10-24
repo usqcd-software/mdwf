@@ -5,6 +5,7 @@
    (require "ast.ss")
    (provide ce-empty-env
 	    ce-search
+	    ce-search-x
 	    ce-lookup
 	    ce-lookup-x
 	    ce-bind
@@ -22,6 +23,8 @@
      (let ([x (assoc key env)])
        (if x (k-found (cdr x))
 	   (k-missed))))
+   (define (ce-search-x env type key k-found k-missed)
+     (ce-search env `(,type ,key) k-found k-missed))
    (define (ce-lookup env key msg . args)
      (ce-search env key (lambda (x) x)
 		(lambda () (apply error 'qa0 msg args))))
@@ -48,6 +51,7 @@
 		     [env (ce-bind-x env 'size-of name size)]
 		     [env (ce-bind-x env 'align-of name align)]
 		     [env (ce-bind-x env 'components name '())]
+		     [env (ce-bind-x env 'aliased-to name name)]
 		     [env (ce-bind-x env 'name-of name c-name)])
 		env)])))
    (define (ce-add-array env name c-name base size)
@@ -102,10 +106,12 @@
 		 [s (ce-lookup-x env 'size-of old "size of ~a" old)]
 		 [a (ce-lookup-x env 'align-of old "align of ~a" old)]
 		 [x (ce-lookup-x env 'name-of old "C name of ~a" old)]
+                 [tn (ce-lookup-x env 'aliased-to old "True name of ~a" old)]
 		 [env (ce-bind-x env 'type new t)]
 		 [env (ce-bind-x env 'size-of new s)]
 		 [env (ce-bind-x env 'align-of new a)]
 		 [env (ce-bind-x env 'components new c)]
+		 [env (ce-bind-x env 'aliased-to new tn)]
 		 [env (ce-bind-x env 'name-of new x)])
 	    (let loop ([c c] [env env])
 	      (cond

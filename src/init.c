@@ -45,10 +45,10 @@ build_packs(struct eo_lattice   *eo,
       if (state->network[d] == 1)
 	continue;
       if (x[d] == local->lo[d]) {
-	q(set_down_pack)(eo->down_pack[d], z_down[d]++, p);
+	q(put_down_pack)(eo->down_pack[d], z_down[d]++, p);
       }
       if (x[d] + 1 == local->hi[d]) {
-	q(set_up_pack)(eo->up_pack[d], z_up[d]++,
+	q(put_up_pack)(eo->up_pack[d], z_up[d]++,
 		       p, state->v2lx[la] * Q(DIM) + d);
       }
     }
@@ -102,7 +102,7 @@ build_local_neighbors(struct eo_lattice        *eo,
       }
       x[d] += 1;
     }
-    q(set_neighbor)(eo->body_neighbor, p, mask, f_up, u_up, f_down, u_down);
+    q(put_neighbor)(eo->body_neighbor, p, mask, f_up, u_up, f_down, u_down);
   }
 }
 
@@ -316,7 +316,7 @@ eo_patch_up(struct eo_lattice *eo,
   int x[Q(DIM)];
 
   for (p = 0; p < down_size; p++) {
-    q(get_down_pack_f)(&dp, eo->down_pack[dim], p);
+    dp = q(get_down_pack_f)(eo->down_pack[dim], p);
     q(l2v)(x, x_local, x_oe->lx2v[dp]);
     x[dim]--;
     if (x[dim] < 0) x[dim] = lattice[dim] - 1;
@@ -341,7 +341,7 @@ eo_patch_down(struct eo_lattice *eo,
   int x[Q(DIM)];
 
   for (p = 0; p < up_size; p++) {
-    q(get_up_pack_f)(&up, x_eo->up_pack[dim], p);
+    up = q(get_up_pack_f)(x_eo->up_pack[dim], p);
     q(l2v)(x, x_local, x_oe->lx2v[up]);
     x[dim]++;
     if (x[dim] == lattice[dim]) x[dim] = 0;

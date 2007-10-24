@@ -178,16 +178,18 @@
 	     out*))
      (define (cf-load attr* type output addr* out* env)
        (cons (make-qa0-load (cf-attr* attr* env)
-			    type
+			    (cf-type type env)
 			    output
 			    (cf-addr* addr* env))
 	     out*))
      (define (cf-store attr* type addr* value out* env)
        (cons (make-qa0-store (cf-attr* attr* env)
-			     type
+			     (cf-type type env)
 			     (cf-addr* addr* env)
 			     (cf-input value env))
 	     out*))
+     (define (cf-type type env)
+       (ce-lookup-x env 'aliased-to type "Type folding of ~a" type))
      (define (cf-loop attr* var low high code* out* env)
        (cons (make-qa0-loop (cf-attr* attr* env)
 			    var

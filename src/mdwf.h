@@ -323,17 +323,17 @@ int qx(sizeof_fermion)(int volume, int Ls);
 int qx(sizeof_projected_fermion)(int volume, int Ls);
 int qx(sizeof_gauge)(int volume);
 
-void q(get_down_pack_f)(int *ptr, const struct down_pack *up, int p);
-void q(get_up_pack_f)(int *ptr, const struct up_pack *up, int p);
-void q(set_down_pack)(struct down_pack *up, int p, int f);
-void q(set_up_pack)(struct up_pack *up, int p, int f, int u);
-void q(set_neighbor)(struct neighbor *n, int p,
+int q(get_down_pack_f)(const struct down_pack *up, int p);
+int q(get_up_pack_f)(const struct up_pack *up, int p);
+void q(put_down_pack)(struct down_pack *up, int p, int f);
+void q(put_up_pack)(struct up_pack *up, int p, int f, int u);
+void q(put_neighbor)(struct neighbor *n, int p,
 		     int m,
 		     const int f_up[Q(DIM)], int u_up,
 		     const int f_down[Q(DIM)], const int u_down[Q(DIM)]);
 void q(fix_neighbor_f_up)(struct neighbor *n, int p, int f_up, int d);
 void q(fix_neighbor_f_down)(struct neighbor *n, int p, int f_down, int d);
-void q(set_ABTable)(struct ABTable *t,
+void q(put_ABTable)(struct ABTable *t,
 		    int i, int ip, int im,
 		    double v, double vp, double vm);
 

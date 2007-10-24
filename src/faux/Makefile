@@ -29,10 +29,10 @@ sources = fix_neighbor_f_down.c \
           fix_neighbor_f_up.c \
           get_down_pack_f.c \
           get_up_pack_f.c \
-          set_neighbor.c \
-          set_down_pack.c \
-          set_up_pack.c \
-          set_abtable.c \
+          put_neighbor.c \
+          put_down_pack.c \
+          put_up_pack.c \
+          put_abtable.c \
           sizeof_neighbor.c \
           sizeof_up_pack.c \
           sizeof_down_pack.c \

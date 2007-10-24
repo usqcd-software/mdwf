@@ -252,7 +252,7 @@
 	 (double-mul              2 "~a = ~a * ~a;"                    1)
 	 (double-madd             3 "~a = ~a + ~a * ~a;"               2)
 	 (complex-move            1 "~a = ~a;"                         0)
-	 (commplex                2 "~a = ~a + I * ~a;"                0)
+	 (complex                 2 "~a = ~a + I * ~a;"                0)
 	 (complex-real            1 "~a = creal(~a);"                  0)
 	 (complex-imag            1 "~a = cimag(~a)"                   0)
 	 (complex-neg             1 "~a = -~a;"                        2)

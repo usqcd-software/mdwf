@@ -34,32 +34,32 @@ Q(set_generic)(struct Q(Parameters) **params_ptr,
   u = c_5[0]*(M_5 + 4) - 1;
   v = -m * u;
   w = b_5[0]*(M_5 + 4) - 1;
-  q(set_ABTable)(params->ATable, 0, Ls-1, 1, w, v, u);
+  q(put_ABTable)(params->ATable, 0, Ls-1, 1, w, v, u);
   for (i = 1; i < Ls - 1; i++) {
     u = c_5[i]*(M_5 + 4) - 1;
     w = b_5[i]*(M_5 + 4) - 1;
-    q(set_ABTable)(params->ATable, i, i-1, i+1, w, u, u);
+    q(put_ABTable)(params->ATable, i, i-1, i+1, w, u, u);
   }
   u = c_5[Ls-1]*(M_5 + 4) - 1;
   v = -m * u;
   w = b_5[Ls-1]*(M_5 + 4) - 1;
-  q(set_ABTable)(params->ATable, Ls-1, Ls-2, 0, w, u, v);
+  q(put_ABTable)(params->ATable, Ls-1, Ls-2, 0, w, u, v);
 
   params->BTable = q(malloc)(state, abs);
   CHECK(params->BTable, "set_generic(): Not enough memory for B table");
   u = c_5[0];
   v = -m * u;
   w = b_5[0];
-  q(set_ABTable)(params->BTable, 0, Ls-1, 1, w, v, u);
+  q(put_ABTable)(params->BTable, 0, Ls-1, 1, w, v, u);
   for (i = 1; i < Ls - 1; i++) {
     u = c_5[i];
     w = b_5[i];
-    q(set_ABTable)(params->BTable, i, i-1, i+1, w, u, u);
+    q(put_ABTable)(params->BTable, i, i-1, i+1, w, u, u);
   }
   u = c_5[Ls-1];
   v = -m * u;
   w = b_5[Ls-1];
-  q(set_ABTable)(params->BTable, Ls-1, Ls-2, 0, w, u, v);
+  q(put_ABTable)(params->BTable, Ls-1, Ls-2, 0, w, u, v);
 
   /* XXX */
 

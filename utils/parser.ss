@@ -22,6 +22,17 @@
 	   (error 'parse-qa0
 		  "Expecting name for ~a, found ~a in:~%~a~%"
 		  msg name form)))
+     (define (check-sym-or-list-of-syms msg form name)
+       (cond
+	[(symbol? name) #t]
+	[(and (list? name) (let loop ([name name])
+			     (cond
+			      [(null? name) #t]
+			      [(symbol? (car name)) (loop (cdr name))]
+			      [else #f]))) #t]
+	[else (error 'parse-qa0
+		     "Expecting name or list of names for ~a, found ~a in ~a~%"
+		     msg name form)]))
      (define (check-string msg form string)
        (if (not (string? string))
 	   (error 'parse-qa0
@@ -84,7 +95,7 @@
 	     [else (error 'parse-qa0 "Unknown form:~%~a~%" s-expr)])]))
      (define (parse-include s-expr)
        (check-list "include form" s-expr = 2)
-       (check-string "include file name" (cadr s-expr))
+       (check-string "include file name" s-expr (cadr s-expr))
        (let ([f (open-input-file (cadr s-expr))])
 	 (let loop ([r (read f)] [ast (empty-ast)])
 	   (cond
@@ -94,8 +105,8 @@
        (check-list "verbose form" s-expr >= 1)
        (map (lambda (x)
 	      (check-list "verbose case" x = 2)
-	      (check-name "verbose target" (car x))
-	      (check-string "verbose data" (cadr x)))
+	      (check-sym-or-list-of-syms "verbose target" s-expr (car x))
+	      (check-string "verbose data" s-expr (cadr x)))
 	    (cdr s-expr))
        (make-qa0-verbose (map car (cdr s-expr)) (map cadr (cdr s-expr))))
      (define (parse-alias s-expr)
