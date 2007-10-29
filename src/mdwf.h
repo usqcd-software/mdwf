@@ -220,46 +220,46 @@ unsigned int qx(proj_g3minus)(struct ProjectedFermion *r,
 			      int size, int Ls,
 			      const struct down_pack *link,
 			      const struct Fermion *f);
-unsigned int qx(proj_Ug0plus)(struct ProjectedFermion *r,
-			      int size, int Ls,
-			      const struct up_pack *link,
-			      const struct SUn *U,
-			      const struct Fermion *f);
-unsigned int qx(proj_Ug1plus)(struct ProjectedFermion *r,
-			      int size, int Ls,
-			      const struct up_pack *link,
-			      const struct SUn *U,
-			      const struct Fermion *f);
-unsigned int qx(proj_Ug2plus)(struct ProjectedFermion *r,
-			      int size, int Ls,
-			      const struct up_pack *link,
-			      const struct SUn *U,
-			      const struct Fermion *f);
-unsigned int qx(proj_Ug3plus)(struct ProjectedFermion *r,
-			      int size, int Ls,
-			      const struct up_pack *link,
-			      const struct SUn *U,
-			      const struct Fermion *f);
-unsigned int qx(proj_Ug0minus)(struct ProjectedFermion *r,
+unsigned int qx(proj_Ucg0plus)(struct ProjectedFermion *r,
 			       int size, int Ls,
 			       const struct up_pack *link,
 			       const struct SUn *U,
 			       const struct Fermion *f);
-unsigned int qx(proj_Ug1minus)(struct ProjectedFermion *r,
+unsigned int qx(proj_Ucg1plus)(struct ProjectedFermion *r,
 			       int size, int Ls,
 			       const struct up_pack *link,
 			       const struct SUn *U,
 			       const struct Fermion *f);
-unsigned int qx(proj_Ug2minus)(struct ProjectedFermion *r,
+unsigned int qx(proj_Ucg2plus)(struct ProjectedFermion *r,
 			       int size, int Ls,
 			       const struct up_pack *link,
 			       const struct SUn *U,
 			       const struct Fermion *f);
-unsigned int qx(proj_Ug3minus)(struct ProjectedFermion *r,
+unsigned int qx(proj_Ucg3plus)(struct ProjectedFermion *r,
 			       int size, int Ls,
 			       const struct up_pack *link,
 			       const struct SUn *U,
 			       const struct Fermion *f);
+unsigned int qx(proj_Ucg0minus)(struct ProjectedFermion *r,
+				int size, int Ls,
+				const struct up_pack *link,
+				const struct SUn *U,
+				const struct Fermion *f);
+unsigned int qx(proj_Ucg1minus)(struct ProjectedFermion *r,
+				int size, int Ls,
+				const struct up_pack *link,
+				const struct SUn *U,
+				const struct Fermion *f);
+unsigned int qx(proj_Ucg2minus)(struct ProjectedFermion *r,
+				int size, int Ls,
+				const struct up_pack *link,
+				const struct SUn *U,
+				const struct Fermion *f);
+unsigned int qx(proj_Ucg3minus)(struct ProjectedFermion *r,
+				int size, int Ls,
+				const struct up_pack *link,
+				const struct SUn *U,
+				const struct Fermion *f);
 
 /* A+F, A and B */
 unsigned int qx(do_ApF)(struct Fermion *r_x,

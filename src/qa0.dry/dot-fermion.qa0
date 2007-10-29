@@ -1,0 +1,29 @@
+(verbose [c99 "/* QA0 source $Id$ */"])
+(verbose [c99 "#include <complex.h>"])
+(verbose [c99 "struct Fermion;"])
+
+(include "types.qa0")
+
+(procedure dot-fermion ([stem "dot_fermion"]
+                        prec&color
+                        count-flops)
+           ([ptr-re    pointer "r_re"      "double *"               ]
+            [ptr-im    pointer "r_im"      "double *"               ]
+            [size      int     "size"      "int"                    ]
+            [l-s       int     "Ls"        "int"                    ]
+            [A         pointer "a"         "const struct Fermion *" ]
+            [B         pointer "b"         "const struct Fermion *" ])
+   (op qcd-fdot-init () (res) ())
+   (loop () (i [const 0] [reg size])
+     (loop () (s [const 0] [reg l-s])
+       (load qcd-fermion () vA ([reg A]))
+       (load qcd-fermion () vB ([reg B]))
+       (op qcd-fdot-add () (res) ([reg res] [reg vA] [reg vB]))
+       (op pointer-add () (A) ([reg A] [const (size-of Fermion)]))
+       (op pointer-add () (B) ([reg B] [const (size-of Fermion)]))))
+   (op qcd-fdot-fini () (v) ([reg res]))
+   (op complex-real () (v-re) ([reg v]))
+   (op complex-imag () (v-im) ([reg v]))
+;   (store double () ([reg ptr-re]) [reg v-re])
+;   (store double () ([reg ptr-im]) [reg v-im])
+)

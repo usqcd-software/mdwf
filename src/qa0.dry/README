@@ -1,0 +1,3 @@
+This directory contains dry qa0 sources. No floating point data is written
+by the code, floating points are read, and indexing information is written and
+read.

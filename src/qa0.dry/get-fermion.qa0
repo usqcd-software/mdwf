@@ -20,10 +20,10 @@
 ;;
 (procedure put-fermion ([stem "put_fermion"]
                         prec&color)
-           ([data      pointer "r"         "double *"               ]
+           ([data      pointer "r"         "struct Fermion *"       ]
             [index     int     "p"         "int"                    ]
             [l-s       int     "Ls"        "int"                    ]
-            [F         pointer "F"         "const struct Fermion *" ])
+            [F         pointer "F"         "const double *"         ])
 
    (op int-mul () (x) ([reg index] [const (size-of Fermion)]))
    (op int-mul () (x1) ([reg x] [reg l-s]))

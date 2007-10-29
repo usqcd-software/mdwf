@@ -2,10 +2,10 @@
 
 /* Conservative version with contained communications */
 static Up_project up_project[Q(DIM)] = {
-  qx(proj_Ug0plus),
-  qx(proj_Ug1plus),
-  qx(proj_Ug2plus),
-  qx(proj_Ug3plus)
+  qx(proj_Ucg0plus),
+  qx(proj_Ucg1plus),
+  qx(proj_Ucg2plus),
+  qx(proj_Ucg3plus)
 };
 
 static Down_project down_project[Q(DIM)] = {

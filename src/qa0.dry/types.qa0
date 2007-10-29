@@ -1,3 +1,4 @@
+(verbose [c99 "#include <mdwf.h>"])
 (verbose [(c-header c99) "/* qa0 type definition: $Id$ */"])
 
 (structure down-pack "down_pack" ([fermion "fermion" int]))
