@@ -4,7 +4,7 @@ void
 q(l2v)(int x[Q(DIM)], const struct local *local, int la)
 {
   int d;
-  for (d = 0; d < Q(DIM); d++) {
+  for (d = Q(DIM); d--;) {
     x[d] = la % local->dx[d] + local->lo[d];
     la = la / local->dx[d];
   }

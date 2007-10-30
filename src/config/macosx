@@ -1,7 +1,6 @@
 # Configuration for my laptop
 #
 QMP_TOP    = $$HOME/QDP/qmp-2.1.7
-LIMP       = faux
 CC         = gcc
 CFLAGS     = -Wall -g -I$(TOP) $(QMP_CFLAGS)
 AR         = ar

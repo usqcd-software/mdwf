@@ -1,6 +1,8 @@
-# This is a working copy (MacOS)
+#
 
 CONFIG     = macosx
+LIMP       = faux
+
 TOP        = .
 QMP_CFLAGS = $(shell $(QMP_TOP:%=%/bin/qmp-config) --cflags)
 

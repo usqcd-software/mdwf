@@ -1,7 +1,6 @@
 # Configuration for my laptop
 #
 QMP_TOP    = /opt/SciDAC/bgl/qmp-2.1.7
-LIMP       = faux
 CC         = blrts_xlc
 CFLAGS     = -I$(TOP) $(QMP_CFLAGS)
 AR         = xar

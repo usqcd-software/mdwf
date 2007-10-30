@@ -43,19 +43,19 @@ zprint(char *fmt, ...)
 }
 
 void
-q(set_down_pack)(struct down_pack *dp, int p, int f)
+q(put_down_pack)(struct down_pack *dp, int p, int f)
 {
   xprint("%p.dp[%5d]=%5d", dp, p, f);
 }
 
 void
-q(set_up_pack)(struct up_pack *dp, int p, int f, int u)
+q(put_up_pack)(struct up_pack *dp, int p, int f, int u)
 {
   xprint("%p.up[%5d]=%5d %5d", dp, p, f, u);
 }
 
 void
-q(set_neighbor)(struct neighbor *np, int p, int m,
+q(pu_neighbor)(struct neighbor *np, int p, int m,
 		const int f_u[Q(DIM)], int u_u,
 		const int f_d[Q(DIM)], const int u_d[Q(DIM)])
 {
