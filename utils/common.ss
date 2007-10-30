@@ -1,6 +1,7 @@
 (module common
 	mzscheme
   (provide dbg
+           dbg-env
 	   assert
 	   define-variant
 	   variant-type
@@ -19,6 +20,11 @@
     (for-each (lambda (x) (display " " dbg-port) (write x dbg-port)) msg)
     (newline dbg-port)
     #f)
+  (define (dbg-env msg env)
+    (display (format "E: ~a~%" msg) dbg-port)
+    (for-each (lambda (k&v)
+		(display (format "  ~a: ~a~%" (car k&v) (cdr k&v)) dbg-port))
+	      env))
   (define-syntax assert
     (lambda (x)
       (syntax-case x ()

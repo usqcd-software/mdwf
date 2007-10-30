@@ -144,7 +144,7 @@
    (define (q2c-load c attr* type output addr* r* env)
      (cond
       [(assq type q2c-load*)
-       => (lambda (n&f) ((car n&f) attr* output addr* r* env))]
+       => (lambda (n&f) ((cdr n&f) attr* output addr* r* env))]
       [else (values (cons c r*) env)]))
    (define (q2c-su-n-offset attr* output* input* r* env)
      (q2c-offset attr* output* input* '*colors* '*colors*
@@ -239,7 +239,7 @@
 		     [(b env) (q2c-rename env (caddr input*) 'fermion c f)])
 	 (values (cons (make-qa0-operation attr*
 			 'complex-cmadd
-			 output* (list (make-reg a) (make-reg b) (car input*)))
+			 output* (list (car input*) (make-reg a) (make-reg b)))
 		       r*)
 		 env)))
      (q2c-check-list output* = 1 "QCD fermion dot add outputs")
@@ -329,7 +329,7 @@
 	   (values (cons (make-qa0-operation attr*
 			   'complex-rmadd
 			   (list (make-reg x))
-			   (list alpha (make-reg a) (make-reg s)))
+			   (list (make-reg s) alpha (make-reg a)))
 			 r*)
 		   env)))
        (q2c-check-list output* = 1 "QCD madd-lohi outputs")
@@ -361,7 +361,7 @@
          (values (cons (make-qa0-operation attr*
 	  	         'complex-rmadd
 			 (list (make-reg x))
-			 (list alpha (make-reg a) (make-reg s)))
+			 (list (make-reg a) alpha (make-reg s)))
 		       r*)
 		 env)))
      (q2c-check-list output* = 1 "QCD madd outputs")

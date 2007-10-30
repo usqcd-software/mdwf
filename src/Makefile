@@ -8,6 +8,16 @@ include config/$(CONFIG)
 
 V          = 0
 
+ifeq ("$V", "0")
+   E=@echo "  "
+   C=@
+else
+   E=@echo > /dev/null
+   C=
+endif
+
+subdirs = faux qa0.dry c99.dry tests
+
 x.sources = error.c \
             alloc-aligned.c \
             alloc-eo.c \
@@ -61,14 +71,6 @@ library = libqop-mdwf3.a
 
 .PHONY: all clean realclean
 
-ifeq ("$V", "0")
-   E=@echo "  "
-   C=@
-else
-   E=@echo > /dev/null
-   C=
-endif
-
 all: $(library)
 	$C$(MAKE) -C $(LIMP) 'V=$V' 'CONFIG=$(CONFIG)' 'library=$(library)' $@
 	$C$(MAKE) -C tests 'V=$V' 'CONFIG=$(CONFIG)' $@
@@ -76,14 +78,16 @@ all: $(library)
 clean:
 	$E RM objects
 	$C$(RM) $(objects)
-	$C$(MAKE) -C $(LIMP) 'V=$V' 'CONFIG=$(CONFIG)' 'library=$(library)' $@
-	$C$(MAKE) -C tests 'V=$V' 'CONFIG=$(CONFIG)' $@
+	$Cfor f in $(subdirs); do \
+	  $(MAKE) -C $$f 'V=$V' 'CONFIG=$(CONFIG)' 'library=$(library)' $@; \
+	done
 
 realclean: clean
 	$E RM library
 	$C$(RM) $(library)
-	$C$(MAKE) -C $(LIMP) 'V=$V' 'CONFIG=$(CONFIG)' 'library=$(library)' $@
-	$C$(MAKE) -C tests 'V=$V' 'CONFIG=$(CONFIG)' $@
+	$Cfor f in $(subdirs); do \
+	  $(MAKE) -C $$f 'V=$V' 'CONFIG=$(CONFIG)' 'library=$(library)' $@; \
+	done
 
 $(library): $(objects)
 	$E AR $@

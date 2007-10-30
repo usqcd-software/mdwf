@@ -8,6 +8,7 @@
 (include "types.qa0")
 
 (procedure do-ApF ([stem "do_ApF"]
+                   prec&color
                    count-flops)
        ([res-x     pointer   "res_x"    "struct Fermion *"         ]
         [size      int       "size"     "int"                      ]

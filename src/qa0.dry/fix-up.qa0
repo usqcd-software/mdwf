@@ -3,7 +3,7 @@
 
 (include "types.qa0")
 
-(procedure fix-neighbor-up ([stem "fix_neighrbor_f_up"])
+(procedure fix-neighbor-up ([stem "fix_neighbor_f_up"])
            ([neighbor pointer "neighbor" "struct neighbor *"   ]
             [index     int     "p"         "int"               ]
             [up-f      int     "up_f"      "int"               ]
@@ -12,5 +12,5 @@
    (op pointer-add () (ptr) ([reg neighbor] [reg x]))
    (op int-mul () (dd) ([reg d] [const (size-of int)]))
    (op pointer-add () (ptr) ([reg ptr] [const (offset-of neighbor up-f)]))
-;   (store int () ([reg ptr] [reg dd]) [reg up-f])
+   (store int () ([reg ptr] [reg dd]) [reg up-f])
 )

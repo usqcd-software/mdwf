@@ -8,15 +8,15 @@
             [index     int     "p"         "int"               ]
             [mask      int     "mask"      "int"               ]
             [up-f      pointer "up_f"      "const int *"       ]
-            [up-U      pointer "up_u"      "int"               ]
+            [up-U      int     "up_u"      "int"               ]
             [down-f    pointer "down_f"    "const int *"       ]
             [down-U    pointer "down_U"    "const int *"       ])
    (op int-mul () (x) ([reg index] [const (size-of neighbor)]))
    (op pointer-add () (ptr) ([reg neighbor] [reg x]))
-;   (store int () ([reg ptr] [const (offset-of neighbor mask)])
-;                 [reg mask])
-;   (store int () ([reg ptr] [const (offset-of neighbor up-u)])
-;                 [reg up-U])
+   (store int () ([reg ptr] [const (offset-of neighbor mask)])
+                 [reg mask])
+   (store int () ([reg ptr] [const (offset-of neighbor up-u)])
+                 [reg up-U])
    (op pointer-add () (uf) ([reg ptr] [const (offset-of neighbor up-f)]))
    (op pointer-add () (df) ([reg ptr] [const (offset-of neighbor down-f)]))
    (op pointer-add () (dU) ([reg ptr] [const (offset-of neighbor down-u)]))
@@ -27,9 +27,9 @@
      (op pointer-add () (up-f) ([reg up-f] [const (size-of int)]))  
      (op pointer-add () (donw-f) ([reg down-f] [const (size-of int)]))  
      (op pointer-add () (down-U) ([reg down-U] [const (size-of int)]))  
-;     (store int () ([reg uf]) [ref v-uf])
-;     (store int () ([reg df]) [ref v-df])
-;     (store int () ([reg du]) [ref v-du])
+     (store int () ([reg uf]) [reg v-uf])
+     (store int () ([reg df]) [reg v-df])
+     (store int () ([reg dU]) [reg v-du])
      (op pointer-add () (uf) ([reg uf] [const (size-of int)]))  
      (op pointer-add () (df) ([reg df] [const (size-of int)]))  
-     (op pointer-add () (du) ([reg du] [const (size-of int)]))))
+     (op pointer-add () (dU) ([reg dU] [const (size-of int)]))))

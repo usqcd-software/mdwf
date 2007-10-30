@@ -9,7 +9,8 @@
 
 (repeat ((d [const 0] [const *dim*]))
    (procedure up-face ([stem "proj_Ucg" d "minus"]
-                         count-flops)
+                       prec&color
+                       count-flops)
         ([res    pointer "res"    "struct ProjectedFermion *" ]
          [size   int     "size"   "int"                       ]
          [l-s    int     "Ls"     "int"                       ]

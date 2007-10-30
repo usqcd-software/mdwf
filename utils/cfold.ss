@@ -189,7 +189,8 @@
 			     (cf-input value env))
 	     out*))
      (define (cf-type type env)
-       (ce-lookup-x env 'aliased-to type "Type folding of ~a" type))
+       (ce-search-x env 'aliased-to type (lambda (x) x) (lambda () type)))
+;       (ce-lookup-x env 'aliased-to type "Type folding of ~a" type))
      (define (cf-loop attr* var low high code* out* env)
        (cons (make-qa0-loop (cf-attr* attr* env)
 			    var

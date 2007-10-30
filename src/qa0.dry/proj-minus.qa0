@@ -8,6 +8,7 @@
 
 (repeat ((d [const 0] [const *dim*]))
    (procedure down-face ([stem "proj_g" d "minus"]
+                         prec&color
                          count-flops)
         ([res    pointer "res"    "struct ProjectedFermion *" ]
          [size   int     "size"   "int"                       ]

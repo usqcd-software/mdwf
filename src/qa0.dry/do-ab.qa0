@@ -5,6 +5,7 @@
 (include "types.qa0")
 
 (procedure do-AB ([stem "do_AB"]
+                  prec&color
                   count-flops)
        ([res-x     pointer   "res_x"   "struct Fermion *"         ]
         [size      int       "size"    "int"                      ]
@@ -31,6 +32,6 @@
       (op qcd-madd-lohi () (g) ([reg g-c]
                                 [reg l-v] [reg f-l]
 				[reg h-v] [reg f-h]))
-      (store qcd-fermion () ([reg res-x]) [reg g])
+;      (store qcd-fermion () ([reg res-x]) [reg g])
       (op pointer-add () (res-x) ([reg res-x] [const (size-of Fermion)]))
       (op pointer-add () (src-x) ([reg src-x] [const (size-of Fermion)])))))

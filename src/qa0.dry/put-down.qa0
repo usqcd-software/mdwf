@@ -3,12 +3,12 @@
 
 (include "types.qa0")
 
-(procedure put-down-pack ([stem "put_down_pack_f"])
+(procedure put-down-pack ([stem "put_down_pack"])
            ([down-pack pointer "down_pack" "struct down_pack *"  ]
             [index     int     "p"         "int"                 ]
             [value     int     "f"         "int"                 ])
    (op int-mul () (x) ([reg index] [const (size-of down-pack)]))
    (op pointer-add () (ptr) ([reg down-pack] [reg x]))
-;   (store int () ([reg ptr] [const (offset-of down-pack fermion)])
-;                 [reg value])
+   (store int () ([reg ptr] [const (offset-of down-pack fermion)])
+                 [reg value])
 )

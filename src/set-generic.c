@@ -27,6 +27,7 @@ Q(set_generic)(struct Q(Parameters) **params_ptr,
   *params_ptr = NULL;
   params = q(malloc)(state, sizeof (struct Q(Parameters)));
   CHECK(params, "set_generic(): Not enough memory for parameters");
+  memset(params, 0, sizeof (struct Q(Parameters)));
 
   abs = q(sizeof_ABTable)(state->Ls);
   params->ATable = q(malloc)(state, abs);
@@ -64,7 +65,6 @@ Q(set_generic)(struct Q(Parameters) **params_ptr,
   /* XXX */
 
   BEGIN_TIMING(state);
-  memset(params, 0, sizeof (struct Q(Parameters)));
   state->used++;
   params->state = state;
   *params_ptr = params;
