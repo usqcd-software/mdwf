@@ -331,6 +331,9 @@ void q(put_neighbor)(struct neighbor *n, int p,
 		     int m,
 		     const int f_up[Q(DIM)], int u_up,
 		     const int f_down[Q(DIM)], const int u_down[Q(DIM)]);
+void q(get_neighbor)(int *m, int *f_up, int *u_up,
+		     int *f_down, int *u_down,
+		     const struct neighbor *n, int p);
 void q(fix_neighbor_f_up)(struct neighbor *n, int p, int f_up, int d);
 void q(fix_neighbor_f_down)(struct neighbor *n, int p, int f_down, int d);
 void q(put_ABTable)(struct ABTable *t,

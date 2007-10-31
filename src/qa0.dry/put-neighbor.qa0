@@ -25,7 +25,7 @@
      (load int () v-df ([reg down-f]))
      (load int () v-du ([reg down-U]))
      (op pointer-add () (up-f) ([reg up-f] [const (size-of int)]))  
-     (op pointer-add () (donw-f) ([reg down-f] [const (size-of int)]))  
+     (op pointer-add () (down-f) ([reg down-f] [const (size-of int)]))  
      (op pointer-add () (down-U) ([reg down-U] [const (size-of int)]))  
      (store int () ([reg uf]) [reg v-uf])
      (store int () ([reg df]) [reg v-df])

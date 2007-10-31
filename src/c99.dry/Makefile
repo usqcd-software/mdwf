@@ -49,6 +49,7 @@ sources =  do-abd.c \
            put-gauged.c \
            put-gaugef.c \
            put-neighbor.c \
+           get-neighbor.c \
            put-up.c \
            sizeof-ab-table.c \
            sizeof-down-pack.c \

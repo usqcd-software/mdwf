@@ -10,7 +10,8 @@ QMP_LIBS    = $(shell $(QMP_TOP:%=%/bin/qmp-config) --libs)
 include $(TOP)/config/$(CONFIG)
 
 tests = operator.c \
-        state.c
+        state.c \
+        statex.c
 
 objects = $(tests:%.c=%.o)
 

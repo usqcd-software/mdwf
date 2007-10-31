@@ -42,46 +42,6 @@ zprint(char *fmt, ...)
   fflush(stdout);
 }
 
-void
-q(put_down_pack)(struct down_pack *dp, int p, int f)
-{
-  xprint("%p.dp[%5d]=%5d", dp, p, f);
-}
-
-void
-q(put_up_pack)(struct up_pack *dp, int p, int f, int u)
-{
-  xprint("%p.up[%5d]=%5d %5d", dp, p, f, u);
-}
-
-void
-q(pu_neighbor)(struct neighbor *np, int p, int m,
-		const int f_u[Q(DIM)], int u_u,
-		const int f_d[Q(DIM)], const int u_d[Q(DIM)])
-{
-  xprint("%p.nb[%5d]= %02x u %5d %5d %5d %5d . %5d"
-	 " d %5d %5d %5d %5d . %5d %5d %5d %5d",
-	 np, p, m,
-	 f_u[0], f_u[1], f_u[2], f_u[3],
-	 u_u,
-	 f_d[0], f_d[1], f_d[2], f_d[3],
-	 u_d[0], u_d[1], u_d[2], u_d[3]);
-}
-
-void
-q(fix_neighbor_f_up)(struct neighbor *np, int p, int f_up, int d)
-{
-  xprint("%p.nb[%5d]= fix u[%d] %5d",
-	 np, p, d, f_up);
-}
-
-void
-q(fix_neighbor_f_down)(struct neighbor *np, int p, int f_up, int d)
-{
-  xprint("%p.nb[%5d]= fix d[%d] %5d",
-	 np, p, d, f_up);
-}
-
 static void
 xshowv(char *name, const int v[4])
 {
@@ -132,6 +92,8 @@ show_4d(const char *name, const char *part,
 static void
 dump_eo(const char *name, struct QOP_MDWF_State *state, struct eo_lattice *eo)
 {
+  int i;
+
   xprint("%p.%s face %6d", state, name, eo->face_size);
   xprint("%p.%s body %6d", state, name, eo->body_size);
   xprint("%p.%s full %6d", state, name, eo->full_size);
@@ -143,6 +105,18 @@ dump_eo(const char *name, struct QOP_MDWF_State *state, struct eo_lattice *eo)
   show_4d(name, "down_rcv", state, eo->receive_down_size);
   show_4d(name, "up_snd", state, eo->send_up_size);
   show_4d(name, "up_rcv", state, eo->receive_up_size);
+  for (i = 0; i < eo->full_size; i++) {
+    int m, u_u;
+    int f_u[4], f_d[4], u_d[4];
+    q(get_neighbor)(&m, f_u, &u_u, f_d, u_d, eo->body_neighbor, i);
+    xprint(" {%5d}: %02x"
+	   " f. %5d %5d %5d %5d  %5d,"
+	   " b. %5d %5d %5d %5d  %5d %5d %5d %5d",
+	   i, m,
+	   f_u[0], f_u[1], f_u[2], f_u[3], u_u,
+	   f_d[0], f_d[1], f_d[2], f_d[3],
+	   u_d[0], u_d[1], u_d[2], u_d[3]);
+  }
 }
 
 static void

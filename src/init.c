@@ -102,7 +102,27 @@ build_local_neighbors(struct eo_lattice        *eo,
       }
       x[d] += 1;
     }
+    xprint("put: %5d %02x  f. %5d %5d %5d %5d :  %5d"
+	   "  b. %5d %5d %5d %5d :  %5d %5d %5d %5d",
+	   p, mask,
+	   f_up[0], f_up[1], f_up[2], f_up[3], u_up,
+	   f_down[0], f_down[1], f_down[2], f_down[3],
+	   u_down[0], u_down[1], u_down[2], u_down[3]);
     q(put_neighbor)(eo->body_neighbor, p, mask, f_up, u_up, f_down, u_down);
+    {
+      int mask;
+      int f_up[4];
+      int f_down[4];
+      int u_up;
+      int u_down[4];
+      q(get_neighbor)(&mask, f_up, &u_up, f_down, u_down, eo->body_neighbor, p);
+      xprint("get: %5d %02x  f. %5d %5d %5d %5d :  %5d"
+	     "  b. %5d %5d %5d %5d :  %5d %5d %5d %5d",
+	     p, mask,
+	     f_up[0], f_up[1], f_up[2], f_up[3], u_up,
+	     f_down[0], f_down[1], f_down[2], f_down[3],
+	     u_down[0], u_down[1], u_down[2], u_down[3]);
+    }
   }
 }
 
@@ -309,6 +329,7 @@ eo_patch_up(struct eo_lattice *eo,
 	    const int lattice[Q(DIM)+1],
 	    int dim)
 {
+#if 0
   int p, la, dp;
   int down_size = x_eo->send_down_size[dim];
   const struct local *local = &state->local;
@@ -321,8 +342,9 @@ eo_patch_up(struct eo_lattice *eo,
     x[dim]--;
     if (x[dim] < 0) x[dim] = lattice[dim] - 1;
     la = q(v2l)(x, local);
-    q(fix_neighbor_f_up)(eo->body_neighbor, la, p, dim);
+    q(fix_neighbor_f_up)(eo->body_neighbor, p, la, dim);
   }
+#endif
 }
 
 static void
@@ -334,6 +356,7 @@ eo_patch_down(struct eo_lattice *eo,
 	      const int lattice[Q(DIM)+1],
 	      int dim)
 {
+#if 0
   int p, la, up;
   int up_size = x_eo->send_up_size[dim];
   const struct local *local = &state->local;
@@ -346,8 +369,9 @@ eo_patch_down(struct eo_lattice *eo,
     x[dim]++;
     if (x[dim] == lattice[dim]) x[dim] = 0;
     la = q(v2l)(x, local);
-    q(fix_neighbor_f_down)(eo->body_neighbor, la, p, dim);
+    q(fix_neighbor_f_down)(eo->body_neighbor, p, la, dim);
   }
+#endif
 }
 
 static char *

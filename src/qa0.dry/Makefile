@@ -26,6 +26,7 @@ sources = fix-down.qa0 \
           put-down.qa0 \
           put-up.qa0 \
           put-neighbor.qa0 \
+          get-neighbor.qa0 \
           sizeof-ab-table.qa0 \
           sizeof-down-pack.qa0 \
           sizeof-up-pack.qa0 \
