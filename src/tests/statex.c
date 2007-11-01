@@ -67,9 +67,6 @@ getsub(int lo[4], int hi[4], const int node[4], void *env)
   for (i = 0; i < 4; i++) {
     lo[i] = (mylattice[i] * node[i]) / mynetwork[i];
     hi[i] = (mylattice[i] * (node[i] + 1)) / mynetwork[i];
-    xprint("getsub[%5d %5d %5d %5d: %d]: (%5d %5d) l %5d n %5d w %5d",
-	   node[0],node[1],node[2],node[3], i,
-	   lo[i],hi[i],mylattice[i],node[i], mynetwork[i]);
   }
 }
 
@@ -93,9 +90,49 @@ show_4d(const char *name, const char *part,
 }
 
 static void
-dump_eo(const char *name, struct QOP_MDWF_State *state, struct eo_lattice *eo)
+dump_down_send(const char *name, int d,
+	       struct QOP_MDWF_State *state,
+	       struct eo_lattice *oe,
+	       int send_size,
+	       struct down_pack *send_down)
 {
   int i;
+
+  if (send_size == 0)
+    return;
+
+  for (i = 0; i < send_size; i++) {
+    int f;
+    q(get_down_pack)(&f, send_down, i);
+    xprint("%s.down[%d][%5d] = %5d", name, d, i, f);
+  }
+}
+
+static void
+dump_up_send(const char *name, int d,
+	     struct QOP_MDWF_State *state,
+	     struct eo_lattice *oe,
+	     int send_size,
+	     struct up_pack *send_up)
+{
+  int i;
+
+  if (send_size == 0)
+    return;
+
+  for (i = 0; i < send_size; i++) {
+    int f, u;
+    q(get_up_pack)(&f, &u, send_up, i);
+    xprint("%s.down[%d][%5d] = %5d u %5d", name, d, i, f, u);
+  }
+}
+
+static void
+dump_eo(const char *name, struct QOP_MDWF_State *state,
+	struct eo_lattice *eo,
+	struct eo_lattice *oe)
+{
+  int i, d;
 
   xprint("%p.%s face %6d", state, name, eo->face_size);
   xprint("%p.%s body %6d", state, name, eo->body_size);
@@ -114,15 +151,23 @@ dump_eo(const char *name, struct QOP_MDWF_State *state, struct eo_lattice *eo)
     int f_u[4], f_d[4], u_d[4];
     q(get_neighbor)(&m, f_u, &u_u, f_d, u_d, eo->body_neighbor, i);
     q(l2v)(x, eo->local, eo->lx2v[i]);
-    xprint(" %5d {%5d, %5d, %5d, %5d}: %02x"
+    xprint("%s.nb %5d {%5d, %5d, %5d, %5d}: %02x"
 	   " f. %5d %5d %5d %5d  :: %5d,"
 	   " b. %5d %5d %5d %5d  :: %5d %5d %5d %5d",
-	   i,
+	   name, i,
 	   x[0], x[1], x[2], x[3],
 	   m,
 	   f_u[0], f_u[1], f_u[2], f_u[3], u_u,
 	   f_d[0], f_d[1], f_d[2], f_d[3],
 	   u_d[0], u_d[1], u_d[2], u_d[3]);
+  }
+  for (d = 0; d < 4; d++) {
+    dump_down_send(name, d, state, oe,
+		   eo->send_down_size[d],
+		   eo->down_pack[d]);
+    dump_up_send(name, d, state, oe,
+		 eo->send_up_size[d],
+		 eo->up_pack[d]);
   }
 }
 
@@ -141,8 +186,8 @@ dump_state(struct QOP_MDWF_State *state)
     xprint(" u[%5d]: { %5d, %5d, %5d, %5d}",
 	   i, x[0], x[1], x[2], x[3]);
   }
-  dump_eo("even", state, &state->even);
-  dump_eo("odd", state, &state->odd);
+  dump_eo("even", state, &state->even, &state->odd);
+  dump_eo("odd", state, &state->odd, &state->even);
 }
 
 int

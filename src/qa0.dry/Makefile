@@ -20,11 +20,13 @@ headers = types.qa0
 
 sources = fix-down.qa0 \
           fix-up.qa0 \
-          get-down-f.qa0 \
-          get-up-f.qa0 \
           put-ab.qa0 \
           put-down.qa0 \
+          get-down.qa0 \
+          get-down-f.qa0 \
           put-up.qa0 \
+          get-up.qa0 \
+          get-up-f.qa0 \
           put-neighbor.qa0 \
           get-neighbor.qa0 \
           sizeof-ab-table.qa0 \

@@ -325,8 +325,10 @@ int qx(sizeof_gauge)(int volume);
 
 int q(get_down_pack_f)(const struct down_pack *up, int p);
 int q(get_up_pack_f)(const struct up_pack *up, int p);
-void q(put_down_pack)(struct down_pack *up, int p, int f);
+void q(put_down_pack)(struct down_pack *down, int p, int f);
+void q(get_down_pack)(int *f, const struct down_pack *up, int p);
 void q(put_up_pack)(struct up_pack *up, int p, int f, int u);
+void q(get_up_pack)(int *f, int *u, const struct up_pack *up, int p);
 void q(put_neighbor)(struct neighbor *n, int p,
 		     int m,
 		     const int f_up[Q(DIM)], int u_up,

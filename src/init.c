@@ -45,13 +45,9 @@ build_packs(struct eo_lattice   *eo,
       if (state->network[d] == 1)
 	continue;
       if (x[d] == local->lo[d]) {
-	xprint("d_pack [%5d %5d %5d %5d: %d] %5d @ %5d",
-	       x[0], x[1], x[2], x[3], d, z_down[d], p);
 	q(put_down_pack)(eo->down_pack[d], z_down[d]++, p);
       }
       if (x[d] + 1 == local->hi[d]) {
-	xprint("u_pack [%5d %5d %5d %5d: %d] %5d @ %5d",
-	       x[0], x[1], x[2], x[3], d, z_down[d], p);
 	q(put_up_pack)(eo->up_pack[d], z_up[d]++,
 		       p, state->v2lx[la] * Q(DIM) + d);
       }
@@ -106,12 +102,6 @@ build_local_neighbors(struct eo_lattice        *eo,
       }
       x[d] += 1;
     }
-    xprint("put: %5d %02x  f. %5d %5d %5d %5d :  %5d"
-	   "  b. %5d %5d %5d %5d :  %5d %5d %5d %5d",
-	   p, mask,
-	   f_up[0], f_up[1], f_up[2], f_up[3], u_up,
-	   f_down[0], f_down[1], f_down[2], f_down[3],
-	   u_down[0], u_down[1], u_down[2], u_down[3]);
     q(put_neighbor)(eo->body_neighbor, p, mask, f_up, u_up, f_down, u_down);
   }
 }
@@ -163,14 +153,10 @@ walker(struct Q(State)  *state,
     state->lx2v[*index] = la;
     *index += 1;
     if (parity & 1) {
-    xprint("walk[%5d %5d %5d %5d]: f(%5d %5d) o(%5d %5d)",
-	   left[0], left[1], left[2], left[3], la, (*index)-1, la, *o_idx);
       state->odd.v2lx[la] = *o_idx;
       state->odd.lx2v[*o_idx] = la;
       *o_idx += 1;
     } else {
-    xprint("walk[%5d %5d %5d %5d]: f(%5d %5d) e(%5d %5d)",
-	   left[0], left[1], left[2], left[3], la, (*index)-1, la, *e_idx);
       state->even.v2lx[la] = *e_idx;
       state->even.lx2v[*e_idx] = la;
       *e_idx += 1;
@@ -190,8 +176,6 @@ build_layout(struct Q(State) *state)
   int  o_idx = 0;
   
 
-  xprint("walk on node %5d %5d %5d %5d",
-	 state->node[0], state->node[1], state->node[2], state->node[3]);
   for (d = 0; d < Q(DIM); d++) {
     left[d] = state->local.lo[d];
     right[d] = state->local.hi[d];
@@ -364,32 +348,7 @@ eo_patch_down(struct eo_lattice *eo,
     if (x[dim] == lattice[dim]) x[dim] = 0;
     la = q(v2l)(x, local);
     b = eo->v2lx[la];
-    xprint("patch_down[%5d, %d]: x = [%5d %5d %5d %5d], dp %5d, la %5d, b %5d",
-	   p, dim, x[0], x[1], x[2], x[3], up, la, b);
-    {
-      int mask, f_up[4], u_up, f_down[4], u_down[4];
-      q(get_neighbor)(&mask, f_up, &u_up, f_down, u_down, eo->body_neighbor, b);
-      xprint("bu0: %5d %02x  f. %5d %5d %5d %5d :  %5d"
-	     "  b. %5d %5d %5d %5d :  %5d %5d %5d %5d",
-	     b, mask,
-	     f_up[0], f_up[1], f_up[2], f_up[3], u_up,
-	     f_down[0], f_down[1], f_down[2], f_down[3],
-	     u_down[0], u_down[1], u_down[2], u_down[3]);
-    }
-
-
     q(fix_neighbor_f_down)(eo->body_neighbor, b, p, dim);
-
-    {
-      int mask, f_up[4], u_up, f_down[4], u_down[4];
-      q(get_neighbor)(&mask, f_up, &u_up, f_down, u_down, eo->body_neighbor, b);
-      xprint("bu1: %5d %02x  f. %5d %5d %5d %5d :  %5d"
-	     "  b. %5d %5d %5d %5d :  %5d %5d %5d %5d",
-	     b, mask,
-	     f_up[0], f_up[1], f_up[2], f_up[3], u_up,
-	     f_down[0], f_down[1], f_down[2], f_down[3],
-	     u_down[0], u_down[1], u_down[2], u_down[3]);
-    }
   }
 }
 

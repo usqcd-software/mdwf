@@ -24,12 +24,6 @@ sources =  do-abd.c \
            do-apff.c \
            dot-fermiond.c \
            dot-fermionf.c \
-           fix-down.c \
-           fix-up.c \
-           get-down-f.c \
-           get-fermiond.c \
-           get-fermionf.c \
-           get-up-f.c \
            madd-fermiond.c \
            madd-fermionf.c \
            norm2-fermiond.c \
@@ -44,13 +38,21 @@ sources =  do-abd.c \
            proj-u-plusf.c \
            put-ab.c \
            put-down.c \
+           get-down.c \
+           get-down-f.c \
            put-fermiond.c \
+           get-fermiond.c \
            put-fermionf.c \
+           get-fermionf.c \
+           put-up.c \
+           get-up.c \
+           get-up-f.c \
            put-gauged.c \
            put-gaugef.c \
            put-neighbor.c \
            get-neighbor.c \
-           put-up.c \
+           fix-down.c \
+           fix-up.c \
            sizeof-ab-table.c \
            sizeof-down-pack.c \
            sizeof-fermiond.c \
@@ -78,6 +80,6 @@ realclean: clean
 	$C$(RM) $(sources)
 
 $(sources:%.c=%.o): %.o: %.c
-	$E CC $@
+	$E CC $<
 	$C$(CC) $(CFLAGS) -c -o $@ $<
 

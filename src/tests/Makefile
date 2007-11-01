@@ -43,7 +43,7 @@ $(programs): %: %.o
               -l$(library) $(QMP_LIBS)
 
 $(objects): %.o: %.c
-	$E CC $@
+	$E CC $<
 	$C$(CC) $(CFLAGS) $(QMP_CFLAGS) -c -o $@ $<
 
 $(objects): ../mdwf.h ../qop-mdwf3.h
