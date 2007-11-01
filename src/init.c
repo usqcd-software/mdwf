@@ -30,24 +30,28 @@ build_packs(struct eo_lattice   *eo,
   int            z_up[Q(DIM)];
   int            z_down[Q(DIM)];
   int            p;
-  int            bsize = eo->body_size;
-  int            fsize = eo->full_size;
+  int            x_bsize = oe->body_size;
+  int            x_fsize = oe->full_size;
   struct local  *local = eo->local;
   int            x[Q(DIM)];
   
   for (d = 0; d < Q(DIM); d++) {
     z_up[d] = z_down[d] = 0;
   }
-  for (p = bsize; p < fsize; p++) {
-    int la = eo->lx2v[p];
-    q(l2v)(x, eo->local, la);
+  for (p = x_bsize; p < x_fsize; p++) {
+    int la = oe->lx2v[p];
+    q(l2v)(x, oe->local, la);
     for (d = 0; d < Q(DIM); d++) {
       if (state->network[d] == 1)
 	continue;
       if (x[d] == local->lo[d]) {
+	xprint("d_pack [%5d %5d %5d %5d: %d] %5d @ %5d",
+	       x[0], x[1], x[2], x[3], d, z_down[d], p);
 	q(put_down_pack)(eo->down_pack[d], z_down[d]++, p);
       }
       if (x[d] + 1 == local->hi[d]) {
+	xprint("u_pack [%5d %5d %5d %5d: %d] %5d @ %5d",
+	       x[0], x[1], x[2], x[3], d, z_down[d], p);
 	q(put_up_pack)(eo->up_pack[d], z_up[d]++,
 		       p, state->v2lx[la] * Q(DIM) + d);
       }
@@ -109,20 +113,6 @@ build_local_neighbors(struct eo_lattice        *eo,
 	   f_down[0], f_down[1], f_down[2], f_down[3],
 	   u_down[0], u_down[1], u_down[2], u_down[3]);
     q(put_neighbor)(eo->body_neighbor, p, mask, f_up, u_up, f_down, u_down);
-    {
-      int mask;
-      int f_up[4];
-      int f_down[4];
-      int u_up;
-      int u_down[4];
-      q(get_neighbor)(&mask, f_up, &u_up, f_down, u_down, eo->body_neighbor, p);
-      xprint("get: %5d %02x  f. %5d %5d %5d %5d :  %5d"
-	     "  b. %5d %5d %5d %5d :  %5d %5d %5d %5d",
-	     p, mask,
-	     f_up[0], f_up[1], f_up[2], f_up[3], u_up,
-	     f_down[0], f_down[1], f_down[2], f_down[3],
-	     u_down[0], u_down[1], u_down[2], u_down[3]);
-    }
   }
 }
 
@@ -173,10 +163,14 @@ walker(struct Q(State)  *state,
     state->lx2v[*index] = la;
     *index += 1;
     if (parity & 1) {
+    xprint("walk[%5d %5d %5d %5d]: f(%5d %5d) o(%5d %5d)",
+	   left[0], left[1], left[2], left[3], la, (*index)-1, la, *o_idx);
       state->odd.v2lx[la] = *o_idx;
       state->odd.lx2v[*o_idx] = la;
       *o_idx += 1;
     } else {
+    xprint("walk[%5d %5d %5d %5d]: f(%5d %5d) e(%5d %5d)",
+	   left[0], left[1], left[2], left[3], la, (*index)-1, la, *e_idx);
       state->even.v2lx[la] = *e_idx;
       state->even.lx2v[*e_idx] = la;
       *e_idx += 1;
@@ -195,7 +189,9 @@ build_layout(struct Q(State) *state)
   int  e_idx = 0;
   int  o_idx = 0;
   
-  
+
+  xprint("walk on node %5d %5d %5d %5d",
+	 state->node[0], state->node[1], state->node[2], state->node[3]);
   for (d = 0; d < Q(DIM); d++) {
     left[d] = state->local.lo[d];
     right[d] = state->local.hi[d];
@@ -329,22 +325,46 @@ eo_patch_up(struct eo_lattice *eo,
 	    const int lattice[Q(DIM)+1],
 	    int dim)
 {
-#if 0
-  int p, la, dp;
+  int p, q, la, dp;
   int down_size = x_eo->send_down_size[dim];
   const struct local *local = &state->local;
   const struct local *x_local = &x_state->local;
   int x[Q(DIM)];
 
   for (p = 0; p < down_size; p++) {
-    dp = q(get_down_pack_f)(eo->down_pack[dim], p);
+    dp = q(get_down_pack_f)(x_eo->down_pack[dim], p);
     q(l2v)(x, x_local, x_oe->lx2v[dp]);
     x[dim]--;
     if (x[dim] < 0) x[dim] = lattice[dim] - 1;
     la = q(v2l)(x, local);
-    q(fix_neighbor_f_up)(eo->body_neighbor, p, la, dim);
+    q = eo->v2lx[la];
+    xprint("patch_up[%5d, %d]: x = [%5d %5d %5d %5d], dp %5d, la %5d, q %5d",
+	   p, dim, x[0], x[1], x[2], x[3], dp, la, q);
+    {
+      int mask, f_up[4], u_up, f_down[4], u_down[4];
+      q(get_neighbor)(&mask, f_up, &u_up, f_down, u_down, eo->body_neighbor, q);
+      xprint("fu0: %5d %02x  f. %5d %5d %5d %5d :  %5d"
+	     "  b. %5d %5d %5d %5d :  %5d %5d %5d %5d",
+	     q, mask,
+	     f_up[0], f_up[1], f_up[2], f_up[3], u_up,
+	     f_down[0], f_down[1], f_down[2], f_down[3],
+	     u_down[0], u_down[1], u_down[2], u_down[3]);
+    }
+
+
+    q(fix_neighbor_f_up)(eo->body_neighbor, q, p, dim);
+
+    {
+      int mask, f_up[4], u_up, f_down[4], u_down[4];
+      q(get_neighbor)(&mask, f_up, &u_up, f_down, u_down, eo->body_neighbor, q);
+      xprint("fu1: %5d %02x  f. %5d %5d %5d %5d :  %5d"
+	     "  b. %5d %5d %5d %5d :  %5d %5d %5d %5d",
+	     q, mask,
+	     f_up[0], f_up[1], f_up[2], f_up[3], u_up,
+	     f_down[0], f_down[1], f_down[2], f_down[3],
+	     u_down[0], u_down[1], u_down[2], u_down[3]);
+    }
   }
-#endif
 }
 
 static void
