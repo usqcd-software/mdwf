@@ -104,7 +104,7 @@ dump_down_send(const char *name, int d,
   for (i = 0; i < send_size; i++) {
     int f;
     q(get_down_pack)(&f, send_down, i);
-    xprint("%s.down[%d][%5d] = %5d", name, d, i, f);
+    xprint("snd.%s.d[%d][%5d] = %5d", name, d, i, f);
   }
 }
 
@@ -123,7 +123,7 @@ dump_up_send(const char *name, int d,
   for (i = 0; i < send_size; i++) {
     int f, u;
     q(get_up_pack)(&f, &u, send_up, i);
-    xprint("%s.down[%d][%5d] = %5d u %5d", name, d, i, f, u);
+    xprint("snd.%s.u[%d][%5d] = %5d u %5d", name, d, i, f, u);
   }
 }
 
