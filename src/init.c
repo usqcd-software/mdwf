@@ -325,7 +325,7 @@ eo_patch_up(struct eo_lattice *eo,
 	    const int lattice[Q(DIM)+1],
 	    int dim)
 {
-  int p, q, la, dp;
+  int p, b, la, dp;
   int down_size = x_eo->send_down_size[dim];
   const struct local *local = &state->local;
   const struct local *x_local = &x_state->local;
@@ -337,33 +337,8 @@ eo_patch_up(struct eo_lattice *eo,
     x[dim]--;
     if (x[dim] < 0) x[dim] = lattice[dim] - 1;
     la = q(v2l)(x, local);
-    q = eo->v2lx[la];
-    xprint("patch_up[%5d, %d]: x = [%5d %5d %5d %5d], dp %5d, la %5d, q %5d",
-	   p, dim, x[0], x[1], x[2], x[3], dp, la, q);
-    {
-      int mask, f_up[4], u_up, f_down[4], u_down[4];
-      q(get_neighbor)(&mask, f_up, &u_up, f_down, u_down, eo->body_neighbor, q);
-      xprint("fu0: %5d %02x  f. %5d %5d %5d %5d :  %5d"
-	     "  b. %5d %5d %5d %5d :  %5d %5d %5d %5d",
-	     q, mask,
-	     f_up[0], f_up[1], f_up[2], f_up[3], u_up,
-	     f_down[0], f_down[1], f_down[2], f_down[3],
-	     u_down[0], u_down[1], u_down[2], u_down[3]);
-    }
-
-
-    q(fix_neighbor_f_up)(eo->body_neighbor, q, p, dim);
-
-    {
-      int mask, f_up[4], u_up, f_down[4], u_down[4];
-      q(get_neighbor)(&mask, f_up, &u_up, f_down, u_down, eo->body_neighbor, q);
-      xprint("fu1: %5d %02x  f. %5d %5d %5d %5d :  %5d"
-	     "  b. %5d %5d %5d %5d :  %5d %5d %5d %5d",
-	     q, mask,
-	     f_up[0], f_up[1], f_up[2], f_up[3], u_up,
-	     f_down[0], f_down[1], f_down[2], f_down[3],
-	     u_down[0], u_down[1], u_down[2], u_down[3]);
-    }
+    b = eo->v2lx[la];
+    q(fix_neighbor_f_up)(eo->body_neighbor, b, p, dim);
   }
 }
 
@@ -376,8 +351,7 @@ eo_patch_down(struct eo_lattice *eo,
 	      const int lattice[Q(DIM)+1],
 	      int dim)
 {
-#if 0
-  int p, la, up;
+  int p, b, la, up;
   int up_size = x_eo->send_up_size[dim];
   const struct local *local = &state->local;
   const struct local *x_local = &x_state->local;
@@ -389,9 +363,34 @@ eo_patch_down(struct eo_lattice *eo,
     x[dim]++;
     if (x[dim] == lattice[dim]) x[dim] = 0;
     la = q(v2l)(x, local);
-    q(fix_neighbor_f_down)(eo->body_neighbor, p, la, dim);
+    b = eo->v2lx[la];
+    xprint("patch_down[%5d, %d]: x = [%5d %5d %5d %5d], dp %5d, la %5d, b %5d",
+	   p, dim, x[0], x[1], x[2], x[3], up, la, b);
+    {
+      int mask, f_up[4], u_up, f_down[4], u_down[4];
+      q(get_neighbor)(&mask, f_up, &u_up, f_down, u_down, eo->body_neighbor, b);
+      xprint("bu0: %5d %02x  f. %5d %5d %5d %5d :  %5d"
+	     "  b. %5d %5d %5d %5d :  %5d %5d %5d %5d",
+	     b, mask,
+	     f_up[0], f_up[1], f_up[2], f_up[3], u_up,
+	     f_down[0], f_down[1], f_down[2], f_down[3],
+	     u_down[0], u_down[1], u_down[2], u_down[3]);
+    }
+
+
+    q(fix_neighbor_f_down)(eo->body_neighbor, b, p, dim);
+
+    {
+      int mask, f_up[4], u_up, f_down[4], u_down[4];
+      q(get_neighbor)(&mask, f_up, &u_up, f_down, u_down, eo->body_neighbor, b);
+      xprint("bu1: %5d %02x  f. %5d %5d %5d %5d :  %5d"
+	     "  b. %5d %5d %5d %5d :  %5d %5d %5d %5d",
+	     b, mask,
+	     f_up[0], f_up[1], f_up[2], f_up[3], u_up,
+	     f_down[0], f_down[1], f_down[2], f_down[3],
+	     u_down[0], u_down[1], u_down[2], u_down[3]);
+    }
   }
-#endif
 }
 
 static char *
