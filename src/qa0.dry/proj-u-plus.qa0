@@ -32,6 +32,6 @@
          (op pointer-add () (f-addr) ([reg f-addr] [const (size-of Fermion)]))
          (op qcd-project ([project d plus]) (g) ([reg f]))
 	 (op qcd-mulh-conj () (h) ([reg V] [reg g]))
-         (store qcd-projected-fermion () ([reg res]) [reg h])
+;         (store qcd-projected-fermion () ([reg res]) [reg h])
          (op pointer-add () (res) ([reg res]
 	                           [const (size-of Projected-Fermion)]))))))

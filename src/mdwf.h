@@ -115,6 +115,7 @@ struct Q(State) {
   int                fatal_error;     /* if 0, allow reseting latch */
   const char        *error;           /* error string */
 
+  int                real_size;       /* 0, 4 or 8 */ 
   struct eo_lattice  even;            /* even sublattice */
   struct eo_lattice  odd;             /* odd sublattice */
 

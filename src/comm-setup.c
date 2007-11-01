@@ -9,7 +9,9 @@ eo_comm(struct eo_lattice *eo, struct Q(State) *state, int real_size)
 
   if (eo->real_size == real_size)
     return 0;
-  q(free_comm)(state);
+
+  xprint("eo_comm(%p, %p, %d), receive_buf=%p",
+	 eo, state, real_size, eo->receive_buf);
 
   /* This version bundles all communication together. Seems to work, but may
    * be suboptimal.
@@ -17,6 +19,7 @@ eo_comm(struct eo_lattice *eo, struct Q(State) *state, int real_size)
   
   eo->total_send = 0;
   eo->total_receive = 0;
+  eo->real_size = real_size;
   for (d = 0, k = ks = kr = 0; d < Q(DIM); d++) {
     if (eo->send_up_size[d]) {
       size = eo->send_up_size[d] * pfL;
@@ -105,17 +108,37 @@ eo_comm(struct eo_lattice *eo, struct Q(State) *state, int real_size)
       eo->total_receive += size;
     }
   }
-  eo->real_size = real_size;
+
+  xprint("comm_setup(eo=%p, receive_buf[]={%p %p %p %p %p %p %p %p}",
+	 eo,
+	 eo->receive_buf[0],
+	 eo->receive_buf[1],
+	 eo->receive_buf[2],
+	 eo->receive_buf[3],
+	 eo->receive_buf[4],
+	 eo->receive_buf[5],
+	 eo->receive_buf[6],
+	 eo->receive_buf[7]);
+
   return 0;
 }
 
 int
 q(setup_comm)(struct Q(State) *state, int real_size)
 {
+  xprint("setup_comm(%d)", real_size);
+  
+  if (state->real_size == real_size)
+    return 0;
+
+  q(free_comm)(state);
+  state->real_size = real_size;
   if (eo_comm(&state->even, state, real_size))
     return q(free_comm)(state);
   if (eo_comm(&state->odd, state, real_size))
     return q(free_comm)(state);
+
+  xprint("setup_comm(%d) done", real_size);
 
   return 0;
 }
