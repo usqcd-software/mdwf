@@ -1,0 +1,17 @@
+(verbose [c99 "/* QA0 source $Id$ */"])
+(verbose [c99 "struct up_pack;"])
+
+(include "types.qa0")
+
+(procedure put-up-pack ([stem "put_up_pack"])
+           ([up-pack   pointer "up_pack" "struct up_pack *"   ]
+            [index     int     "p"         "int"              ]
+            [f-value   int     "f"         "int"              ]
+            [u-value   int     "u"         "int"              ])
+   (op int-mul () (x) ([reg index] [const (size-of up-pack)]))
+   (op pointer-add () (ptr) ([reg up-pack] [reg x]))
+   (store int () ([reg ptr] [const (offset-of up-pack fermion)])
+                 [reg f-value])
+   (store int () ([reg ptr] [const (offset-of up-pack gauge)])
+                 [reg u-value])
+)

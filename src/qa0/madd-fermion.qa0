@@ -1,0 +1,24 @@
+(verbose [c99 "/* QA0 source $Id$ */"])
+(verbose [c99 "struct Fermion;"])
+
+(include "types.qa0")
+
+(procedure madd-fermion ([stem "madd_fermion"]
+                         prec&color
+                         count-flops)
+           ([result    pointer "r"         "struct Fermion *"       ]
+            [size      int     "size"      "int"                    ]
+            [l-s       int     "Ls"        "int"                    ]
+            [A         pointer "a"         "const struct Fermion *" ]
+            [scale     double  "s"         "double"                 ]
+            [B         pointer "b"         "const struct Fermion *" ])
+   (loop () (i [const 0] [reg size])
+     (loop () (s [const 0] [reg l-s])
+       (load qcd-fermion () vA ([reg A]))
+       (load qcd-fermion () vB ([reg B]))
+       (op qcd-maddf () (v) ([reg vA] [reg scale] [reg vB]))
+       (store qcd-fermion () ([reg result]) [reg v])
+       (op pointer-add () (A) ([reg A] [const (size-of Fermion)]))
+       (op pointer-add () (B) ([reg B] [const (size-of Fermion)]))
+       (op pointer-add () (result) ([reg result] [const (size-of Fermion)])))))
+

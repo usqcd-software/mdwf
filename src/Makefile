@@ -18,7 +18,9 @@ else
    C=
 endif
 
-subdirs = faux qa0.dry c99.dry tests
+.PHONY: all clean realclean dist
+
+subdirs = faux qa0.dry c99.dry qa0 c99 tests
 
 x.sources = error.c \
             alloc-aligned.c \
@@ -71,8 +73,6 @@ headers = mdwf.h \
 
 library = libqop-mdwf3.a
 
-.PHONY: all clean realclean
-
 all: $(library)
 	$C$(MAKE) -C $(LIMP) 'V=$V' 'CONFIG=$(CONFIG)' 'library=$(library)' $@
 	$C$(MAKE) -C tests 'V=$V' 'CONFIG=$(CONFIG)' $@
@@ -90,6 +90,15 @@ realclean: clean
 	$Cfor f in $(subdirs); do \
 	  $(MAKE) -C $$f 'V=$V' 'CONFIG=$(CONFIG)' 'library=$(library)' $@; \
 	done
+
+dist: clean
+	$E RM library
+	$C$(RM) $(library)
+	$Cfor f in $(subdirs); do \
+	   $(MAKE) -C $$f 'V=$V' 'CONFIG=$(CONFIG)' library=$(library) $@; \
+	done
+	$E TAR src
+	$Cx=`pwd`; cd .. ; tar -cf - `basename $$x` | bzip2 -9 > $$x.tar.bz2
 
 $(library): $(objects)
 	$E AR $@

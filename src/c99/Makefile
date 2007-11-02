@@ -1,7 +1,7 @@
 TOP    = ..
 V      = 0
 CONFIG = macosx
-DEST   = $(TOP)/c99.dry
+DEST   = $(TOP)/c99
 QMP_CFLAGS = $(shell $(QMP_TOP:%=%/bin/qmp-config) --cflags)
 
 include $(TOP)/config/$(CONFIG)
@@ -67,16 +67,16 @@ sources =  do-abd.c \
 objects = $(sources:%.c=%.o)
 
 all: $(objects)
-	$E AR $@ / c99.dry
+	$E AR $@ / c99
 	$C$(AR) cr $(TOP)/$(library) $^
 	$C$(RANLIB) $(TOP)/$(library)
 
 dist clean:
-	$E RM c99.dry/objects
+	$E RM c99/objects
 	$C$(RM) $(objects)
 
 realclean: clean
-	$E RM c99.dry/sources
+	$E RM c99/sources
 	$C$(RM) $(sources)
 
 $(sources:%.c=%.o): %.o: %.c

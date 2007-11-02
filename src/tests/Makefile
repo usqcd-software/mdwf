@@ -17,7 +17,7 @@ objects = $(tests:%.c=%.o)
 
 programs = $(tests:%.c=%)
 
-.PHONY: all clean realclean
+.PHONY: all clean realclean dist
 
 ifeq ("$V", "0")
    E=@echo "  "
@@ -33,7 +33,7 @@ clean:
 	$E RM tests/objects
 	$C$(RM) $(objects)
 
-realclean: clean
+dist realclean: clean
 	$E RM tests/programs
 	$C$(RM) $(programs)
 

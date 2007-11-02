@@ -1,0 +1,37 @@
+(verbose [c99 "/* QA0 source $Id$ */"])
+(verbose [c99 "#include <complex.h>"])
+(verbose [c99 "struct Fermion;"])
+(verbose [c99 "struct ProjectedFermion;"])
+(verbose [c99 "struct up_pack;"])
+(verbose [c99 "struct SUn;"])
+
+(include "types.qa0")
+
+(repeat ((d [const 0] [const *dim*]))
+   (procedure up-face ([stem "proj_Ucg" d "minus"]
+                       prec&color
+                       count-flops)
+        ([res    pointer "res"    "struct ProjectedFermion *" ]
+         [size   int     "size"   "int"                       ]
+         [l-s    int     "Ls"     "int"                       ]
+         [link   pointer "link"   "const struct up_pack *"    ]
+         [U      pointer "U"      "const struct SUn *"        ]
+         [src    pointer "src"    "const struct Fermion *"    ])
+     (op int-mul () (bytes-in-s) ([reg l-s] [const (size-of Fermion)]))
+     (loop () (i [const 0] [reg size])
+       (load int () f-idx ([reg link] [const (offset-of up-pack fermion)]))
+       (load int () u-idx ([reg link] [const (offset-of up-pack gauge)]))
+       (op pointer-add () (link) ([reg link] [const (size-of up-pack)]))
+       (op int-mul () (src-off) ([reg f-idx] [reg bytes-in-s]))
+       (op int-mul () (U-off) ([reg u-idx] [const (size-of SU-n)]))
+       (op pointer-add () (f-addr) ([reg src] [reg src-off]))
+       (op pointer-add () (u-addr) ([reg U] [reg U-off]))
+       (load qcd-su-n () V ([reg u-addr]))
+       (loop () (s [const 0] [reg l-s])
+         (load qcd-fermion () f ([reg f-addr]))
+         (op pointer-add () (f-addr) ([reg f-addr] [const (size-of Fermion)]))
+         (op qcd-project ([project d minus]) (g) ([reg f]))
+	 (op qcd-mulh-conj () (h) ([reg V] [reg g]))
+         (store qcd-projected-fermion () ([reg res]) [reg h])
+         (op pointer-add () (res) ([reg res]
+	                           [const (size-of Projected-Fermion)]))))))

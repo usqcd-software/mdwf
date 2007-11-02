@@ -1,0 +1,12 @@
+(verbose [c99 "/* QA0 source $Id$ */"])
+
+(include "types.qa0")
+
+(procedure size-of-projected-fermion ([stem "sizeof_projected_fermion"]
+ 	                              [return total int "int"]
+				      prec&color)
+           ([volume int "volume" "int"]
+	    [l-s    int "Ls"     "int"])
+   (op int-mul () (x) ([reg volume] [reg l-s]))
+   (op int-mul () (total) ([reg x] [const (size-of Projected-Fermion)])))
+
