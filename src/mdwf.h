@@ -9,6 +9,7 @@
 # include <stdlib.h>
 # include <string.h>
 # include <qmp.h>
+# include <sys/time.h>
 
 # define q(x) qop_mdwf_##x
 # define Q(x) QOP_MDWF_##x
@@ -119,6 +120,7 @@ struct Q(State) {
   struct eo_lattice  even;            /* even sublattice */
   struct eo_lattice  odd;             /* odd sublattice */
 
+  struct timeval     t0, t1;          /* for timing */
   double             time_sec;        /* seconds in the last routine */
   long long          flops;           /* FLOP in the last routine */
   long long          sent;            /* bytes sent in the last routine */
@@ -296,8 +298,12 @@ unsigned int qx(norm2_fermion)(double *v_r,
 			       const struct Fermion *a);
 
 /* Timing */
-#define BEGIN_TIMING(s)
-#define END_TIMING(s, f, snd, rcv)
+#define BEGIN_TIMING(s) do { gettimeofday(&((s)->t0), NULL); } while (0)
+#define END_TIMING(s, f, snd, rcv) do { \
+    gettimeofday(&((s)->t1), NULL); \
+    (s)->time_sec = ((s)->t1.tv_sec - (s)->t0.tv_sec) \
+      + 1e-6 * ((s)->t1.tv_usec - (s)->t0.tv_usec); \
+    (s)->flops = (f); (s)->sent = (snd); (s)->received = (rcv); } while (0)
 
 /* Argument checking */
 #define DECLARE_STATE struct Q(State) *state = NULL

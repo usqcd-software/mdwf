@@ -290,6 +290,7 @@ main(int argc, char *argv[])
 
   QOP_MDWF_fini(&mdwf_state);
 
+  zprint("Operator test finished\n");
   status = 0;
  end:
   QMP_finalize_msg_passing();

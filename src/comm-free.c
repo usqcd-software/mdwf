@@ -8,8 +8,6 @@ eo_free(struct eo_lattice *eo, struct Q(State) *state)
   if (eo->real_size == 0)
     return;
 
-  xprint("eo_free(%p)", eo);
-
   for (k = eo->hrt_count; k--;)
     QMP_free_msghandle(eo->hrt[k]);
   eo->hrt_count = 0;
@@ -38,8 +36,6 @@ eo_free(struct eo_lattice *eo, struct Q(State) *state)
 int
 q(free_comm)(struct Q(State) *state)
 {
-  xprint("free_comm(%p,%d)", state, state->real_size);
-
   if (state->real_size == 0)
     return 1;
 
@@ -47,6 +43,5 @@ q(free_comm)(struct Q(State) *state)
   eo_free(&state->odd, state);
   state->real_size = 0;
 
-  xprint("free_comm(%p) done", state);
   return 1;
 }

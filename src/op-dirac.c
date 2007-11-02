@@ -32,9 +32,7 @@ qx(compute_ApFB)(struct Q(State) *state,
   int Ls = state->Ls;
   int i;
 
-  xprint("compute_ApFB(%p), hrt_count=%d", xy, xy->hrt_count);
   for (i = 0; i < xy->hrt_count; i++) {
-    xprint("hrt[%d]=%p", i, xy->hrt[i]);
     QMP_start(xy->hrt[i]);
   }
 
@@ -45,14 +43,12 @@ qx(compute_ApFB)(struct Q(State) *state,
       *flops += (up_project[i])(xy->send_up_buf[i],
 				xy->send_up_size[i], Ls,
 				xy->up_pack[i], U, By);
-      xprint("hs_up[%d]=%p", i, xy->hs_up[i]);
       QMP_start(xy->hs_up[i]);
     }
     if (xy->send_down_size[i]) {
       *flops += (down_project[i])(xy->send_down_buf[i],
 				  xy->send_down_size[i], Ls,
 				  xy->down_pack[i], By);
-      xprint("hs_down[%d]=%p", i, xy->hs_down[i]);
       QMP_start(xy->hs_down[i]);
     }
   }
