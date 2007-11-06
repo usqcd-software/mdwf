@@ -33,7 +33,7 @@ done **  norm2_half_fermion
 done * x_export
 done * x_import
 done *+ faux -- empty routines
-*+ c99/qa0
+done *+ c99/qa0
 
 done * QA0:
 done ** PLT on BG/L fen

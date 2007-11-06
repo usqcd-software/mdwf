@@ -266,7 +266,7 @@ unsigned int qx(proj_Ucg3minus)(struct ProjectedFermion *r,
 
 /* A+F, A and B */
 unsigned int qx(do_ApF)(struct Fermion *r_x,
-			int size, int Ls,
+			int start, int size, int Ls,
 			const struct ABTable *atable,
 			const struct neighbor *neighbor,
 			const struct SUn *U,
@@ -277,6 +277,16 @@ unsigned int qx(do_AB)(struct Fermion *r_x,
 		       int size, int Ls,
 		       const struct ABTable *atable,
 		       const struct Fermion *s_x);
+unsigned int qx(do_AxpBxFx)(struct Fermion *r_x,
+			    int start, int size, int Ls,
+			    const struct ABTable *atable,
+			    const struct ABTable *btable,
+			    const struct neighbor *neighbor,
+			    const struct SUn *U,
+			    const struct Fermion *s_x,
+			    const struct Fermion *s_y,
+                            struct Fermion *tmp,
+			    void *rb[]);
 
 /* XXX  other functions */
 

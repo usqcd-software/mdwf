@@ -11,6 +11,7 @@
                    prec&color
                    count-flops)
        ([res-x     pointer   "res_x"    "struct Fermion *"         ]
+        [start     int       "start"    "int"                      ]
         [size      int       "size"     "int"                      ]
         [l-s       int       "Ls"       "int"        		   ]
 	[table     pointer   "table"    "const struct ABTable *"   ]
@@ -20,6 +21,9 @@
 	[src-y     pointer   "src_y"    "const struct Fermion *"   ]
         [buf*      pointer   "rb"       "void **"                  ])
   (op int-mul () (s-line) ([reg l-s] [const (size-of Fermion)]))
+  (op int-mul () (x-start) ([reg start] [reg s-line]))
+  (op pointer-add () (res-x) ([reg res-x] [reg x-start]))
+  (op pointer-add () (src-x) ([reg src-x] [reg x-start]))
   (loop () (i [const 0] [reg size])
     (op pointer-move () (t-s) ([reg table]))
     (op pointer-move () (r-s) ([reg res-x]))

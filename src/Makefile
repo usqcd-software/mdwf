@@ -59,7 +59,8 @@ p.sources = f-alloc.c \
             h-dot.c \
             f-norm2.c \
             h-norm2.c  \
-            op-dirac.c
+            op-dirac.c \
+            op-dirac-conj.c
 
 x.objects = $(x.sources:%.c=%.o)
 

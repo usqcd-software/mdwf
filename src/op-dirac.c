@@ -53,14 +53,14 @@ qx(compute_ApFB)(struct Q(State) *state,
     }
   }
 
-  *flops += qx(do_ApF)(r_x, xy->body_size, Ls,
+  *flops += qx(do_ApF)(r_x, 0, xy->body_size, Ls,
 		       params->ATable, xy->body_neighbor,
 		       U, s_x, By, NULL);
 
   if (xy->hrt_count)
     QMP_wait_all(xy->hrt, xy->hrt_count);
 
-  *flops += qx(do_ApF)(r_x, xy->face_size, Ls,
+  *flops += qx(do_ApF)(r_x, xy->body_size, xy->face_size, Ls,
 		       params->ATable, xy->face_neighbor,
 		       U, s_x, By, xy->receive_buf);
 

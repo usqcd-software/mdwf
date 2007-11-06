@@ -36,6 +36,7 @@ sources = fix-down.qa0 \
 
 x.sources = do-ab.qa0 \
             do-apf.qa0 \
+            do-axpbxfx.qa0 \
             dot-fermion.qa0 \
             get-fermion.qa0 \
             madd-fermion.qa0 \

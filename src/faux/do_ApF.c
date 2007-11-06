@@ -1,7 +1,7 @@
 #include <mdwf.h>
 
 unsigned int qx(do_ApF)(struct Fermion *r_x,
-			int size, int Ls,
+			int start, int size, int Ls,
 			const struct ABTable *atable,
 			const struct neighbor *neighbor,
 			const struct SUn *U,
