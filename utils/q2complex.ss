@@ -61,7 +61,7 @@
 		   'low 'fermion r* env))
    (define (q2c-store-fermion-hi attr* addr* value r* env)
      (q2c-store-xy attr* addr* value '*colors* '*fermion-dim*
-		   'hight 'fermion r* env))
+		   'high 'fermion r* env))
    (define (q2c-store-projected-fermion attr* addr* value r* env)
      (q2c-store-xy attr* addr* value '*colors* '*projected-fermion-dim*
 		   'all 'projected-fermion r* env))

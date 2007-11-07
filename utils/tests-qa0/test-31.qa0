@@ -1,0 +1,54 @@
+(verbose [c99 "/* QA0 source $Id$ */"])
+
+(verbose [c99 "struct ABplus;"])
+(verbose [c99 "struct Fermion;"])
+
+(structure abc "xxx_abc" ([a "a" double]
+                          [b "b" double]
+                          [c "c" double]))
+
+(structure AB+ "ABminus" ([z    "z"   double]
+                         [abc  "abc" pointer]))
+
+(procedure inverse-minus ([stem "foo"]
+	                  prec&color
+                          count-flops)
+     ([phi          pointer    "phi"    "struct Fermion *"      ]
+      [size         int        "size"   "int"                   ]
+      [l-s          int        "Ls"     "int"                   ]
+      [minus-table  pointer    "table"  "const struct ABplus *" ]
+      [psi          pointer    "psi"    "const struct Fermion *"])
+  (op int-add () (Ls-1) ([reg l-s] [const -1]))
+  (op int-mul () (s-1-size) ([reg Ls-1] [const (size-of Fermion)]))
+  (op int-mul () (s-size) ([reg l-s] [const (size-of Fermion)]))
+  (loop () (s [const 0] [reg size])
+    (op pointer-add () (psi-n) ([reg psi] [reg s-1-size]))
+    (load qcd-fermion-hi () q ([reg psi-n]))
+    (op pointer-move () (x) ([reg psi]))
+    (op pointer-move () (y) ([reg phi]))
+    (load pointer () t ([reg minus-table] [const (offset-of AB+ abc)]))
+    (loop () (k [const 1] [reg l-s])
+      (load double () a ([reg t] [const (offset-of abc a)]))
+      (op pointer-add () (t) ([reg t] [const (size-of abc)]))
+      (load qcd-fermion-hi () psi-k ([reg x]))
+      (op pointer-add () (x) ([reg x] [const (size-of Fermion)]))
+      (store qcd-fermion-hi () ([reg y]) [reg psi-k])
+      (op pointer-add () (y) ([reg y] [const (size-of Fermion)]))
+      (op qcd-maddf-hi () (q) ([reg q] [reg a] [reg psi-k])))
+    (load double () z ([reg minus-table] [const (offset-of AB+ z)]))
+    (op qcd-scalef-hi () (q) ([reg z] [reg q]))
+    (op pointer-add () (y) ([reg phi] [reg s-1-size]))
+    (store qcd-fermion-hi () ([reg y]) [reg q])
+    (op pointer-add () (psi) ([reg psi] [reg s-size]))
+    (op pointer-add () (x) ([reg y] [const (- (size-of Fermion))]))
+    (load pointer () t ([reg minus-table] [const (offset-of AB+ abc)]))
+    (loop () (k [const 1] [reg l-s])
+      (load double () b ([reg t] [const (offset-of abc b)]))
+      (load double () c ([reg t] [const (offset-of abc c)]))
+      (op pointer-add () (t) ([reg t] [const (size-of abc)]))
+      (load qcd-fermion-hi () p ([reg x]))
+      (op qcd-scalef-hi () (bq) ([reg b] [reg q]))
+      (op qcd-maddf-hi () (q) ([reg bq] [reg c] [reg p]))
+      (store qcd-fermion-hi () ([reg x]) [reg q])
+      (op pointer-add () (x) ([reg x] [const (- (size-of Fermion))])))
+    (op pointer-add () (phi) ([reg phi] [reg s-size]))))
