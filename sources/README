@@ -1,3 +1,0 @@
-*** On BG/L QMP is broken - it does not properly support multiple outstanding
-transactions. The code is downgraded to overlapping communications with
-computing on the body.
