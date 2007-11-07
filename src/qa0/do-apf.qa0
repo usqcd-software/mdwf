@@ -60,7 +60,7 @@
    (op pointer-add () (up-f) ([reg nb] [const (offset-of neighbor up-f)]))
    (op int-mul () (U-off) ([reg U-idx] [const (size-of SU-n)]))
    (op pointer-add () (U-addr) ([reg U] [reg U-off]))
-   (macro ((d [const 0] [const *dim*]))
+   (repeat ((d [const 0] [const *dim*]))
      (load int () f-idx ([reg up-f]))
      (op pointer-add () (up-f) ([reg up-f] [const (size-of int)]))
      (op int-mul () (f-off) ([reg f-idx] [reg s-line]))
@@ -97,7 +97,7 @@
    ;; down neighbors
    (op pointer-add () (dn-f) ([reg nb] [const (offset-of neighbor down-f)]))
    (op pointer-add () (dn-u) ([reg nb] [const (offset-of neighbor down-u)]))
-   (macro ((d [const 0] [const *dim*]))
+   (repeat ((d [const 0] [const *dim*]))
      (load int () f-idx ([reg dn-f]))
      (load int () U-idx ([reg dn-u]))
      (op pointer-add () (dn-f) ([reg dn-f] [const (size-of int)]))

@@ -1,7 +1,7 @@
 (procedure repeats ([stem "rep"] count-flops)
               ()
    (op start () () ())
-   (macro ([x (const 0) (const 4)]
+   (repeat ([x (const 0) (const 4)]
            [y (a b c)])
      (op foo ([xx x y]) () ())
      (op bar ([xx x y]) () ()))

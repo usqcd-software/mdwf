@@ -18,7 +18,7 @@
   (op int-mul () (sf-size) ([reg Vs] [const (size-of Fermion)]))
   (loop () [i (const 0) (reg size)]
     (load int () mask ([reg nt] [const (offset-of k-neighbor mask)]))
-    (macro ([d (const 0) (const *dim*)])
+    (repeat ([d (const 0) (const *dim*)])
       (if [const (and (= *mdwf-start-sum-direction* 'plus)
                       (= *mdwf-start-sum-dimension* d))]
         (begin
@@ -88,7 +88,7 @@
               (op pointer-add () (f) ([reg f]
                                       [const (/ (size-of Fermion) 2)])))))))
     (load int () u-x ([reg nt] [const (offset-of k-neighbor u-g)]))
-    (macro ([d (const 0) (const *dim*)])
+    (repeat ([d (const 0) (const *dim*)])
       (if [const (not (and (= *mdwf-start-sum-direction* 'plus)
                            (= *mdwf-start-sum-dimension* d)))]
         (begin

@@ -190,7 +190,7 @@ there are only leaf procedures.
   \also\nonterminal{loop}\\
   \also\nonterminal{conditional}\\
   \also\nonterminal{inner macro}\\
-\nonterminal{inner macro}\is\terminal{(} \terminal{repeat}
+\nonterminal{inner repeat}\is\terminal{(} \terminal{repeat}
          \terminal{(} \nonterminal{iterator}\any \terminal{)}
          \nonterminal{code}\oneplus \terminal{)}\\
 \end{grammar}

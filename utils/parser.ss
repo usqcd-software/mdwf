@@ -204,7 +204,7 @@
 			       (parse-code* (cdr code)
 					    (lambda (op2*)
 					      (k (append op2* op*))))]
-			      [(macro) (k (parse-macro code op*))]
+			      [(repeat) (k (parse-macro code op*))]
 			      [else (k (cons (parse-code code) op*))]))))))
      (define (parse-attr f)
        (cond

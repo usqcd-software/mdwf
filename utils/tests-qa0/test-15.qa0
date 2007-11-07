@@ -1,8 +1,8 @@
 (procedure repeats ([stem "rep"] count-flops)
               ()
    (op start () () ())
-   (macro ([x (const 0) (const 4)]
-           [y (a b c)])
+   (repeat ([x (const 0) (const 4)]
+            [y (a b c)])
      (if (const (and (= x 2) (= y 'c)))
        (op foo ([xx x y]) () ()))
      (op barxxxxxx ([xx x y]) () ()))
@@ -11,8 +11,8 @@
 (procedure repeats-xor ([stem "rep"] count-flops)
               ()
    (op start () () ())
-   (macro ([x (const 0) (const 4)]
-           [y (a b c)])
+   (repeat ([x (const 0) (const 4)]
+            [y (a b c)])
      (if-else (const (and (= x 2) (= y 'c)))
        (op foo ([xx x y]) () ())
        (op barxxxxxx ([xx x y]) () ())))
@@ -21,8 +21,8 @@
 (procedure repeats-block ([stem "rep"] count-flops)
               ()
    (op start () () ())
-   (macro ([x (const 0) (const 4)]
-           [y (a b c)])
+   (repeat ([x (const 0) (const 4)]
+            [y (a b c)])
      (if (const (and (= x 2) (= y 'c)))
        (begin (op foo ([xx x y]) () ())
               (op barxxxxxx ([xx x y]) () ()))))

@@ -29,7 +29,7 @@
   (loop () (i [const 0] [reg size])
     (load int () mask ([reg nb] [const (offset-of neighbor mask)]))
     ;; First term
-     (macro ((d [const 0] [const *dim*]))
+     (repeat ((d [const 0] [const *dim*]))
        (if [const (= d *mdwf-start-sum-dimension*)]
          (begin
             (if [const (= 'plus *mdwf-start-sum-direction*)]
@@ -101,7 +101,7 @@
                       (store qcd-fermion () ([reg ttt]) [reg r])
                       (op pointer-add () (ttt) ([reg ttt] [const (size-of Fermion)]))))))))))
       ;; Other F+ terms
-      (macro ((d [const 0] [const *dim*]))
+      (repeat ((d [const 0] [const *dim*]))
         ;; remaining directions and dimensions
         (begin
           (if [const (not (and (= d *mdwf-start-sum-dimension*)

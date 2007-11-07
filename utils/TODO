@@ -1,6 +1,8 @@
 
 Next big version:
-- make surface syntax for repeats identical on the top and lexical levels.
+[done] - make surface syntax for repeats identical on the top and
+         lexical levels.
+- more uniform macro substitution.
 - make loads and stores return computed address (optional, so the current syntax
   still works).
 - add macros on the top level with arguments and register renaming.
