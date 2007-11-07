@@ -435,6 +435,25 @@ Load QCD gauge matrix from $M[a+b+\cdots]$ in current precision into
 Store QCD fermion $r$ into $M[a+b+\cdots]$ in current precision.
 
 \begin{grammar}
+\terminal{(} \terminal{store} \terminal{qcd-fermion-lo} \terminal{()}
+ \terminal{(} $a_p$ $b_i$\any\terminal{)} $r_l$
+\terminal{)}
+\end{grammar}
+
+Store the lower half of QCD fermion in register $r$ into $M[a+b+\cdots]$
+in current precision.
+
+\begin{grammar}
+\terminal{(} \terminal{store} \terminal{qcd-fermion-hi} \terminal{()}
+ \terminal{(} $a_p$ $b_i$\any\terminal{)}
+ $r_h$
+\terminal{)}
+\end{grammar}
+
+Store the upper half of QCD fermion in register $r$ into$M[a+b+\cdots]$
+in current precision.
+
+\begin{grammar}
 \terminal{(} \terminal{store} \terminal{qcd-projected-fermion} \terminal{()}
  \terminal{(} $a_p$ $b_i$\any\terminal{)} $r_H$ \terminal{)}
 \end{grammar}
@@ -537,7 +556,22 @@ Compute $r\leftarrow a + b$ for a projected fermion.
 \terminal{)}
 \end{grammar}
 Compute $r\leftarrow a + s b$ for a fermion.
-% XXXX --- make it so!
+
+\begin{grammar}
+\terminal{(}\terminal{op} \terminal{qcd-maddf-lo} \terminal{()}
+   \terminal{(} $r_F$ \terminal{)}
+   \terminal{(} $a_F$ $s_d$ $b_F$ \terminal{)}
+\terminal{)}
+\end{grammar}
+Compute $r\leftarrow a + s b$ for the lower half of a fermion.
+
+\begin{grammar}
+\terminal{(}\terminal{op} \terminal{qcd-maddf-hi} \terminal{()}
+   \terminal{(} $r_F$ \terminal{)}
+   \terminal{(} $a_F$ $s_d$ $b_F$ \terminal{)}
+\terminal{)}
+\end{grammar}
+Compute $r\leftarrow a + s b$ for the upper halft of the fermion.
 
 \begin{grammar}
 \terminal{(}\terminal{op} \terminal{qcd-maddh} \terminal{()}
@@ -546,7 +580,6 @@ Compute $r\leftarrow a + s b$ for a fermion.
 \terminal{)}
 \end{grammar}
 Compute $r\leftarrow a + s b$ for a projected fermion.
-% XXXX --- make it so!
 
 \begin{grammar}
 \terminal{(}\terminal{op} \terminal{qcd-madd-lohi} \terminal{()}

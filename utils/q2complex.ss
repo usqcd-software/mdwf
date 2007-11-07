@@ -52,16 +52,24 @@
 	       env)))
    (define (q2c-store-su-n attr* addr* value r* env)
      (q2c-store-xy attr* addr* value '*colors* '*colors*
-		   'gauge r* env))
+		   'all 'gauge r* env))
    (define (q2c-store-fermion attr* addr* value r* env)
      (q2c-store-xy attr* addr* value '*colors* '*fermion-dim*
-		   'fermion r* env))
+		   'all 'fermion r* env))
+   (define (q2c-store-fermion-lo attr* addr* value r* env)
+     (q2c-store-xy attr* addr* value '*colors* '*fermion-dim*
+		   'low 'fermion r* env))
+   (define (q2c-store-fermion-hi attr* addr* value r* env)
+     (q2c-store-xy attr* addr* value '*colors* '*fermion-dim*
+		   'hight 'fermion r* env))
    (define (q2c-store-projected-fermion attr* addr* value r* env)
      (q2c-store-xy attr* addr* value '*colors* '*projected-fermion-dim*
-		   'projected-fermion r* env))
-   (define (q2c-store-xy attr* addr* value c-n f-n t r* env)
-     (let ([c-n (ce-lookup-x env 'const c-n "Color count")]
-	   [f-n (ce-lookup-x env 'const f-n "Fermion size")])
+		   'all 'projected-fermion r* env))
+   (define (q2c-store-xy attr* addr* value c-n f-n part t r* env)
+     (let* ([c-n (ce-lookup-x env 'const c-n "Color count")]
+	    [f-n (ce-lookup-x env 'const f-n "Fermion size")]
+	    [f-lo (if (eq? part 'high) (/ f-n 2) 0)]
+	    [f-hi (if (eq? part 'low) (/ f-n 2) f-n)])
        (define (c-store c f r* env)
 	 (let-values* ([(x env) (q2c-rename env value t c f)]
 		       [c-s (ce-lookup-x env 'size-of 'COMPLEX "complex size")]
@@ -79,14 +87,16 @@
        (let c-loop ([c 0] [r* r*] [env env])
 	 (cond
 	  [(= c c-n) (values r* env)]
-	  [else (let f-loop ([f 0] [r* r*] [env env])
+	  [else (let f-loop ([f f-lo] [r* r*] [env env])
 		  (cond
-		   [(= f f-n) (c-loop (+ c 1) r* env)]
+		   [(= f f-hi) (c-loop (+ c 1) r* env)]
 		   [else (let-values* ([(r* e) (c-store c f r* env)])
 		           (f-loop (+ f 1) r* e))]))]))))
    (define q2c-store*
      `((qcd-su-n               . ,q2c-store-su-n)
        (qcd-fermion            . ,q2c-store-fermion)
+       (qcd-fermion-lo         . ,q2c-store-fermion-lo)
+       (qcd-fermion-hi         . ,q2c-store-fermion-hi)
        (qcd-projected-fermion  . ,q2c-store-projected-fermion)))
    (define (q2c-store c attr* type addr* value r* env)
      (cond
@@ -178,19 +188,31 @@
 		    'projected-fermion r* env))
    (define (q2c-maddf attr* output* input* r* env)
      (q2c-maddx attr* output* input* '*fermion-dim*
-		'fermion r* env))
+		'all 'fermion r* env))
+   (define (q2c-maddf-lo attr* output* input* r* env)
+     (q2c-maddx attr* output* input* '*fermion-dim*
+		'low 'fermion r* env))
+   (define (q2c-maddf-hi attr* output* input* r* env)
+     (q2c-maddx attr* output* input* '*fermion-dim*
+		'high 'fermion r* env))
    (define (q2c-maddh attr* output* input* r* env)
      (q2c-maddx attr* output* input* '*projected-fermion-dim*
-		'projected-fermion r* env))
+		'all 'projected-fermion r* env))
    (define (q2c-scaleu attr* output* input* r* env)
      (q2c-scalex attr* output* input* '*colors*
-		 'gauge r* env))
+		 'all 'gauge r* env))
    (define (q2c-scalef attr* output* input* r* env)
      (q2c-scalex attr* output* input* '*fermion-dim*
-		 'fermion r* env))
+		 'all 'fermion r* env))
+   (define (q2c-scalef-lo attr* output* input* r* env)
+     (q2c-scalex attr* output* input* '*fermion-dim*
+		 'low 'fermion r* env))
+   (define (q2c-scalef-hi attr* output* input* r* env)
+     (q2c-scalex attr* output* input* '*fermion-dim*
+		 'high 'fermion r* env))
    (define (q2c-scaleh attr* output* input* r* env)
      (q2c-scalex attr* output* input* '*projected-fermion-dim*
-		 'projected-fermion r* env))
+		 'all 'projected-fermion r* env))
    (define (q2c-fnorm-init attr* output* input* r* env)
      (q2c-check-list output* = 1 "QCD fermion norm init outputs")
      (q2c-check-list input* = 0 "QCD fermion norm init inputs")
@@ -297,7 +319,7 @@
 		   [(= f f-n) (c-loop (+ c 1) r* env)]
 		   [else (let-values* ([(r* env) (complex-add c f r* env)])
 		           (f-loop (+ f 1) r* env))]))]))))
-   (define (q2c-scalex attr* output* input* f-n t r* env)
+   (define (q2c-scalex attr* output* input* f-n part t r* env)
      (define (complex-scale c f r* env)
        (let-values* ([a (car input*)]
 		     [(b env) (q2c-rename env (cadr input*) t c f)]
@@ -310,14 +332,16 @@
 		 env)))
      (q2c-check-list output* = 1 "QCD add outputs")
      (q2c-check-list input* = 2 "QCD add inputs")
-     (let ([c-n (ce-lookup-x env 'const '*colors* "Color count")]
-	   [f-n (ce-lookup-x env 'const f-n "Field dimension")])
+     (let* ([c-n (ce-lookup-x env 'const '*colors* "Color count")]
+	    [f-n (ce-lookup-x env 'const f-n "Field dimension")]
+	    [f-lo (if (eq? part 'high) (/ f-n 2) 0)]
+	    [f-hi (if (eq? part 'low) (/ f-n 2) f-n)])
        (let c-loop ([c 0] [r* r*] [env env])
 	 (cond
 	  [(= c c-n) (values r* env)]
-	  [else (let f-loop ([f 0] [r* r*] [env env])
+	  [else (let f-loop ([f f-lo] [r* r*] [env env])
 		  (cond
-		   [(= f f-n) (c-loop (+ c 1) r* env)]
+		   [(= f f-hi) (c-loop (+ c 1) r* env)]
 		   [else (let-values* ([(r* env) (complex-scale c f r* env)])
 		           (f-loop (+ f 1) r* env))]))]))))
    (define (q2c-madd-lohi attr* output* input* r* env)
@@ -353,7 +377,7 @@
 				    (complex-madd c f s alpha a r* env)
 				    (complex-madd c f s beta b r* env))])
 		   (f-loop (+ f 1) r* env))]))])))))
-   (define (q2c-maddx attr* output* input* f-n t r* env)
+   (define (q2c-maddx attr* output* input* f-n part t r* env)
      (define (complex-madd c f s alpha a r* env)
        (let-values* ([(s env) (q2c-rename env s t c f)]
 		     [(a env) (q2c-rename env a t c f)]
@@ -366,16 +390,19 @@
 		 env)))
      (q2c-check-list output* = 1 "QCD madd outputs")
      (q2c-check-list input* = 3 "QCD madd inputs")
-     (let ([c-n (ce-lookup-x env 'const '*colors* "Color count")]
-	   [f-n (ce-lookup-x env 'const f-n "Field dimension")]
-	   [s  (car input*)]
-	   [alpha (cadr input*)] [a (caddr input*)])
+     (let* ([c-n (ce-lookup-x env 'const '*colors* "Color count")]
+	    [f-n (ce-lookup-x env 'const f-n "Field dimension")]
+	    [f-lo (if (eq? part 'high) (/ f-n 2) 0)]
+	    [f-hi (if (eq? part 'low) (/ f-n 2) f-n)]
+	    [a  (car input*)]
+	    [alpha (cadr input*)]
+	    [s (caddr input*)])
        (let c-loop ([c 0] [r* r*] [env env])
 	 (cond
 	  [(= c c-n) (values r* env)]
-	  [else (let f-loop ([f 0] [r* r*] [env env])
+	  [else (let f-loop ([f f-lo] [r* r*] [env env])
 		  (cond
-		   [(= f f-n) (c-loop (+ c 1) r* env)]
+		   [(= f f-hi) (c-loop (+ c 1) r* env)]
 		   [else (let-values*
 			     ([(r* env) (complex-madd c f s alpha a r* env)])
 			   (f-loop (+ f 1) r* env))]))]))))
@@ -604,11 +631,15 @@
        (qcd-mulh-conj                . ,q2c-mulh-conj)
        (qcd-scaleu                   . ,q2c-scaleu)
        (qcd-scalef                   . ,q2c-scalef)
+       (qcd-scalef-lo                . ,q2c-scalef-lo)
+       (qcd-scalef-hi                . ,q2c-scalef-hi)
        (qcd-scaleh                   . ,q2c-scaleh)
        (qcd-addu                     . ,q2c-addu)
        (qcd-addf                     . ,q2c-addf)
        (qcd-addh                     . ,q2c-addh)
        (qcd-maddf                    . ,q2c-maddf)
+       (qcd-maddf-lo                 . ,q2c-maddf-lo)
+       (qcd-maddf-hi                 . ,q2c-maddf-hi)
        (qcd-maddh                    . ,q2c-maddh)
        (qcd-madd-lohi                . ,q2c-madd-lohi)
        (qcd-fnorm-init               . ,q2c-fnorm-init)

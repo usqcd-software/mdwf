@@ -1,0 +1,44 @@
+(verbose [c99 "/* QA0 source $Id$ */"])
+
+(structure abc "xxx_abc" ([a "a" double]
+                          [b "b" double]
+                          [c "c" double]))
+
+(structure AB+ "ABplus" ([z    "z"   double]
+                         [abc  "abc" pointer]))
+
+(procedure inverse-plus ([stem "foo"]
+	                 prec&color
+                         count-flops)
+     ([phi         pointer    "phi"    "struct Fermion *"      ]
+      [size        int        "size"   "int"                   ]
+      [l-s         int        "Ls"     "int"                   ]
+      [plus-table  pointer    "table"  "const struct ABplus *" ]
+      [psi         pointer    "psi"    "const struct Fermion *"])
+  (loop () (s [const 0] [reg size])
+    (load pointer () t ([reg plus-table] [const (offset-of AB+ abc)]))
+    (load qcd-fermion-lo () q ([reg psi]))
+    (op pointer-add () (x) ([reg psi] [const (size-of Fermion)]))
+    (op pointer-add () (y) ([reg phi] [const (size-of Fermion)]))
+    (loop () (k [const 1] [reg l-s])
+      (load double () a ([reg t] [const (offset-of abc a)]))
+      (op pointer-add () (t) ([reg t] [const (size-of abc)]))
+      (load qcd-fermion-lo () p ([reg x]))
+      (op pointer-add () (x) ([reg x] [const (size-of Fermion)]))
+      (store qcd-fermion-lo () ([reg y]) [reg p])
+      (op pointer-add () (y) ([reg y] [const (size-of Fermion)]))
+      (op qcd-maddf-lo () (q) ([reg q] [reg a] [reg p])))
+    (load double () z ([reg plus-table] [const (offset-of AB+ z)]))
+    (op qcd-scalef-lo () (q) ([reg z] [reg q]))
+    (store qcd-fermion-lo () ([reg phi]) [reg q])
+    (op pointer-add () (phi) ([reg phi] [const (size-of Fermion)]))
+    (load pointer () t ([reg plus-table] [const (offset-of AB+ abc)]))
+    (loop () (k [const 1] [reg l-s])
+      (load double () b ([reg t] [const (offset-of abc b)]))
+      (load double () c ([reg t] [const (offset-of abc c)]))
+      (op pointer-add () (t) ([reg t] [const (size-of abc)]))
+      (load qcd-fermion-lo () p ([reg phi]))
+      (op qcd-scalef-lo () (bq) ([reg b] [reg q]))
+      (op qcd-maddf-lo () (q) ([reg bq] [reg c] [reg p]))
+      (store qcd-fermion-lo () ([reg phi]) [reg q])
+      (op pointer-add () (phi) ([reg phi] [const (size-of Fermion)])))))
