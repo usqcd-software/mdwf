@@ -1,10 +1,8 @@
-(procedure repeats ([stem "rep"] count-flops)
+(procedure repeats ([stem "rep"]
+                    [return r int "int"])
               ()
-   (op start () () ())
+   (op int-move () (r) ([const 0]))
    (repeat ([x (const 0) (const 4)]
-           [y (a b c)])
-     (op foo ([xx x y]) () ())
-     (op bar ([xx x y]) () ()))
-   (op end () () ()))
-
-
+           [y (4 9 16)])
+     (op int-add ([xx x y]) (r) ([reg r] [const x]))
+     (op int-mul ([xx x y]) (r) ([reg r] [const y]))))

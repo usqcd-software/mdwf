@@ -32,7 +32,7 @@
           (if-else [reg md]
             ; starting in d plus masked
             (loop () [j (const 0) (reg Vs)]
-              (load qcd-half-fermion () h ([reg f]))
+              (load qcd-projected-fermion () h ([reg f]))
               (op qcd-unproject ([unproject d plus]) (ff) ([reg h]))
               (store qcd-fermion () ([reg r]) [reg ff])
               (op pointer-add () (r) ([reg r] [const (size-of Fermion)]))
@@ -70,7 +70,7 @@
           (if-else [reg md]
             ; starting in d minus masked
             (loop () [j (const 0) (reg Vs)]
-              (load qcd-half-fermion () h ([reg f]))
+              (load qcd-projected-fermion () h ([reg f]))
               (op qcd-mulh () (gh) ([reg gauge] [reg h]))
               (op qcd-unproject ([unproject d minus]) (ff) ([reg gh]))
               (store qcd-fermion () ([reg r]) [reg ff])
@@ -103,7 +103,7 @@
             ; starting in d plus masked
             (loop () [j (const 0) (reg Vs)]
               (load qcd-fermion () ff ([reg r]))
-              (load qcd-half-fermion () h ([reg f]))
+              (load qcd-projected-fermion () h ([reg f]))
               (op qcd-unproject-add ([unproject d plus])
                                     (ff) ([reg ff] [reg h]))
               (store qcd-fermion () ([reg r]) [reg ff])
@@ -144,7 +144,7 @@
             ; starting in d minus masked
             (loop () [j (const 0) (reg Vs)]
               (load qcd-fermion () ff ([reg r]))
-              (load qcd-half-fermion () h ([reg f]))
+              (load qcd-projected-fermion () h ([reg f]))
               (op qcd-mulh () (gh) ([reg gauge] [reg h]))
               (op qcd-unproject-add ([unproject d minus])
                                     (ff) ([reg ff] [reg gh]))

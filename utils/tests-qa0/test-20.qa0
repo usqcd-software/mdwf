@@ -1,6 +1,4 @@
 ; dot product of two fermions
-(array Fermion "xFermion" COMPLEX [const (* *fermion-dim* *colors*)])
-
 (procedure F-dot ([stem "fdot"] count-flops)
               ([r-re  pointer "res_r"  "double *"               ]
                [r-im  pointer "res_i"  "double *"               ]

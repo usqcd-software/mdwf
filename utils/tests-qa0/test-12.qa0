@@ -3,7 +3,7 @@
               ([res    pointer   "result" "struct Fermion *"]
                [U      pointer   "U"      "struct SU3 *"    ]
                [src    pointer   "source" "struct Fermion *"])
-   (load qcd-half-fermion () x ([reg src]))
+   (load qcd-projected-fermion () x ([reg src]))
    (op qcd-unproject ([unproject 2 plus]) (q) ([reg x]))
    (store qcd-fermion () ([reg res]) [reg q]))
 
@@ -13,9 +13,9 @@
               ([res    pointer   "result" "struct Fermion *"]
                [U      pointer   "U"      "struct SU3 *"    ]
                [src    pointer   "source" "struct Fermion *"])
-   (load qcd-half-fermion () x ([reg src]))
-   (load qcd-fermion () x ([reg U]))
-   (op qcd-unproject-add ([unproject 2 plus]) (q) ([reg U] [reg x]))
+   (load qcd-projected-fermion () x ([reg src]))
+   (load qcd-fermion () y ([reg U]))
+   (op qcd-unproject-add ([unproject 2 plus]) (q) ([reg y] [reg x]))
    (store qcd-fermion () ([reg res]) [reg q]))
 
 (procedure proj-zz ([stem "qcd_U" 2 minus]

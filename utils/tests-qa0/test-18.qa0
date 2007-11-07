@@ -18,7 +18,7 @@
   (loop () [i (const 0) (reg sf-size)]
     (load qcd-fermion () v-a ([reg a]))
     (load qcd-fermion () v-b ([reg b]))
-    (op qcd-maddf () (z) ([reg s] [reg v-a] [reg v-b]))
+    (op qcd-maddf () (z) ([reg v-a] [reg s] [reg v-b]))
     (store qcd-fermion () ([reg res]) [reg z])
     (op pointer-add () (res) ([reg res] [const (size-of Fermion)]))
     (op pointer-add () (a)   ([reg a] [const (size-of Fermion)]))

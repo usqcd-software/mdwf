@@ -1,6 +1,4 @@
 ;; computing tri-diagonal matrix fermion product in s-space
-(array x-spinor "x_Spinor" COMPLEX (const 4))
-(array x-fermion "x_Fermion" x-spinor (const *colors*))
 (structure AB-data "AB_data" ([u-offset    "u_offset" int]
                               [d-offset    "d_offset" int]
                               [u-scale     "u_scale" double]
@@ -14,23 +12,23 @@
                [matrix pointer   "matrix" "struct AB_data *"]
                [src    pointer   "source" "struct Fermion *"])
    (loop () (i [const 0] [reg size])
-     (op move ([type pointer]) (m) ([reg matrix]))
+     (op pointer-move () (m) ([reg matrix]))
      (loop () (s [const 0] [reg Ls])
        (load int () u-off ([reg m] [const (offset-of AB-data u-offset)]))
        (load int () d-off ([reg m] [const (offset-of AB-data d-offset)]))
        (load double () u-s ([reg m] [const (offset-of AB-data u-scale)]))
        (load double () z-s ([reg m] [const (offset-of AB-data z-scale)]))
        (load double () d-s ([reg m] [const (offset-of AB-data d-scale)]))
-       (op mul ([type int]) (u-x) ([reg u-off] [const (size-of x-fermion)]))
-       (op mul ([type int]) (d-x) ([reg d-off] [const (size-of x-fermion)]))
-       (load x-fermion () z-v ([reg src]))
-       (load x-fermion () u-v ([reg src] [reg u-x]))
-       (load x-fermion () d-v ([reg src] [reg d-x]))
-       (op mul-real-fermion () (z-w) ([reg z-s] [reg z-v]))
-       (op madd-real-fermion () (r-zu) ([reg u-s] [reg u-v] [reg z-w]))
-       (op madd-real-fermion () (r-v) ([reg d-s] [reg d-v] [reg r-zu]))
-       (store x-fermion () ([reg res]) [reg r-v])
-       (op add ([type pointer]) (res) ([reg res] [const (size-of x-fermion)]))
-       (op add ([type pointer]) (src) ([reg res] [const (size-of x-fermion)]))
-       (op add ([type pointer]) (m) ([reg m] [const (size-of AB-data)])))))
+       (op int-mul () (u-x) ([reg u-off] [const (size-of Fermion)]))
+       (op int-mul () (d-x) ([reg d-off] [const (size-of Fermion)]))
+       (load qcd-fermion () z-v ([reg src]))
+       (load qcd-fermion () u-v ([reg src] [reg u-x]))
+       (load qcd-fermion () d-v ([reg src] [reg d-x]))
+       (op qcd-scalef () (z-w) ([reg z-s] [reg z-v]))
+       (op qcd-maddf () (r-zu) ([reg u-v] [reg u-s] [reg z-w]))
+       (op qcd-maddf () (r-v) ([reg d-v] [reg d-s] [reg r-zu]))
+       (store qcd-fermion () ([reg res]) [reg r-v])
+       (op pointer-add () (res) ([reg res] [const (size-of Fermion)]))
+       (op pointer-add () (src) ([reg res] [const (size-of Fermion)]))
+       (op pointer-add () (m) ([reg m] [const (size-of AB-data)])))))
 

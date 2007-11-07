@@ -10,6 +10,7 @@
 	    ce-lookup-x
 	    ce-bind
 	    ce-bind-x
+	    ce-add-param
 	    ce-add-const
 	    ce-add-type
 	    ce-add-array
@@ -33,6 +34,10 @@
 		(lambda () (apply error 'qa0 msg args))))
    (define (ce-bind env k v) `((,k . ,v) ,@env))
    (define (ce-bind-x env t k v) `(((,t ,k) . ,v) ,@env))
+   (define (ce-add-param env name value)
+     (let* ([env (ce-bind-x env 'list name 'param)]
+	    [env (ce-bind-x env 'param name value)])
+       env))
    (define (ce-add-const env name value)
      (let* ([t (list 'type name)]
 	    [x (assoc t env)])
@@ -66,6 +71,7 @@
 		     [env (ce-bind-x env 'size-of name (* size bs))]
 		     [env (ce-bind-x env 'align-of name ba)]
 		     [env (ce-bind-x env 'components name '())]
+		     [env (ce-bind-x env 'aliased-to name name)]
 		     [env (ce-bind-x env 'name-of name c-name)])
 		env)])))
    (define (ce-add-struct env name c-name field* type*)
@@ -81,6 +87,7 @@
 			 [env (ce-bind-x env 'size-of name size)]
 			 [env (ce-bind-x env 'align-of name align)]
 			 [env (ce-bind-x env 'components name field*)]
+			 [env (ce-bind-x env 'aliased-to name name)]
 			 [env (ce-bind-x env 'name-of name c-name)])
 		    env)]
                  [else
@@ -94,7 +101,7 @@
 			 [env (ce-bind env (list 'offset-of name f) start)])
 		    (loop env (cdr f*) (cdr t*) (+ start s-f) align))]))])))
    (define (ce-add-alias env new old)
-     (let ([t (ce-lookup-x env 'type old "type of ~a" old)])
+    (let ([t (ce-lookup-x env 'type old "type of ~a" old)])
        (case t
 	 [(const) (let* ([v (ce-lookup-x env 'const old "value of ~a" old)]
 			 [env (ce-bind-x env 'type new t)]

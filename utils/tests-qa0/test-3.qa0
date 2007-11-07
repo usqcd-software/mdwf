@@ -20,10 +20,10 @@
                [matrix pointer   "matrix" "struct AB_data *"]
                [src    pointer   "source" "struct Fermion *"])
    (loop () (i [const 0] [reg size])
-     (op move ([type pointer]) (m) ([reg matrix]))
+     (op pointer-move () (m) ([reg matrix]))
      (loop () (s [const 0] [reg Ls])
        ; ...
-       (op add ([type pointer]) (res) ([reg res] [const (size-of x-fermion)]))
-       (op add ([type pointer]) (src) ([reg res] [const (size-of x-fermion)]))
-       (op add ([type pointer]) (m) ([reg m] [const (size-of AB-data)])))))
+       (op pointer-add () (res) ([reg res] [const (size-of x-fermion)]))
+       (op pointer-add () (src) ([reg res] [const (size-of x-fermion)]))
+       (op pointer-add () (m) ([reg m] [const (size-of AB-data)])))))
 

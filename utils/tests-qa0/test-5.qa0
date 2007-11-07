@@ -1,14 +1,10 @@
 ;; projections
-(array x-spinor        "x_Spinor"      COMPLEX       (const 4))
-(array x-half-spinor   "x_HSpinor"     COMPLEX       (const 2))
-(array x-fermion       "x_Fermion"     x-spinor      (const *colors*))
-(array x-half-fermion  "x_HalfFermion" x-half-spinor (const *colors*))
 
 (structure shift-down-data "sd_data" ([offset    "offset" int]))
 (structure shift-up-data "su_data" ([f-offset    "f_offset" int]
                                     [u-offset    "u_offset" int]))
 
-(procedure shift-down ([stem "shift_down" d p/m]
+(procedure shift-down ([stem "shift_down"]
                        count-flops)
               ([size   int       "size"   "int"                      ]
                [Ls     int       "ls"     "int"                      ]
@@ -17,11 +13,11 @@
                [src    pointer   "source" "struct Fermion *"         ])
    (loop () (i [const 0] [reg size])
      (load int () s-index ([reg index]))
-     (op mul-int () (s-offset) ([reg s-index] [const (size-of x-fermion)]))
+     (op int-mul () (s-offset) ([reg s-index] [const (size-of Fermion)]))
      (loop () (s [const 0] [reg Ls])
-       (load x-fermion () s ([reg src] [reg s-offset]))
-       (op spin-project ([sign p/p] [direction d]) (r) ([reg s])) 
-       (store x-half-fermion () ([reg res]) [reg r])
-       (op add-int () (s-offset) ([reg s-offset] [const (size-of x-fermion)]))
-       (op add-int () (res) ([reg res] [const (size-of x-half-fermion)])))
-     (op add-int () (index) ([reg index] [const (size-of shift-down-data)]))))
+       (load qcd-fermion () s ([reg src] [reg s-offset]))
+       (op qcd-project ([project 1 plus]) (r) ([reg s])) 
+       (store qcd-projected-fermion () ([reg res]) [reg r])
+       (op int-add () (s-offset) ([reg s-offset] [const (size-of Fermion)]))
+       (op int-add () (res) ([reg res] [const (size-of Projected-Fermion)])))
+     (op int-add () (index) ([reg index] [const (size-of shift-down-data)]))))

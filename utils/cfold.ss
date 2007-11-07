@@ -68,30 +68,38 @@
 	 (values out* (ce-add-const env name v))))
      (define (cf-struct name c-name
 			field-name* field-type* field-c-name* out* env)
-       (values (cons (make-qa0-struct name c-name
-				      field-name* field-type* field-c-name*)
-		     out*)
-	       (ce-add-struct env name c-name field-name* field-type*)))
+       (let ([name (cf-eval-param name env)]
+	     [c-name (cf-eval-param c-name env)]
+	     [field-name* (cf-eval-param* field-name* env)]
+	     [field-type* (cf-eval-param* field-type* env)]
+	     [field-c-name* (cf-eval-param* field-c-name* env)])
+	 (values (cons (make-qa0-struct name c-name
+					field-name* field-type* field-c-name*)
+		       out*)
+		 (ce-add-struct env name c-name field-name* field-type*))))
      (define (cf-array name c-name base size out* env)
-       (let ([size (cf-eval-const size env)])
+       (let ([size (cf-eval-const size env)]
+	     [name (cf-eval-param name env)]
+	     [c-name (cf-eval-param c-name env)]
+	     [base (cf-eval-param base env)])
 	 (values (cons (make-qa0-array name c-name base (cf-rewrap size)) out*)
 		 (ce-add-array env name c-name base size))))
      (define (cf-proc attr* name arg-name* arg-type* arg-c-name* arg-c-type*
 		      code* out* env)
        (values (cons (make-qa0-proc (cf-attr* attr* env)
-				    name
-				    arg-name*
-				    arg-type*
-				    arg-c-name*
-				    arg-c-type*
+				    (cf-eval-param name env)
+				    (cf-eval-param* arg-name* env)
+				    (cf-eval-param* arg-type* env)
+				    (cf-eval-param* arg-c-name* env)
+				    (cf-eval-param* arg-c-type* env)
 				    (cf-block code* env))
 		     out*)
 	       env))
      (define (cf-repeat-list id value* body* out* env)
-       (let loop-values ([value* value*] [out* out*])
+       (let loop-values ([value* (cf-eval-param* value* env)] [out* out*])
 	 (cond
 	  [(null? value*) (values out* env)]
-	  [else (let ([env-x (ce-add-const env id (car value*))])
+	  [else (let ([env-x (ce-add-param env id (car value*))])
 		  (let loop-body ([body* body*] [out* out*])
 		    (cond
 		     [(null? body*) (loop-values (cdr value*) out*)]
@@ -104,7 +112,7 @@
 	 (let loop-values ([i low] [out* out*])
 	   (cond
 	    [(>= i high) (values out* env)]
-	    [else (let ([env-x (ce-add-const env id i)])
+	    [else (let ([env-x (ce-add-param env id i)])
 		    (let loop-body ([body* body*] [out* out*])
 		      (cond
 		       [(null? body*) (loop-values (+ i 1) out*)]
@@ -132,15 +140,12 @@
      (define (cf-attr attr env)
        (variant-case attr
          [qa0-attr (name value*)
-           (make-qa0-attr name
-			  (map (lambda (v) (cf-eval-literal v env)) value*))]))
+           (make-qa0-attr (cf-eval-param name env)
+			  (cf-eval-param* value* env))]))
      (define (cf-attr* attr* env)
        (map (lambda (attr) (cf-attr attr env)) attr*))
      (define (cf-block code* env)
-       (let loop ([code* code*] [out* '()])
-	 (cond
-	  [(null? code*) (reverse out*)]
-	  [else (loop (cdr code*) (cf-code (car code*) out* env))])))
+       (reverse (cf-code* code* '() env)))
      (define (cf-code* code* out* env)
        (let loop ([code* code*] [out* out*])
 	 (cond
@@ -172,14 +177,14 @@
 			     out*)])))
      (define (cf-operation attr* name output* input* out* env)
        (cons (make-qa0-operation (cf-attr* attr* env)
-				 name
-				 output*
+				 (cf-eval-param name env)
+				 (cf-output* output* env)
 				 (cf-input* input* env))
 	     out*))
      (define (cf-load attr* type output addr* out* env)
        (cons (make-qa0-load (cf-attr* attr* env)
 			    (cf-type type env)
-			    output
+			    (cf-output output env)
 			    (cf-addr* addr* env))
 	     out*))
      (define (cf-store attr* type addr* value out* env)
@@ -188,21 +193,18 @@
 			     (cf-addr* addr* env)
 			     (cf-input value env))
 	     out*))
-     (define (cf-type type env)
-       (ce-search-x env 'aliased-to type (lambda (x) x) (lambda () type)))
-;       (ce-lookup-x env 'aliased-to type "Type folding of ~a" type))
      (define (cf-loop attr* var low high code* out* env)
        (cons (make-qa0-loop (cf-attr* attr* env)
-			    var
+			    (cf-eval-param var env)
 			    (cf-input low env)
 			    (cf-input high env)
 			    (cf-block code* env))
 	     out*))
      (define (cf-macro-list id value* code* out* env)
-       (let loop ([value* value*] [out* out*])
+       (let loop ([value* (cf-eval-param* value* env)] [out* out*])
 	 (cond
 	  [(null? value*) out*]
-	  [else (let ([env-x (ce-add-const env id (car value*))])
+	  [else (let ([env-x (ce-add-param env id (car value*))])
 		  (loop (cdr value*) (cf-code* code* out* env-x)))])))
      (define (cf-macro-range id low high code* out* env)
        (let ([low (cf-eval-const low env)]
@@ -211,31 +213,39 @@
 	   (cond
 	    [(>= i high) out*]
 	    [else (loop (+ i 1) (cf-code* code* out*
-					  (ce-add-const env id i)))]))))
-     (define (cf-addr* addr* env)
-       (map (lambda (addr) (cf-input addr env)) addr*))
+					  (ce-add-param env id i)))]))))
      (define (cf-input* input* env)
        (map (lambda (in) (cf-input in env)) input*))
      (define (cf-input input env)
        (variant-case input
-         [reg () input]
+         [reg (name) (make-reg (cf-eval-param name env))]
 	 [else (cf-rewrap (cf-eval-const input env))]))
+     (define (cf-addr* addr* env)
+       (cf-input* addr* env))
+     (define (cf-output* output* env)
+       (map (lambda (out) (cf-output out env)) output*))
+     (define (cf-output output env)
+       (variant-case output
+         [reg (name) (make-reg (cf-eval-param name env))]))
      (define (cf-rewrap c)
        (cond
         [(number? c) (make-c-expr-number c)]
         [(string? c) (make-c-expr-string c)]
         [else (error 'qa0 "Unexpected computed constant is ~a" c)]))
+     (define (cf-type type env)
+       (let ([type (cf-eval-param type env)])
+	 (ce-search-x env 'aliased-to type (lambda (x) x) (lambda () type))))
      (define (cf-eval-const const env)
        (variant-case const
          [c-expr-quote (literal) literal]
 	 [c-expr-op (name c-expr*) (cx-const-op name c-expr* env)]
 	 [c-expr-string (string) string]
 	 [c-expr-number (number) number]
-	 [c-expr-id (id) (ce-lookup env (list 'const id)
-				    "Constant evaluation of ~a" id)]))
-     (define (cf-eval-literal literal env)
-       (ce-search env (list 'const literal)
-		  (lambda (x) x) (lambda () literal)))
+	 [c-expr-id (id) (let ([v (cf-eval-param id env)])
+                           (if (number? v) v
+			       (ce-lookup-x env 'const v
+					    "Constant evaluation of ~a (~a)"
+					    id v)))]))
      (define (cx-const-op name expr* env)
        (define (check-id-arg v)
 	 (variant-case v
@@ -250,9 +260,9 @@
 		[(null? arg*) #t]
 		[else (check-id-arg (car arg*))
 		      (loop (cdr arg*))]))))
-       (define (get-id v)
+       (define (get-id v env)  ; for types and fields
 	 (variant-case v
-           [c-expr-id (id) id]))
+           [c-expr-id (id) (cf-eval-param id env)]))
        (define (compute-arith op)
 	 (let ([arg* (map (lambda (arg) (cf-eval-const arg env)) expr*)])
 	   (map check-number-arg arg*)
@@ -296,33 +306,37 @@
 	    [(null? arg*) 1]
 	    [(zero? (cf-eval-const (car arg*) env)) 0]
 	    [else (loop (cdr arg*))])))
-       (case name
-	 [(size-of align-of) (check-id-arg* expr* 1)
-	  (let ([type (get-id (car expr*))])
-	    (ce-lookup env (list name type)
-		       "Computing (~a ~a)" name type))]
-	 [(offset-of) (check-id-arg* expr* 2)
-	  (let ([type (get-id (car expr*))]
-		[field (get-id (cadr expr*))])
-	    (ce-lookup env (list name type field)
-		       "Computing (~a ~a ~a)" name type field))]
-	 [(+) (compute-arith +)]
-	 [(-) (compute-arith -)]
-	 [(*) (compute-arith *)]
-	 [(/) (compute-arith quotient)]
-	 [(=) (compute-equal)]
-	 [(shift) (compute-shift)]
-	 [(and) (compute-and)]
-	 [(or) (compute-or)]
-	 [(not) (compute-not)]
-	 [else (error 'qa0 "Unexpected constant operation ~a" name)]))
+       (let ([v (cf-eval-param name env)])
+	 (case v
+	   [(size-of align-of) (check-id-arg* expr* 1)
+	    (let ([type (get-id (car expr*) env)])
+	      (ce-lookup env (list name type)
+			 "Computing (~a ~a)" name type))]
+	   [(offset-of) (check-id-arg* expr* 2)
+	    (let ([type (get-id (car expr*) env)]
+		  [field (get-id (cadr expr*) env)])
+	      (ce-lookup env (list name type field)
+			 "Computing (~a ~a ~a)" name type field))]
+	   [(+) (compute-arith +)]
+	   [(-) (compute-arith -)]
+	   [(*) (compute-arith *)]
+	   [(/) (compute-arith quotient)]
+	   [(=) (compute-equal)]
+	   [(shift) (compute-shift)]
+	   [(and) (compute-and)]
+	   [(or) (compute-or)]
+	   [(not) (compute-not)]
+	   [else (error 'qa0 "Unexpected constant operation ~a (~a)" name v)])))
+     (define (cf-eval-param* param* env)
+       (map (lambda (p) (cf-eval-param p env)) param*))
+     (define (cf-eval-param param env)
+       (ce-search-x env 'param param
+		    (lambda (p) (cf-eval-param p env))
+		    (lambda () param)))
      (variant-case ast
        [qa0-top (decl*)
 	 (let loop ([in* decl*] [out* '()] [env (ce-start-env machine real)])
 	   (cond
 	    [(null? in*) (values (make-qa0-top (reverse out*)) env)]
 	    [else (let-values* ([(out* env) (cf-decl (car in*) out* env)])
-			       (loop (cdr in*) out* env))]))]))
-   (define (fold-constants ast machine real)
-     (let-values* ([(ast env) (fold-constants/env ast machine real)])
-		  ast)))
+			       (loop (cdr in*) out* env))]))])))

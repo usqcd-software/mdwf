@@ -21,7 +21,7 @@
    (op int-mul () (r-v) ([reg r-x] [reg r-z]))
    (loop () [i [const 1] [reg r-v]]
      (op int-mul () (r-z) ([reg r-z] [reg i]))
-     (op complex-madd () (r-c0) ([reg r-c0] [reg r-c1]))
+     (op complex-madd () (r-c0) ([reg r-c0] [reg r-c0] [reg r-c1]))
      (op int-add () (r-z) ([reg r-z] [reg i]))
      (op int-mul () (idx) ([reg i] [const (size-of complex-double)]))
      (load complex-double ()
@@ -67,7 +67,7 @@
    (op int-mul () (r-v) ([reg r-x] [reg r-z]))
    (loop () [i [const 1] [reg r-v]]
      (op int-mul () (r-z) ([reg r-z] [reg i]))
-     (op complex-madd () (r-c0) ([reg r-c0] [reg r-c1]))
+     (op complex-madd () (r-c0) ([reg r-c0] [reg r-c1] [reg r-c1]))
      (op int-add () (r-z) ([reg r-z] [reg i]))
      (op int-mul () (idx) ([reg i] [const (size-of complex-double)]))
      (load complex-double ()
