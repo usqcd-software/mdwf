@@ -35,7 +35,7 @@
 	    [data* data* (cdr data*)])
 	   [(null? target*)]
 	 (print-start (+ 1 level))
-	 (printf "~a: ~s~%" (car target) (car data*)))
+	 (printf "~a: ~s~%" (car target*) (car data*)))
        (print-start level)
        (printf "end(verbose)~%"))
      (define (print-alias level old-name new-name)

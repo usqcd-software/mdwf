@@ -36,13 +36,4 @@ $(objects): %.o: %.ss
 $(program): $(main) $(sources)
 	$(SC) --exe $@ $(main)
 
-ast.o:        common.ss
-attr.o:       common.ss ast.ss cenv.ss
-cenv.o:       common.ss ast.ss basis.ss
-cfold.o:      common.ss ast.ss cenv.ss basis.ss
-parser.o:     common.ss ast.ss cenv.ss
-q2complex.o:  common.ss ast.ss cenv.ss attr.ss
-qa0print.o:   common.ss ast.ss
-backend.o:    cenv.ss
-be-c99.o:     common.ss ast.ss cenv.ss attr.ss cheader.ss verbose.ss
-cheader.o:    common.ss ast.ss cenv.ss attr.ss verbose.ss
+$(objects): $(sources)
