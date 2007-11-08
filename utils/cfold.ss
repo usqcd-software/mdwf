@@ -2,10 +2,16 @@
 	mzscheme
    (require "basis.ss")
    (require "common.ss")
+   (require "parser.ss")
    (require "ast.ss")
    (require "cenv.ss")
 
    (provide fold-constants/env)
+   (define *param-count* 0)
+   (define (fresh-param-reg)
+     (let ([n *param-count*])
+       (set! *param-count* (+ n 1))
+       (string->symbol (format "~a~a" 'p n))))
    (define (fold-constants/env ast machine real)
      (define (ce-start-env machine real)
        (let* ([env (ce-empty-env)]
@@ -60,7 +66,11 @@
   	   (cf-repeat-list id value* body* out* env)]
 	 [qa0-repeat-range (id low high body*)
            (cf-repeat-range id low high body* out* env)]
+	 [qa0-macro-def (id)
+	   (cf-macro-def ast id out* env)]
 	 [qa0-verbose () (cf-verbose ast out* env)]))
+     (define (cf-macro-def ast id out* env)
+       (values out* (ce-add-macro env id ast)))
      (define (cf-alias old new out* env)
        (values out* (ce-add-alias env new old)))
      (define (cf-const name value out* env)
@@ -163,6 +173,8 @@
            (cf-loop attr* var low high code* out* env)]
 	 [qa0-if (var true-code* false-code*)
            (cf-if var true-code* false-code* out* env)]
+         [qa0-macro-call (id arg*)
+           (cf-macro-call id arg* out* env)]
 	 [qa0-macro-list (id value* code*)
            (cf-macro-list id value* code* out* env)]
 	 [qa0-macro-range (id low high code*)
@@ -200,6 +212,56 @@
 			    (cf-input high env)
 			    (cf-block code* env))
 	     out*))
+     (define (cf-macro-call id p* out* env)
+       (variant-case (ce-lookup-x env 'macro id "Macro call of ~a" id)
+         [qa0-macro-def (arg* code*)
+           (if (not (= (length arg*) (length p*)))
+	       (error 'qa0 "Macro call ~a expects ~a arguments"
+		      `(macro ,id ,@p*) (length arg*)))
+	   (let* ([env (ne-extend* env arg* (cf-input* p* env))]
+		  [env (ne-mcode* env code*)])
+	     (let loop ([out* out*] [code* code*])
+	       (cond
+		[(null? code*) out*]
+		[else (loop (cf-code (car code*) out* env) (cdr code*))])))]))
+     (define (ne-extend* env arg* p*)
+       (cond
+	[(null? arg*) env]
+	[else (ne-extend* (ne-extend env (car arg*) (car p*))
+			  (cdr arg*) (cdr p*))]))
+     (define (ne-extend env arg p)
+       (variant-case p
+         [reg (name) (ce-add-param env (user-reg arg) name)]
+	 [c-expr-id (id) (ce-add-param env arg id)]
+	 [c-expr-number (number) (ce-add-param env arg number)]
+	 [c-expr-string (string) (ce-add-param env arg string)]))
+     (define (ne-mcode* env code*)
+       (cond
+	[(null? code*) env]
+	[else (ne-mcode* (ne-mcode env (car code*)) (cdr code*))]))
+     (define (ne-mcode env code)
+       (variant-case code
+         [qa0-operation (output*) (ne-output* env output*)]
+	 [qa0-load (output) (ne-output env output)]
+	 [qa0-store () env]
+	 [qa0-loop (var code*) (ne-mcode* (ne-output env var) code*)]
+	 [qa0-if (var true-code* false-code*)
+	   (ne-mcode* (ne-mcode* (ne-output env var) true-code*) false-code*)]
+	 [qa0-macro-call () env]
+	 [qa0-macro-list (id code*)
+           (ne-mcode* (ne-mcode env id) code*)]
+	 [qa0-macro-range (id code*)
+           (ne-mcode* (ne-mcode env id) code*)]))
+     (define (ne-output* env output*)
+       (cond
+	[(null? output*) env]
+	[else (ne-output* (ne-output env (car output*)) (cdr output*))]))
+     (define (ne-output env output)
+       (ce-search-x env 'param (reg->name output)
+		    (lambda (x) env)
+		    (lambda ()
+		      (ce-bind-x env 'param (reg->name output)
+                                            (fresh-param-reg)))))
      (define (cf-macro-list id value* code* out* env)
        (let loop ([value* (cf-eval-param* value* env)] [out* out*])
 	 (cond
@@ -331,7 +393,8 @@
        (map (lambda (p) (cf-eval-param p env)) param*))
      (define (cf-eval-param param env)
        (ce-search-x env 'param param
-		    (lambda (p) (cf-eval-param p env))
+;		    (lambda (p) (cf-eval-param p env))
+                    (lambda (p) p)
 		    (lambda () param)))
      (variant-case ast
        [qa0-top (decl*)

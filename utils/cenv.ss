@@ -11,11 +11,13 @@
 	    ce-bind
 	    ce-bind-x
 	    ce-add-param
+	    ce-add-param*
 	    ce-add-const
 	    ce-add-type
 	    ce-add-array
 	    ce-add-struct
 	    ce-add-alias
+	    ce-add-macro
 	    ce-add-qcd-type
             ce-for-each
 	    ce-bgl)
@@ -35,9 +37,13 @@
    (define (ce-bind env k v) `((,k . ,v) ,@env))
    (define (ce-bind-x env t k v) `(((,t ,k) . ,v) ,@env))
    (define (ce-add-param env name value)
-     (let* ([env (ce-bind-x env 'list name 'param)]
+     (let* ([env (ce-bind-x env 'type name 'param)]
 	    [env (ce-bind-x env 'param name value)])
        env))
+   (define (ce-add-param* env name* value*)
+     (if (null? name*) env
+	 (ce-add-param* (ce-add-param env (car name*) (car value*))
+			(cdr name*) (cdr value*))))
    (define (ce-add-const env name value)
      (let* ([t (list 'type name)]
 	    [x (assoc t env)])
@@ -130,6 +136,8 @@
 			     (ce-bind env (list 'offset-of new (car c))
 				      o)))])))]
 	 [else (error 'qa0 "Internal error in ce-add-alias")])))
+   (define (ce-add-macro env name value)
+     (ce-bind-x env 'macro name value))
    (define (ce-add-qcd-type env name c-name a-dim b-dim)
      (let ([c-size (ce-lookup-x env 'size-of 'COMPLEX "(size-of COMPLEX)")]
 	   [c-align (ce-lookup-x env 'align-of 'COMPLEX "(align-of COMPLEX)")]

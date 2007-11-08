@@ -48,12 +48,20 @@ Here we define the grammar for QA. We start with the file level constructs:
   \also\nonterminal{array}\\
   \also\nonterminal{verbose} \\
   \also\nonterminal{include} \\
-  \also\nonterminal{top level macro}\\
-\nonterminal{top level macro}\is\nonterminal{procedure}\\
+  \also\nonterminal{macro definition}\\
+  \also\nonterminal{top level repeat}\\
+\nonterminal{top level repeat}\is\nonterminal{procedure}\\
   \also\terminal{(} \terminal{repeat}
          \terminal{(} \nonterminal{iterator}\any \terminal{)}
-         \nonterminal{top level macro}\oneplus \terminal{)}\\
+         \nonterminal{top level repeat}\oneplus \terminal{)}\\
 \end{grammar}
+
+The \nonterminal{macro defintion} directive defines a hygenic macro.
+\begin{grammar}
+\nonterminal{macro definition}\is\terminal{(}\terminal{define}
+  \terminal{(} \nonterminal{name} \nonterminal{name}\any\terminal{)}
+ \nonterminal{code}\oneplus\terminal{)}
+\end{grammar} 
 
 The \nonterminal{include} directive inserts the contents of the file into the
 input.
@@ -189,10 +197,21 @@ there are only leaf procedures.
   \also\nonterminal{block}\\
   \also\nonterminal{loop}\\
   \also\nonterminal{conditional}\\
-  \also\nonterminal{inner macro}\\
+  \also\nonterminal{macro call}\\
+  \also\nonterminal{inner repeat}\\
 \nonterminal{inner repeat}\is\terminal{(} \terminal{repeat}
          \terminal{(} \nonterminal{iterator}\any \terminal{)}
          \nonterminal{code}\oneplus \terminal{)}\\
+\end{grammar}
+
+To insert the body of \nonterminal{macro definition}, one provides arguments
+to the \nonterminal{macro call} form. All registers used as outputs in the body
+of the definition will be renamed thus providing hygenic semantics of macro
+substitution. There is no syntactic distinction between inputs and outputs in
+the call parameters.
+\begin{grammar}
+\nonterminal{macro call}\is\terminal{(}\terminal{macro}
+ \nonterminal{name} \nonterminal{input}\any\terminal{)}
 \end{grammar}
 
 Operations modify only their outputs and depends only on their inputs. The

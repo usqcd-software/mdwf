@@ -90,6 +90,8 @@
 	      (make-qa0-top (append decl* (parse-repeat s-expr)))]
 	     [(include)
               (make-qa0-top (append decl* (parse-include s-expr)))]
+	     [(define)
+	      (make-qa0-top (append decl* (list (parse-define s-expr))))]
 	     [(verbose)
 	      (make-qa0-top (append decl* (list (parse-verbose s-expr))))]
 	     [else (error 'parse-qa0 "Unknown form:~%~a~%" s-expr)])]))
@@ -193,6 +195,17 @@
 				     (map caddr (cadddr s-expr))
 				     (map cadddr (cadddr s-expr))
 				     code*))))
+     (define (parse-define s-expr)
+       (check-list "define" s-expr >= 3)
+       (check-list "define spec" (cadr s-expr) >= 1)
+       (check-name "define name" s-expr (caadr s-expr))
+       (map (lambda (arg) (check-name "parameter name" s-expr arg))
+	    (cdadr s-expr))
+       (parse-code* (cddr s-expr)
+		    (lambda (code*)
+		      (make-qa0-macro-def (caadr s-expr)
+					  (cdadr s-expr)
+					  code*))))
      (define (parse-code* code* k)
        (if (null? code*) (k '())
 	   (parse-code* (cdr code*)
@@ -204,8 +217,13 @@
 			       (parse-code* (cdr code)
 					    (lambda (op2*)
 					      (k (append op2* op*))))]
-			      [(repeat) (k (parse-macro code op*))]
+			      [(macro) (k (cons (parse-macro code) op*))]
+			      [(repeat) (k (parse-foreach code op*))]
 			      [else (k (cons (parse-code code) op*))]))))))
+     (define (parse-macro f)
+       (check-list "macro" f >= 2)
+       (check-name "macro name" f (cadr f))
+       (make-qa0-macro-call (cadr f) (map parse-input (cddr f))))
      (define (parse-attr f)
        (cond
 	[(symbol? f) (make-qa0-attr f '())]
@@ -303,7 +321,7 @@
        (if (and (list s) (> (length s) 0) (equal? (car s) 'begin))
 	   (parse-code* (cdr s) (lambda (p*) p*))
 	   (list (parse-code s))))
-     (define (parse-macro form op*)
+     (define (parse-foreach form op*)
        (check-list "macro" form >= 3)
        (let ([iterator* (cadr form)]
 	     [code* (cddr form)])
@@ -322,7 +340,8 @@
 				 [lo (parse-const-expr (cadr i))]
 				 [hi (parse-const-expr (caddr i))])
 			     (cons (make-qa0-macro-range id lo hi c*) t*))]
-		      [else (error 'qa0 "Internal error in parse-macro")]))]))))
+		      [else (error 'qa0
+				   "Internal error in parse-foreach")]))]))))
      (define (parse-const-expr form)
        (check-list "constant expression" form = 2)
        (parse-c-expr (cadr form)))

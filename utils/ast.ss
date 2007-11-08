@@ -18,6 +18,8 @@
    (define-variant qa0-store (attr* type addr* value))
    (define-variant qa0-loop (attr* var low high code*))
    (define-variant qa0-if (var true-code* false-code*))
+   (define-variant qa0-macro-def (id arg* code*))
+   (define-variant qa0-macro-call (id arg*))
    (define-variant qa0-macro-list (id value* code*))
    (define-variant qa0-macro-range (id low high code*))
    (define-variant qa0-attr (name value*))
