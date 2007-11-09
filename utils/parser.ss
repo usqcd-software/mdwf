@@ -64,6 +64,14 @@
 	     [else #t])
 	   (error 'parse-qa0 "Bad value for input of ~a, found ~a in ~%~a~%"
 		  msg in form)))
+     (define (check-macro-arg in)
+       (check-list "Macro argument" in = 2)
+       (if (case (car in)
+	     [(reg) (not (symbol? (cadr in)))]
+	     [(const) #f]
+	     [(macro) #f]
+	     [else #t])
+	   (error 'parse-qa0 "Bad value for macro argument ~a" in)))
      (define (check-iterator msg form iter)
        (check-list msg iter >= 2)
        (check-name msg form (car iter))
@@ -223,7 +231,7 @@
      (define (parse-macro f)
        (check-list "macro" f >= 2)
        (check-name "macro name" f (cadr f))
-       (make-qa0-macro-call (cadr f) (map parse-input (cddr f))))
+       (make-qa0-macro-call (cadr f) (map parse-macro-arg (cddr f))))
      (define (parse-attr f)
        (cond
 	[(symbol? f) (make-qa0-attr f '())]
@@ -238,6 +246,7 @@
 	 [(loop) (parse-loop f)]
 	 [(if) (parse-if f)]
 	 [(if-else) (parse-if-else f)]
+         [(macro) (parse-macro f)]
 	 [else (error 'parse-qa0 "Unexpected code~%~a~%" f)]))
      (define (parse-op f)
        (check-list "code op" f = 5)
@@ -254,6 +263,13 @@
 			     (map parse-output out*)
 			     (map parse-input in*))))
      (define (parse-output out) (parse-reg out))
+     (define (parse-macro-arg arg)
+       (check-macro-arg arg)
+       (case (car arg)
+	 [(reg) (parse-reg (cadr arg))]
+	 [(const) (parse-const-expr arg)]
+         [(macro) (make-c-expr-quote (cadr arg))]
+	 [else (error 'parse-qa0 "Internal error in parse-input")]))
      (define (parse-input in)
        (case (car in)
 	 [(reg) (parse-reg (cadr in))]

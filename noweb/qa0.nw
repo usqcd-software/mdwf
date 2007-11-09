@@ -211,8 +211,12 @@ substitution. There is no syntactic distinction between inputs and outputs in
 the call parameters.
 \begin{grammar}
 \nonterminal{macro call}\is\terminal{(}\terminal{macro}
- \nonterminal{name} \nonterminal{input}\any\terminal{)}
+ \nonterminal{name} \nonterminal{macro input}\any\terminal{)}\\
+\nonterminal{macro input}\is
+  \terminal{(}\terminal{macro} \nonterminal{name}\terminal{)}\\
+  \also\nonterminal{input}
 \end{grammar}
+The \terminal{macro} form of the macro argument is used to pass macros by name.
 
 Operations modify only their outputs and depends only on their inputs. The
 name space of the opcodes is open-ended, the attributes are specific for each

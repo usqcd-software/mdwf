@@ -1,0 +1,12 @@
+(define (projector d dst u src)
+   (repeat ((p/m (a b c)))
+     (op xxx ([attribute d p/m]) (x) ([reg src]))
+     (op yyy () (dst) ([reg u] [reg x]))))
+
+(procedure test ([stem "test"])
+     ([dst pointer    "dst" "void *"      ]
+      [U   pointer    "U"   "const void *"]
+      [src pointer    "src" "const void *"])
+  (repeat ((d [const 0] [const *dim*]))
+     (macro projector [const d] [reg dst] [reg U] [reg src])
+     (op step-pointer () (dst) ([reg dst] [const d]))))

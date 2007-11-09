@@ -213,17 +213,19 @@
 			    (cf-block code* env))
 	     out*))
      (define (cf-macro-call id p* out* env)
-       (variant-case (ce-lookup-x env 'macro id "Macro call of ~a" id)
-         [qa0-macro-def (arg* code*)
-           (if (not (= (length arg*) (length p*)))
-	       (error 'qa0 "Macro call ~a expects ~a arguments"
-		      `(macro ,id ,@p*) (length arg*)))
-	   (let* ([env (ne-extend* env arg* (cf-input* p* env))]
-		  [env (ne-mcode* env code*)])
-	     (let loop ([out* out*] [code* code*])
-	       (cond
-		[(null? code*) out*]
-		[else (loop (cf-code (car code*) out* env) (cdr code*))])))]))
+       (let ([vv (cf-eval-param id env)])
+	 (variant-case (ce-lookup-x env 'macro vv "Macro call of ~a (~a)" vv id)
+           [qa0-macro-def (arg* code*)
+             (if (not (= (length arg*) (length p*)))
+		 (error 'qa0 "Macro call ~a expects ~a arguments"
+			`(macro ,id ,@p*) (length arg*)))
+	     (let* ([env (ne-extend* env arg* (cf-input* p* env))]
+		    [env (ne-mcode* env code*)])
+	       (let loop ([out* out*] [code* code*])
+		 (cond
+		  [(null? code*) out*]
+		  [else (loop (cf-code (car code*) out* env)
+			      (cdr code*))])))])))
      (define (ne-extend* env arg* p*)
        (cond
 	[(null? arg*) env]
@@ -233,6 +235,7 @@
        (variant-case p
          [reg (name) (ce-add-param env (user-reg arg) name)]
 	 [c-expr-id (id) (ce-add-param env arg id)]
+         [c-expr-quote (literal) (ce-add-param env arg literal)]
 	 [c-expr-number (number) (ce-add-param env arg number)]
 	 [c-expr-string (string) (ce-add-param env arg string)]))
      (define (ne-mcode* env code*)
@@ -249,19 +252,22 @@
 	   (ne-mcode* (ne-mcode* (ne-output env var) true-code*) false-code*)]
 	 [qa0-macro-call () env]
 	 [qa0-macro-list (id code*)
-           (ne-mcode* (ne-mcode env id) code*)]
+           (ne-mcode* (ne-mvar env id) code*)]
 	 [qa0-macro-range (id code*)
-           (ne-mcode* (ne-mcode env id) code*)]))
+           (ne-mcode* (ne-mvar env id) code*)]))
+     (define (ne-add-binding env name)
+       (ce-search-x env 'param name
+		    (lambda (x) env)
+		    (lambda ()
+		      (ce-bind-x env 'param name (fresh-param-reg)))))
+     (define (ne-mvar env id)
+       (ne-add-binding env id))
      (define (ne-output* env output*)
        (cond
 	[(null? output*) env]
 	[else (ne-output* (ne-output env (car output*)) (cdr output*))]))
      (define (ne-output env output)
-       (ce-search-x env 'param (reg->name output)
-		    (lambda (x) env)
-		    (lambda ()
-		      (ce-bind-x env 'param (reg->name output)
-                                            (fresh-param-reg)))))
+       (ne-add-binding env (reg->name output)))
      (define (cf-macro-list id value* code* out* env)
        (let loop ([value* (cf-eval-param* value* env)] [out* out*])
 	 (cond
@@ -293,6 +299,7 @@
        (cond
         [(number? c) (make-c-expr-number c)]
         [(string? c) (make-c-expr-string c)]
+        [(symbol? c) (make-c-expr-quote c)]
         [else (error 'qa0 "Unexpected computed constant is ~a" c)]))
      (define (cf-type type env)
        (let ([type (cf-eval-param type env)])
@@ -393,7 +400,6 @@
        (map (lambda (p) (cf-eval-param p env)) param*))
      (define (cf-eval-param param env)
        (ce-search-x env 'param param
-;		    (lambda (p) (cf-eval-param p env))
                     (lambda (p) p)
 		    (lambda () param)))
      (variant-case ast

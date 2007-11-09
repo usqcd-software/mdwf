@@ -2,7 +2,7 @@
 Next big version:
 [done] - make surface syntax for repeats identical on the top and
          lexical levels.
-- more uniform macro substitution.
-- add macros on the top level with arguments and register renaming.
+[done] more uniform macro substitution.
+[done] add macros on the top level with arguments and register renaming.
 - make loads and stores return computed address (optional, so the current syntax
   still works).
