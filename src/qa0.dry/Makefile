@@ -55,10 +55,39 @@ x.sources = do-A.qa0 \
             sizeof-gauge.qa0 \
             sizeof-pfermion.qa0
 
+# Who include defs-A.qa0
+A.sources = do-1pA.qa0 \
+            do-A-conj.qa0 \
+            do-A.qa0 \
+            do-ApB.qa0 \
+            do-ApF.qa0 \
+            do-AxpBxFx.qa0
 
+# Who include defs-F.qa0 (they also need defs-spin.qa0)
+F.sources = do-F.qa0 \
+            do-ApF.qa0 \
+            do-AxpBxFx.qa0 
+
+# Who include defs-spin.qa0
+spin.sources = $(F.sources) \
+               proj-plus.qa0 \
+               proj-u-plus.qa0 \
+               proj-minus.qa0 \
+               proj-u-minus.qa0
+
+# Convert qa0 to C names
 c99.sources = $(sources:%.qa0=$(DEST)/%.c) \
               $(x.sources:%.qa0=$(DEST)/%d.c) \
               $(x.sources:%.qa0=$(DEST)/%f.c)
+
+c.A.sources = $(A.sources:%.qa0=$(DEST)/%d.c) \
+              $(A.sources:%.qa0=$(DEST)/%f.c)
+
+c.F.sources = $(F.sources:%.qa0=$(DEST)/%d.c) \
+              $(F.sources:%.qa0=$(DEST)/%f.c)
+
+c.spin.sources = $(spin.sources:%.qa0=$(DEST)/%d.c) \
+                 $(spin.sources:%.qa0=$(DEST)/%f.c)
 
 dist all: $(c99.sources)
 
@@ -81,4 +110,8 @@ $(x.sources:%.qa0=$(DEST)/%f.c): $(DEST)/%f.c: %.qa0
 	$C $(QA0) c99 float $@ $<
 
 
-$(c99.sources): $(headers)
+$(c99.sources): types.qa0
+$(c.A.sources): defs-A.qa0
+$(c.F.sources): defs-F.qa0
+$(c.spin.sources): defs-spin.qa0
+

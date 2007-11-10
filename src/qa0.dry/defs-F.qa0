@@ -39,7 +39,7 @@
   (load qcd-projected-fermion () h ([reg f]))
   (op pointer-add () (f) ([reg f] [const (size-of Projected-Fermion)]))
   (macro link-op [const g-op] [const d] [reg q] [reg r] [reg U] [reg h])
-  (store qcd-fermion () ([reg r]) [reg q])
+;  (store qcd-fermion () ([reg r]) [reg q])
   (op pointer-add () (r) ([reg r] [const (size-of Fermion)]))
   (op nop (end-face link-op g-op d) () ()))
 
@@ -60,7 +60,7 @@
   (load qcd-fermion () hh ([reg f]))
   (op pointer-add () (f) ([reg f] [const (size-of Fermion)]))
   (macro link-op [const g-op] [const d] [reg q] [reg r] [reg U] [reg hh])
-  (store qcd-fermion () ([reg r]) [reg q])
+;  (store qcd-fermion () ([reg r]) [reg q])
   (op pointer-add () (r) ([reg r] [const (size-of Fermion)]))
   (op nop (end-body link-op g-op d) () ()))
 
