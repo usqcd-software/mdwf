@@ -171,8 +171,8 @@
 	   (do-emit level "~a += ~a;" counter flops)))
      (define (emit-code l code env count-flops? counter flops) ; => flops'
        (variant-case code
-         [qa0-operation (name output* input*)
-           (emit-op l name output* input* env flops)]
+         [qa0-operation (name attr* output* input*)
+           (emit-op l name attr* output* input* env flops)]
 	 [qa0-load (type output addr*)
 	   (emit-load l type output addr* env flops)]
 	 [qa0-store (type addr* value)
@@ -274,13 +274,16 @@
 	 (complex-dot-init        0 "~a = 0.0;"                          0)
 	 (complex-dot-add         3 "~a = ~a + conj(~a) * (~a);"         8)
 	 (complex-dot-fini        1 "~a = (~a);"                         0)))
-     (define (emit-op l name output* input* env flops)
+     (define (emit-op l name attr* output* input* env flops)
        (let* ([inx* (if (eq? name 'complex-norm-add)
 			(list (car input*) (cadr input*) (cadr input*))
 			input*)]
 	      [out* (map (lambda (out) (preemit-output out env)) output*)]
 	      [inx* (map (lambda (in) (preemit-input in env)) inx*)])
 	 (cond
+          [(eq? name 'nop)
+	   (do-emit l "/* NOP: ~a */" (map qa0-attr->name attr*))
+	   flops]
 	  [(assq name op-table)
 	   => (lambda (op-rec)
 		(let ([i-count (cadr op-rec)]
@@ -347,7 +350,8 @@
 	 (int-sub                   int)
 	 (int-xor                   int)
 	 (pointer-add               pointer)
-	 (pointer-move              pointer)))
+	 (pointer-move              pointer)
+         (nop                       )))
      (define c99-load*
        '((int               int)
 	 (pointer           pointer)

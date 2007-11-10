@@ -23,6 +23,7 @@
    (define-variant qa0-macro-list (id value* code*))
    (define-variant qa0-macro-range (id low high code*))
    (define-variant qa0-attr (name value*))
+   (define-variant c-expr-macro (name))
    (define-variant c-expr-id (id))
    (define-variant c-expr-quote (literal))
    (define-variant c-expr-number (number))

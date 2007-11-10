@@ -1,0 +1,7 @@
+(define (ll a b)
+  (loop () (x [const 0] [reg a])
+    (op int-add () (b) ([reg b] [reg x]))))
+
+(procedure test-ml ([stem "test"] [return v int "int"])
+      ([x int "x" "int"])
+  (macro ll [reg x] [reg v]))

@@ -137,7 +137,9 @@
 				      o)))])))]
 	 [else (error 'qa0 "Internal error in ce-add-alias")])))
    (define (ce-add-macro env name value)
-     (ce-bind-x env 'macro name value))
+     (let* ([env (ce-bind-x env 'type name 'macro)]
+	    [env (ce-bind-x env 'macro name value)])
+       env))
    (define (ce-add-qcd-type env name c-name a-dim b-dim)
      (let ([c-size (ce-lookup-x env 'size-of 'COMPLEX "(size-of COMPLEX)")]
 	   [c-align (ce-lookup-x env 'align-of 'COMPLEX "(align-of COMPLEX)")]

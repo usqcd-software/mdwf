@@ -268,7 +268,7 @@
        (case (car arg)
 	 [(reg) (parse-reg (cadr arg))]
 	 [(const) (parse-const-expr arg)]
-         [(macro) (make-c-expr-quote (cadr arg))]
+         [(macro) (make-c-expr-macro (cadr arg))]
 	 [else (error 'parse-qa0 "Internal error in parse-input")]))
      (define (parse-input in)
        (case (car in)
