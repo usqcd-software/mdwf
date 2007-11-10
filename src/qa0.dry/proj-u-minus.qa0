@@ -6,6 +6,7 @@
 (verbose [c99 "struct SUn;"])
 
 (include "types.qa0")
+(include "defs-spin.qa0")
 
 (repeat ((d [const 0] [const *dim*]))
    (procedure up-face ([stem "proj_Ucg" d "minus"]
@@ -29,9 +30,9 @@
        (load qcd-su-n () V ([reg u-addr]))
        (loop () (s [const 0] [reg l-s])
          (load qcd-fermion () f ([reg f-addr]))
-         (op pointer-add () (f-addr) ([reg f-addr] [const (size-of Fermion)]))
-         (op qcd-project ([project d minus]) (g) ([reg f]))
-	 (op qcd-mulh-conj () (h) ([reg V] [reg g]))
-;         (store qcd-projected-fermion () ([reg res]) [reg h])
-         (op pointer-add () (res) ([reg res]
-	                           [const (size-of Projected-Fermion)]))))))
+	 (op pointer-add () (f-addr) ([reg f-addr] [const (size-of Fermion)]))
+	 (macro project-U [const 'minus] [const d] [reg rr] [reg V] [reg f])
+;         (store qcd-projected-fermion () ([reg res]) [reg rr])
+	 (op pointer-add () (res) ([reg res]
+                                   [const (size-of Projected-Fermion)]))))))
+

@@ -1,3 +1,4 @@
+;;; compute r = A* x
 ;;; compute r = A x
 
 (verbose [c99 "/* QA0 source $Id$ */"])
@@ -7,13 +8,13 @@
 (include "types.qa0")
 (include "defs-A.qa0")
 
-(procedure do-A ([stem "do_A"]
-                 prec&color
-                 count-flops)
+(procedure do-A-conj ([stem "do_Ax"]
+                      prec&color
+                      count-flops)
        ([res-x     pointer   "res_x"   "struct Fermion *"         ]
         [size      int       "size"    "int"                      ]
         [l-s       int       "Ls"      "int"        		  ]
 	[table     pointer   "table"   "const struct ABTable *"   ]
 	[src-x     pointer   "src_x"   "const struct Fermion *"   ])
   (loop () (i [const 0] [reg size])
-    (macro S-compute-A [reg res-x] [reg l-s] [reg table] [reg src-x])))
+    (macro S-compute-A* [reg res-x] [reg l-s] [reg table] [reg src-x]))

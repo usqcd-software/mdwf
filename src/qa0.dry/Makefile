@@ -16,7 +16,10 @@ else
    C=
 endif
 
-headers = types.qa0
+headers = types.qa0 \
+          defs-A.qa0 \
+          defs-F.qa0 \
+          defs-spin.qa0 \
 
 sources = fix-down.qa0 \
           fix-up.qa0 \
@@ -34,9 +37,10 @@ sources = fix-down.qa0 \
           sizeof-up-pack.qa0 \
           sizeof-neighbor.qa0
 
-x.sources = do-ab.qa0 \
-            do-apf.qa0 \
-            do-axpbxfx.qa0 \
+x.sources = do-A.qa0 \
+            do-F.qa0 \
+            do-ApF.qa0 \
+            do-AxpBxFx.qa0 \
             dot-fermion.qa0 \
             get-fermion.qa0 \
             madd-fermion.qa0 \

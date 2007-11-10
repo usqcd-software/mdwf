@@ -1,0 +1,50 @@
+;;; Spin projection operations
+;;
+(define (project g-op d r V f)
+  (op qcd-project ([project d g-op]) (r) ([reg f])))
+
+(define (project-U g-op d r V f)
+  (op qcd-project ([project d g-op]) (h) ([reg f]))
+  (op qcd-mulh () (r) ([reg V] [reg h])))
+
+(define (project-U* g-op d r V f)
+  (op qcd-project ([project d g-op]) (r) ([reg f]))
+  (op qcd-mulh-conj () (r) ([reg V] [reg h])))
+
+(define (unproject g-op d q r V h)
+  (op qcd-unproject ([unproject d g-op]) (q) ([reg h])))
+
+(define (unproject-U g-op d q r U h)
+  (op qcd-mulh () (Uh) ([reg U] [reg h]))
+  (op qcd-unproject ([unproject d g-op]) (q) ([reg Uh])))
+
+(define (add-unproject g-op d q r V h)
+  (load qcd-fermion () rr ([reg r]))
+  (op qcd-unproject-add ([unproject d g-op]) (q) ([reg rr] [reg h])))
+
+(define (add-unproject-U g-op d q r U h)
+  (op qcd-mulh () (Uh) ([reg U] [reg h]))
+  (load qcd-fermion () rr ([reg r]))
+  (op qcd-unproject-add ([unproject d g-op]) (q) ([reg rr] [reg Uh])))
+
+(define (one-x-gamma-U g-op d q r U hh)
+  (op qcd-project ([project d g-op]) (h) ([reg hh]))
+  (op qcd-mulh () (Uh) ([reg U] [reg h]))
+  (op qcd-unproject ([unproject d g-op]) (q) ([reg Uh])))
+
+(define (one-x-gamma-U* g-op d q r U hh)
+  (op qcd-project ([project d g-op]) (h) ([reg hh]))
+  (op qcd-mulh-conj () (Uh) ([reg U] [reg h]))
+  (op qcd-unproject ([unproject d g-op]) (q) ([reg Uh])))
+
+(define (add-one-x-gamma-U g-op d q r U hh)
+  (op qcd-project ([project d g-op]) (h) ([reg hh]))
+  (op qcd-mulh () (Uh) ([reg U] [reg h]))
+  (load qcd-fermion () rr ([reg r]))
+  (op qcd-unproject-add ([unproject d g-op]) (q) ([reg rr] [reg Uh])))
+
+(define (add-one-x-gamma-U* g-op d q r U hh)
+  (op qcd-project ([project d g-op]) (h) ([reg hh]))
+  (op qcd-mulh-conj () (Uh) ([reg U] [reg h]))
+  (load qcd-fermion () rr ([reg r]))
+  (op qcd-unproject-add ([unproject d g-op]) (q) ([reg rr] [reg Uh])))
