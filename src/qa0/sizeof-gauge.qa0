@@ -1,9 +1,0 @@
-(verbose [c99 "/* QA0 source $Id$ */"])
-
-(include "types.qa0")
-
-(procedure size-gauge ([stem "sizeof_gauge"]
-	               [return total int "int"]
-		       prec&color)
-           ([volume int "volume" "int"])
-   (op int-mul () (total) ([reg volume] [const (* *dim* (size-of SU-n))])))

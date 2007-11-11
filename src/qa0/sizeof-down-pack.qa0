@@ -1,8 +1,0 @@
-(verbose [c99 "/* QA0 source $Id$ */"])
-
-(include "types.qa0")
-
-(procedure size-down-pack ([stem "sizeof_down_pack"]
-	                   [return total int "int"])
-           ([volume int "volume" "int"])
-   (op int-mul () (total) ([reg volume] [const (size-of down-pack)])))
