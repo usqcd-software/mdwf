@@ -18,51 +18,41 @@ endif
 
 headers = ../mdwf.h
 
-sources =  do-Ad.c \
-           do-Af.c \
-           do-ApFd.c \
-           do-ApFf.c \
-           dot-fermiond.c \
-           dot-fermionf.c \
-           madd-fermiond.c \
-           madd-fermionf.c \
-           norm2-fermiond.c \
-           norm2-fermionf.c \
-           proj-minusd.c \
-           proj-minusf.c \
-           proj-plusd.c \
-           proj-plusf.c \
-           proj-u-minusd.c \
-           proj-u-minusf.c \
-           proj-u-plusd.c \
-           proj-u-plusf.c \
-           put-ab.c \
-           put-down.c \
-           get-down.c \
-           get-down-f.c \
-           put-fermiond.c \
-           get-fermiond.c \
-           put-fermionf.c \
-           get-fermionf.c \
-           put-up.c \
-           get-up.c \
-           get-up-f.c \
-           put-gauged.c \
-           put-gaugef.c \
-           put-neighbor.c \
-           get-neighbor.c \
-           fix-down.c \
-           fix-up.c \
-           sizeof-ab-table.c \
-           sizeof-down-pack.c \
-           sizeof-fermiond.c \
-           sizeof-fermionf.c \
-           sizeof-gauged.c \
-           sizeof-gaugef.c \
-           sizeof-neighbor.c \
-           sizeof-pfermiond.c \
-           sizeof-pfermionf.c \
-           sizeof-up-pack.c
+i.sources = put-ab.c \
+            put-down.c \
+            get-down.c \
+            get-down-f.c \
+            put-up.c \
+            get-up.c \
+            get-up-f.c \
+            put-neighbor.c \
+            get-neighbor.c \
+            fix-down.c \
+            fix-up.c \
+            sizeof-ab-table.c \
+            sizeof-down-pack.c \
+            sizeof-neighbor.c \
+            sizeof-up-pack.c
+
+x.sources = do-A \
+            do-ApF \
+            dot-fermion \
+            madd-fermion \
+            norm2-fermion \
+            proj-minus \
+            proj-plus \
+            proj-u-minus \
+            proj-u-plus \
+            put-fermion \
+            get-fermion \
+            put-gauge \
+            sizeof-fermion \
+            sizeof-gauge \
+            sizeof-pfermion
+
+sources = $(i.sources) \
+          $(x.sources:%=%f.c) \
+          $(x.sources:%=%d.c)
 
 objects = $(sources:%.c=%.o)
 
