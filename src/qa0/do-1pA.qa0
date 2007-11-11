@@ -1,0 +1,22 @@
+;;; compute r = x + B y
+
+(verbose [c99 "/* QA0 source $Id$ */"])
+(verbose [c99 "struct Fermion;"])
+(verbose [c99 "struct ABTable;"])
+
+(include "types.qa0")
+(include "defs-A.qa0")
+
+(procedure do-1+A ([stem "do_1pA"]
+                   prec&color
+                   count-flops)
+       ([res-x     pointer   "res_x"   "struct Fermion *"         ]
+        [size      int       "size"    "int"                      ]
+        [l-s       int       "Ls"      "int"        		  ]
+	[a-x       pointer   "b_x"     "const struct Fermion *"   ]
+	[b-table   pointer   "b_table" "const struct ABTable *"   ]
+	[b-x       pointer   "b_x"     "const struct Fermion *"   ])
+  (loop () (i [const 0] [reg size])
+    (macro S-compute-1+A [reg res-x] [reg l-s]
+                         [reg src-x] [reg b-table] [reg src-y])))
+

@@ -1,0 +1,28 @@
+;; compute r = F psi
+
+(verbose [c99 "/* QA0 source $Id$ */"])
+(verbose [c99 "struct Fermion;"])
+(verbose [c99 "struct ABTable;"])
+
+(include "types.qa0")
+(include "defs-F.qa0")
+
+(procedure do-ApF ([stem "do_ApF"]
+                   prec&color
+                   count-flops)
+       ([res-x     pointer   "res_x"    "struct Fermion *"         ]
+        [start     int       "start"    "int"                      ]
+        [size      int       "size"     "int"                      ]
+        [l-s       int       "Ls"       "int"        		   ]
+	[nb        pointer   "neighbor" "const struct neighbor *"  ]
+	[U         pointer   "U"        "const struct SUn *"       ]
+	[src-y     pointer   "src_y"    "const struct Fermion *"   ]
+        [buf*      pointer   "rb"       "void **"                  ])
+  (op int-mul () (s-line) ([reg l-s] [const (size-of Fermion)]))
+  (op int-mul () (x-start) ([reg start] [reg s-line]))
+  (op pointer-add () (res-x) ([reg res-x] [reg x-start]))
+  (loop () (i [const 0] [reg size])
+    (macro S-compute-F ; [const 'plus] [const 'minus]
+                       [const 'minus] [const 'plus]
+                       [reg res-x] [reg l-s] [reg s-line] [reg nb] [reg U]
+                       [reg src-y] [reg buf*])))

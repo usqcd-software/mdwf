@@ -1,0 +1,35 @@
+(verbose [c99 "/* QA0 source $Id$ */"])
+(verbose [c99 "struct neighbor;"])
+
+(include "types.qa0")
+
+(procedure put-neighbor ([stem "put_neighbor"])
+           ([neighbor pointer "neighbor" "struct neighbor *"   ]
+            [index     int     "p"         "int"               ]
+            [mask      int     "mask"      "int"               ]
+            [up-f      pointer "up_f"      "const int *"       ]
+            [up-U      int     "up_u"      "int"               ]
+            [down-f    pointer "down_f"    "const int *"       ]
+            [down-U    pointer "down_U"    "const int *"       ])
+   (op int-mul () (x) ([reg index] [const (size-of neighbor)]))
+   (op pointer-add () (ptr) ([reg neighbor] [reg x]))
+   (store int () ([reg ptr] [const (offset-of neighbor mask)])
+                 [reg mask])
+   (store int () ([reg ptr] [const (offset-of neighbor up-u)])
+                 [reg up-U])
+   (op pointer-add () (uf) ([reg ptr] [const (offset-of neighbor up-f)]))
+   (op pointer-add () (df) ([reg ptr] [const (offset-of neighbor down-f)]))
+   (op pointer-add () (dU) ([reg ptr] [const (offset-of neighbor down-u)]))
+   (loop () (i [const 0] [const *dim*])
+     (load int () v-uf ([reg up-f]))
+     (load int () v-df ([reg down-f]))
+     (load int () v-du ([reg down-U]))
+     (op pointer-add () (up-f) ([reg up-f] [const (size-of int)]))  
+     (op pointer-add () (down-f) ([reg down-f] [const (size-of int)]))  
+     (op pointer-add () (down-U) ([reg down-U] [const (size-of int)]))  
+     (store int () ([reg uf]) [reg v-uf])
+     (store int () ([reg df]) [reg v-df])
+     (store int () ([reg dU]) [reg v-du])
+     (op pointer-add () (uf) ([reg uf] [const (size-of int)]))  
+     (op pointer-add () (df) ([reg df] [const (size-of int)]))  
+     (op pointer-add () (dU) ([reg dU] [const (size-of int)]))))
