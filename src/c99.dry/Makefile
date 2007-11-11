@@ -18,10 +18,10 @@ endif
 
 headers = ../mdwf.h
 
-sources =  do-abd.c \
-           do-abf.c \
-           do-apfd.c \
-           do-apff.c \
+sources =  do-Ad.c \
+           do-Af.c \
+           do-ApFd.c \
+           do-ApFf.c \
            dot-fermiond.c \
            dot-fermionf.c \
            madd-fermiond.c \

@@ -8,7 +8,7 @@
 (include "defs-spin.qa0")
 
 (repeat ((d [const 0] [const *dim*]))
-   (procedure down-face ([stem "proj_g" d "plus"]
+   (procedure down-face ([stem "proj_g" d "minus"]
                          prec&color
                          count-flops)
         ([res    pointer "res"    "struct ProjectedFermion *" ]

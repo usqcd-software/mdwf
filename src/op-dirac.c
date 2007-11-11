@@ -36,7 +36,7 @@ qx(compute_ApFB)(struct Q(State) *state,
     QMP_start(xy->hrt[i]);
   }
 
-  *flops += qx(do_AB)(By, yx->full_size, Ls, params->BTable, s_y);
+  *flops += qx(do_A)(By, yx->full_size, Ls, params->BTable, s_y);
 
   for (i = 0; i < Q(DIM); i++) {
     if (xy->send_up_size[i]) {

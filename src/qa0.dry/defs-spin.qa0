@@ -9,7 +9,7 @@
   (op qcd-mulh () (r) ([reg V] [reg h])))
 
 (define (project-U* g-op d r V f)
-  (op qcd-project ([project d g-op]) (r) ([reg f]))
+  (op qcd-project ([project d g-op]) (h) ([reg f]))
   (op qcd-mulh-conj () (r) ([reg V] [reg h])))
 
 (define (unproject g-op d q r V h)
