@@ -1,3 +1,2 @@
-This directory contains files generated from ../qa0.dry/*.qa0
-The files implement low-level operations of MDWF. This version does not write
-gauge or fermion fields in any operations.
+This directory contains files generated from ../qa0/*.qa0
+The files implement low-level operations of MDWF.

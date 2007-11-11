@@ -17,7 +17,7 @@
        (load qcd-fermion () vA ([reg A]))
        (load qcd-fermion () vB ([reg B]))
        (op qcd-maddf () (v) ([reg vA] [reg scale] [reg vB]))
-;       (store qcd-fermion () ([reg result]) [reg v])
+       (store qcd-fermion () ([reg result]) [reg v])
        (op pointer-add () (A) ([reg A] [const (size-of Fermion)]))
        (op pointer-add () (B) ([reg B] [const (size-of Fermion)]))
        (op pointer-add () (result) ([reg result] [const (size-of Fermion)])))))

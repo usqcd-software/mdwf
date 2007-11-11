@@ -24,6 +24,6 @@
    (op qcd-fdot-fini () (v) ([reg res]))
    (op complex-real () (v-re) ([reg v]))
    (op complex-imag () (v-im) ([reg v]))
-;   (store double () ([reg ptr-re]) [reg v-re])
-;   (store double () ([reg ptr-im]) [reg v-im])
+   (store double () ([reg ptr-re]) [reg v-re])
+   (store double () ([reg ptr-im]) [reg v-im])
 )

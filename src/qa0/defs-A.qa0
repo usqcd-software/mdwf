@@ -32,7 +32,7 @@
                  [reg v-c] [reg v-l] [reg v-h] [reg t] [reg x])
   (op qcd-scalef () (g-c) ([reg v-c] [reg f-c]))
   (op qcd-madd-lohi () (g) ([reg g-c] [reg v-l] [reg f-l] [reg v-h] [reg f-h]))
-;  (store qcd-fermion () ([reg r]) [reg g])
+  (store qcd-fermion () ([reg r]) [reg g])
   (op pointer-add () (r) ([reg r] [const (size-of Fermion)])))
 
 ;; compute r = A* x in a point, advance r, x and t
@@ -41,7 +41,7 @@
                   [reg v-c] [reg v-l] [reg v-h] [reg t] [reg x])
   (op qcd-scalef () (g-c) ([reg v-c] [reg f-c]))
   (op qcd-madd-lohi () (g) ([reg g-c] [reg v-l] [reg f-l] [reg v-h] [reg f-h]))
-;  (store qcd-fermion () ([reg r]) [reg g])
+  (store qcd-fermion () ([reg r]) [reg g])
   (op pointer-add () (r) ([reg r] [const (size-of Fermion)])))
 
 ;; compute r = A x + B y in a point, advance r, x, y, and tables
@@ -58,7 +58,7 @@
   (op qcd-madd-lohi () (z) ([reg g-r]
                             [reg vb-l] [reg fb-l]
                             [reg vb-h] [reg fb-h]))
-;  (store qcd-fermion () ([reg r]) [reg z])
+  (store qcd-fermion () ([reg r]) [reg z])
   (op pointer-add () (r) ([reg r] [const (size-of Fermion)])))
 
 ;; compute r = A* x + B* y in a point, advance r, x, y, and tables
@@ -75,7 +75,7 @@
   (op qcd-madd-lohi () (z) ([reg g-r]
                             [reg vb-l] [reg fb-l]
                             [reg vb-h] [reg fb-h]))
-;  (store qcd-fermion () ([reg r]) [reg z])
+  (store qcd-fermion () ([reg r]) [reg z])
   (op pointer-add () (r) ([reg r] [const (size-of Fermion)])))
 
 ;; compute r = x + A y in a point, advance r, x, y, and tables
@@ -88,7 +88,7 @@
   (op qcd-madd-lohi () (z) ([reg g-r]
                             [reg vb-l] [reg fb-l]
                             [reg vb-h] [reg fb-h]))
-;  (store qcd-fermion () ([reg r]) [reg z])
+  (store qcd-fermion () ([reg r]) [reg z])
   (op pointer-add () (r) ([reg r] [const (size-of Fermion)])))
 
 ;; compute r = x + A* y in a point, advance r, x, y, and tables
@@ -101,7 +101,7 @@
   (op qcd-madd-lohi () (z) ([reg g-r]
                             [reg vb-l] [reg fb-l]
                             [reg vb-h] [reg fb-h]))
-;  (store qcd-fermion () ([reg r]) [reg z])
+  (store qcd-fermion () ([reg r]) [reg z])
   (op pointer-add () (r) ([reg r] [const (size-of Fermion)])))
 
 ;;;;
@@ -157,12 +157,12 @@
     (op pointer-add () (t) ([reg t] [const (size-of abc)]))
     (load mem-part () p ([reg x]))
     (op pointer-add () (x) ([reg x] [const (size-of Fermion)]))
-;    (store mem-part () ([reg y]) [reg p])
+    (store mem-part () ([reg y]) [reg p])
     (op pointer-add () (y) ([reg y] [const (size-of Fermion)]))
     (op madd-op () (q) ([reg q] [reg a] [reg p])))
   (load double () z ([reg p-table] [const (offset-of AB-Inverse z)]))
   (op scale-op () (zq) ([reg z] [reg q]))
-;  (store mem-part () ([reg res-x]) [reg zq])
+  (store mem-part () ([reg res-x]) [reg zq])
   (op pointer-add () (r) ([reg res-x] [const (size-of Fermion)]))
   (op pointer-add () (t) ([reg p-table] [const (offset-of AB-Inverse abc)]))
   (loop () (k [const 1] [reg l-s])
@@ -172,7 +172,7 @@
     (op scale-op () (bq) ([reg b] [reg zq]))
     (load mem-part () p ([reg r]))
     (op madd-op () (zq) ([reg bq] [reg c] [reg p]))
-;    (store mem-part () ([reg r]) [reg zq])
+    (store mem-part () ([reg r]) [reg zq])
     (op pointer-add () (r) ([reg r] [const (size-of Fermion)])))
   (op nop (end S-compute-A/+inv) () ()))
 
@@ -189,13 +189,13 @@
     (op pointer-add () (t) ([reg t] [const (size-of abc)]))
     (load mem-part () src-k ([reg x]))
     (op pointer-add () (x) ([reg x] [const (size-of Fermion)]))
-;    (store mem-part () ([reg y]) [reg src-k])
+    (store mem-part () ([reg y]) [reg src-k])
     (op pointer-add () (y) ([reg y] [const (size-of Fermion)]))
     (op madd-op () (q) ([reg q] [reg a] [reg src-k])))
   (load double () z ([reg m-table] [const (offset-of AB-Inverse z)]))
   (op scale-op () (zq) ([reg z] [reg q]))
   (op pointer-add () (y) ([reg res-x] [reg s-1-size]))
-;  (store mem-part () ([reg y]) [reg zq])
+  (store mem-part () ([reg y]) [reg zq])
   (op pointer-add () (x) ([reg y] [const (- (size-of Fermion))]))
   (op pointer-add () (t) ([reg m-table] [const (offset-of AB-Inverse abc)]))
   (loop () (k [const 1] [reg l-s])
@@ -205,7 +205,7 @@
     (op scale-op () (bq) ([reg b] [reg q]))
     (load mem-part () p ([reg x]))
     (op madd-op () (q) ([reg bq] [reg c] [reg p]))
-;    (store mem-part () ([reg x]) [reg q])
+    (store mem-part () ([reg x]) [reg q])
     (op pointer-add () (x) ([reg x] [const (- (size-of Fermion))])))
   (op nop (end S-compute-A/-inv) () ()))
 

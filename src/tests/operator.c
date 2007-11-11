@@ -47,7 +47,7 @@ zprint(char *fmt, ...)
   va_end(va);
 }
 
-static void
+void
 xshowv(char *name, const int v[4])
 {
   xprint("%s: %d %d %d %d", name, v[0], v[1], v[2], v[3]);
@@ -106,7 +106,23 @@ read_fermion(const int pos[5],
   return 1.0;
 }
 
+static double t_sec;
+static long long t_flops;
+static long long t_send;
+static long long t_receive;
+static int rounds;
+
 static void
+start_perf(void)
+{
+  t_sec = 0.0;
+  t_flops = 0;
+  t_send = 0;
+  t_receive = 0;
+  rounds = 0;
+}
+  
+static int
 report_perf(const char *name, struct QOP_MDWF_State *state)
 {
   double sec;
@@ -115,11 +131,24 @@ report_perf(const char *name, struct QOP_MDWF_State *state)
   long long receive;
   
   QOP_MDWF_performance(&sec, &flops, &send, &receive, state);
-  zprint("perf(%s): %g MFlops/sec, snd %g MBytes/sec, rcv %g MBytes/sec "
+  t_sec += sec;
+  t_flops += flops;
+  t_send += send;
+  t_receive += receive;
+  rounds ++;
+  
+  if (t_sec < 10)
+    return 1;
+
+  zprint("perf(%s @ %d): %g MFlops/sec, snd %g MBytes/sec, rcv %g MBytes/sec "
 	 "[%g %lld %lld %lld]\n",
-	 name, 1e-6 * flops/sec, 1e-6 * send/sec, 1e-6 * receive/sec,
-	 sec, flops, send, receive);
+	 name, rounds,
+	 1e-6 * t_flops/t_sec,
+	 1e-6 * t_send/t_sec,
+	 1e-6 * t_receive/t_sec,
+	 t_sec, t_flops, t_send, t_receive);
   zflush();
+  return 0;
 }
 
 static int
@@ -142,17 +171,21 @@ do_f3(struct QOP_MDWF_State *state, struct QOP_MDWF_Parameters *params)
     goto no_R;
   }
 
-  if (QOP_F3_MDWF_DDW_operator(R, params, U, F)) {
-    zprint("f3.0: operator failed: %s", QOP_MDWF_error(state));
-    goto no_X;
-  }
-  report_perf("f3.0", state);
+  start_perf();
+  do {
+    if (QOP_F3_MDWF_DDW_operator(R, params, U, F)) {
+      zprint("f3.0: operator failed: %s", QOP_MDWF_error(state));
+      goto no_X;
+    }
+  } while(report_perf("f3.0", state));
 
-  if (QOP_F3_MDWF_DDW_operator(R, params, U, F)) {
-    zprint("f3.1: operator failed: %s", QOP_MDWF_error(state));
-    goto no_X;
-  }
-  report_perf("f3.1", state);
+  start_perf();
+  do {
+    if (QOP_F3_MDWF_DDW_operator(R, params, U, F)) {
+      zprint("f3.1: operator failed: %s", QOP_MDWF_error(state));
+      goto no_X;
+    }
+  } while (report_perf("f3.1", state));
 
   QOP_F3_MDWF_free_fermion(&R);    
   QOP_F3_MDWF_free_fermion(&F);    
@@ -188,17 +221,21 @@ do_d3(struct QOP_MDWF_State *state, struct QOP_MDWF_Parameters *params)
     goto no_R;
   }
 
-  if (QOP_D3_MDWF_DDW_operator(R, params, U, F)) {
-    zprint("d3.0: operator failed: %s\n", QOP_MDWF_error(state));
-    goto no_X;
-  }
-  report_perf("d3.0", state);
+  start_perf();
+  do {
+    if (QOP_D3_MDWF_DDW_operator(R, params, U, F)) {
+      zprint("d3.0: operator failed: %s\n", QOP_MDWF_error(state));
+      goto no_X;
+    }
+  } while (report_perf("d3.0", state));
 
-  if (QOP_D3_MDWF_DDW_operator(R, params, U, F)) {
-    zprint("d3.1: operator failed: %s\n", QOP_MDWF_error(state));
-    goto no_X;
-  }
-  report_perf("d3.1", state);
+  start_perf();
+  do {
+    if (QOP_D3_MDWF_DDW_operator(R, params, U, F)) {
+      zprint("d3.1: operator failed: %s\n", QOP_MDWF_error(state));
+      goto no_X;
+    }
+  } while (report_perf("d3.1", state));
 
   QOP_D3_MDWF_free_fermion(&R);    
   QOP_D3_MDWF_free_fermion(&F);    
@@ -262,7 +299,9 @@ main(int argc, char *argv[])
   getv(mynode, 0, QMP_get_logical_number_of_dimensions(),
        QMP_get_logical_coordinates());
 
-  xshowv("node", mynode);
+  /*
+    xshowv("node", mynode);
+  */
 
   if (QOP_MDWF_init(&mdwf_state,
 		    mylattice, mynetwork, mynode, primary,

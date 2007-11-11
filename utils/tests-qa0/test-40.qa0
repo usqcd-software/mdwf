@@ -1,0 +1,7 @@
+(define (foo instruction a b)
+  (op instruction () (a) ([reg b] [reg b])))
+
+(procedure test-op ([stem "xx"] [return v int "int"])
+       ([r int "r" "int"])
+   (macro foo [const 'int-add] [reg v] [reg r])
+   (macro foo [const 'int-mul] [reg v] [reg v]))

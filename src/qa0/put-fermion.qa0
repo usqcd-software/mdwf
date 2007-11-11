@@ -37,6 +37,6 @@
          (op qcd-fermion-offset () (cd) ([reg c] [reg d]))
          (op pointer-add () (p) ([reg ptr] [reg cd]))
          (op complex () (v) ([reg v-re] [reg v-im]))
-;         (store COMPLEX () ([reg p]) [reg v])
+         (store COMPLEX () ([reg p]) [reg v])
        ))
       (op pointer-add () (ptr) ([reg ptr] [const (size-of Fermion)]))))

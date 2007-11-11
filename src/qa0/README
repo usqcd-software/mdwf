@@ -1,3 +1,2 @@
-This directory contains dry qa0 sources. No floating point data is written
-by the code, floating points are read, and indexing information is written and
-read.
+This directory contains wet qa0 sources. The code implements full qcd
+operations, its target is C99; the output is understood by both gcc and xlc.

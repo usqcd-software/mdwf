@@ -26,7 +26,7 @@
          (load qcd-fermion () f ([reg f-addr]))
 	 (op pointer-add () (f-addr) ([reg f-addr] [const (size-of Fermion)]))
 	 (macro project [const 'plus] [const d] [reg rr] [reg V] [reg f])
-;         (store qcd-projected-fermion () ([reg res]) [reg rr])
+         (store qcd-projected-fermion () ([reg res]) [reg rr])
 	 (op pointer-add () (res) ([reg res]
                                    [const (size-of Projected-Fermion)]))))))
 

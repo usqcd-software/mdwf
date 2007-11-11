@@ -18,5 +18,5 @@
        (op qcd-fnorm-add () (res) ([reg res] [reg vA]))
        (op pointer-add () (A) ([reg A] [const (size-of Fermion)]))))
    (op qcd-fnorm-fini () (v) ([reg res]))
-;   (store double () ([reg ptr-re]) [reg v])
+   (store double () ([reg ptr-re]) [reg v])
 )

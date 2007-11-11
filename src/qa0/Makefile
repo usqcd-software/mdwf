@@ -1,7 +1,7 @@
 TOP    = ..
 V      = 0
 CONFIG = macosx
-DEST   = $(TOP)/c99.dry
+DEST   = $(TOP)/c99
 QA0    = $(TOP)/../utils/qa0
 
 include $(TOP)/config/$(CONFIG)
