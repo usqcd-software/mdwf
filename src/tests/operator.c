@@ -137,8 +137,10 @@ report_perf(const char *name, struct QOP_MDWF_State *state)
   t_receive += receive;
   rounds ++;
   
-  if (t_sec < 10)
-    return 1;
+  if (rounds < 100000) {
+    if (t_sec < 10)
+      return 1;
+  }
 
   zprint("perf(%s @ %d): %g MFlops/sec, snd %g MBytes/sec, rcv %g MBytes/sec "
 	 "[%g %lld %lld %lld]\n",

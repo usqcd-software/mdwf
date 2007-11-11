@@ -5,7 +5,7 @@ QMP_CFLAGS = $(shell $(QMP_TOP:%=%/bin/qmp-config) --cflags)
 
 include $(TOP)/config/$(CONFIG)
 
-x.sources = do_AB.c \
+x.sources = do_A.c \
             do_ApF.c \
             dot_fermion.c \
             get_fermion.c \
@@ -27,7 +27,10 @@ x.sources = do_AB.c \
 
 sources = fix_neighbor_f_down.c \
           fix_neighbor_f_up.c \
+          get_neighbor.c \
+          get_down_pack.c \
           get_down_pack_f.c \
+          get_up_pack.c \
           get_up_pack_f.c \
           put_neighbor.c \
           put_down_pack.c \
