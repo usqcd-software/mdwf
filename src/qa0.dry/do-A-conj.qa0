@@ -17,4 +17,4 @@
 	[table     pointer   "table"   "const struct ABTable *"   ]
 	[src-x     pointer   "src_x"   "const struct Fermion *"   ])
   (loop () (i [const 0] [reg size])
-    (macro S-compute-A* [reg res-x] [reg l-s] [reg table] [reg src-x]))
+    (macro S-compute-A* [reg res-x] [reg l-s] [reg table] [reg src-x])))

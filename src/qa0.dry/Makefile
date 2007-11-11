@@ -38,6 +38,11 @@ sources = fix-down.qa0 \
           sizeof-neighbor.qa0
 
 x.sources = do-A.qa0 \
+            do-A-conj.qa0 \
+            do-A-inv.qa0 \
+            do-A-conj-inv.qa0 \
+            do-1pA.qa0 \
+            do-ApB.qa0 \
             do-F.qa0 \
             do-ApF.qa0 \
             do-AxpBxFx.qa0 \
@@ -56,9 +61,11 @@ x.sources = do-A.qa0 \
             sizeof-pfermion.qa0
 
 # Who include defs-A.qa0
-A.sources = do-1pA.qa0 \
+A.sources = do-A.qa0 \
             do-A-conj.qa0 \
-            do-A.qa0 \
+            do-A-inv.qa0 \
+            do-A-conj-inv.qa0 \
+            do-1pA.qa0 \
             do-ApB.qa0 \
             do-ApF.qa0 \
             do-AxpBxFx.qa0

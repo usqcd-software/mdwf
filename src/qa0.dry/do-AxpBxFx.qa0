@@ -1,4 +1,4 @@
-(verbose [c99 "/* QA0 source $Id: do-apf.qa0 283 2007-10-31 17:39:15Z avp $ */"])
+(verbose [c99 "/* QA0 source $Id$ */"])
 (verbose [c99 "#include <complex.h>"])
 (verbose [c99 "struct Fermion;"])
 (verbose [c99 "struct ABTable;"])

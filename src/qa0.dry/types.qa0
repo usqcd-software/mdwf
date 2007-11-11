@@ -12,6 +12,13 @@
  				  [lo-value "l_val"   double ]
 				  [hi-value "h_val"   double ]))
 
+(structure abc "x_abc"          ([a  "a"  double]
+	       			 [b  "b"  double]
+				 [c  "c"  double]))
+
+(structure AB-Inverse "AiTable" ([z     "z"   double]
+	                         [abc   "abc" abc   ]))  ;; careful with sizeof
+
 (array d-vector "xVector" int (const *dim*))
 
 (structure neighbor  "neighbor"  ([mask     "mask"    int      ]
