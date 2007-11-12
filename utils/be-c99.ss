@@ -12,7 +12,7 @@
    (provide machine-c99-32)
    
    (define new-var
-     (let ([x 0]) (lambda () (let ([s (format "g~a" x)])
+     (let ([x 0]) (lambda () (let ([s (gen-reg 'g x)])
 			       (set! x (+ x 1))
 			       s))))
    (define (c99-back-end ast env) (values ast env))
@@ -332,6 +332,7 @@
 	 (complex-norm-add          double)
 	 (complex-norm-fini         double)
 	 (complex-dot-init          complex-double)
+	 (complex-dot-add           complex-double)
 	 (complex-dot-fini          complex-double)
 	 (double-add                double)
 	 (double-div                double)

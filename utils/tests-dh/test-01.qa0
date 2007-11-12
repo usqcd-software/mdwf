@@ -1,0 +1,15 @@
+;;; test of various operations that should convert properly to double hummer
+(procedure dh-test ([stem "dh_test"])
+   	   ([a pointer "a" "void *"]
+	    [b pointer "b" "void *"])
+  (load double () a-r ([reg a]))
+  (load double () a-i ([reg a] [const (size-of REAL)]))
+  (op nop (make complex) () ())
+  (op complex () (a-c) ([reg a-r] [reg a-i]))
+  (load COMPLEX () a-1 ([reg a] [const (* 1 (size-of COMPLEX))]))
+  (load COMPLEX () a-2 ([reg a] [const (* 2 (size-of COMPLEX))]))
+  (op nop (complex mul) () ())
+  (op complex-mul () (c) ([reg a-c] [reg a-1]))
+  (op nop (complex mul-add) () ())
+  (op complex-madd () (c-2) ([reg c] [reg a-1] [reg a-2]))
+  (store COMPLEX () ([reg b]) [reg a-c]))

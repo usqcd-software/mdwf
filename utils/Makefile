@@ -8,6 +8,7 @@ sources = ast.ss \
           common.ss \
           parser.ss \
           q2complex.ss \
+          cx2dh.ss \
           cheader.ss \
           qa0print.ss \
           verbose.ss \

@@ -1,6 +1,9 @@
 (module ast
         mzscheme
    (require "common.ss")
+
+   (provide gen-reg)
+
    (define-variant qa0-top (decl*))
    (define-variant qa0-verbose (target* data*))
    (define-variant qa0-alias (old-name new-name))
@@ -29,4 +32,9 @@
    (define-variant c-expr-number (number))
    (define-variant c-expr-string (string))
    (define-variant c-expr-op (name c-expr*))
-   (define-variant reg (name)))
+   (define-variant reg (name))
+   (define (gen-reg prefix . r*)
+     (let loop ([s (format "~a" prefix)] [r* r*])
+       (cond
+	[(null? r*) (string->symbol s)]
+	[else (loop (format "~a~a" s (car r*)) (cdr r*))]))))

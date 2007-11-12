@@ -6,7 +6,7 @@
    (provide parse-qa0-file
 	    user-reg)
 
-   (define (user-reg name) (string->symbol (format "_~a" name)))
+   (define (user-reg name) (gen-reg "_" name))
    (define (parse-qa0-file file-name)
      (define (check-list msg in cmp min-size)
        (if (not (list? in))

@@ -1,0 +1,32 @@
+
+test-align.o:     file format elf32-powerpc-blrts
+
+Disassembly of section .text:
+
+00000000 <foo>:
+   0:	2c 03 00 00 	cmpwi   r3,0
+   4:	7c 00 23 9c 	lfpdx   f0,r0,r4
+   8:	38 c4 ff f8 	addi    r6,r4,-8
+   c:	38 a5 ff f8 	addi    r5,r5,-8
+  10:	54 60 20 36 	rlwinm  r0,r3,4,0,27
+  14:	40 81 00 44 	ble-    58 <foo+0x58>
+  18:	7c 69 03 a6 	mtctr   r3
+  1c:	38 60 00 08 	li      r3,8
+  20:	7c 26 1b 9c 	lfpdx   f1,r6,r3
+  24:	38 c4 00 08 	addi    r6,r4,8
+  28:	7c 84 02 14 	add     r4,r4,r0
+  2c:	43 40 00 20 	bdz-    4c <foo+0x4c>
+  30:	7c 65 1b 9c 	lfpdx   f3,r5,r3
+  34:	38 a5 00 10 	addi    r5,r5,16
+  38:	10 43 08 3a 	fxcxnpma f2,f3,f0,f1
+  3c:	7c 26 1b 9c 	lfpdx   f1,r6,r3
+  40:	38 c6 00 10 	addi    r6,r6,16
+  44:	00 03 10 24 	fxcpmadd f0,f3,f0,f2
+  48:	43 20 ff e8 	bdnz-   30 <foo+0x30>
+  4c:	7c 45 1b 9c 	lfpdx   f2,r5,r3
+  50:	10 22 08 3a 	fxcxnpma f1,f2,f0,f1
+  54:	00 02 08 24 	fxcpmadd f0,f2,f0,f1
+  58:	d8 04 00 00 	stfd    f0,0(r4)
+  5c:	38 60 00 08 	li      r3,8
+  60:	7c 04 1d 9c 	stfsdx  f0,r4,r3
+  64:	4e 80 00 20 	blr

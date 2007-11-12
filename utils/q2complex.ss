@@ -8,7 +8,7 @@
 
    (define new-reg
      (let ([n 0])
-       (lambda () (let ([r (string->symbol (format "~a~a" 'c n))])
+       (lambda () (let ([r (gen-reg 'c n)])
 		    (set! n (+ n 1))
 		    r))))
    (define (q2c-decl decl env)

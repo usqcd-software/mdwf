@@ -7,6 +7,7 @@
    (require "parser.ss")
    (require "cfold.ss")
    (require "q2complex.ss")
+   (require "cx2dh.ss")
    (require "qa0print.ss")
 
    (define *version* "$Id$")
@@ -39,6 +40,8 @@
      (la-compilier arg* qa0-macro print-tree/env))
    (define (do-expand arg*)
      (la-compilier arg* qa0-expand print-tree/env))
+   (define (do-dhexpand arg*)
+     (la-compilier arg* qa0-dhexpand print-tree/env))
    (define (qa0-macro name machine d/f back-end)
      (let-values* ([ast (parse-qa0-file name)]
                    [(ast env) (fold-constants/env ast machine d/f)])
@@ -48,6 +51,11 @@
 		(lambda (ast env)
 		  (let-values* ([(ast e-x) (qcd->complex ast env)])
 		    (back-end ast env)))))
+   (define (qa0-dhexpand name machine d/f back-end)
+     (qa0-expand name machine d/f
+		 (lambda (ast env)
+		   (let ([ast (complex->double-hummer ast)])
+		     (back-end ast env)))))
    (define (qa0-compile name machine d/f back-end)
      (qa0-expand name machine d/f
 		 (lambda (ast env)
@@ -59,6 +67,7 @@
        ("c99"     "d/f out in   build .c file for double/float"  ,do-c99)
        ("macro"   "d/f out in   do constant folding only"        ,do-macro)
        ("expand"  "d/f out in   convert to complex only"         ,do-expand)
+       ("dhexpand" "d/f out in   convert to DH only"             ,do-dhexpand)
        ("version" "             print qa0 version"               ,do-version)))
 
    (define (dispatch name arg*)

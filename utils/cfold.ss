@@ -11,7 +11,7 @@
    (define (fresh-param-reg)
      (let ([n *param-count*])
        (set! *param-count* (+ n 1))
-       (string->symbol (format "~a~a" 'p n))))
+       (gen-reg 'p n)))
    (define (fold-constants/env ast machine real)
      (define (ce-start-env machine real)
        (let* ([env (ce-empty-env)]
