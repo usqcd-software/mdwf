@@ -14,6 +14,8 @@ static int mynode[4];
 static double b5[128];
 static double c5[128];
 
+static FILE *xf = NULL;
+
 void
 zflush(void)
 {
@@ -28,24 +30,36 @@ xprint(char *fmt, ...)
   char buffer[4096];
   va_list va;
 
+  if (xf == 0) {
+    sprintf(buffer, "out.%06d", self);
+    xf = fopen(buffer, "wt");
+    if (xf == 0)
+      return;
+  }
+
   va_start(va, fmt);
   vsprintf(buffer, fmt, va);
   va_end(va);
-  printf("[%04d] %s\n", self, buffer);
-  fflush(stdout);
+  fprintf(xf, "[%04d] %s\n", self, buffer);
+  fflush(xf);
 }
 
-static void
+void
 zprint(char *fmt, ...)
 {
+  char buffer[4096];
   va_list va;
   if (primary == 0)
     return;
 
   va_start(va, fmt);
-  vprintf(fmt, va);
+  vsprintf(buffer, fmt, va);
   va_end(va);
+
+  printf("%s\n", buffer);
 }
+
+#define zprint xprint
 
 void
 xshowv(char *name, const int v[4])
@@ -56,13 +70,13 @@ xshowv(char *name, const int v[4])
 static void
 zshowv4(char *name, const int v[4])
 {
-  zprint("%s: %d %d %d %d\n", name, v[0], v[1], v[2], v[3]);
+  zprint("%s: %d %d %d %d", name, v[0], v[1], v[2], v[3]);
 }
 
 static void
 zshowv5(char *name, const int v[5])
 {
-  zprint("%s: %d %d %d %d %d\n", name, v[0], v[1], v[2], v[3], v[4]);
+  zprint("%s: %d %d %d %d %d", name, v[0], v[1], v[2], v[3], v[4]);
 }
 
 static void
@@ -143,7 +157,7 @@ report_perf(const char *name, struct QOP_MDWF_State *state)
   }
 
   zprint("perf(%s @ %d): %g MFlops/sec, snd %g MBytes/sec, rcv %g MBytes/sec "
-	 "[%g %lld %lld %lld]\n",
+	 "[%g %lld %lld %lld]",
 	 name, rounds,
 	 1e-6 * t_flops/t_sec,
 	 1e-6 * t_send/t_sec,
@@ -161,22 +175,22 @@ do_f3(struct QOP_MDWF_State *state, struct QOP_MDWF_Parameters *params)
   struct QOP_F3_MDWF_Fermion *R;
 
   if (QOP_F3_MDWF_import_gauge(&U, state, read_gauge, NULL)) {
-    zprint("f3: import gauge failed\n");
+    zprint("f3: import gauge failed");
     goto no_U;
   }
   if (QOP_F3_MDWF_import_fermion(&F, state, read_fermion, NULL)) {
-    zprint("f3: import fermion failed\n");
+    zprint("f3: import fermion failed");
     goto no_F;
   }
   if (QOP_F3_MDWF_allocate_fermion(&R, state)) {
-    zprint("f3: allocate fermion failed\n");
+    zprint("f3: allocate fermion failed");
     goto no_R;
   }
 
   start_perf();
   do {
     if (QOP_F3_MDWF_DDW_operator(R, params, U, F)) {
-      zprint("f3.0: operator failed: %s", QOP_MDWF_error(state));
+      xprint("f3.0: operator failed: %s", QOP_MDWF_error(state));
       goto no_X;
     }
   } while(report_perf("f3.0", state));
@@ -184,7 +198,7 @@ do_f3(struct QOP_MDWF_State *state, struct QOP_MDWF_Parameters *params)
   start_perf();
   do {
     if (QOP_F3_MDWF_DDW_operator(R, params, U, F)) {
-      zprint("f3.1: operator failed: %s", QOP_MDWF_error(state));
+      xprint("f3.1: operator failed: %s", QOP_MDWF_error(state));
       goto no_X;
     }
   } while (report_perf("f3.1", state));
@@ -211,22 +225,22 @@ do_d3(struct QOP_MDWF_State *state, struct QOP_MDWF_Parameters *params)
   struct QOP_D3_MDWF_Fermion *R;
 
   if (QOP_D3_MDWF_import_gauge(&U, state, read_gauge, NULL)) {
-    zprint("d3: import gauge failed\n");
+    zprint("d3: import gauge failed");
     goto no_U;
   }
   if (QOP_D3_MDWF_import_fermion(&F, state, read_fermion, NULL)) {
-    zprint("d3: import fermion failed\n");
+    zprint("d3: import fermion failed");
     goto no_F;
   }
   if (QOP_D3_MDWF_allocate_fermion(&R, state)) {
-    zprint("d3: allocate fermion failed\n");
+    zprint("d3: allocate fermion failed");
     goto no_R;
   }
 
   start_perf();
   do {
     if (QOP_D3_MDWF_DDW_operator(R, params, U, F)) {
-      zprint("d3.0: operator failed: %s\n", QOP_MDWF_error(state));
+      zprint("d3.0: operator failed: %s", QOP_MDWF_error(state));
       goto no_X;
     }
   } while (report_perf("d3.0", state));
@@ -234,7 +248,7 @@ do_d3(struct QOP_MDWF_State *state, struct QOP_MDWF_Parameters *params)
   start_perf();
   do {
     if (QOP_D3_MDWF_DDW_operator(R, params, U, F)) {
-      zprint("d3.1: operator failed: %s\n", QOP_MDWF_error(state));
+      zprint("d3.1: operator failed: %s", QOP_MDWF_error(state));
       goto no_X;
     }
   } while (report_perf("d3.1", state));
@@ -275,9 +289,9 @@ main(int argc, char *argv[])
   self = QMP_get_node_number();
   primary = QMP_is_primary_node();
   for (i = 0; i < argc; i++)
-    zprint("arg[%d]=%s\n", i, argv[i]);
+    zprint("arg[%d]=%s", i, argv[i]);
   if (argc != 10) {
-    zprint("10 arguments expected, found %d\n", argc);
+    zprint("10 arguments expected, found %d", argc);
     QMP_finalize_msg_passing();
     return 1;
   }
@@ -294,7 +308,7 @@ main(int argc, char *argv[])
   zshowv5("lattice", mylattice);
 
   if (QMP_declare_logical_topology(mynetwork, 4) != QMP_SUCCESS) {
-    zprint("declare_logical_top failed\n");
+    zprint("declare_logical_top failed");
     goto end;
   }
 
@@ -308,30 +322,30 @@ main(int argc, char *argv[])
   if (QOP_MDWF_init(&mdwf_state,
 		    mylattice, mynetwork, mynode, primary,
 		    getsub, NULL)) {
-    zprint("MDWF_init() failed\n");
+    zprint("MDWF_init() failed");
     goto end;
   }
 
-  zprint("MDWF_init() done\n");
+  zprint("MDWF_init() done");
 
   if (QOP_MDWF_set_generic(&mdwf_params, mdwf_state, b5, c5, 0.123, 0.05)) {
-    zprint("MDW_set_generic() failed\n");
+    zprint("MDW_set_generic() failed");
     goto end;
   }
-  zprint("MDWF_set_generic() done\n");
+  zprint("MDWF_set_generic() done");
 
   if (do_f3(mdwf_state, mdwf_params)) {
-    zprint("float test failed\n");
+    zprint("float test failed");
     goto end;
   }
   if (do_d3(mdwf_state, mdwf_params)) {
-    zprint("double test failed\n");
+    zprint("double test failed");
     goto end;
   }
 
   QOP_MDWF_fini(&mdwf_state);
 
-  zprint("Operator test finished\n");
+  zprint("Operator test finished");
   status = 0;
  end:
   QMP_finalize_msg_passing();

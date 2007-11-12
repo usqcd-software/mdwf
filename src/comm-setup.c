@@ -3,17 +3,20 @@
 static int
 eo_comm(struct eo_lattice *eo, struct Q(State) *state, int real_size)
 {
-  int d, k, ks, kr;
+  int d, k;
   int pfL = eo->Ls * Q(COLORS) * Q(PROJECTED_FERMION_DIM) * 2 * real_size;
   int size;
 
   if (eo->real_size == real_size)
     return 0;
 
+  /* This version bundles all communication together. Seems to work, but may
+   * be suboptimal.
+   */
+  
   eo->total_send = 0;
   eo->total_receive = 0;
-  eo->real_size = real_size;
-  for (d = 0, k = ks = kr = 0; d < Q(DIM); d++) {
+  for (d = 0, k = 0; d < Q(DIM); d++) {
     if (eo->send_up_size[d]) {
       size = eo->send_up_size[d] * pfL;
       eo->mem[k] = QMP_allocate_aligned_memory(size,
@@ -27,14 +30,12 @@ eo_comm(struct eo_lattice *eo, struct Q(State) *state, int real_size)
       if (eo->mh[k] == NULL)
 	return 1;
       eo->mh_count = k + 1;
-      eo->hs_up[d] = QMP_declare_send_relative(eo->mh[k], d, +1, 0);
-      if (eo->hs_up[d] == NULL)
+      eo->th[k] = QMP_declare_send_relative(eo->mh[k], d, +1, 0);
+      if (eo->th[k] == NULL)
 	return 1;
-      eo->hsv[ks] = eo->hs_up[d];
-      eo->hsv_count = ks + 1;
-      k++;
-      ks++;
+      eo->th_count = k + 1;
       eo->total_send += size;
+      k++;
     }
     if (eo->send_down_size[d]) {
       size = eo->send_down_size[d] * pfL;
@@ -49,14 +50,12 @@ eo_comm(struct eo_lattice *eo, struct Q(State) *state, int real_size)
       if (eo->mh[k] == NULL)
 	return 1;
       eo->mh_count = k + 1;
-      eo->hs_down[d] = QMP_declare_send_relative(eo->mh[k], d, -1, 0);
-      if (eo->hs_down[d] == NULL)
+      eo->th[k] = QMP_declare_send_relative(eo->mh[k], d, -1, 0);
+      if (eo->th[k] == NULL)
 	return 1;
-      eo->hsv[ks] = eo->hs_down[d];
-      eo->hsv_count = ks + 1;
-      k++;
-      ks++;
+      eo->th_count = k + 1;
       eo->total_send += size;
+      k++;
     }
     if (eo->receive_up_size[d]) {
       size = eo->receive_up_size[d] * pfL;
@@ -71,13 +70,12 @@ eo_comm(struct eo_lattice *eo, struct Q(State) *state, int real_size)
       if (eo->mh[k] == NULL)
 	return 1;
       eo->mh_count = k + 1;
-      eo->hrt[kr] = QMP_declare_receive_relative(eo->mh[k], d, +1, 0);
-      if (eo->hrt[kr] == NULL)
+      eo->th[k] = QMP_declare_receive_relative(eo->mh[k], d, +1, 0);
+      if (eo->th[k] == NULL)
 	return 1;
-      eo->hrt_count = kr + 1;
-      k++;
-      kr++;
+      eo->th_count = k + 1;
       eo->total_receive += size;
+      k++;
     }
     if (eo->receive_down_size[d]) {
       size = eo->receive_down_size[d] * pfL;
@@ -92,16 +90,22 @@ eo_comm(struct eo_lattice *eo, struct Q(State) *state, int real_size)
       if (eo->mh[k] == NULL)
 	return 1;
       eo->mh_count = k + 1;
-      eo->hrt[kr] = QMP_declare_receive_relative(eo->mh[k], d, -1, 0);
-      if (eo->hrt[kr] == NULL)
+      eo->th[k] = QMP_declare_receive_relative(eo->mh[k], d, -1, 0);
+      if (eo->th[k] == NULL)
 	return 1;
-      eo->hrt_count = kr + 1;
-      k++;
-      kr++;
+      eo->th_count = k + 1;
       eo->total_receive += size;
+      k++;
     }
   }
-
+  if (eo->th_count > 0) {
+    eo->handle = QMP_declare_multiple(eo->th, eo->th_count);
+    if (eo->handle == NULL)
+      return 1;
+    eo->th_count = 0;
+    eo->h_valid = 1;
+  }
+  eo->real_size = real_size;
   return 0;
 }
 

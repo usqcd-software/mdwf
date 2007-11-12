@@ -221,6 +221,7 @@
 			  (let ([code (car code*)])
 			    (check-list "operation" code >= 1)
 			    (case (car code)
+			      [(comment) (k op*)]
 			      [(begin)
 			       (parse-code* (cdr code)
 					    (lambda (op2*)

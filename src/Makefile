@@ -1,5 +1,6 @@
 #
 
+DIST       = mdwf-dist
 CONFIG     = macosx
 LIMP       = faux
 
@@ -99,7 +100,7 @@ dist: clean
 	   $(MAKE) -C $$f 'V=$V' 'CONFIG=$(CONFIG)' library=$(library) $@; \
 	done
 	$E TAR src
-	$Cx=`pwd`; cd .. ; tar -cf - `basename $$x` | bzip2 -9 > $$x.tar.bz2
+	$Cx=`pwd`; cd .. ; tar -cf - `basename $$x` | bzip2 -9 > $(DIST).tar.bz2
 
 $(library): $(objects)
 	$E AR $@
