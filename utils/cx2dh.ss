@@ -121,7 +121,7 @@
       (complex-norm-fini       dh-norm-fini                         )
       (complex-dot-init        dh-dot-init                          )
       (complex-dot-add         #f                 . ,dho-dot-add    )
-      (complex-dot-fini        dho-dot-fini                         )))
+      (complex-dot-fini        dh-dot-fini                          )))
   (define (cx->dh-operation code attr* name output* input* r*)
     (let ([trans (assq name dh-optable)])
       (cond

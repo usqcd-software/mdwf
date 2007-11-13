@@ -1,12 +1,14 @@
-TOP    = ..
-V      = 0
-CONFIG = macosx
-DEST   = $(TOP)/c99
-QA0    = $(TOP)/../utils/qa0
+TOP     = ..
+V       = 0
+CONFIG  = macosx
+TARGETS = c99 bgl/xlc
+TARGET  =
+DEST    =
+QA0     = $(TOP)/../utils/qa0
 
 include $(TOP)/config/$(CONFIG)
 
-.PHONY: all clean realclean dist
+.PHONY: all clean realclean dist do.all do.clean
 
 ifeq ("$V", "0")
    E=@echo "  "
@@ -14,6 +16,14 @@ ifeq ("$V", "0")
 else
    E=@echo > /dev/null
    C=
+endif
+
+ifeq ("$(TARGET)", "c99")
+  DEST   = $(TOP)/c99
+endif
+
+ifeq ("$(TARGET)", "bgl/xlc")
+  DEST   = $(TOP)/bgl-xlc
 endif
 
 headers = types.qa0 \
@@ -83,7 +93,7 @@ spin.sources = $(F.sources) \
                proj-u-minus.qa0
 
 # Convert qa0 to C names
-c99.sources = $(sources:%.qa0=$(DEST)/%.c) \
+dst.sources = $(sources:%.qa0=$(DEST)/%.c) \
               $(x.sources:%.qa0=$(DEST)/%d.c) \
               $(x.sources:%.qa0=$(DEST)/%f.c)
 
@@ -96,28 +106,40 @@ c.F.sources = $(F.sources:%.qa0=$(DEST)/%d.c) \
 c.spin.sources = $(spin.sources:%.qa0=$(DEST)/%d.c) \
                  $(spin.sources:%.qa0=$(DEST)/%f.c)
 
-dist all: $(c99.sources)
+dist all:
+	@for t in $(TARGETS) ; do \
+	  echo making target $$t; \
+	  $(MAKE) "V=$(V)" CONFIG="$(CONFIG)" TARGET="$$t" do.all ; \
+	done
+
+do.all: $(dst.sources)
 
 clean:
 
 realclean: clean
-	$E RM c99.dry/sources
-	$C $(RM) $(c99.sources)
+	@for t in $(TARGETS); do \
+	  echo making realclean $$t; \
+	  $(MAKE) "V=$(V)" CONFIG="$(CONFIG)" TARGET="$$t" do.clean ; \
+	done
+
+do.clean:
+	$E RM $(DEST)/sources
+	$C $(RM) $(dst.sources)
 
 $(sources:%.qa0=$(DEST)/%.c): $(DEST)/%.c: %.qa0
 	$E QA0 $@
-	$C $(QA0) c99 double $@ $<
+	$C $(QA0) $(TARGET) double $@ $<
 
 $(x.sources:%.qa0=$(DEST)/%d.c): $(DEST)/%d.c: %.qa0
 	$E QA0-d $@
-	$C $(QA0) c99 double $@ $<
+	$C $(QA0) $(TARGET) double $@ $<
 
 $(x.sources:%.qa0=$(DEST)/%f.c): $(DEST)/%f.c: %.qa0
 	$E QA0-f $@
-	$C $(QA0) c99 float $@ $<
+	$C $(QA0) $(TARGET) float $@ $<
 
 
-$(c99.sources): types.qa0
+$(dst.sources): types.qa0
 $(c.A.sources): defs-A.qa0
 $(c.F.sources): defs-F.qa0
 $(c.spin.sources): defs-spin.qa0

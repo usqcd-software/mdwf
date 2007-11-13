@@ -1,8 +1,4 @@
-(verbose [c99 "/* QA0 source $Id$ */"])
-(verbose [c99 "#include <complex.h>"])
-(verbose [c99 "struct Fermion;"])
-(verbose [c99 "struct ProjectedFermion;"])
-(verbose [c99 "struct down_pack;"])
+(verbose [(c99 bgl/xlc) "/* $Id$ */"])
 
 (include "types.qa0")
 (include "defs-spin.qa0")

@@ -1,6 +1,4 @@
-(verbose [c99 "#include <complex.h>"])
-(verbose [c99 "/* QA0 source $Id$ */"])
-(verbose [c99 "struct SUn;"])
+(verbose [(c99 bgl/xlc) "/* $Id$ */"])
 
 (include "types.qa0")
 

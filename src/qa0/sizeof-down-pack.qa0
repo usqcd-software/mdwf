@@ -1,4 +1,4 @@
-(verbose [c99 "/* QA0 source $Id$ */"])
+(verbose [(c99 bgl/xlc) "/* $Id$ */"])
 
 (include "types.qa0")
 

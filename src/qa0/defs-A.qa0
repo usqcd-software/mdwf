@@ -1,4 +1,4 @@
-(verbose [c99 "/* QA macros $Id$ */"])
+(verbose [(c99 bgl/xlc) "/* $Id$ */"])
 ;;; Pieces for A etc.
 (define (get-A&addr f-c addr-l addr-h v-c v-l v-h t x)
   (load int () hi-index ([reg t] [const (offset-of AB-Table hi-index)]))

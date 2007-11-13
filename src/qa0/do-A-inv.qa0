@@ -1,8 +1,6 @@
 ;;; compute r = 1/A x
 
-(verbose [c99 "/* QA0 source $Id$ */"])
-(verbose [c99 "struct Fermion;"])
-(verbose [c99 "struct ABTable;"])
+(verbose [(c99 bgl/xlc) "/* $Id$ */"])
 
 (include "types.qa0")
 (include "defs-A.qa0")

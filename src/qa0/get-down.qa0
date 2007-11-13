@@ -1,6 +1,4 @@
-(verbose [c99 "/* QA0 source $Id$ */"])
-(verbose [c99 "struct down_pack;"])
-
+(verbose [(c99 bgl/xlc) "/* $Id$ */"])
 (include "types.qa0")
 
 (procedure get-down-pack ([stem "get_down_pack"])

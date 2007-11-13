@@ -1,4 +1,4 @@
-(verbose [c99 "/* QA macros $Id$ */"])
+(verbose [(c99 bgl/xlc) "/* $Id$ */"])
 ;; Macros for F
 (include "defs-spin.qa0")
 

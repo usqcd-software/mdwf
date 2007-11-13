@@ -1,4 +1,4 @@
-(verbose [c99 "/* QA macros $Id$ */"])
+(verbose [(c99 bgl/xlc) "/* $Id$ */"])
 ;;; Spin projection operations
 ;;
 (define (project g-op d r V f)
