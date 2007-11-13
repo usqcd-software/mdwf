@@ -1,0 +1,23 @@
+(procedure test-1 ([stem "test_i"])
+	   ([a  pointer "a" "void *"]
+	    [b  pointer "b" "const void *"]
+	    [c  pointer "c" "const void *"])
+   (load COMPLEX () v-b ([reg b]))
+   (load COMPLEX () v-c ([reg c]))
+   (op complex-times-plus-i () (b+i) ([reg v-b]))
+   (op complex-times-minus-i () (c-i) ([reg v-c]))
+   (store COMPLEX () ([reg a]) [reg b+i])
+   (store COMPLEX () ([reg a] [const (size-of COMPLEX)]) [reg c-i]))
+
+(procedure test-2 ([stem "test_add_i"])
+	   ([a  pointer "a" "void *"]
+	    [b  pointer "b" "const void *"]
+	    [c  pointer "c" "const void *"])
+   (load COMPLEX () v-b ([reg b]))
+   (load COMPLEX () v-c ([reg c]))
+   (load COMPLEX () a-0 ([reg a]))
+   (load COMPLEX () a-1 ([reg a] [const (size-of COMPLEX)]))
+   (op complex-add-i () (b+i) ([reg a-0] [reg v-b]))
+   (op complex-sub-i () (c-i) ([reg a-1] [reg v-c]))
+   (store COMPLEX () ([reg a]) [reg b+i])
+   (store COMPLEX () ([reg a] [const (size-of COMPLEX)]) [reg c-i]))

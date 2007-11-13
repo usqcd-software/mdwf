@@ -17,6 +17,19 @@
     (let ([x (gen-reg 'g *var-count*)])
       (set! *var-count* (+ *var-count* 1))
       x))
+  (define (preemit-param p)
+    (format "a_~a" p))
+
+  (define op-needing-zero*
+    '(dh-times-plus-i
+      dh-times-minus-i
+      dh-norm-init
+      dh-dot-init))
+  (define op-needing-one*
+    '(dh-times-plus-i
+      dh-times-minus-i
+      dh-add-i
+      dh-sub-i))
   (define bgl/xlc-op*
     '((dh-make                   dh-double)
       (dh-real                   double)
@@ -103,10 +116,24 @@
 				   (lambda ()
 				     (ce-bind-x env 'back-end name
 						(list (new-var) type))))]))
+    (define (add-zero name env)
+      (if (not (memq name op-needing-zero*)) env
+	  (ce-search-x env 'bgl/xlc 'zero
+		       (lambda (x) env)
+		       (lambda ()
+			 (ce-bind-x env 'bgl/xlc 'zero (new-var))))))
+    (define (add-one name env)
+      (if (not (memq name op-needing-one*)) env
+	  (ce-search-x env 'bgl/xlc 'one
+		       (lambda (x) env)
+		       (lambda ()
+			 (ce-bind-x env 'bgl/xlc 'one (new-var))))))
     (walk-code* code*
 		; operation
 		(lambda (env name attr* output* input*)
-		  (add-output* output* (be-out-type* env name) env))
+		  (let* ([env (add-zero name env)]
+			 [env (add-one name env)])
+		    (add-output* output* (be-out-type* env name) env)))
 		; load
 		(lambda (env type attr* output addr*)
 		  (add-output output (be-load-type env type) env))
@@ -168,7 +195,8 @@
 	    (let loop ([name* arg-c-name*] [type* arg-c-type*] [p ""])
 	      (cond
 	       [(null? name*)]
-	       [else (printf "~a~a ~a~a" p (car type*) (car name*)
+	       [else (printf "~a~a ~a~a" p (car type*)
+			     (preemit-param (car name*))
 			     (if (null? (cdr name*)) "" ",\n"))
 		     (loop (cdr name*) (cdr type*) x)]))
 	    (printf ")~%")))))
@@ -210,7 +238,7 @@
 				     "BGL/XLC name for ~a" (car n*))]
 		    [rt (ce-lookup-x env 'name-of (cadr rn)
 				     "BGL/XLC type for ~a" (car n*))])
-	       (do-emit 1 "~a = (~a)~a;" (car rn) rt (car c*))
+	       (do-emit 1 "~a = (~a)~a;" (car rn) rt (preemit-param (car c*)))
 	       (loop (cdr n*) (cdr c*)))])))
   (define (emit-dh-double-store level addr* value env)
     (do-emit level (format "__stfpd((double *)(~a), ~a);"
@@ -272,18 +300,18 @@
       (dh-imag                 1 "$0 = __cimag(%0)"                       0)
       (dh-move                 1 "$0 = (%0)"                              0)
       (dh-neg                  1 "$0 = __fpneg(%0)"                       2)
-      (dh-times-plus-i         2 "$0 = __(%0)"                      1000 )
-      (dh-times-minus-i        2 "$0 = __(%0)"                      1000 )
+      (dh-times-plus-i         1 "$0 = __fxcxnpma(gZERO, %0, gONE)"       1)
+      (dh-times-minus-i        1 "$0 = __fxcxnsma(gZERO, %0, gONE)"       1)
       (dh-add                  2 "$0 = __fpadd(%0, %1)"                   2)
       (dh-sub                  2 "$0 = __fpsub(%0, %1)"                   2)
       (dh-rmul                 2 "$0 = __fxpmul(%1, %0)"                  2)
       (dh-rmadd                3 "$0 = __fxcpmadd(%0, %2, %1)"            4)
-      (dh-add-i                1 "$0 = __(%0)"                      1000 )
-      (dh-sub-i                1 "$0 = __(%0)"                      1000 )
-      (dh-norm-init            0 "$0 = __cmplx(0.0, 0.0)"                 0)
+      (dh-add-i                2 "$0 = __fxcxnpma(%0, %1, gONE)"          2)
+      (dh-sub-i                2 "$0 = __fxcxnsma(%0, %1, gONE)"          2)
+      (dh-norm-init            0 "$0 = gZERO"                             0)
       (dh-norm-add             2 "$0 = __fpmadd(%1, %1, %0)"              4)
       (dh-norm-fini            1 "$0 = __creal(%0) + __cimag(%0)"         1)
-      (dh-dot-init             0 "$0 = __cmplx(0.0, 0.0)"                 0)
+      (dh-dot-init             0 "$0 = gZERO"                             0)
       (dh-dot-a                3 "$0 = __fxcpmadd(%0, %2, __creal(%1))"   4)
       (dh-dot-b                3 "$0 = __fxcxnsma(%0, %2, __cimag(%1))"   4)
       (dh-dot-fini             1 "$0 = (%0)"                              0)
@@ -292,12 +320,10 @@
       (dh-madd-a               3 "$0 = __fxcpmadd(%0, %2, __creal(%1))"   4)
       (dh-madd-b               3 "$0 = __fxcxnpma(%0, %2, __cimag(%1))"   4)
       (dh-cmul-a               2 "$0 = __fxpmul(%1, __creal(%0))"         2)
-      (dh-cmul-b               3 "$0 = __fxcxnsma(%0, %2, __cimag(%1)"    4)
+      (dh-cmul-b               3 "$0 = __fxcxnsma(%0, %2, __cimag(%1))"   4)
       (dh-cmadd-a              3 "$0 = __fxcpmadd(%0, %2, __creal(%1))"   4)
       (dh-cmadd-b              3 "$0 = __fxcxnsma(%0, %2, __cimag(%1))"   4)
-      (dh->float               1 "$0 = __fprsp(%0)"                       0)
-      
-      ))
+      (dh->float               1 "$0 = __fprsp(%0)"                       0)))
   (define (get-element r* f)
     (if (char-numeric? f) (format "~a" (list-ref r* (- (char->integer f)
 						       (char->integer #\0))))
@@ -381,6 +407,28 @@
      [(null? code*) (emit-count level cf? counter f)]
      [else (let ([f (emit-code level (car code*) env cf? counter f)])
 	     (emit-code* level (cdr code*) env cf? counter f))]))
+  (define (zo-var* env)
+    (define (do-constant id init)
+      (ce-search-x env 'bgl/xlc id
+		   (lambda (v) (do-emit 1 "const double _Complex ~a = ~a;"
+					v init))
+		   (lambda () #t)))
+    (do-constant 'zero "__cmplx(0.0, 0.0)")
+    (do-constant 'one  "__cmplx(1.0, 1.0)"))
+  (define (zo-define* env)
+    (define (do-define id name def)
+      (ce-search-x env 'bgl/xlc id
+		   (lambda (v) (do-emit 0 "#define ~a ~a" name (format def v)))
+		   (lambda () #t)))
+    (do-define 'zero "gZERO" "(~a)")
+    (do-define 'one "gONE" "(__cimag(~a))"))
+  (define (zo-undefine* env)
+    (define (do-undefine id name)
+      (ce-search-x env 'bgl/xlc id
+		   (lambda (v) (do-emit 0 "#undef ~a" name))
+		   (lambda () #t)))
+    (do-undefine 'zero "gZERO")
+    (do-undefine 'one "gONE"))
   (define (emit-proc attr* name arg-name* arg-type* arg-c-name* arg-c-type*
 		     code* env)
     (let* ([env (C-collect-args arg-name* arg-type* new-var env)]
@@ -396,10 +444,13 @@
       (do-emit 0 "{")
       (if cf? (do-emit 1 "int ~a = 0;" counter))
       (emit-variables env)
+      (zo-var* env)
       (emit-disjoint* arg-name* arg-type* arg-c-name* env)
       (emit-align* arg-name* arg-type* arg-c-name* env)
       (emit-param* arg-name* arg-c-name* env)
+      (zo-define* env)
       (emit-code* 1 code* env cf? counter 0)
+      (zo-undefine* env)
       (if cf? (do-emit 1 "return ~a;" counter))
       (if rv (if (< (length rv) 1)
 		 (error 'qa0-bgl/xlc "return without a name in ~a" name)
