@@ -13,7 +13,8 @@ sources = ast.ss \
           qa0print.ss \
           verbose.ss \
           backend.ss \
-          be-c99.ss
+          be-c99.ss \
+          be-bgl-xlc.ss
 
 main = qa0.ss
 

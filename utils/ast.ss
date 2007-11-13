@@ -2,7 +2,8 @@
         mzscheme
    (require "common.ss")
 
-   (provide gen-reg)
+   (provide gen-reg
+            walk-code*)
 
    (define-variant qa0-top (decl*))
    (define-variant qa0-verbose (target* data*))
@@ -33,6 +34,24 @@
    (define-variant c-expr-string (string))
    (define-variant c-expr-op (name c-expr*))
    (define-variant reg (name))
+   (define (walk-code* code* p-op p-load p-store p-loop p-if arg)
+     (define (do-walk* code* arg)
+       (cond
+	[(null? code*) arg]
+	[else (do-walk* (cdr code*) (walk-code (car code*) arg))]))
+     (define (walk-code code arg)
+       (variant-case code
+         [qa0-operation (name attr* output* input*)
+	   (p-op arg name attr* output* input*)]
+	 [qa0-load (type attr* output addr*)
+           (p-load arg type attr* output addr*)]
+	 [qa0-store (type attr* addr* value)
+	   (p-store arg type attr* addr* value)]
+	 [qa0-loop (attr* var low high code*)
+           (do-walk* code* (p-loop arg attr* var low high))]
+	 [qa0-if (var true-code* false-code*)
+           (do-walk* true-code* (do-walk* false-code* (p-if arg var)))]))
+     (do-walk* code* arg))
    (define (gen-reg prefix . r*)
      (let loop ([s (format "~a" prefix)] [r* r*])
        (cond

@@ -18,7 +18,7 @@
           (gh-add-struct  name c-name field-type* field-c-name*)]
         [qa0-proc (attr* name arg-c-name* arg-c-type*)
           (gh-add-proc attr* name arg-c-name* arg-c-type*)]
-	[qa0-verbose (target* data*) (process-verbose 'c-header target* data*)]
+	[qa0-verbose (target* data*) (emit-verbose 'c-header target* data*)]
 	[else #f]))
     (define (gh-add-array name c-name base size)
       (printf "typedef ~a ~a[~a];~%~%"

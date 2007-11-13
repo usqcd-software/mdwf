@@ -11,10 +11,11 @@
 
    (provide machine-c99-32)
    
-   (define new-var
-     (let ([x 0]) (lambda () (let ([s (gen-reg 'g x)])
-			       (set! x (+ x 1))
-			       s))))
+   (define *var-count* 0)
+   (define (new-var)
+    (let ([x (gen-reg 'g *var-count*)])
+      (set! *var-count* (+ *var-count* 1))
+      x))
    (define (c99-back-end ast env) (values ast env))
    (define (c99-emit qa0 env)
      (define (emit-indent n)
@@ -27,12 +28,6 @@
        (newline))
      (define (emit-decl decl)
        (define (proc-outputs arg-name* arg-type* code* env)
-	 (define (collect-args arg-name* arg-type* env)
-	   (cond
-	    [(null? arg-name*) env]
-	    [else (let* ([env (ce-bind-x env 'back-end (car arg-name*)
-					 (list (new-var) (car arg-type*)))])
-		    (collect-args (cdr arg-name*) (cdr arg-type*) env))]))
 	 (define (collect-output* code* env)
 	   (cond
 	    [(null? code*) env]
@@ -59,11 +54,11 @@
 	 (define (add-output output type env)
 	   (variant-case output
              [reg (name)
-               (ce-search env (list 'back-end name)
-			  (lambda (v) env)
-			  (lambda () (ce-bind-x env 'back-end name
-						(list (new-var) type))))]))
-	 (let* ([env (collect-args arg-name* arg-type* env)]
+               (ce-search-x env 'back-end name
+			    (lambda (v) env)
+			    (lambda () (ce-bind-x env 'back-end name
+						  (list (new-var) type))))]))
+	 (let* ([env (C-collect-args arg-name* arg-type* new-var env)]
 		[env (collect-output* code* env)])
 	   env))
        (define (input-code* code* env)
@@ -97,7 +92,7 @@
 			arg-c-name* arg-c-type*
 			code* env))]
 	 [qa0-verbose (target* data*)
-	    (process-verbose 'c99 target* data*)]
+	    (emit-verbose 'c99 target* data*)]
 	 [else #t]))
      (define (emit-proc attr* name
 			arg-name* arg-type*
@@ -183,16 +178,16 @@
 	 [qa0-loop (var low high code*)
            (emit-loop l var low high code* env count-flops? counter flops)]))
      (define (emit-loop l var low high code* env count-flops? counter flops)
-       (cond
-	[(null? code*) (do-emit l "~a = ~a; /* empty loop */" var high) flops]
-	[else (let ([v (preemit-output var env)]
-		    [lo (preemit-input low env)]
-		    [hi (preemit-input high env)])
-		(emit-count l count-flops? counter flops)
+       (let ([v (preemit-output var env)]
+	     [lo (preemit-input low env)]
+	     [hi (preemit-input high env)])
+	 (cond
+	  [(null? code*) (do-emit l "~a = ~a; /* empty loop */" v hi) flops]
+	  [else (emit-count l count-flops? counter flops)
 		(do-emit l "for (~a = ~a; ~a < ~a; ~a++) {" v lo v hi v)
 		(emit-code* (+ l 1) code* env count-flops? counter 0)
 		(do-emit l "}")
-		0)]))
+		0])))
      (define (emit-if l var true-code*
 		      false-code* env count-flops? counter flops)
        (emit-count l count-flops? counter flops)
@@ -239,7 +234,7 @@
 	 (int-mod                 2 "~a = ~a % (~a);"                    0)
 	 (int-add                 2 "~a = ~a + (~a);"                    0)
 	 (int-sub                 2 "~a = ~a - (~a);"                    0)
-	 (int-neg                 1 "~a = -~a;"                          0)
+	 (int-neg                 1 "~a = -(~a);"                        0)
 	 (int-and                 2 "~a = ~a & (~a);"                    0)
 	 (int-or                  2 "~a = ~a | (~a);"                    0)
 	 (int-xor                 2 "~a = ~a ^ (~a);"                    0)

@@ -5,7 +5,8 @@
            emit-back-end
 	   be-out-type*
 	   be-load-type
-	   machine-*-32)
+	   machine-*-32
+	   C-collect-args)
   (define (complex->back-end ast env)
     ((ce-lookup env 'back-end "Back end transformer not found") ast env))
   (define (emit-back-end ast env)
@@ -16,6 +17,12 @@
   (define (be-load-type env load-op)
     (ce-lookup-x env 'be-load-type load-op
 		 "Unknown load operation ~a in be-load-type" load-op))
+  (define (C-collect-args arg-name* arg-type* new-var env)
+    (cond
+     [(null? arg-name*) env]
+     [else (let* ([env (ce-bind-x env 'back-end (car arg-name*)
+				  (list (new-var) (car arg-type*)))])
+	     (C-collect-args (cdr arg-name*) (cdr arg-type*) new-var env))]))
   (define (machine-*-32 env op* load*)
     (let* ([env (ce-add-type env 'int            "int"              4  4)]
 	   [env (ce-add-type env 'pointer        "unsigned char *"  4  4)]

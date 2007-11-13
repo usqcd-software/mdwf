@@ -1,8 +1,8 @@
 (module verbose
         mzscheme
-   (provide process-verbose)
+   (provide emit-verbose)
 
-   (define (process-verbose key target* data*)
+   (define (emit-verbose key target* data*)
      (let loop ([target* target*] [data* data*])
        (cond
 	[(null? target*) (printf "~%")]
