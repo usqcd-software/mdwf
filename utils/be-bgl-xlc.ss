@@ -219,7 +219,9 @@
 	  (cond
 	   [(null? b*) (loop-a (cdr a*) (cdr t*) (cdr c*))]
 	   [(not (eq? 'pointer (car s*))) (loop-b (cdr b*) (cdr s*) (cdr d*))]
-	   [else (do-emit 0 "#pragma disjoint(*~a,*~a)" (car c*) (car d*))
+	   [else (do-emit 0 "#pragma disjoint(*~a,*~a)"
+			  (preemit-param (car c*))
+			  (preemit-param (car d*)))
 		 (loop-b (cdr b*) (cdr s*) (cdr d*))]))])))
   (define (emit-align* arg-name* arg-type* arg-c-name* env)
     (do-emit 0 "")
@@ -227,7 +229,7 @@
       (cond
        [(null? a*)]
        [(not (eq? 'pointer (car t*))) (loop-a (cdr a*) (cdr t*) (cdr c*))]
-       [else (do-emit 1 "__alignx(16, ~a);" (car c*))
+       [else (do-emit 1 "__alignx(16, ~a);" (preemit-param (car c*)))
 	     (loop-a (cdr a*) (cdr t*) (cdr c*))])))
   (define (emit-param* arg-name* arg-c-name* env)
     (do-emit 0 "")

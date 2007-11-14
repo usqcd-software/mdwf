@@ -4,6 +4,6 @@ Next big version:
          lexical levels.
 [done] more uniform macro substitution.
 [done] add macros on the top level with arguments and register renaming.
-- backport improvements from BGL/XLC to C99.
+[done] backport improvements from BGL/XLC to C99.
 - make loads and stores return computed address (optional, so the current syntax
   still works).
