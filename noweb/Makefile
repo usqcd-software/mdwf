@@ -10,7 +10,8 @@ DVIPDFM  = dvipdfm
 #TFLAGS   = -L'\#line %L "%F"%N'
 
 noweb = mdwf.nw \
-        qa0.nw
+        qa0.nw \
+        qcd-defs.nw
 
 sources = ../src/qop-mdwf3.h \
           ../utils/basis.ss
