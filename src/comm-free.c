@@ -37,7 +37,7 @@ int
 q(free_comm)(struct Q(State) *state)
 {
   if (state->real_size == 0)
-    return;
+    return 1;
 
   state->real_size = 0;
   eo_free(&state->even, state);

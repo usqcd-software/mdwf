@@ -1,0 +1,7 @@
+# Configuration for my laptop
+#
+QMP_TOP    = /opt/SciDAC/bgl/qmp-2.1.7
+CC         = blrts_xlc
+CFLAGS     = -O0 -I$(TOP) $(QMP_CFLAGS)
+AR         = xar
+RANLIB     = xranlib

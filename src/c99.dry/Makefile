@@ -57,7 +57,7 @@ sources = $(i.sources) \
 objects = $(sources:%.c=%.o)
 
 all: $(objects)
-	$E AR $@ / c99.dry
+	$E AR $@/c99.dry
 	$C$(AR) cr $(TOP)/$(library) $^
 	$C$(RANLIB) $(TOP)/$(library)
 

@@ -10,6 +10,7 @@ QMP_LIBS    = $(shell $(QMP_TOP:%=%/bin/qmp-config) --libs)
 include $(TOP)/config/$(CONFIG)
 
 tests = operator.c \
+        heater.c \
         state.c \
         statex.c
 
