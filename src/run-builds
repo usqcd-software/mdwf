@@ -1,22 +1,20 @@
 #!/bin/sh
 
 if [ $# -ne 3 ]; then
-  echo "Usage: run-builds limp config-root install-root"
+  echo "Usage: run-builds limp config install-root"
   exit 1
 fi
 
 limp=$1
-root=$2
+config=$2
 install=$3
 
-for f in config/$root* ; do
-   conf=`echo $f | sed -e 'sx.*/xx'`
-   echo '****************' doing $conf
-   make clean
-   rm -f lib*.a
-   make CONFIG=$conf LIMP=$limp
-   [ -d $install/$conf ] || mkdir -p $install/$conf
-   for x in operator heater-d heater-f state statex ; do
-     mv tests/$x $install/$conf/$x
-   done
+echo '****************' doing $config
+make clean
+rm -f lib*.a
+make CONFIG=$config LIMP=$limp
+target=$install/$config-$limp
+[ -d $target ] || mkdir -p $target
+for x in operator heater-d heater-f state statex ; do
+  mv tests/$x $target/$x
 done
