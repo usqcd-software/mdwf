@@ -130,7 +130,7 @@ start_perf(void)
 }
   
 static int
-report_perf(const char *name,
+report_perf(const char prec,
 	    struct QOP_MDWF_State *state,
 	    double *run_time,
 	    double *report_moment)
@@ -153,9 +153,9 @@ report_perf(const char *name,
 
   *report_moment += SHOW_INTERVAL;
 
-  zprint("perf(%s @ %d): %g MFlops/sec, snd %g MBytes/sec, rcv %g MBytes/sec "
+  zprint("perf(%c3 @ %d): %g MFlops/sec, snd %g MBytes/sec, rcv %g MBytes/sec "
 	 "[%g %lld %lld %lld]",
-	 name, rounds,
+	 prec, rounds,
 	 1e-6 * t_flops/t_sec,
 	 1e-6 * t_send/t_sec,
 	 1e-6 * t_receive/t_sec,
@@ -168,45 +168,47 @@ report_perf(const char *name,
 }
 
 static int
-do_f3(struct QOP_MDWF_State *state, struct QOP_MDWF_Parameters *params)
+do_run(struct QOP_MDWF_State *state, struct QOP_MDWF_Parameters *params)
 {
   double run_time = 0.0;
   double next_report = SHOW_INTERVAL;
-  struct QOP_F3_MDWF_Gauge *U;
-  struct QOP_F3_MDWF_Fermion *F;
-  struct QOP_F3_MDWF_Fermion *R;
+  struct QOP_MDWF_Gauge *U;
+  struct QOP_MDWF_Fermion *F;
+  struct QOP_MDWF_Fermion *R;
 
-  if (QOP_F3_MDWF_import_gauge(&U, state, read_gauge, NULL)) {
-    zprint("f3: import gauge failed");
+  if (QOP_MDWF_import_gauge(&U, state, read_gauge, NULL)) {
+    zprint("%c3: import gauge failed", QOP_MDWF_DEFAULT_PRECISION);
     goto no_U;
   }
-  if (QOP_F3_MDWF_import_fermion(&F, state, read_fermion, NULL)) {
-    zprint("f3: import fermion failed");
+  if (QOP_MDWF_import_fermion(&F, state, read_fermion, NULL)) {
+    zprint("%c3: import fermion failed", QOP_MDWF_DEFAULT_PRECISION);
     goto no_F;
   }
-  if (QOP_F3_MDWF_allocate_fermion(&R, state)) {
-    zprint("f3: allocate fermion failed");
+  if (QOP_MDWF_allocate_fermion(&R, state)) {
+    zprint("%c3: allocate fermion failed", QOP_MDWF_DEFAULT_PRECISION);
     goto no_R;
   }
 
   start_perf();
   do {
-    if (QOP_F3_MDWF_DDW_operator(R, params, U, F)) {
-      xprint("f3.0: operator failed: %s", QOP_MDWF_error(state));
+    if (QOP_MDWF_DDW_operator(R, params, U, F)) {
+      xprint("%c3: operator failed: %s", QOP_MDWF_error(state),
+	     QOP_MDWF_DEFAULT_PRECISION);
       goto no_X;
     }
-  } while(report_perf("f3.0", state, &run_time, &next_report));
+  } while(report_perf(QOP_MDWF_DEFAULT_PRECISION, state,
+		      &run_time, &next_report));
 
-  QOP_F3_MDWF_free_fermion(&R);    
-  QOP_F3_MDWF_free_fermion(&F);    
-  QOP_F3_MDWF_free_gauge(&U);
+  QOP_MDWF_free_fermion(&R);    
+  QOP_MDWF_free_fermion(&F);    
+  QOP_MDWF_free_gauge(&U);
   return 0;
  no_X:
-  QOP_F3_MDWF_free_fermion(&R);    
+  QOP_MDWF_free_fermion(&R);    
  no_R:
-  QOP_F3_MDWF_free_fermion(&F);    
+  QOP_MDWF_free_fermion(&F);    
  no_F:
-  QOP_F3_MDWF_free_gauge(&U);  
+  QOP_MDWF_free_gauge(&U);  
  no_U:
   return 1;
 }
@@ -275,7 +277,7 @@ main(int argc, char *argv[])
   }
   zprint("MDWF_set_generic() done");
 
-  if (do_f3(mdwf_state, mdwf_params)) {
+  if (do_run(mdwf_state, mdwf_params)) {
     zprint("float test failed");
     goto end;
   }

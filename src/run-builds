@@ -13,10 +13,10 @@ for f in config/$root* ; do
    conf=`echo $f | sed -e 'sx.*/xx'`
    echo '****************' doing $conf
    make clean
-   rm lib*.a
+   rm -f lib*.a
    make CONFIG=$conf LIMP=$limp
    [ -d $install/$conf ] || mkdir -p $install/$conf
-   for x in operator heater state statex ; do
+   for x in operator heater-d heater-f state statex ; do
      mv tests/$x $install/$conf/$x
    done
 done

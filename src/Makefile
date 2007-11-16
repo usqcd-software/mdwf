@@ -21,7 +21,7 @@ endif
 
 .PHONY: all clean realclean dist
 
-subdirs = faux qa0.dry c99.dry qa0 c99 tests
+subdirs = faux qa0.dry c99.dry qa0 c99 bgl-xlc tests
 
 x.sources = error.c \
             alloc-aligned.c \
