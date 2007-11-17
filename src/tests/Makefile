@@ -13,7 +13,8 @@ tests = operator.c \
         state.c \
         statex.c
 
-x.tests = heater.c
+x.tests = heater.c \
+          localheat.c
 
 objects = $(tests:%.c=%.o)
 x.objects = $(x.tests:%.c=%-d.o) $(x.tests:%.c=%-f.o)
@@ -54,7 +55,7 @@ $(x.tests:%.c=%-f.o): %-f.o: %.c
 	$C$(CC) $(CFLAGS) -DQOP_MDWF_DEFAULT_PRECISION=\'F\' -c -o $@ $<
 
 $(x.tests:%.c=%-d.o): %-d.o: %.c
-	$E CC-f $<
+	$E CC-d $<
 	$C$(CC) $(CFLAGS) -DQOP_MDWF_DEFAULT_PRECISION=\'D\' -c -o $@ $<
 
 

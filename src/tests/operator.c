@@ -15,6 +15,7 @@ static double b5[128];
 static double c5[128];
 
 static FILE *xf = NULL;
+static char *xfname = "out";
 
 void
 zflush(void)
@@ -31,7 +32,7 @@ xprint(char *fmt, ...)
   va_list va;
 
   if (xf == 0) {
-    sprintf(buffer, "out.%06d", self);
+    sprintf(buffer, "%s.%06d", xfname, self);
     xf = fopen(buffer, "wt");
     if (xf == 0)
       return;
@@ -288,10 +289,9 @@ main(int argc, char *argv[])
 
   self = QMP_get_node_number();
   primary = QMP_is_primary_node();
-  for (i = 0; i < argc; i++)
-    zprint("arg[%d]=%s", i, argv[i]);
-  if (argc != 10) {
+  if (argc != 11) {
     zprint("10 arguments expected, found %d", argc);
+    zprint("Usage: operator Nx Ny Nz Nt lx ly lz lt Ls out-prefix");
     QMP_finalize_msg_passing();
     return 1;
   }
@@ -302,7 +302,10 @@ main(int argc, char *argv[])
     mylattice[i] = mylocal[i] * mynetwork[i];
   }
   mylocal[4] = mylattice[4] = atoi(argv[9]);
+  xfname = argv[10];
 
+  for (i = 0; i < argc; i++)
+    zprint("arg[%d]=%s", i, argv[i]);
   zshowv4("network", mynetwork);
   zshowv5("local lattice", mylocal);
   zshowv5("lattice", mylattice);

@@ -8,13 +8,14 @@ fi
 limp=$1
 config=$2
 install=$3
+progs="operator state statex heater-d heater-f localheat-d localheat-f"
 
 echo '****************' doing $config
 make clean
 rm -f lib*.a
 make CONFIG=$config LIMP=$limp
-target=$install/$config-$limp
+target=$install/$config-$limp/bin
 [ -d $target ] || mkdir -p $target
-for x in operator heater-d heater-f state statex ; do
+for x in $progs ; do
   mv tests/$x $target/$x
 done

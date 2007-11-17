@@ -56,16 +56,16 @@ sources = $(i.sources) \
 objects = $(sources:%.c=%.o)
 
 all: $(objects)
-	$E AR $@ / c99.dry
+	$E AR $@/bgl-xlc
 	$C$(AR) cr $(TOP)/$(library) $^
 	$C$(RANLIB) $(TOP)/$(library)
 
 dist clean:
-	$E RM c99.dry/objects
+	$E RM bgl-xlc/objects
 	$C$(RM) $(objects)
 
 realclean: clean
-	$E RM c99.dry/sources
+	$E RM bgl-xlc/sources
 	$C$(RM) $(sources)
 
 $(sources:%.c=%.o): %.o: %.c

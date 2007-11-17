@@ -234,26 +234,27 @@ main(int argc, char *argv[])
 
   self = QMP_get_node_number();
   primary = QMP_is_primary_node();
-  if (argc != 6) {
-    zprint("6 arguments expected, found %d", argc);
-    zprint("usage: heater Nx Ny Nz Nt time");
+  if (argc != 7) {
+    zprint("7 arguments expected, found %d", argc);
+    zprint("usage: localheat Lx Ly Lz Lt Ls time");
     QMP_finalize_msg_passing();
     return 1;
   }
 
   for (i = 0; i < 4; i++) {
-    mynetwork[i] = atoi(argv[i+1]);
-    mylocal[i] = 4;
+    mynetwork[i] = 1;
+    mylocal[i] = atoi(argv[i+1]);
     mylattice[i] = mylocal[i] * mynetwork[i];
   }
-  mylocal[4] = mylattice[4] = 16;
-  total_sec = atoi(argv[5]);
+  mylocal[4] = mylattice[4] = atoi(argv[5]);
+  total_sec = atoi(argv[6]);
 
   zshowv4("network", mynetwork);
   zshowv5("local lattice", mylocal);
   zshowv5("lattice", mylattice);
   zprint("total requested runtime %.0f sec", total_sec);
 
+#if 0
   if (QMP_declare_logical_topology(mynetwork, 4) != QMP_SUCCESS) {
     zprint("declare_logical_top failed");
     goto end;
@@ -261,6 +262,12 @@ main(int argc, char *argv[])
 
   getv(mynode, 0, QMP_get_logical_number_of_dimensions(),
        QMP_get_logical_coordinates());
+#else
+  { int i;
+    for (i = 0; i < 4; i++)
+       mynode[i] = 0;
+  }
+#endif
 
   if (QOP_MDWF_init(&mdwf_state,
 		    mylattice, mynetwork, mynode, primary,
