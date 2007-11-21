@@ -14,9 +14,13 @@ sources = ast.ss \
           verbose.ss \
           backend.ss \
           be-c99.ss \
-          be-bgl-xlc.ss
+          be-bgl-xlc.ss \
+          be-ckind.ss \
+          be-c99-new.ss \
+          be-bgl-xlc-new.ss
 
-main = qa0.ss
+main = qa0.ss \
+       qa0-new.ss
 
 program = $(main:%.ss=%)
 objects = $(sources:%.ss=%.o)
@@ -35,7 +39,9 @@ realclean: clean
 $(objects): %.o: %.ss
 	$(SC) -o $<
 
-$(program): $(main) $(sources)
-	$(SC) --exe $@ $(main)
+$(program): %: %.ss
+	$(SC) --exe $@ $<
+
+$(program): $(sources)
 
 $(objects): $(sources)
