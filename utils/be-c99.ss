@@ -1,4 +1,4 @@
-(module be-c99-new
+(module be-c99
 	mzscheme
   (require "common.ss")
   (require "ast.ss")

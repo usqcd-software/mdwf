@@ -1,8 +1,6 @@
-(module qa0-new
+(module qa0
         mzscheme
    (require "common.ss")
-   (require "be-c99-new.ss")
-   (require "be-bgl-xlc-new.ss")
    (require "cheader.ss")
    (require "backend.ss")
    (require "parser.ss")
@@ -10,6 +8,8 @@
    (require "q2complex.ss")
    (require "cx2dh.ss")
    (require "qa0print.ss")
+   (require "be-c99.ss")
+   (require "be-bgl-xlc.ss")
 
    (define *version* "$Id$")
    (define (do-help arg*)

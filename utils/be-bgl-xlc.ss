@@ -1,4 +1,4 @@
-(module be-bgl-xlc-new
+(module be-bgl-xlc
 	mzscheme
   (require "common.ss")
   (require "ast.ss")
