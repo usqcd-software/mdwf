@@ -1,4 +1,4 @@
-(module be-c99
+(module be-dry
 	mzscheme
   (require "common.ss")
   (require "ast.ss")
@@ -11,7 +11,7 @@
   (require "verbose.ss")
   (require "be-ckind.ss")
 
-  (provide machine-c99-32)
+  (provide machine-dry)
 
   (define op-type-table
     '((complex-add               complex-double)
@@ -108,16 +108,16 @@
       (complex-float     complex-double)
       (complex-double    complex-double)))
   (define (emit-load level type output addr* env f)
-    (do-emit level "~a = *(~a *)(~a);"
-	     (preemit-output output env)
-	     (ce-lookup-x env 'name-of type "C99 name of type ~a" type)
-	     (preemit-addr* addr* env))
+    (let ([value (case type
+		   [(int) "0"]
+		   [(pointer) "(void *)0"]
+		   [(float)   "0.0"]
+		   [(complex-float complex-double) "0.0"])])
+      (do-emit level "~a = ~a;"
+	       (preemit-output output env)
+	       value))
     f)
   (define (emit-store level type addr* value env f)
-    (do-emit level "*(~a *)(~a) = ~a;"
-	     (ce-lookup-x env 'name-of type "C99 name of type ~a" type)
-	     (preemit-addr* addr* env)
-	     (preemit-input value env))
     f)
   (define (collect-output* code* env)
     (define (add-output* output* type* env)
@@ -153,8 +153,8 @@
   (define (extra-decl* arg-name* arg-type* arg-c-name* arg-c-type* env) #t)
   (define (extra-def* env) #t)
   (define (extra-undef* env) #t)
-  (define machine-c99-32
-    (build-ckind-back-end 'c99              ; target-name
+  (define machine-dry
+    (build-ckind-back-end 'dry              ; target-name
 			  op-emit-table     ; op-emit-table
 			  op-type-table     ; op-type-table
 			  load-table        ; ld-type-table

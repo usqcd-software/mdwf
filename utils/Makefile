@@ -14,6 +14,7 @@ sources = ast.ss \
           verbose.ss \
           backend.ss \
           be-c99.ss \
+          be-dry.ss \
           be-bgl-xlc.ss \
           be-ckind.ss
 

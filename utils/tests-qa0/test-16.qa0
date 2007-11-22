@@ -6,6 +6,13 @@
                                   [u-f "uF"  d-table]
                                   [d-g "dU"  d-table]
                                   [d-f "dF"  d-table]))
+
+
+(verbose ([c99 bgl/xlc dry] "#include <complex.h>"))
+(verbose ([c99 bgl/xlc dry] "struct Fermion;"))
+(verbose ([c99 bgl/xlc dry] "struct Neighbor;"))
+(verbose ([c99 bgl/xlc dry] "struct SUN;"))
+(verbose ([c99 bgl/xlc dry] "struct ProjectedFermion;"))
                                
 (procedure K-n ([stem "K"] count-flops)
               ([res  pointer "res"  "struct Fermion *"               ]
