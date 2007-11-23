@@ -1,14 +1,14 @@
 TOP     = ..
 V       = 0
 CONFIG  = macosx
-TARGETS = c99 bgl/xlc
+TARGETS = c99 bgl/xlc dry
 TARGET  =
 DEST    =
-QA0     = $(TOP)/../utils/qa0
+QA0     = $(TOP)/utils/qa0
 
 include $(TOP)/config/$(CONFIG)
 
-.PHONY: all clean realclean dist do.all do.clean
+.PHONY: all clean realclean dist
 
 ifeq ("$V", "0")
    E=@echo "  "
@@ -18,13 +18,7 @@ else
    C=
 endif
 
-ifeq ("$(TARGET)", "c99")
-  DEST   = $(TOP)/c99
-endif
-
-ifeq ("$(TARGET)", "bgl/xlc")
-  DEST   = $(TOP)/bgl-xlc
-endif
+DEST=$(TOP)/$(shell echo $(TARGET) | sed -e sx/x-xg)
 
 headers = types.qa0 \
           defs-A.qa0 \
@@ -106,6 +100,8 @@ c.F.sources = $(F.sources:%.qa0=$(DEST)/%d.c) \
 c.spin.sources = $(spin.sources:%.qa0=$(DEST)/%d.c) \
                  $(spin.sources:%.qa0=$(DEST)/%f.c)
 
+.PHONY: do.all
+
 dist all:
 	@for t in $(TARGETS) ; do \
 	  echo making target $$t; \
@@ -116,13 +112,15 @@ do.all: $(dst.sources)
 
 clean:
 
+.PHONY: do.realclean
+
 realclean: clean
 	@for t in $(TARGETS); do \
 	  echo making realclean $$t; \
-	  $(MAKE) "V=$(V)" CONFIG="$(CONFIG)" TARGET="$$t" do.clean ; \
+	  $(MAKE) "V=$(V)" CONFIG="$(CONFIG)" TARGET="$$t" do.realclean ; \
 	done
 
-do.clean:
+do.realclean:
 	$E RM $(DEST)/sources
 	$C $(RM) $(dst.sources)
 
@@ -137,7 +135,6 @@ $(x.sources:%.qa0=$(DEST)/%d.c): $(DEST)/%d.c: %.qa0
 $(x.sources:%.qa0=$(DEST)/%f.c): $(DEST)/%f.c: %.qa0
 	$E QA0-f $@
 	$C $(QA0) $(TARGET) float $@ $<
-
 
 $(dst.sources): types.qa0
 $(c.A.sources): defs-A.qa0

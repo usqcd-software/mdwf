@@ -1,67 +1,7 @@
-done * state fini, ref counting
-done *+ state init
-done * gauge allocation, deallocation
-done ** import
-done ** free
-done * fermion alloc etc
-done ** import
-done ** export
-done ** alloc
-done ** free
-done * half fermions alloc etc
-done ** import
-done ** export
-done ** alloc
-done ** free
-done * communication setup and cleanup
-done ** setup
-done ** cleanup
 * operators
 done ** D
 ** D conjugated
 ** M
 ** M conjugated
-done * helpers
-done **  madd_fermion
-done **  madd_half_fermion
-done **  dot_fermion
-done **  dot_half_fermion
-done **  norm2_fermion
-done **  norm2_half_fermion
 * cg
 * shifted cg
-done * x_export
-done * x_import
-done *+ faux -- empty routines
-done *+ c99/qa0
-
-done * QA0:
-done ** PLT on BG/L fen
-done ** modules
-done ** precision (in)dependent names
-
-
-LIMP functions:
-** qx(do_AB)
-** qx(do_ApF)
-** qx(dot_fermion)
-** qx(get_fermion)
-** qx(madd_fermion)
-** qx(norm2_fermion)
-** qx(proj_Ug0plus)
-** qx(proj_Ug1plus)
-** qx(proj_Ug2plus)
-** qx(proj_Ug3plus)
-** qx(proj_g0minus)
-** qx(proj_g1minus)
-** qx(proj_g2minus)
-** qx(proj_g3minus)
-** qx(put_fermion)
-** qx(put_gauge)
-** q(fix_neighbor_f_down)
-** q(fix_neighbor_f_up)
-** q(get_up_pack_f)
-** q(set_neighbor)
-** q(set_up_pack)
-** q(sizeof_neighbor)
-** q(sizeof_up_pack)

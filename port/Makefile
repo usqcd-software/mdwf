@@ -1,13 +1,12 @@
 #
-
-DIST       = mdwf-dist
 CONFIG     = macosx
-LIMP       = faux
+LIBRARY    = libqop-mdwf3.a
+LIMPDIR    = .
 
-TOP        = .
 QMP_CFLAGS = $(shell $(QMP_TOP:%=%/bin/qmp-config) --cflags)
+lib        = $(LIMPDIR)/$(LIBRARY)
 
-include config/$(CONFIG)
+include ../config/$(CONFIG)
 
 V          = 0
 
@@ -19,9 +18,7 @@ else
    C=
 endif
 
-.PHONY: all clean realclean dist
-
-subdirs = faux qa0.dry c99.dry qa0 c99 bgl-xlc tests
+.PHONY: all clean realclean library dist
 
 x.sources = error.c \
             alloc-aligned.c \
@@ -63,60 +60,52 @@ p.sources = f-alloc.c \
             op-dirac.c \
 #            op-dirac-conj.c
 
-x.objects = $(x.sources:%.c=%.o)
+x.objects = $(x.sources:%.c=$(LIMPDIR)/%.o)
 
-p.objects = $(p.sources:%.c=%f.o) \
-            $(p.sources:%.c=%d.o)
+p.objects = $(p.sources:%.c=$(LIMPDIR)/%f.o) \
+            $(p.sources:%.c=$(LIMPDIR)/%d.o)
 
 objects = $(x.objects) $(p.objects)
 
 headers = mdwf.h \
           qop-mdwf3.h
 
-library = libqop-mdwf3.a
 
-all: $(library)
-	$C$(MAKE) -C $(LIMP) 'V=$V' 'CONFIG=$(CONFIG)' 'library=$(library)' $@
-	$C$(MAKE) -C tests 'V=$V' 'CONFIG=$(CONFIG)' $@
+all: $(lib)
+ifeq ("$(LIMPDIR)", ".")
+	$E qop-mdwf3.h in place
+else
+	$E CP qop-mdwf3.h
+	$C cp qop-mdwf3.h $(LIMPDIR)/
+endif
 
 clean:
 	$E RM objects
 	$C$(RM) $(objects)
-	$Cfor f in $(subdirs); do \
-	  $(MAKE) -C $$f 'V=$V' 'CONFIG=$(CONFIG)' 'library=$(library)' $@; \
-	done
 
 realclean: clean
-	$E RM library
-	$C$(RM) $(library)
-	$Cfor f in $(subdirs); do \
-	  $(MAKE) -C $$f 'V=$V' 'CONFIG=$(CONFIG)' 'library=$(library)' $@; \
-	done
+ifeq ("$(LIMPDIR)", ".")
+	$C$(RM) $(lib)
+endif
+
 
 dist: clean
-	$E RM library
-	$C$(RM) $(library)
-	$Cfor f in $(subdirs); do \
-	   $(MAKE) -C $$f 'V=$V' 'CONFIG=$(CONFIG)' library=$(library) $@; \
-	done
-	$E TAR src
-	$Cx=`pwd`; cd .. ; tar -cf - `basename $$x` | bzip2 -9 > $(DIST).tar.bz2
 
-$(library): $(objects)
+$(lib): $(objects)
 	$E AR $@
 	$C$(AR) cr $@ $^
 	$C$(RANLIB) $@
 
-$(x.objects): %.o: %.c
+$(x.objects): $(LIMPDIR)/%.o: %.c
 	$E CC $<
-	$C$(CC) $(CFLAGS) -c -o $@ $<
+	$C$(CC) $(CFLAGS) -I. -c -o $@ $<
 
-$(p.sources:%.c=%f.o): %f.o: %.c
+$(p.sources:%.c=$(LIMPDIR)/%f.o): $(LIMPDIR)/%f.o: %.c
 	$E CC-f $<
-	$C$(CC) $(CFLAGS) -DQOP_MDWF_DEFAULT_PRECISION=\'F\' -c -o $@ $<
+	$C$(CC) $(CFLAGS) -I. -DQOP_MDWF_DEFAULT_PRECISION=\'F\' -c -o $@ $<
 
-$(p.sources:%.c=%d.o): %d.o: %.c
+$(p.sources:%.c=$(LIMPDIR)/%d.o): $(LIMPDIR)/%d.o: %.c
 	$E CC-d $<
-	$C$(CC) $(CFLAGS) -DQOP_MDWF_DEFAULT_PRECISION=\'D\' -c -o $@ $<
+	$C$(CC) $(CFLAGS) -I. -DQOP_MDWF_DEFAULT_PRECISION=\'D\' -c -o $@ $<
 
-$(objects): $(headers) $(limp.headers:%=$(LIMP)/%)
+$(objects): $(headers)

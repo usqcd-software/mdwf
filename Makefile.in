@@ -1,7 +1,0 @@
-#
-# Check that Make.config is present and complain if it is not.
-#
-
-# Targets:
-.PHONY: all doc clean realclean install install-doc dist
-
