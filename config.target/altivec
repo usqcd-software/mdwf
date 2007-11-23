@@ -1,3 +1,0 @@
-#
-# Builds is a list of MDWF code variants for the Makefile
-builds="altivecf"
