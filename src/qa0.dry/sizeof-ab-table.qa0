@@ -1,8 +1,0 @@
-(verbose [c99 "/* QA0 source $Id$ */"])
-
-(include "types.qa0")
-
-(procedure size-of-ab-table ([stem "sizeof_ABTable"]
-	                     [return total int "int"])
-	   ([l-s    int "Ls"     "int"])
-   (op int-mul () (total) ([reg l-s] [const (size-of AB-Table)])))
