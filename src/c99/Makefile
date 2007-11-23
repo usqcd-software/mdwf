@@ -34,7 +34,14 @@ i.sources = put-ab.c \
             sizeof-up-pack.c
 
 x.sources = do-A \
+            do-A-conj \
+            do-A-inv \
+            do-A-conj-inv \
             do-ApF \
+            do-1pA \
+            do-ApB \
+            do-AxpBxFx \
+            do-F \
             dot-fermion \
             madd-fermion \
             norm2-fermion \
