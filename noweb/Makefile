@@ -13,7 +13,7 @@ noweb = mdwf.nw \
         qa0.nw \
         qcd-defs.nw
 
-sources = ../src/qop-mdwf3.h \
+sources = ../port/qop-mdwf3.h \
           ../utils/basis.ss
 
 f.tex = $(noweb:%.nw=%.tex)

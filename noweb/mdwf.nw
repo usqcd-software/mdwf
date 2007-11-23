@@ -700,7 +700,7 @@ Notice that SCG always starts with $x_0=0$.
 The MDWF interface is fully functional to isolate users of the code from
 implementation details. Several types defined in the interface provide help
 with typechecking.
-<<File [[../src/qop-mdwf3.h]]>>=
+<<File [[../port/qop-mdwf3.h]]>>=
 #ifndef QOP_MDWF_0bd50d0caeec4311a0d7c183032c43c2
 # define `QOP_MDWF_0bd50d0caeec4311a0d7c183032c43c2
   <<Interface macros>>
