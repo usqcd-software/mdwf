@@ -1,6 +1,8 @@
-TOP    = ..
-V      = 0
-CONFIG = macosx
+TOP        = ..
+V          = 0
+LIBRARY    = libqop-mdwf3.a
+CONFIG     = macosx
+LIMP       = bgl-xlc
 QMP_CFLAGS = $(shell $(QMP_TOP:%=%/bin/qmp-config) --cflags)
 
 include $(TOP)/config/$(CONFIG)
@@ -15,7 +17,7 @@ else
    C=
 endif
 
-headers = ../mdwf.h
+headers = ../port/mdwf.h
 
 i.sources = put-ab.c \
             put-down.c \
@@ -37,11 +39,11 @@ x.sources = do-A \
             do-A-conj \
             do-A-inv \
             do-A-conj-inv \
+            do-ApF \
             do-1pA \
             do-ApB \
             do-AxpBxFx \
             do-F \
-            do-ApF \
             dot-fermion \
             madd-fermion \
             norm2-fermion \
@@ -63,19 +65,26 @@ sources = $(i.sources) \
 objects = $(sources:%.c=%.o)
 
 all: $(objects)
-	$E AR $@/bgl-xlc
-	$C$(AR) cr $(TOP)/$(library) $^
-	$C$(RANLIB) $(TOP)/$(library)
+	$E AR $@/$(LIMP)
+	$C$(AR) cr $(LIBRARY) $^
+	$C$(RANLIB) $(LIBRARY)
+	$C$(MAKE) CONFIG='$(CONFIG)' V='$V' LIBRARY='$(LIBRARY)' \
+                LIMPDIR=../$(LIMP) -C ../port $@
 
 dist clean:
-	$E RM bgl-xlc/objects
+	$E RM $(LIMP)/objects
 	$C$(RM) $(objects)
+	$C$(MAKE) CONFIG='$(CONFIG)' V='$V' LIBRARY='$(LIBRARY)' \
+                LIMPDIR=../$(LIMP) -C ../port $@
 
 realclean: clean
-	$E RM bgl-xlc/sources
+	$E RM $(LIMP)/sources
 	$C$(RM) $(sources)
+	$C$(MAKE) CONFIG='$(CONFIG)' V='$V' LIBRARY='$(LIBRARY)' \
+                LIMPDIR=../$(LIMP) -C ../port $@
+	$C$(RM) $(LIBRARY)
 
 $(sources:%.c=%.o): %.o: %.c
 	$E CC $<
-	$C$(CC) $(CFLAGS) -c -o $@ $<
+	$C$(CC) $(CFLAGS) -I../port -c -o $@ $<
 

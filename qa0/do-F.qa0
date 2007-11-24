@@ -5,7 +5,7 @@
 (include "types.qa0")
 (include "defs-F.qa0")
 
-(procedure do-ApF ([stem "do_ApF"]
+(procedure do-F ([stem "do_F"]
                    prec&color
                    count-flops)
        ([res-x     pointer   "res_x"    "struct Fermion *"         ]

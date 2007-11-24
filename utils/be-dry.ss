@@ -111,8 +111,10 @@
     (let ([value (case type
 		   [(int) "0"]
 		   [(pointer) "(void *)0"]
-		   [(float)   "0.0"]
-		   [(complex-float complex-double) "0.0"])])
+		   [(float double)   "0.0"]
+		   [(complex-float complex-double) "0.0"]
+		   [else (error 'be-dry "emit-load type=~a, addr*=~a"
+				type addr*)])])
       (do-emit level "~a = ~a;"
 	       (preemit-output output env)
 	       value))

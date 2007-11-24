@@ -5,6 +5,7 @@ LIMPDIR    = .
 
 QMP_CFLAGS = $(shell $(QMP_TOP:%=%/bin/qmp-config) --cflags)
 lib        = $(LIMPDIR)/$(LIBRARY)
+HDR        = qop-mdwf3.h
 
 include ../config/$(CONFIG)
 
@@ -68,15 +69,15 @@ p.objects = $(p.sources:%.c=$(LIMPDIR)/%f.o) \
 objects = $(x.objects) $(p.objects)
 
 headers = mdwf.h \
-          qop-mdwf3.h
+          $(HDR)
 
 
 all: $(lib)
 ifeq ("$(LIMPDIR)", ".")
-	$E qop-mdwf3.h in place
+	$E $(HDR) in place
 else
-	$E CP qop-mdwf3.h
-	$C cp qop-mdwf3.h $(LIMPDIR)/
+	$E CP $(HDR)
+	$C cp $(HDR) $(LIMPDIR)/
 endif
 
 clean:
@@ -84,8 +85,8 @@ clean:
 	$C$(RM) $(objects)
 
 realclean: clean
-ifeq ("$(LIMPDIR)", ".")
-	$C$(RM) $(lib)
+ifneq ("$(LIMPDIR)", ".")
+	$C$(RM) $(LIMPDIR)/$(HDR)
 endif
 
 

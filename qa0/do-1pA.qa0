@@ -11,7 +11,7 @@
        ([res-x     pointer   "res_x"   "struct Fermion *"         ]
         [size      int       "size"    "int"                      ]
         [l-s       int       "Ls"      "int"        		  ]
-	[a-x       pointer   "b_x"     "const struct Fermion *"   ]
+	[a-x       pointer   "a_x"     "const struct Fermion *"   ]
 	[b-table   pointer   "b_table" "const struct ABTable *"   ]
 	[b-x       pointer   "b_x"     "const struct Fermion *"   ])
   (loop () (i [const 0] [reg size])
