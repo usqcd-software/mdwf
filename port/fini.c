@@ -44,6 +44,7 @@ q(cleanup_state)(struct Q(State) *state)
     q(free)(state, state->lx2v, state->volume * sizeof (int));
   if (state->v2lx)
     q(free)(state, state->v2lx, state->volume * sizeof (int));
+  assert(state->used == 1);
   memset(state, 0, sizeof (struct Q(State)));
 }
 
@@ -64,6 +65,5 @@ Q(fini)(struct Q(State) **state_ptr)
   }
     
   q(cleanup_state)(state);
-  assert(state->used == 1);
   free(state);
 }

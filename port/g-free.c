@@ -6,8 +6,8 @@ QX(free_gauge)(struct QX(Gauge) **g_ptr)
 
   if (g_ptr == 0 || *g_ptr == 0)
     return;
-  BEGIN_TIMING(state);
   state = (*g_ptr)->state;
+  BEGIN_TIMING(state);
   END_TIMING(state, 0, 0, 0);
   q(free)(state, *g_ptr, (*g_ptr)->size);
   *g_ptr = 0;
