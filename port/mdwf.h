@@ -111,6 +111,7 @@ struct Q(Parameters) {
 
 struct Q(State) {
   int                used;            /* gc ref counter */
+  int                saved;           /* gc internal counter */
   size_t             allocated;       /* currently allocated bytes */
   size_t             max_allocated;   /* maximum allocation */
 

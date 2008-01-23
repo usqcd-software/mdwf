@@ -22,7 +22,6 @@ QX(allocate_fermion)(struct QX(Fermion) **fermion_ptr,
     return q(set_error)(state, 0, "allocate_fermion(): not enough memory");
 
   BEGIN_TIMING(state);
-  state->used++;
   fermion->state = state;
   fermion->size = size;
   fermion->even = even;

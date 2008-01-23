@@ -10,6 +10,5 @@ QX(free_fermion)(struct QX(Fermion) **fermion_ptr)
   BEGIN_TIMING(state);
   q(free)(state, *fermion_ptr, (*fermion_ptr)->size);
   END_TIMING(state, 0, 0, 0);
-
-  Q(fini)(&state);
+  *fermion_ptr = 0;
 }

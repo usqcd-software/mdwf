@@ -34,7 +34,6 @@ QX(import_gauge)(struct QX(Gauge) **gauge_ptr,
     return q(set_error)(state, 0, "import_gauge(): not enough memory");
 
   BEGIN_TIMING(state);
-  state->used++;
   gauge->state = state;
   gauge->size = size;
   gauge->data = ptr;

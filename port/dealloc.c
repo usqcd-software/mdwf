@@ -8,6 +8,8 @@ q(free)(struct Q(State) *state, void *ptr, size_t bytes)
 
   free(ptr);
 
-  if (state)
+  if (state) {
     state->allocated -= bytes;
+    Q(fini)(&state);
+  }
 }

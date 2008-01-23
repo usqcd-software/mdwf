@@ -92,7 +92,6 @@ Q(set_generic)(struct Q(Parameters) **params_ptr,
   /* XXX */
 
   BEGIN_TIMING(state);
-  state->used++;
   params->state = state;
   *params_ptr = params;
   END_TIMING(state, 0, 0, 0);
@@ -100,22 +99,6 @@ Q(set_generic)(struct Q(Parameters) **params_ptr,
   return 0;
 #undef CHECK
  error:
-  if (params == NULL)
-    return q(set_error)(state, 0, msg);
-
-  if (params->AipTable != NULL)
-    q(free)(state, params->AipTable, iabs);
-  if (params->AimTable != NULL)
-    q(free)(state, params->AimTable, iabs);
-  if (params->BipTable != NULL)
-    q(free)(state, params->BipTable, iabs);
-  if (params->BimTable != NULL)
-    q(free)(state, params->BimTable, iabs);
-  if (params->ATable != NULL)
-    q(free)(state, params->ATable, abs);
-  if (params->BTable != NULL)
-    q(free)(state, params->BTable, abs);
-  q(free)(state, params, sizeof (struct Q(Parameters)));
-  state->used--;
+  Q(free_parameters)(&params);
   return q(set_error)(state, 0, msg);
 }

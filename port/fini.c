@@ -1,4 +1,5 @@
 #include <mdwf.h>
+#include <assert.h>
 
 static void
 free_eo(struct Q(State) *state, struct eo_lattice *eo)
@@ -33,6 +34,9 @@ free_eo(struct Q(State) *state, struct eo_lattice *eo)
 void
 q(cleanup_state)(struct Q(State) *state)
 {
+  state->used = state->saved + 1;
+  state->saved = 0;
+
   q(free_comm)(state);
   free_eo(state, &state->even);
   free_eo(state, &state->odd);
@@ -53,10 +57,13 @@ Q(fini)(struct Q(State) **state_ptr)
 
   state = *state_ptr;
   *state_ptr = NULL;
-  state->used--;
-  if (state->used != 0)
-    return;
 
+  if (state->used != 0) {
+      state->used--;
+      return;
+  }
+    
   q(cleanup_state)(state);
+  assert(state->used == 1);
   free(state);
 }

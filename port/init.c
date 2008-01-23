@@ -238,7 +238,7 @@ state_init(struct Q(State)  *state,
   int v, d, la, parity, face;
   struct eo_lattice *eo;
   int x[Q(DIM)];
-#define CHECK(cond,message) do { if (cond) return message; } while (0)
+#define CHECK(c,m) do { if (c) { msg = (m); goto err; } } while (0)
 
   memset(state, 0, sizeof (struct Q(State)));
   state->Ls = lattice[Q(DIM)];
@@ -279,9 +279,9 @@ state_init(struct Q(State)  *state,
   }
   
   msg = eo_init(&state->even, &state->odd, state);
-  CHECK(msg, msg);
+  CHECK(msg != 0, msg);
   msg = eo_init(&state->odd, &state->even, state);
-  CHECK(msg, msg);
+  CHECK(msg != 0, msg);
 
   state->v2lx = q(malloc) (state, state->volume * sizeof(int));
   CHECK(state->v2lx == 0, "Not enough memory for state->vector2layout");
@@ -296,8 +296,14 @@ state_init(struct Q(State)  *state,
   build_packs(&state->even, &state->odd, state);
   build_packs(&state->odd, &state->even, state);
 
+  state->saved = state->used;
+  state->used = 0;
   return 0;
 #undef CHECK
+err:
+  state->saved = state->used;
+  state->used = 0;
+  return msg;
 }
 
 static void
@@ -453,10 +459,10 @@ Q(init)(struct Q(State) **state_ptr,
   CHECK(node[3] < 0, "Node address too small in T");
   
   status = state_init(state, lattice, network, node, master_p, local, env);
-  CHECK(status, status);
+  CHECK(status != 0, status);
   
   status = patch_boundary(state, lattice, network, node, master_p, local, env);
-  CHECK(status, status);
+  CHECK(status != 0, status);
   
   q(free)(state, state->v2lx, state->volume * sizeof(int));
   state->v2lx = NULL;

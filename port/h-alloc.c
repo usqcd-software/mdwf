@@ -22,7 +22,6 @@ QX(allocate_half_fermion)(struct QX(HalfFermion) **hf_ptr,
     return q(set_error)(state, 0, "allocate_half_fermion(): not enough memory");
 
   BEGIN_TIMING(state);
-  state->used++;
   hf->state = state;
   hf->size = size;
   hf->even = even;
