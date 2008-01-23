@@ -240,7 +240,6 @@ state_init(struct Q(State)  *state,
   int x[Q(DIM)];
 #define CHECK(c,m) do { if (c) { msg = (m); goto err; } } while (0)
 
-  printf("begin state_init(%p)\n", state);
   memset(state, 0, sizeof (struct Q(State)));
   state->Ls = lattice[Q(DIM)];
   state->master_p = master_p;
@@ -299,13 +298,11 @@ state_init(struct Q(State)  *state,
 
   state->saved = state->used;
   state->used = 0;
-  printf("end state_init(%p)\n", state);
   return 0;
 #undef CHECK
 err:
   state->saved = state->used;
   state->used = 0;
-  printf("end state_init(%p) FAILED: %s\n", state, msg);
   return msg;
 }
 
