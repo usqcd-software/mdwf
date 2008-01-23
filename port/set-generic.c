@@ -103,6 +103,14 @@ Q(set_generic)(struct Q(Parameters) **params_ptr,
   if (params == NULL)
     return q(set_error)(state, 0, msg);
 
+  if (params->AipTable != NULL)
+    q(free)(state, params->AipTable, iabs);
+  if (params->AimTable != NULL)
+    q(free)(state, params->AimTable, iabs);
+  if (params->BipTable != NULL)
+    q(free)(state, params->BipTable, iabs);
+  if (params->BimTable != NULL)
+    q(free)(state, params->BimTable, iabs);
   if (params->ATable != NULL)
     q(free)(state, params->ATable, abs);
   if (params->BTable != NULL)

@@ -221,6 +221,7 @@ main(int argc, char *argv[])
 	goto end;
     }
 
+    QOP_MDWF_free_parameters(&mdwf_params);
     QOP_MDWF_fini(&mdwf_state);
     zprint("Conjugate gradient test finished");
     status = 0;

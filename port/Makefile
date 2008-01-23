@@ -32,6 +32,7 @@ x.sources = error.c \
             set-moebius.c \
             set-shamir.c \
             set-generic.c \
+            p-free.c \
             step-even.c \
             step-odd.c \
             version.c \
