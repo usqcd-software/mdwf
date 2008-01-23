@@ -10,8 +10,8 @@
        ([res-x     pointer   "res_x"    "struct Fermion *"         ]
         [size      int       "size"     "int"                      ]
         [l-s       int       "Ls"       "int"        		   ]
-        [p-table   pointer   "p_table"  "const struct AiTable *"   ]
-        [m-table   pointer   "m_table"  "const struct AiTable *"   ]
+        [p-table   pointer   "p_table"  "const struct ABiTable *"  ]
+        [m-table   pointer   "m_table"  "const struct ABiTable *"  ]
 	[src-x     pointer   "src_x"    "const struct Fermion *"   ])
   (op int-mul () (s-line) ([reg l-s] [const (size-of Fermion)]))
   (op int-sub () (s-1-size) ([reg s-line] [const (size-of Fermion)]))

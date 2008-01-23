@@ -19,6 +19,8 @@ endif
 headers = ../port/mdwf.h
 
 i.sources = put-ab.c \
+            put-abi.c \
+            put-abi-z.c \
             put-down.c \
             get-down.c \
             get-down-f.c \
@@ -30,19 +32,34 @@ i.sources = put-ab.c \
             fix-down.c \
             fix-up.c \
             sizeof-ab-table.c \
+            sizeof-abi-table.c \
             sizeof-down-pack.c \
             sizeof-neighbor.c \
             sizeof-up-pack.c
 
-x.sources = do-A \
+x.sources = f-copy \
+            f-norm \
+            f-add3 \
+            f-add2 \
+            f-add2-norm \
+            f-add2x \
+            do-A \
             do-A-conj \
             do-A-inv \
+            do-BA-inv \
             do-A-conj-inv \
+            do-A-conj-inv-B \
             do-ApF \
             do-1pA \
             do-ApB \
             do-AxpBxFx \
             do-F \
+            do-1mF \
+            do-1mFx \
+            do-B-A-inv-F \
+            do-A-conj-inv-B-conj-F-conj \
+            do-1mB1AF \
+            do-1mB1AF-norm \
             dot-fermion \
             madd-fermion \
             norm2-fermion \

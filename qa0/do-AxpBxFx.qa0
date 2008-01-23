@@ -31,4 +31,7 @@
     (op pointer-move () (ttt) ([reg tmp]))
     (macro S-compute-A*+B* [reg res-x] [reg l-s]
                            [reg a-table] [reg src-x]
-			   [reg b-table] [reg ttt])))
+			   [reg b-table] [reg ttt])
+    (op pointer-add () (src-x) ([reg src-x] [reg s-line]))
+    (op pointer-add () (src-y) ([reg src-y] [reg s-line]))))
+

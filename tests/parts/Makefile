@@ -1,4 +1,5 @@
-TOP         = ..
+TOP         = ../..
+LIMPDIR     = c99
 V           = 0
 CONFIG      = macosx
 library     = qop-mdwf3
@@ -7,9 +8,12 @@ QMP_CFLAGS  = $(shell $(QMP_TOP:%=%/bin/qmp-config) --cflags)
 QMP_LDFLAGS = $(shell $(QMP_TOP:%=%/bin/qmp-config) --ldflags)
 QMP_LIBS    = $(shell $(QMP_TOP:%=%/bin/qmp-config) --libs)
 
+TCFLAGS = $(CFLAGS) $(QMP_CFLAGS) -I$(TOP)/$(LIMPDIR)
+
 include $(TOP)/config/$(CONFIG)
 
 tests = operator.c \
+        conjgrad.c \
         state.c \
         statex.c
 
@@ -43,22 +47,24 @@ dist realclean: clean
 
 $(programs): %: %.o
 	$E LD $@
-	$C$(CC) $(CFLAGS) $(QMP_LDFLAGS) -L$(TOP) -o $@ $< \
+	$C$(CC) $(TCFLAGS) $(QMP_LDFLAGS) -L$(TOP)/$(LIMPDIR) -o $@ $< \
               -l$(library) $(QMP_LIBS)
 
 $(objects): %.o: %.c
 	$E CC $<
-	$C$(CC) $(CFLAGS) $(QMP_CFLAGS) -c -o $@ $<
+	$C$(CC) $(TCFLAGS) -I$(TOP)/port -c -o $@ $<
 
 $(x.tests:%.c=%-f.o): %-f.o: %.c
 	$E CC-f $<
-	$C$(CC) $(CFLAGS) -DQOP_MDWF_DEFAULT_PRECISION=\'F\' -c -o $@ $<
+	$C$(CC) $(TCFLAGS) -DQOP_MDWF_DEFAULT_PRECISION=\'F\' -c -o $@ $<
 
 $(x.tests:%.c=%-d.o): %-d.o: %.c
 	$E CC-d $<
-	$C$(CC) $(CFLAGS) -DQOP_MDWF_DEFAULT_PRECISION=\'D\' -c -o $@ $<
+	$C$(CC) $(TCFLAGS) -DQOP_MDWF_DEFAULT_PRECISION=\'D\' -c -o $@ $<
 
 
-$(x.objects) $(objects): ../mdwf.h ../qop-mdwf3.h
+$(x.objects) $(objects): $(TOP)/port/mdwf.h $(TOP)/$(LIMPDIR)/qop-mdwf3.h
 
-$(programs): ../lib$(library).a
+conjgrad.o: clear-mdwf.h do-cg.c
+
+$(programs): $(TOP)/$(LIMPDIR)/lib$(library).a

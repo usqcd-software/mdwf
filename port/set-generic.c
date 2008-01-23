@@ -13,6 +13,7 @@ Q(set_generic)(struct Q(Parameters) **params_ptr,
   int Ls;
   struct Q(Parameters) *params;
   int abs;
+  int iabs;
   double u, v, w;
 
 #define CHECK(p, m) do { if ((p) == NULL) { msg = (m); goto error; }} while(0)
@@ -29,7 +30,7 @@ Q(set_generic)(struct Q(Parameters) **params_ptr,
   CHECK(params, "set_generic(): Not enough memory for parameters");
   memset(params, 0, sizeof (struct Q(Parameters)));
 
-  abs = q(sizeof_ABTable)(state->Ls);
+  abs = q(sizeof_ABTable)(Ls);
   params->ATable = q(malloc)(state, abs);
   CHECK(params->ATable, "set_generic(): Not enough memory for A table");
   u = c_5[0]*(M_5 + 4) - 1;
@@ -62,6 +63,26 @@ Q(set_generic)(struct Q(Parameters) **params_ptr,
   w = b_5[Ls-1];
   q(put_ABTable)(params->BTable, Ls-1, Ls-2, 0, w, u, v);
 
+  /* XXX fill iATable and iBTable */
+  iabs = q(sizeof_ABiTable)(Ls);
+  params->AipTable = q(malloc)(state, iabs);
+  CHECK(params->AipTable, "set_generic(): Not enough memory for 1/A + table");
+  params->AimTable = q(malloc)(state, iabs);
+  CHECK(params->AimTable, "set_generic(): Not enough memory for 1/A - table");
+  params->BipTable = q(malloc)(state, iabs);
+  CHECK(params->BipTable, "set_generic(): Not enough memory for 1/B + table");
+  params->BimTable = q(malloc)(state, iabs);
+  CHECK(params->BimTable, "set_generic(): Not enough memory for 1/B - table");
+  q(put_ABiTableZ)(params->AipTable, 1.0);
+  q(put_ABiTableZ)(params->AimTable, 1.0);
+  q(put_ABiTableZ)(params->BipTable, 1.0);
+  q(put_ABiTableZ)(params->BimTable, 1.0);
+  for (i = 1; i < Ls; i++) {
+      q(put_ABiTable)(params->AipTable, i, 1.0, 1.0, 1.0);
+      q(put_ABiTable)(params->AimTable, i, 1.0, 1.0, 1.0);
+      q(put_ABiTable)(params->BipTable, i, 1.0, 1.0, 1.0);
+      q(put_ABiTable)(params->BimTable, i, 1.0, 1.0, 1.0);
+  }  
   /* XXX */
 
   BEGIN_TIMING(state);

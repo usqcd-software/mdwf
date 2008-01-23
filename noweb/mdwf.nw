@@ -349,13 +349,13 @@ one performs the following steps:
 \begin{enumerate}
 \item Compute
 \[
-\phi_o = B_{ee}A_{ee}^{-1}\left(\eta_o - F_{eo}B_{oo}A_{oo}^{-1}\eta_e\right).
+\phi_e = B_{ee}A_{ee}^{-1}\left(\eta_e - F_{eo}B_{oo}A_{oo}^{-1}\eta_o\right).
 \]
 \item Use $M=I_{ee}-B_{ee}A_{ee}^{-1}F_{eo}B_{oo}A_{oo}^{-1}F_{oe}$ in the
 following.
 \item Compute
 \[
-\varphi_o = M^{\dagger}\phi_o.
+\varphi_e = M^{\dagger}\phi_e.
 \]
 where $M^\dagger=I_{ee}-\left(F_{oe}\right)^\dagger
 \left(A_{oo}^{-1}\right)^\dagger
@@ -365,13 +365,13 @@ where $M^\dagger=I_{ee}-\left(F_{oe}\right)^\dagger
 \left(B_{ee}\right)^\dagger$.
 \item Solve
 \[
-M^{\dagger}M\xi_o = \varphi_o
+M^{\dagger}M\xi_e = \varphi_e
 \]
-for $\xi_o$ using Alg.~\ref{real}.
+for $\xi_e$ using Alg.~\ref{real}.
 \item Compute
 \begin{eqnarray*}
-\psi_e &=& A_{oo}^{-1}\left(\eta_e-F_{oe}\xi_o\right),\\
-\psi_o &=& B_{ee}^{-1}\xi_o.
+\psi_o &=& A_{oo}^{-1}\left(\eta_o-F_{oe}\xi_e\right),\\
+\psi_e &=& B_{ee}^{-1}\xi_e.
 \end{eqnarray*}
 \end{enumerate}
 

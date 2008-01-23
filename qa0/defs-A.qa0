@@ -91,6 +91,33 @@
   (store qcd-fermion () ([reg r]) [reg z])
   (op pointer-add () (r) ([reg r] [const (size-of Fermion)])))
 
+;; compute r = x - A y in a point, advance r, x, y, and tables
+(define (compute-1-A r x-a t-B x-b)
+  (load qcd-fermion () x ([reg x-a]))
+  (op pointer-add () (x-a) ([reg x-a] [const (size-of Fermion)]))
+  (macro get-A&x [reg fb-c] [reg fb-l] [reg fb-h]
+                 [reg vb-c] [reg vb-l] [reg vb-h] [reg t-B] [reg x-b])
+  (op qcd-msubf () (g-r) ([reg x] [reg vb-c] [reg fb-c]))
+  (op qcd-msub-lohi () (z) ([reg g-r]
+                            [reg vb-l] [reg fb-l]
+                            [reg vb-h] [reg fb-h]))
+  (store qcd-fermion () ([reg r]) [reg z])
+  (op pointer-add () (r) ([reg r] [const (size-of Fermion)])))
+
+;; compute r = x - A y in a point, advance r, x, y, and tables, norm += |r|^2
+(define (compute-1-A-norm norm r x-a t-B x-b)
+  (load qcd-fermion () x ([reg x-a]))
+  (op pointer-add () (x-a) ([reg x-a] [const (size-of Fermion)]))
+  (macro get-A&x [reg fb-c] [reg fb-l] [reg fb-h]
+                 [reg vb-c] [reg vb-l] [reg vb-h] [reg t-B] [reg x-b])
+  (op qcd-msubf () (g-r) ([reg x] [reg vb-c] [reg fb-c]))
+  (op qcd-msub-lohi () (z) ([reg g-r]
+                            [reg vb-l] [reg fb-l]
+                            [reg vb-h] [reg fb-h]))
+  (op qcd-fnorm-add () (norm) ([reg norm] [reg z]))
+  (store qcd-fermion () ([reg r]) [reg z])
+  (op pointer-add () (r) ([reg r] [const (size-of Fermion)])))
+
 ;; compute r = x + A* y in a point, advance r, x, y, and tables
 (define (compute-1+A* r x-a t-B x-b)
   (load qcd-fermion () x ([reg x-a]))
@@ -125,6 +152,18 @@
   (loop () (s [const 0] [reg l-s])
     (macro compute-1+A [reg r] [reg x] [reg t-a] [reg y])))
 
+;; compute r = x - A y on one S-slice, advance r, x, and y
+(define (S-compute-1-A r l-s x a-table y)
+  (op pointer-move () (t-a) ([reg a-table]))
+  (loop () (s [const 0] [reg l-s])
+    (macro compute-1-A [reg r] [reg x] [reg t-a] [reg y])))
+
+;; compute r = x - A y on one S-slice, advance r, x, and y, norm += |r|^2
+(define (S-compute-1-A-norm norm r l-s x a-table y)
+  (op pointer-move () (t-a) ([reg a-table]))
+  (loop () (s [const 0] [reg l-s])
+    (macro compute-1-A-norm [reg norm] [reg r] [reg x] [reg t-a] [reg y])))
+
 ;; compute r = A* x on one S-slice, advance r and x
 (define (S-compute-A* r l-s table x)
   (op pointer-move () (t-s) ([reg table]))
@@ -146,6 +185,7 @@
 
 ;;; Inverses of A and A*
 
+;; XXX for now
 (define (S-compute-A/+inv res-x mem-part scale-op madd-op l-s p-table src-x)
   (op nop (start S-compute-A/+inv) () ())
   (op pointer-add () (t) ([reg p-table] [const (offset-of AB-Inverse abc)]))

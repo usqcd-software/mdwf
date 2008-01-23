@@ -58,6 +58,7 @@ p.sources = f-alloc.c \
             h-dot.c \
             f-norm2.c \
             h-norm2.c  \
+            cg-dirac.c \
             op-dirac.c \
 #            op-dirac-conj.c
 

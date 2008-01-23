@@ -95,14 +95,18 @@ struct QX(Gauge) {
   struct SUn *data;
 };
 
-/* struct ABTable is defined by qa0 */
+/* structs ABTable and ABiTable are defined by qa0 */
 struct ABTable;
+struct ABiTable;
 
 struct Q(Parameters) {
   struct Q(State) *state;
-  struct ABTable *ATable;
-  struct ABTable *BTable;
-  /* XXX */
+  struct ABTable  *ATable;
+  struct ABTable  *BTable;
+  struct ABiTable *AipTable; /* XXX */
+  struct ABiTable *AimTable; /* XXX */
+  struct ABiTable *BipTable; /* XXX */
+  struct ABiTable *BimTable; /* XXX */
 };
 
 struct Q(State) {
@@ -304,7 +308,102 @@ unsigned int qx(dot_fermion)(double *v_r, double *v_i,
 unsigned int qx(norm2_fermion)(double *v_r,
 			       int size, int Ls,
 			       const struct Fermion *a);
-
+unsigned int qx(do_A_inverse)(struct Fermion *r,
+			      int size, int Ls,
+			      const struct ABiTable *iatable_p,
+			      const struct ABiTable *iatable_m,
+			      const struct Fermion *x);
+/* XXX functions for cg, need better integration with the rest */
+unsigned int qx(do_1AcBc)(struct Fermion *r,
+			  int size, int Ls,
+			  const struct ABiTable *iatable_p,
+			  const struct ABiTable *iatable_m,
+			  const struct ABTable *btable,
+			  const struct Fermion *x);
+unsigned int qx(do_B1A)(struct Fermion *r,
+			int size, int Ls,
+			const struct ABTable *btable,
+			const struct ABiTable *iatable_p,
+			const struct ABiTable *iatable_m,
+			const struct Fermion *x);
+unsigned int qx(do_1mF)(struct Fermion *r_x,
+			int start, int size, int Ls,
+			const struct neighbor *neighbor,
+			const struct Fermion *s_x,
+			const struct SUn *U,
+			const struct Fermion *s_y,
+			void *rb[]);
+unsigned int qx(do_1mFc)(struct Fermion *r_y,
+			 int start, int size, int Ls,
+			 const struct neighbor *neighbor,
+			 const struct Fermion *s_y,
+			 const struct SUn *U,
+			 const struct Fermion *s_x,
+			 void *rb[]);
+unsigned int qx(do_1AcBcFc)(struct Fermion *r_y,
+			    int start, int size, int Ls,
+			    const struct ABiTable *iatable_p,
+			    const struct ABiTable *iatable_m,
+			    const struct ABTable *btable,
+			    const struct neighbor *neighbor,
+			    const struct SUn *U,
+			    const struct Fermion *s_x,
+			    void *rb[]);
+unsigned int qx(do_B1AF)(struct Fermion *r_y,
+			 int start, int size, int Ls,
+			 const struct ABTable *btable,
+			 const struct ABiTable *iatable_p,
+			 const struct ABiTable *iatable_m,
+			 const struct neighbor *neighbor,
+			 const struct SUn *U,
+			 const struct Fermion *s_x,
+			 void *rb[]);
+unsigned int qx(do_1mB1AF)(struct Fermion *r_y,
+			   int start, int size, int Ls,
+			   const struct ABTable *btable,
+			   const struct ABiTable *iatable_p,
+			   const struct ABiTable *iatable_m,
+			   const struct neighbor *neighbor,
+			   const struct Fermion *a_y,
+			   const struct SUn *U,
+			   const struct Fermion *b_x,
+			   void *rb[]);
+unsigned int qx(do_1mB1AF_norm)(struct Fermion *r_y,
+				double *norm,
+				int start, int size, int Ls,
+				const struct ABTable *btable,
+				const struct ABiTable *iatable_p,
+				const struct ABiTable *iatable_m,
+				const struct neighbor *neighbor,
+				const struct Fermion *a_y,
+				const struct SUn *U,
+				const struct Fermion *b_x,
+				void *rb[]);
+void qx(f_copy)(int size, int Ls,
+		struct Fermion *dst, 
+		const struct Fermion *src);
+unsigned int qx(f_add3)(int size, int Ls,
+			struct Fermion *r,
+			const struct Fermion *a,
+			double s,
+			const struct Fermion *b);
+unsigned int qx(f_add2)(int size, int Ls,
+			struct Fermion *r,
+			double s,
+			const struct Fermion *b);
+unsigned int qx(f_add2_norm)(int size, int Ls,
+			     struct Fermion *r,
+			     double *norm,
+			     double s,
+			     const struct Fermion *b);
+unsigned int qx(f_add2x)(int size, int Ls,
+			struct Fermion *r,
+			double s,
+			const struct Fermion *b);
+unsigned int qx(f_norm)(int size, int Ls,
+			double *s,
+			const struct Fermion *a);
+/* end of functions for cg */
 /* Timing */
 #define BEGIN_TIMING(s) do { gettimeofday(&((s)->t0), NULL); } while (0)
 #define END_TIMING(s, f, snd, rcv) do { \
@@ -334,6 +433,7 @@ int q(sizeof_neighbor)(int volume);
 int q(sizeof_up_pack)(int volume);
 int q(sizeof_down_pack)(int volume);
 int q(sizeof_ABTable)(int Ls);
+int q(sizeof_ABiTable)(int Ls);
 int qx(sizeof_fermion)(int volume, int Ls);
 int qx(sizeof_projected_fermion)(int volume, int Ls);
 int qx(sizeof_gauge)(int volume);
@@ -356,5 +456,9 @@ void q(fix_neighbor_f_down)(struct neighbor *n, int p, int f_down, int d);
 void q(put_ABTable)(struct ABTable *t,
 		    int i, int ip, int im,
 		    double v, double vp, double vm);
+void q(put_ABiTableZ)(struct ABiTable *t, double z);
+void q(put_ABiTable)(struct ABiTable *t,
+		     int i,
+		     double vp, double sp, double fp);
 
 #endif /* !defined(MARK_B9BA8123_0F1A_40FD_8827_42266FE32F3E) */

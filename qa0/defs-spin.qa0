@@ -19,9 +19,18 @@
   (op qcd-mulh () (Uh) ([reg U] [reg h]))
   (op qcd-unproject ([unproject d g-op]) (q) ([reg Uh])))
 
+(define (sub-unproject g-op d q r V h)
+  (load qcd-fermion () rr ([reg r]))
+  (op qcd-unproject-sub ([unproject d g-op]) (q) ([reg rr] [reg h])))
+
 (define (add-unproject g-op d q r V h)
   (load qcd-fermion () rr ([reg r]))
   (op qcd-unproject-add ([unproject d g-op]) (q) ([reg rr] [reg h])))
+
+(define (sub-unproject-U g-op d q r U h)
+  (op qcd-mulh () (Uh) ([reg U] [reg h]))
+  (load qcd-fermion () rr ([reg r]))
+  (op qcd-unproject-sub ([unproject d g-op]) (q) ([reg rr] [reg Uh])))
 
 (define (add-unproject-U g-op d q r U h)
   (op qcd-mulh () (Uh) ([reg U] [reg h]))
@@ -38,11 +47,23 @@
   (op qcd-mulh-conj () (Uh) ([reg U] [reg h]))
   (op qcd-unproject ([unproject d g-op]) (q) ([reg Uh])))
 
+(define (sub-one-x-gamma-U g-op d q r U hh)
+  (op qcd-project ([project d g-op]) (h) ([reg hh]))
+  (op qcd-mulh () (Uh) ([reg U] [reg h]))
+  (load qcd-fermion () rr ([reg r]))
+  (op qcd-unproject-sub ([unproject d g-op]) (q) ([reg rr] [reg Uh])))
+
 (define (add-one-x-gamma-U g-op d q r U hh)
   (op qcd-project ([project d g-op]) (h) ([reg hh]))
   (op qcd-mulh () (Uh) ([reg U] [reg h]))
   (load qcd-fermion () rr ([reg r]))
   (op qcd-unproject-add ([unproject d g-op]) (q) ([reg rr] [reg Uh])))
+
+(define (sub-one-x-gamma-U* g-op d q r U hh)
+  (op qcd-project ([project d g-op]) (h) ([reg hh]))
+  (op qcd-mulh-conj () (Uh) ([reg U] [reg h]))
+  (load qcd-fermion () rr ([reg r]))
+  (op qcd-unproject-sub ([unproject d g-op]) (q) ([reg rr] [reg Uh])))
 
 (define (add-one-x-gamma-U* g-op d q r U hh)
   (op qcd-project ([project d g-op]) (h) ([reg hh]))

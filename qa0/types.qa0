@@ -8,7 +8,7 @@
 (verbose [(c99 bgl/xlc dry) "struct SUn;"])
 (verbose [(c99 bgl/xlc dry) "struct neighbor;"])
 (verbose [(c99 bgl/xlc dry) "struct ABTable;"])
-(verbose [(c99 bgl/xlc dry) "struct AiTable;"])
+(verbose [(c99 bgl/xlc dry) "struct ABiTable;"])
 (verbose [(c99 bgl/xlc dry) "struct Fermion;"])
 (verbose [(c99 bgl/xlc dry) "struct ProjectedFermion;"])
 (verbose [(c99 bgl/xlc dry) "struct SUn;"])
@@ -31,8 +31,9 @@
 	       			 [b  "b"  double]
 				 [c  "c"  double]))
 
-(structure AB-Inverse "AiTable" ([z     "z"   double]
-	                         [abc   "abc" abc   ]))  ;; careful with sizeof
+(structure AB-Inverse "ABiTable" ([z     "z"   double]
+	                          [abc   "abc" abc   ]))  ;; careful with sizeof
+
 
 (array d-vector "x_vector" int (const *dim*))
 

@@ -112,6 +112,7 @@
       (complex-mul             #f                 . ,dho-mul        )
       (complex-madd            #f                 . ,dho-madd       )
       (complex-rmadd           dh-rmadd                             )
+      (complex-rmsub           dh-rmsub                             )
       (complex-cmul            #f                 . ,dho-cmul       )
       (complex-cmadd           #f                 . ,dho-cmadd      )
       (complex-add-i           dh-add-i                             )

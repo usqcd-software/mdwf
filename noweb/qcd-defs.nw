@@ -522,7 +522,7 @@ Compute $M[r]\leftarrow (A^\dagger)^{-1} M[x_a]$ at a flavor slice.
                    [reg U] [reg src] [reg buf*])
 \end{verbatim}
 Compute $\phi\leftarrow F\psi$ or $\phi\leftarrow F^\dagger\psi$, advance
-\verb|res|, \verb|nb|, and \verb|src|.
+\verb|res| and \verb|nb|.
 % Description
 
 \begin{center}
@@ -543,12 +543,12 @@ Compute $\phi\leftarrow F\psi$ or $\phi\leftarrow F^\dagger\psi$, advance
 
 \subsection{\texttt{S-compute-add-F}}
 \begin{verbatim}
-(macro S-compute-F [const 'up-sign] [const 'down-sign] [reg phi]
-                   [reg l-s] [reg s-line] [reg nb]
-                   [reg U] [reg src] [reg buf*])
+(macro S-compute-add-F [const 'up-sign] [const 'down-sign] [reg phi]
+                       [reg l-s] [reg s-line] [reg nb]
+                       [reg U] [reg src] [reg buf*])
 \end{verbatim}
 Compute $\phi\leftarrow\phi+F\psi$ or $\phi\leftarrow\phi+F^\dagger\psi$,
-advance \verb|phi|, \verb|nb|, and \verb|src|.
+advance \verb|phi| and \verb|nb|.
 % Description
 
 \begin{center}
@@ -562,6 +562,33 @@ advance \verb|phi|, \verb|nb|, and \verb|src|.
 \verb|nb|& in/out & address of be \verb|neighbor| element\\
 \verb|U|& in & address of the gauge field\\
 \verb|src|& in & address of the local fermion field\\
+\verb|buf*|& in & address of the receive buffers table\\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{\texttt{S-compute-sub-F}}
+\begin{verbatim}
+(macro S-compute-sub-F [const 'up-sign] [const 'down-sign] [reg phi]
+                       [reg l-s] [reg s-line] [reg nb]
+                       [reg src-varphi] [reg U] [reg src-psi] [reg buf*])
+\end{verbatim}
+Compute $\phi\leftarrow\varphi-F\psi$ or $\phi\leftarrow\varphi-F^\dagger\psi$,
+advance \verb|phi|, \verb|src-varphi|, and \verb|nb|.
+% Description
+
+\begin{center}
+\begin{tabular}{|l|c|l|}
+\hline
+\verb|up-sign|& in & \verb|plus| for $F$, \verb|minus| for $F^\dagger$\\
+\verb|down-sign|& in & \verb|minus| for $F$, \verb|plus| for $F^\dagger$\\
+\verb|phi|& in/out & address of the result fermion\\
+\verb|l-s|& in & value of $L_s$\\
+\verb|s-line|& in & value of $L_s\sizeof(\Fermion)$\\
+\verb|nb|& in/out & address of be \verb|neighbor| element\\
+\verb|src-varphi|& in/out & address of the local fermion field\\
+\verb|U|& in & address of the gauge field\\
+\verb|src-psi|& in & address of the local fermion field\\
 \verb|buf*|& in & address of the receive buffers table\\
 \hline
 \end{tabular}

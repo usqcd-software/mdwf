@@ -195,6 +195,15 @@
    (define (q2c-maddf-hi attr* output* input* r* env)
      (q2c-maddx attr* output* input* '*fermion-dim*
 		'high 'fermion r* env))
+   (define (q2c-msubf attr* output* input* r* env)
+     (q2c-msubx attr* output* input* '*fermion-dim*
+		'all 'fermion r* env))
+   (define (q2c-msubf-lo attr* output* input* r* env)
+     (q2c-msubx attr* output* input* '*fermion-dim*
+		'low 'fermion r* env))
+   (define (q2c-msubf-hi attr* output* input* r* env)
+     (q2c-msubx attr* output* input* '*fermion-dim*
+		'high 'fermion r* env))
    (define (q2c-maddh attr* output* input* r* env)
      (q2c-maddx attr* output* input* '*projected-fermion-dim*
 		'all 'projected-fermion r* env))
@@ -377,6 +386,39 @@
 				    (complex-madd c f s alpha a r* env)
 				    (complex-madd c f s beta b r* env))])
 		   (f-loop (+ f 1) r* env))]))])))))
+   (define (q2c-msub-lohi attr* output* input* r* env)
+     (let ([t 'fermion])
+       (define (complex-msub c f s alpha a r* env)
+	 (let-values* ([(s env) (q2c-rename env s t c f)]
+		       [(a env) (q2c-rename env a t c f)]
+		       [(x env) (q2c-rename env (car output*) t c f)])
+	   (values (cons (make-qa0-operation attr*
+			   'complex-rmsub
+			   (list (make-reg x))
+			   (list (make-reg s) alpha (make-reg a)))
+			 r*)
+		   env)))
+       (q2c-check-list output* = 1 "QCD msub-lohi outputs")
+       (q2c-check-list input* = 5 "QCD msub-lohi inputs")
+       (let* ([c-n (ce-lookup-x env 'const '*colors* "Color count")]
+	      [f-n (ce-lookup-x env 'const '*fermion-dim* "Field dimension")]
+	      [f-m (/ f-n 2)]
+	      [s  (car input*)]
+	      [alpha (cadr input*)] [a (caddr input*)]
+	      [beta (cadddr input*)] [b (car (cddddr input*))])
+	 (let c-loop ([c 0] [r* r*] [env env])
+	   (cond
+	    [(= c c-n) (values r* env)]
+	    [else
+	     (let f-loop ([f 0] [r* r*] [env env])
+	       (cond
+		[(= f f-n) (c-loop (+ c 1) r* env)]
+		[else
+		 (let-values*
+		     ([(r* env) (if (< f f-m)
+				    (complex-msub c f s alpha a r* env)
+				    (complex-msub c f s beta b r* env))])
+		   (f-loop (+ f 1) r* env))]))])))))
    (define (q2c-maddx attr* output* input* f-n part t r* env)
      (define (complex-madd c f s alpha a r* env)
        (let-values* ([(s env) (q2c-rename env s t c f)]
@@ -405,6 +447,35 @@
 		   [(= f f-hi) (c-loop (+ c 1) r* env)]
 		   [else (let-values*
 			     ([(r* env) (complex-madd c f s alpha a r* env)])
+			   (f-loop (+ f 1) r* env))]))]))))
+   (define (q2c-msubx attr* output* input* f-n part t r* env)
+     (define (complex-msub c f s alpha a r* env)
+       (let-values* ([(s env) (q2c-rename env s t c f)]
+		     [(a env) (q2c-rename env a t c f)]
+		     [(x env) (q2c-rename env (car output*) t c f)])
+         (values (cons (make-qa0-operation attr*
+	  	         'complex-rmsub
+			 (list (make-reg x))
+			 (list (make-reg a) alpha (make-reg s)))
+		       r*)
+		 env)))
+     (q2c-check-list output* = 1 "QCD msub outputs")
+     (q2c-check-list input* = 3 "QCD msub inputs")
+     (let* ([c-n (ce-lookup-x env 'const '*colors* "Color count")]
+	    [f-n (ce-lookup-x env 'const f-n "Field dimension")]
+	    [f-lo (if (eq? part 'high) (/ f-n 2) 0)]
+	    [f-hi (if (eq? part 'low) (/ f-n 2) f-n)]
+	    [a  (car input*)]
+	    [alpha (cadr input*)]
+	    [s (caddr input*)])
+       (let c-loop ([c 0] [r* r*] [env env])
+	 (cond
+	  [(= c c-n) (values r* env)]
+	  [else (let f-loop ([f f-lo] [r* r*] [env env])
+		  (cond
+		   [(= f f-hi) (c-loop (+ c 1) r* env)]
+		   [else (let-values*
+			     ([(r* env) (complex-msub c f s alpha a r* env)])
 			   (f-loop (+ f 1) r* env))]))]))))
    (define (q2c-mul-g attr* output* input* f-n t op-0 op-k u-get r* env)
      (q2c-check-list output* = 1 "QCD mul outputs")
@@ -621,10 +692,50 @@
 		   [(null? op*) (c-loop (+ c 1) r* env)]
 		   [else (let-values* ([(r* env) (upa c f (car op*) r* env)])
 			   (f-loop (+ f 1) (cdr op*) r* env))]))]))))
+   (define (q2c-unproject-sub attr* output* input* r* env)
+     (q2c-check-list output* = 1 "QCD gamma unproject-sub result")
+     (q2c-check-list input* = 2 "QCD gamma unproject-sub sources")
+     (let* ([kind (attr-lookup attr* 'unproject "qcd-unproject-sub")]
+	    [op* (ce-lookup env `(unproject ,@kind)
+			    "unproj op-table for ~a" kind)]
+	    [c-n (ce-lookup-x env 'const '*colors* "Color count")]
+	    [r-r (car output*)]
+	    [r-a (car input*)]
+	    [r-b (cadr input*)])
+       (define (upa c f op r* env)
+	 (q2c-check-list op = 2 "Unprojection operation")
+	 (let-values* ([(a env) (q2c-rename env r-a 'fermion c f)]
+		       [opcode (car op)] [(component) (cadr op)]
+		       [(b env) (q2c-rename env r-b 'projected-fermion
+					    c component)]
+		       [cmd (sub-cmd opcode)]
+		       [(r env) (q2c-rename env r-r 'fermion c f)])
+	   (values (cons (make-qa0-operation attr*
+                           cmd
+			   (list (make-reg r))
+			   (list (make-reg a) (make-reg b)))
+			 r*)
+		   env)))
+       (define (sub-cmd name)
+	 (case name
+	   [(plus-one)   'complex-sub]
+	   [(minus-one)  'complex-add]
+	   [(plus-i)     'complex-sub-i]
+	   [(minus-i)    'complex-add-i]
+	   [else (error 'qa0 "Unknown unproject operation ~a" name)]))
+       (let c-loop ([c 0] [r* r*] [env env])
+	 (cond
+	  [(= c c-n) (values r* env)]
+	  [else (let f-loop ([f 0] [op* op*] [r* r*] [env env])
+		  (cond
+		   [(null? op*) (c-loop (+ c 1) r* env)]
+		   [else (let-values* ([(r* env) (upa c f (car op*) r* env)])
+			   (f-loop (+ f 1) (cdr op*) r* env))]))]))))
    (define q2c-op*
      `((qcd-project                  . ,q2c-project)
        (qcd-unproject                . ,q2c-unproject)
        (qcd-unproject-add            . ,q2c-unproject-add)
+       (qcd-unproject-sub            . ,q2c-unproject-sub)
        (qcd-mulf                     . ,q2c-mulf)
        (qcd-mulh                     . ,q2c-mulh)
        (qcd-mulf-conj                . ,q2c-mulf-conj)
@@ -640,8 +751,12 @@
        (qcd-maddf                    . ,q2c-maddf)
        (qcd-maddf-lo                 . ,q2c-maddf-lo)
        (qcd-maddf-hi                 . ,q2c-maddf-hi)
+       (qcd-msubf                    . ,q2c-msubf)
+       (qcd-msubf-lo                 . ,q2c-msubf-lo)
+       (qcd-msubf-hi                 . ,q2c-msubf-hi)
        (qcd-maddh                    . ,q2c-maddh)
        (qcd-madd-lohi                . ,q2c-madd-lohi)
+       (qcd-msub-lohi                . ,q2c-msub-lohi)
        (qcd-fnorm-init               . ,q2c-fnorm-init)
        (qcd-fnorm-add                . ,q2c-fnorm-add)
        (qcd-fnorm-fini               . ,q2c-fnorm-fini)
