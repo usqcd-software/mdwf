@@ -240,6 +240,7 @@ state_init(struct Q(State)  *state,
   int x[Q(DIM)];
 #define CHECK(c,m) do { if (c) { msg = (m); goto err; } } while (0)
 
+  printf("begin state_init(%p)\n", state);
   memset(state, 0, sizeof (struct Q(State)));
   state->Ls = lattice[Q(DIM)];
   state->master_p = master_p;
@@ -298,11 +299,13 @@ state_init(struct Q(State)  *state,
 
   state->saved = state->used;
   state->used = 0;
+  printf("end state_init(%p)\n", state);
   return 0;
 #undef CHECK
 err:
   state->saved = state->used;
   state->used = 0;
+  printf("end state_init(%p) FAILED: %s\n", state, msg);
   return msg;
 }
 
@@ -463,13 +466,17 @@ Q(init)(struct Q(State) **state_ptr,
   
   status = patch_boundary(state, lattice, network, node, master_p, local, env);
   CHECK(status != 0, status);
-  
+
+  state->used = state->saved;
+  state->saved = 0;
   q(free)(state, state->v2lx, state->volume * sizeof(int));
   state->v2lx = NULL;
   q(free)(state, state->even.v2lx, state->volume * sizeof (int));
   state->even.v2lx = NULL;
   q(free)(state, state->odd.v2lx, state->volume * sizeof (int));
   state->odd.v2lx = NULL;
+  state->saved = state->used;
+  state->used = 0;
 
   return 0;
 

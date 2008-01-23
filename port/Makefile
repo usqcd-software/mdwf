@@ -94,10 +94,12 @@ endif
 
 dist: clean
 
-$(lib): $(objects)
-	$E AR $@
-	$C$(AR) cr $@ $^
-	$C$(RANLIB) $@
+$(lib): library
+
+library: $(objects)
+	$E AR $(lib)
+	$C$(AR) cr $(lib) $^
+	$C$(RANLIB) $(lib)
 
 $(x.objects): $(LIMPDIR)/%.o: %.c
 	$E CC $<
