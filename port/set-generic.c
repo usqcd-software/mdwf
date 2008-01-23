@@ -36,32 +36,38 @@ Q(set_generic)(struct Q(Parameters) **params_ptr,
   u = c_5[0]*(M_5 + 4) - 1;
   v = -m * u;
   w = b_5[0]*(M_5 + 4) - 1;
-  q(put_ABTable)(params->ATable, 0, Ls-1, 1, w, v, u);
+/* XXX q(put_ABTable)(params->ATable, 0, Ls-1, 1, w, v, u); */
+  q(put_ABTable)(params->ATable, 0, Ls-1, 1, 0.0, 0.0, 0.0);
   for (i = 1; i < Ls - 1; i++) {
     u = c_5[i]*(M_5 + 4) - 1;
     w = b_5[i]*(M_5 + 4) - 1;
-    q(put_ABTable)(params->ATable, i, i-1, i+1, w, u, u);
+/* XXX    q(put_ABTable)(params->ATable, i, i-1, i+1, w, u, u); */
+    q(put_ABTable)(params->ATable, i, i-1, i+1, 0.0, 0.0, 0.0);
   }
   u = c_5[Ls-1]*(M_5 + 4) - 1;
   v = -m * u;
   w = b_5[Ls-1]*(M_5 + 4) - 1;
-  q(put_ABTable)(params->ATable, Ls-1, Ls-2, 0, w, u, v);
+/* XXX  q(put_ABTable)(params->ATable, Ls-1, Ls-2, 0, w, u, v); */
+  q(put_ABTable)(params->ATable, Ls-1, Ls-2, 0, 0.0, 0.0, 0.0);
 
   params->BTable = q(malloc)(state, abs);
   CHECK(params->BTable, "set_generic(): Not enough memory for B table");
   u = c_5[0];
   v = -m * u;
   w = b_5[0];
-  q(put_ABTable)(params->BTable, 0, Ls-1, 1, w, v, u);
+/* XXX  q(put_ABTable)(params->BTable, 0, Ls-1, 1, w, v, u); */
+  q(put_ABTable)(params->BTable, 0, Ls-1, 1, 0.0, 0.0, 0.0);
   for (i = 1; i < Ls - 1; i++) {
     u = c_5[i];
     w = b_5[i];
-    q(put_ABTable)(params->BTable, i, i-1, i+1, w, u, u);
+/* XXX   q(put_ABTable)(params->BTable, i, i-1, i+1, w, u, u); */
+    q(put_ABTable)(params->BTable, i, i-1, i+1, 0.0, 0.0, 0.0);
   }
   u = c_5[Ls-1];
   v = -m * u;
   w = b_5[Ls-1];
-  q(put_ABTable)(params->BTable, Ls-1, Ls-2, 0, w, u, v);
+/* XXX  q(put_ABTable)(params->BTable, Ls-1, Ls-2, 0, w, u, v); */
+  q(put_ABTable)(params->BTable, Ls-1, Ls-2, 0, 0.0, 0.0, 0.0);
 
   /* XXX fill iATable and iBTable */
   iabs = q(sizeof_ABiTable)(Ls);
@@ -73,15 +79,15 @@ Q(set_generic)(struct Q(Parameters) **params_ptr,
   CHECK(params->BipTable, "set_generic(): Not enough memory for 1/B + table");
   params->BimTable = q(malloc)(state, iabs);
   CHECK(params->BimTable, "set_generic(): Not enough memory for 1/B - table");
-  q(put_ABiTableZ)(params->AipTable, 1.0);
-  q(put_ABiTableZ)(params->AimTable, 1.0);
-  q(put_ABiTableZ)(params->BipTable, 1.0);
-  q(put_ABiTableZ)(params->BimTable, 1.0);
+  q(put_ABiTableZ)(params->AipTable, 0.0);
+  q(put_ABiTableZ)(params->AimTable, 0.0);
+  q(put_ABiTableZ)(params->BipTable, 0.0);
+  q(put_ABiTableZ)(params->BimTable, 0.0);
   for (i = 1; i < Ls; i++) {
-      q(put_ABiTable)(params->AipTable, i, 1.0, 1.0, 1.0);
-      q(put_ABiTable)(params->AimTable, i, 1.0, 1.0, 1.0);
-      q(put_ABiTable)(params->BipTable, i, 1.0, 1.0, 1.0);
-      q(put_ABiTable)(params->BimTable, i, 1.0, 1.0, 1.0);
+      q(put_ABiTable)(params->AipTable, i,  0.0,  0.0, 0.0);
+      q(put_ABiTable)(params->AimTable, i,  0.0,  0.0, 0.0);
+      q(put_ABiTable)(params->BipTable, i,  0.0,  0.0, 0.0);
+      q(put_ABiTable)(params->BimTable, i,  0.0,  0.0, 0.0);
   }  
   /* XXX */
 

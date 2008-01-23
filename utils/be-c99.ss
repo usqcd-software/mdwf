@@ -157,6 +157,8 @@
   (define (extra-undef* env) #t)
   (define machine-c99-32
     (build-ckind-back-end 'c99              ; target-name
+                          4                 ; pointer-size
+                          4                 ; pointer-align
 			  op-emit-table     ; op-emit-table
 			  op-type-table     ; op-type-table
 			  load-table        ; ld-type-table

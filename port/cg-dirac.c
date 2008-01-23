@@ -463,15 +463,18 @@ qx(cg_MxM)(struct Q(State) *state,
 	   flops, sent, received);
     *flops += qx(f_add3)(x_size, Ls, r_x, varphi_x, -1.0, p_x);
     *flops += qx(f_norm)(x_size, Ls, &rho, r_x);
+    /* XXX */ rho = 1.0;
     qx(f_copy)(x_size, Ls, p_x, r_x);
     
     for (k = 0; rho > epsilon && k < max_iter; k++) {
 	qx(M_norm)(state, xy, yx, params, z_x, &zz, U, p_x, t1_y,
 		   flops, sent, received);
+	/* XXX */ zz = 1.0;
 	qx(Mx)(state, xy, yx, params, q_x, U, z_x, t0_x, t1_y,
 	       flops, sent, received);
 	alpha = rho / zz;
 	*flops += qx(f_add2_norm)(x_size, Ls, r_x, &gamma, -alpha, q_x);
+	/* XXX */ gamma = 1.0;
 	*flops += qx(f_add2)(x_size, Ls, xi_x, alpha, p_x);
 	if (gamma < epsilon)
 	    break;
@@ -500,6 +503,7 @@ QX(DDW_CG)(struct QX(Fermion) *result,
     long long received = 0;
     void *ptr;
     size_t ptr_size;
+    void *temps;
     struct Fermion *t1_o;
     struct Fermion *t2_e;  /* also z_e */
     struct Fermion *phi_e; /* also q_e */
@@ -521,15 +525,23 @@ QX(DDW_CG)(struct QX(Fermion) *result,
 
     /* allocate locals */
     ptr = q(allocate_eo)(state, &ptr_size,
-			 0, /* XXX first local */
+			 &temps, /* first local */
 			 0, /* no header */
-			 0, /* XXX evens */
-			 0, /* XXX odds */
+			 7, /* evens */
+			 1, /* odds */
 			 sizeof (REAL));
     if (ptr == 0) {
 	return q(set_error)(state, 0, "DDWF_CG(): not enough memory");
     }
-    /* XXX setup other locals from ?? */
+    /* setup other locals from temps */
+    t1_o     = temps;
+    t2_e     = temps = q(step_odd)(state, temps, sizeof (REAL));
+    phi_e    = temps = q(step_even)(state, temps, sizeof (REAL));
+    varphi_e = temps = q(step_even)(state, temps, sizeof (REAL));
+    xi_e     = temps = q(step_even)(state, temps, sizeof (REAL));
+    r_e      = temps = q(step_even)(state, temps, sizeof (REAL));
+    p_e      = temps = q(step_even)(state, temps, sizeof (REAL));
+    t3_e     = temps = q(step_even)(state, temps, sizeof (REAL));
     
     BEGIN_TIMING(state);
     /*  compute rhs for MxM */

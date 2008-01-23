@@ -1,4 +1,4 @@
-(module be-dry
+(module be-c99-64
 	mzscheme
   (require "common.ss")
   (require "ast.ss")
@@ -11,7 +11,7 @@
   (require "verbose.ss")
   (require "be-ckind.ss")
 
-  (provide machine-dry)
+  (provide machine-c99-64)
 
   (define op-type-table
     '((complex-add               complex-double)
@@ -110,18 +110,16 @@
       (complex-float     complex-double)
       (complex-double    complex-double)))
   (define (emit-load level type output addr* env f)
-    (let ([value (case type
-		   [(int) "0"]
-		   [(pointer) "(void *)0"]
-		   [(float double)   "0.0"]
-		   [(complex-float complex-double) "0.0"]
-		   [else (error 'be-dry "emit-load type=~a, addr*=~a"
-				type addr*)])])
-      (do-emit level "~a = ~a;"
-	       (preemit-output output env)
-	       value))
+    (do-emit level "~a = *(~a *)(~a);"
+	     (preemit-output output env)
+	     (ce-lookup-x env 'name-of type "C99 name of type ~a" type)
+	     (preemit-addr* addr* env))
     f)
   (define (emit-store level type addr* value env f)
+    (do-emit level "*(~a *)(~a) = ~a;"
+	     (ce-lookup-x env 'name-of type "C99 name of type ~a" type)
+	     (preemit-addr* addr* env)
+	     (preemit-input value env))
     f)
   (define (collect-output* code* env)
     (define (add-output* output* type* env)
@@ -152,22 +150,22 @@
 		; if
 		(lambda (env var) env)
 		env))
-  (define (c99-back-end ast env) (values ast env))
+  (define (c99-64-back-end ast env) (values ast env))
   (define (extra-env env) env)
   (define (extra-decl* arg-name* arg-type* arg-c-name* arg-c-type* env) #t)
   (define (extra-def* env) #t)
   (define (extra-undef* env) #t)
-  (define machine-dry
-    (build-ckind-back-end 'dry              ; target-name
-                          4                 ; pointer-size
-                          4                 ; pointer-align
+  (define machine-c99-64
+    (build-ckind-back-end 'c99-64           ; target-name
+                          8                 ; pointer-size
+                          8                 ; pointer-align
 			  op-emit-table     ; op-emit-table
 			  op-type-table     ; op-type-table
 			  load-table        ; ld-type-table
 			  emit-load         ; emit-load
 			  emit-store        ; emit-store
 			  collect-output*   ; collect-outputs
-			  c99-back-end      ; the-back-end
+			  c99-64-back-end   ; the-back-end
 			  extra-env         ; extra-env
 			  extra-decl*       ; extra-decl*
 			  extra-def*        ; extra-def*

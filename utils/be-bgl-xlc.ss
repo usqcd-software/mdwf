@@ -266,6 +266,8 @@
     (do-undefine 'one "gONE"))
   (define machine-bgl/xlc
     (build-ckind-back-end 'bgl/xlc          ; target-name
+                          4                 ; pointer-size
+                          4                 ; pointer-align
 			  op-emit-table     ; op-emit-table
 			  op-type-table     ; op-type-table
 			  load-table        ; ld-type-table

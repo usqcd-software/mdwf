@@ -47,6 +47,8 @@
   (define (preemit-param p)
     (format "a_~a" p))
   (define (build-ckind-back-end target-name
+				pointer-size
+				pointer-align
 				op-emit-table
 				op-type-table
 				ld-type-table
@@ -238,7 +240,7 @@
 					    env))))
 	(do-emit 0 "}~%")))
     (define (machine-ckind env)
-      (let* ([env (machine-*-32 env op-type-table ld-type-table)]
+      (let* ([env (machine-*-* pointer-size pointer-align env op-type-table ld-type-table)]
 	     [env (extra-env env)]
 	     [env (ce-bind env 'back-end the-back-end)]
 	     [env (ce-bind env 'be-emit ckind-emit)])

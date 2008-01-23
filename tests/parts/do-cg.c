@@ -36,6 +36,7 @@ do_xxx(struct QOP_MDWF_State *state, struct QOP_MDWF_Parameters *params,
     max_iter = 100;
     eps = 1e-4;
     do {
+	zprint("%s: loop max_iter=%d, eps=%g", name, max_iter, eps);
 	start_perf();
 	QOP_MDWF_DDW_CG(R, &out_iter, &out_eps,
 			params, guess, U, rhs, max_iter, eps);
@@ -47,7 +48,7 @@ do_xxx(struct QOP_MDWF_State *state, struct QOP_MDWF_Parameters *params,
     QOP_MDWF_free_fermion(&guess);
     QOP_MDWF_free_fermion(&rhs);
     QOP_MDWF_free_gauge(&U);
-    zprint("%s: end max_iter=%d, esp=%g\n", max_iter/2, eps * 2.0);
+    zprint("%s: end max_iter=%d, esp=%g", name, max_iter/2, eps * 2.0);
     return 0;
 
 no_R:

@@ -16,6 +16,6 @@
 	[b-x       pointer   "b_x"     "const struct Fermion *"   ])
   (loop () (i [const 0] [reg size])
     (macro S-compute-A+B [reg res-x] [reg l-s]
-                         [reg a-table] [reg src-x]
-                         [reg b-table] [reg src-y])))
+                         [reg a-table] [reg a-x]
+                         [reg b-table] [reg b-x])))
 

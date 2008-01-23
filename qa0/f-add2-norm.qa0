@@ -17,10 +17,10 @@
        (load qcd-fermion () vA ([reg result]))
        (load qcd-fermion () vB ([reg B]))
        (op qcd-maddf () (v) ([reg vA] [reg scale] [reg vB]))
-       (op qcd-fnorm-add () (res) ([reg res] [reg v]))
+       (op qcd-fnorm-add () (norm) ([reg norm] [reg v]))
        (store qcd-fermion () ([reg result]) [reg v])
        (op pointer-add () (B) ([reg B] [const (size-of Fermion)]))
        (op pointer-add () (result) ([reg result] [const (size-of Fermion)]))))
-   (op qcd-fnorm-fini () (v) ([reg res]))
+   (op qcd-fnorm-fini () (v) ([reg norm]))
    (store double () ([reg ptr-norm]) [reg v]))
 

@@ -5,7 +5,7 @@
            emit-back-end
 	   be-out-type*
 	   be-load-type
-	   machine-*-32
+	   machine-*-*
 	   C-collect-args)
   (define (complex->back-end ast env)
     ((ce-lookup env 'back-end "Back end transformer not found") ast env))
@@ -23,9 +23,10 @@
      [else (let* ([env (ce-bind-x env 'back-end (car arg-name*)
 				  (list (new-var) (car arg-type*)))])
 	     (C-collect-args (cdr arg-name*) (cdr arg-type*) new-var env))]))
-  (define (machine-*-32 env op* load*)
+  (define (machine-*-* pointer-size pointer-align env op* load*)
     (let* ([env (ce-add-type env 'int            "int"              4  4)]
-	   [env (ce-add-type env 'pointer        "unsigned char *"  4  4)]
+	   [env (ce-add-type env 'pointer        "unsigned char *"
+			     pointer-size  pointer-align)]
 	   [env (ce-add-type env 'float          "float"            4  4)]
 	   [env (ce-add-type env 'double         "double"           8  8)]
 	   [env (ce-add-type env 'vector-float   "vector float"     8  8)]

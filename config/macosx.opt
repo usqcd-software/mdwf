@@ -2,6 +2,6 @@
 #
 QMP_TOP    = $$HOME/QDP/qmp-2.1.7
 CC         = gcc
-CFLAGS     = -Wall -O2 -I$(TOP) $(QMP_CFLAGS)
+CFLAGS     = -Wall -O2 $(QMP_CFLAGS)
 AR         = ar
 RANLIB     = ranlib
