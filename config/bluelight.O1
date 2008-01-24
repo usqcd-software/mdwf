@@ -2,6 +2,6 @@
 #
 QMP_TOP    = /opt/SciDAC/bgl/qmp-2.1.7
 CC         = blrts_xlc
-CFLAGS     = -O -I$(TOP) $(QMP_CFLAGS)
+CFLAGS     = -O $(TOP:%=-I%) $(QMP_CFLAGS)
 AR         = xar
 RANLIB     = xranlib
