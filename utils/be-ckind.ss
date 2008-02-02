@@ -10,6 +10,7 @@
   (require "verbose.ss")
 
   (provide build-ckind-back-end
+	   empty-postparam*
 	   do-emit
 	   preemit-addr*
 	   preemit-input
@@ -17,6 +18,7 @@
 	   preemit-param
 	   ck-new-var)
 
+  (define (empty-postparam* arg-name* type* arg-c-name* c-type* env) #t)
   (define *var-count* 0)
   (define (ck-new-var)
     (let ([x (gen-reg 'g *var-count*)])
@@ -59,6 +61,7 @@
 				extra-env
 				extra-decl*
 				extra-def*
+				extra-postparam*
 				extra-undef*)
     (define (ckind-emit qa0 env)
       (variant-case qa0
@@ -225,11 +228,10 @@
 	(do-emit 0 "{")
 	(if cf? (do-emit 1 "int ~a = 0;" counter))
 	(emit-variables env)
-	(extra-decl* arg-name* arg-type*
-		     arg-c-name* arg-c-type*
-		     env)
+	(extra-decl* arg-name* arg-type* arg-c-name* arg-c-type* env)
 	(emit-param* arg-name* arg-c-name* env)
 	(extra-def* env)
+	(extra-postparam* arg-name* arg-type* arg-c-name* arg-c-type* env)
 	(emit-code* 1 code* env cf? counter 0)
 	(extra-undef* env)
 	(if cf? (do-emit 1 "return ~a;" counter))

@@ -214,41 +214,13 @@
 	   [env (ce-add-type env 'dh-float    "float _Complex"   8  8)])
       env))
   (define (extra-decl* arg-name* arg-type* arg-c-name* arg-c-type* env)
-    (define (zo-var*)
-      (define (do-constant id init)
-	(ce-search-x env 'bgl/xlc id
-		     (lambda (v) (do-emit 1 "const double _Complex ~a = ~a;"
-					  v init))
-		     (lambda () #t)))
-      (do-constant 'zero "__cmplx(0.0, 0.0)")
-      (do-constant 'one  "__cmplx(1.0, 1.0)"))
-    (define (emit-disjoint*)
-      (do-emit 0 "")
-      (let loop-a ([a* arg-name*] [t* arg-type*] [c* arg-c-name*])
-	(cond
-	 [(null? a*)]
-	 [(not (eq? 'pointer (car t*))) (loop-a (cdr a*) (cdr t*) (cdr c*))]
-	 [else
-	  (let loop-b ([b* (cdr a*)] [s* (cdr t*)] [d* (cdr c*)])
-	    (cond
-	     [(null? b*) (loop-a (cdr a*) (cdr t*) (cdr c*))]
-	     [(not (eq? 'pointer (car s*))) (loop-b (cdr b*) (cdr s*) (cdr d*))]
-	     [else (do-emit 0 "#pragma disjoint(*~a,*~a)"
-			    (preemit-param (car c*))
-			    (preemit-param (car d*)))
-		   (loop-b (cdr b*) (cdr s*) (cdr d*))]))])))
-    (define (emit-align*)
-      (do-emit 0 "")
-      (let loop-a ([a* arg-name*] [t* arg-type*] [c* arg-c-name*])
-	(cond
-	 [(null? a*)]
-	 [(not (eq? 'pointer (car t*))) (loop-a (cdr a*) (cdr t*) (cdr c*))]
-	 [else (do-emit 1 "__alignx(16, ~a);" (preemit-param (car c*)))
-	       (loop-a (cdr a*) (cdr t*) (cdr c*))])))
-    ;;;
-    (zo-var*)
-    (emit-disjoint*)
-    (emit-align*))
+    (define (do-constant id init)
+      (ce-search-x env 'bgl/xlc id
+		   (lambda (v) (do-emit 1 "const double _Complex ~a = ~a;"
+					v init))
+		   (lambda () #t)))
+    (do-constant 'zero "__cmplx(0.0, 0.0)")
+    (do-constant 'one  "__cmplx(1.0, 1.0)"))
 
   (define (zo-define* env)
     (define (do-define id name def)
@@ -257,6 +229,40 @@
  		   (lambda () #t)))
      (do-define 'zero "gZERO" "(~a)")
      (do-define 'one "gONE" "(__cimag(~a))"))
+  (define (extra-postparam* arg-name* arg-type* arg-c-name* arg-c-type* env)
+    (define (emit-disjoint*)
+      (do-emit 0 "")
+      (let loop-a ([a* arg-name*] [t* arg-type*])
+	(cond
+	 [(null? a*)]
+	 [(not (eq? 'pointer (car t*))) (loop-a (cdr a*) (cdr t*))]
+	 [else
+	  (let ([rn (car (ce-lookup-x env 'back-end (car a*)
+				      "bgl/xlc name for ~a" (car a*)))])
+	    (let loop-b ([b* (cdr a*)] [s* (cdr t*)])
+	      (cond
+	       [(null? b*) (loop-a (cdr a*) (cdr t*))]
+	       [(not (eq? 'pointer (car s*))) (loop-b (cdr b*) (cdr s*))]
+	       [else (do-emit 0 "#pragma disjoint(*~a,*~a)"
+			      rn
+			      (car (ce-lookup-x env 'back-end (car b*)
+						"bgl/xlc name for ~a"
+						(car b*))))
+		     (loop-b (cdr b*) (cdr s*))])))])))
+    (define (emit-align*)
+      (do-emit 0 "")
+      (let loop-a ([a* arg-name*] [t* arg-type*])
+	(cond
+	 [(null? a*) (do-emit 0 "")]
+	 [(not (eq? 'pointer (car t*))) (loop-a (cdr a*) (cdr t*))]
+	 [else
+	  (let ([rn (car (ce-lookup-x env 'back-end (car a*)
+				      "bgl/xlc name for ~a" (car a*)))])
+	    (do-emit 1 "__alignx(16, ~a);" rn)
+	    (loop-a (cdr a*) (cdr t*)))])))
+    ;;;
+    (emit-disjoint*)
+    (emit-align*))
   (define (zo-undefine* env)
     (define (do-undefine id name)
       (ce-search-x env 'bgl/xlc id
@@ -278,4 +284,5 @@
 			  extra-env         ; extra-env
 			  extra-decl*       ; extra-decl*
 			  zo-define*        ; extra-def*
+			  extra-postparam*  ; extra-postparam*
 			  zo-undefine*)))   ; extra-undef*

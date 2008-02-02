@@ -169,4 +169,5 @@
 			  extra-env         ; extra-env
 			  extra-decl*       ; extra-decl*
 			  extra-def*        ; extra-def*
+			  empty-postparam*  ; extra-postparam*
 			  extra-undef*)))   ; extra-undef*
