@@ -7,3 +7,4 @@ Next big version:
 [done] backport improvements from BGL/XLC to C99.
 - make loads and stores return computed address (optional, so the current syntax
   still works).
+- convert complex to real to prepare for vector archs.

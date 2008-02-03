@@ -41,6 +41,8 @@
       (double-add                double)
       (double-div                double)
       (double-madd               double)
+      (double-msub               double)
+      (double-zero               double)
       (double-move               double)
       (double-mul                double)
       (double-neg                double)
@@ -58,6 +60,7 @@
       (pointer-move              pointer)
       (nop                       )))
   (define op-emit-table
+    ;; op i-count fmt flop-count
     `((pointer-move            1 "$0 = %0"                                0)
       (pointer-add             2 "$0 = %0 + (%1)"                         0)
       (int-move                1 "$0 = %0"                                0)
@@ -71,6 +74,7 @@
       (int-or                  2 "$0 = %0 | (%1)"                         0)
       (int-xor                 2 "$0 = %0 ^ (%1)"                         0)
       (int-not                 1 "$0 = !(%0)"                             0)
+      (double-zero             0 "$0 = 0.0"                               0)
       (double-move             1 "$0 = %0"                                0)
       (double-neg              1 "$0 = - (%0)"                            1)
       (double-add              2 "$0 = %0 + (%1)"                         1)
@@ -78,6 +82,7 @@
       (double-div              2 "$0 = %0 / (%1)"                         1)
       (double-mul              2 "$0 = %0 * (%1)"                         1)
       (double-madd             3 "$0 = %0 + (%1) * (%2)"                  2)
+      (double-msub             3 "$0 = %0 - (%1) * (%2)"                  2)
       (complex-move            1 "$0 = %0"                                0)
       (complex                 2 "$0 = %0 + I * (%1)"                     0)
       (complex-real            1 "$0 = creal(%0)"                         0)
