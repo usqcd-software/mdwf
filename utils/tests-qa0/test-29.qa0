@@ -1,4 +1,0 @@
-(alias foo int)
-(procedure bar ([stem "bar"] [return value int "int"])
-      ([a pointer "a" "void *"])
-  (load foo () value ([reg a])))

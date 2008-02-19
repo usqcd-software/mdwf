@@ -1,9 +1,0 @@
-(constant foo (const 1))
-(constant bar (const (+ foo 2)))
-
-(procedure test ([stem "test"])
-   ([v pointer "v" "int *"])
-  (op int-move () (x) ([const 42]))
-  (repeat ([xxx (int-add int-mul int-sub)])
-    (op xxx () (x) ([reg x] [const (+ bar 7)])))
-  (store int () ([reg v]) [reg x]))

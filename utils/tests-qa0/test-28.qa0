@@ -1,7 +1,0 @@
-(alias foo int)
-(procedure bar ([stem "bar"])
-      ([a pointer "a" "void *"]
-       [b pointer "b" "void *"])
-  (load COMPLEX () value ([reg a]))
-  (op complex-real () (v) ([reg value]))
-  (store REAL () ([reg b]) [reg v]))

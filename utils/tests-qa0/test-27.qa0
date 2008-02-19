@@ -1,4 +1,0 @@
-(procedure p-x ([stem "sizeof_SUn"]
-	        [return full-size int "int"])
-               ([volume  int     "volume" "int"            ])
-   (op int-mul () (full-size) ([reg volume] [const (size-of SU-n)])))

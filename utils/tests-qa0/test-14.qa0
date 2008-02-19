@@ -1,4 +1,0 @@
-(repeat ([x (const 0) (const 4)] [y (a b c)])
-  (procedure repeats ([stem "rep" x y] [return zz int "int"])
-              ()
-   (op int-move () (zz) ([const x]))))
