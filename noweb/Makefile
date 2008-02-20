@@ -10,11 +10,9 @@ DVIPDFM  = dvipdfm
 #TFLAGS   = -L'\#line %L "%F"%N'
 
 noweb = mdwf.nw \
-        qa0.nw \
         qcd-defs.nw
 
-sources = ../port/qop-mdwf3.h \
-          ../utils/basis.ss
+sources = ../port/qop-mdwf3.h
 
 f.tex = $(noweb:%.nw=%.tex)
 f.dvi = $(noweb:%.nw=%.dvi)

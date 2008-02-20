@@ -20,12 +20,17 @@ tests = operator.c \
 x.tests = heater.c \
           localheat.c
 
+optests = op-dummy.c
+
+opdriver = optest.c
+
 objects = $(tests:%.c=%.o)
 x.objects = $(x.tests:%.c=%-d.o) $(x.tests:%.c=%-f.o)
+op.objects = $(optests:%.c=%.o) $(opdriver:%.c = %.o)
 
 programs = $(objects:%.o=%) $(x.objects:%.o=%)
 
-.PHONY: all clean realclean dist
+.PHONY: all clean realclean dist optests
 
 ifeq ("$V", "0")
    E=@echo "  "
@@ -35,7 +40,9 @@ else
    C=
 endif
 
-all: $(programs)
+all: $(programs) optests
+
+optests: $(optests:%.c=%)
 
 clean:
 	$E RM tests/objects
@@ -51,20 +58,30 @@ $(programs): %: %.o
               -l$(library) $(QMP_LIBS)
 
 $(objects): %.o: %.c
-	$E CC $<
+	$E CC $@
 	$C$(CC) $(TCFLAGS) -I$(TOP)/port -c -o $@ $<
 
 $(x.tests:%.c=%-f.o): %-f.o: %.c
-	$E CC-f $<
+	$E CC-f $@
 	$C$(CC) $(TCFLAGS) -DQOP_MDWF_DEFAULT_PRECISION=\'F\' -c -o $@ $<
 
 $(x.tests:%.c=%-d.o): %-d.o: %.c
-	$E CC-d $<
+	$E CC-d $@
 	$C$(CC) $(TCFLAGS) -DQOP_MDWF_DEFAULT_PRECISION=\'D\' -c -o $@ $<
 
+$(optests:%.c=%.o) $(opdriver:%.c=%.o): %.o: %.c
+	$E CC-d $@
+	$C$(CC) $(TCFLAGS) -DQOP_MDWF_DEFAULT_PRECISION=\'D\' -c -o $@ $<
+
+$(optests:%.c=%): %: %.o
+	$E CC $@
+	$C$(CC) $(TCFLAGS) $(QMP_LDFLAGS) -L$(TOP)/$(LIMPDIR) -o $@ $^ \
+              -l$(library) $(QMP_LIBS)
+
+$(optests:%.c=%): $(opdriver:%.c=%.o)
 
 $(x.objects) $(objects): $(TOP)/port/mdwf.h $(TOP)/$(LIMPDIR)/qop-mdwf3.h
 
 conjgrad.o: clear-mdwf.h do-cg.c
 
-$(programs): $(TOP)/$(LIMPDIR)/lib$(library).a
+$(optests:%.c=%) $(programs): $(TOP)/$(LIMPDIR)/lib$(library).a

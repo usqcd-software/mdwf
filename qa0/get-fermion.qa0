@@ -15,12 +15,12 @@
 ;;  ...
 ;;  [d-1].[nC-1][nF-1].im
 ;;
-(procedure put-fermion ([stem "put_fermion"]
+(procedure get-fermion ([stem "get_fermion"]
                         prec&color)
-           ([data      pointer "r"         "struct Fermion *"       ]
+           ([data      pointer "r"         "double *"               ]
+            [F         pointer "F"         "const struct Fermion *" ]
             [index     int     "p"         "int"                    ]
-            [l-s       int     "Ls"        "int"                    ]
-            [F         pointer "F"         "const double *"         ])
+            [l-s       int     "Ls"        "int"                    ])
 
    (op int-mul () (x) ([reg index] [const (size-of Fermion)]))
    (op int-mul () (x1) ([reg x] [reg l-s]))
@@ -34,7 +34,7 @@
          (op complex-real () (v-re) ([reg v]))
          (op complex-imag () (v-im) ([reg v]))
          (store double () ([reg data]) [reg v-re])
- 	  (store double () ([reg data] [const (size-of double)]) [reg v-im])
+         (store double () ([reg data] [const (size-of double)]) [reg v-im])
          (op pointer-add () (data) ([reg data] [const (* 2 (size-of double))]))
        ))
       (op pointer-add () (ptr) ([reg ptr] [const (size-of Fermion)]))))

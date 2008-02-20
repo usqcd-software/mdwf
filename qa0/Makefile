@@ -4,7 +4,7 @@ CONFIG  = macosx
 TARGETS = c99 c99-64 cee cee-64 bgl/xlc dry
 TARGET  =
 DEST    =
-QA0     = $(TOP)/utils/qa0
+QA0     = qa0
 
 include $(TOP)/config/$(CONFIG)
 
