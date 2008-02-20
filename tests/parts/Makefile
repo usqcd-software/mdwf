@@ -85,3 +85,5 @@ $(x.objects) $(objects): $(TOP)/port/mdwf.h $(TOP)/$(LIMPDIR)/qop-mdwf3.h
 conjgrad.o: clear-mdwf.h do-cg.c
 
 $(optests:%.c=%) $(programs): $(TOP)/$(LIMPDIR)/lib$(library).a
+
+$(optests:%.c=%.o) $(opdriver:%.c=%.o): optest.h

@@ -82,7 +82,7 @@ getsub(int lo[4], int hi[4], const int node[4], void *env)
   }
 }
 
-static void
+void
 getv(int v[4], int def, int dim, const int d[])
 {
   int i;

@@ -1,25 +1,19 @@
 #include <qop-mdwf3.h>
-
-extern void xprint(const char *fmt, ...);
-
-extern struct QOP_MDWF_State *state;
-extern struct QOP_MDWF_Parameters *params;
-extern struct QOP_MDWF_Fermion *result;
-extern struct QOP_MDWF_Fermion *fermion;
-extern struct QOP_MDWF_Gauge *gauge;
-
-extern int fermion_pos[5];
-extern int fermion_color;
-extern int fermion_dirac;
-extern int fermion_reim;
+#include "optest.h"
 
 char *op_name = "Dummy operator";
 
-void operator(void)
+
+void
+setup_bc(void)
 {
-    return;
+    int i;
+
+    for (i = 0; i < lattice[4]; i++) {
+	b5[i] = 1.0 / (i + 2.0);
+	c5[i] = 1.0 / (lattice[4] + 1.0 - i * i);
+    }
 }
-	      
 
 double
 read_gauge(int dir,
@@ -60,7 +54,12 @@ write_fermion(const int pos[5],
 	      void *env)
 {
     if (value != 0.0)
-	xprint("fermion[%d,%d,%d,%d;%d][%d,%d].%d = %g",
+	xprint("   fermion[%d,%d,%d,%d;%d][%d,%d].%d = %g",
 	       pos[0], pos[1], pos[2], pos[3], pos[4],
 	       c, d, re_im, value);
+}
+
+int operator(void)
+{
+    return 0;
 }
