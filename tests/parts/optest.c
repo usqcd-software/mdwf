@@ -23,6 +23,8 @@ int primary;
 int lattice[5];
 int network[4];
 int node[4];
+double M_5;
+double m;
 double b5[128];
 double c5[128];
 
@@ -116,25 +118,27 @@ main(int argc, char *argv[])
 
     self = QMP_get_node_number();
     primary = QMP_is_primary_node();
-    if (argc != 18) {
-	zprint("18 arguments expected, found %d", argc);
-	zprint("Usage: operator Nx Ny Nz Nt"
+    if (argc != 20) {
+	zprint("20 arguments expected, found %d", argc);
+	zprint("Usage: operator M_5 m Nx Ny Nz Nt"
 	       "  Lx Ly Lz Lt Ls"
 	       "  x y z t s c d re/im");
 	QMP_finalize_msg_passing();
 	return 1;
     }
     
+    M_5 = atof(argv[1]);
+    m = atof(argv[2]);
     for (i = 0; i < 4; i++) {
-	network[i] = atoi(argv[i+1]);
-	lattice[i] = atoi(argv[i+5]);
-	fermion_pos[i] = atoi(argv[i+10]);
+	network[i] = atoi(argv[i+3]);
+	lattice[i] = atoi(argv[i+7]);
+	fermion_pos[i] = atoi(argv[i+12]);
     }
-    lattice[4] = atoi(argv[9]);
-    fermion_pos[4] = atoi(argv[14]);
-    fermion_color = atoi(argv[15]);
-    fermion_dirac = atoi(argv[16]);
-    fermion_reim = atoi(argv[17]);
+    lattice[4] = atoi(argv[11]);
+    fermion_pos[4] = atoi(argv[16]);
+    fermion_color = atoi(argv[17]);
+    fermion_dirac = atoi(argv[18]);
+    fermion_reim = atoi(argv[19]);
 
     setup_bc();
 
@@ -153,6 +157,8 @@ main(int argc, char *argv[])
 	   fermion_dirac,
 	   fermion_reim);
 
+    zprint("M_5 = %.6f", M_5);
+    zprint("m   = %.6f", m);
     for (i = 0; i < lattice[4]; i++) {
 	zprint("  (b,c)[%2d] = %10.7f %10.7f",
 	       i, b5[i], c5[i]);
@@ -188,7 +194,7 @@ main(int argc, char *argv[])
     xprint("initial fermion dump end");
 
 
-    if (QOP_MDWF_set_generic(&params, state, b5, c5, .0625, -7.25)) {
+    if (QOP_MDWF_set_generic(&params, state, b5, c5, M_5, m)) {
 	zprint("MDW_set_generic() failed");
 	goto no_params;
     }

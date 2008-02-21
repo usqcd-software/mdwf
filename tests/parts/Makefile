@@ -21,7 +21,8 @@ x.tests = heater.c \
           localheat.c
 
 optests = op-dummy.c \
-          op-ddw.c
+          op-ddw.c \
+          op-a.c
 
 opdriver = optest.c
 
