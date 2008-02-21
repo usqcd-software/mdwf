@@ -20,7 +20,8 @@ tests = operator.c \
 x.tests = heater.c \
           localheat.c
 
-optests = op-dummy.c
+optests = op-dummy.c \
+          op-ddw.c
 
 opdriver = optest.c
 
