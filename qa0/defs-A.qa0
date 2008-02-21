@@ -1,6 +1,7 @@
 (verbose [(c99 bgl/xlc) "/* $Id$ */"])
 ;;; Pieces for A etc.
 (define (get-A&addr f-c addr-l addr-h v-c v-l v-h t x)
+  (op nop (get-A&addr) () ())
   (load int () hi-index ([reg t] [const (offset-of AB-Table hi-index)]))
   (load int () lo-index ([reg t] [const (offset-of AB-Table lo-index)]))
   (load double () v-c ([reg t] [const (offset-of AB-Table c-value)]))
@@ -9,18 +10,20 @@
   (op pointer-add () (t) ([reg t] [const (size-of AB-Table)]))
   (op int-mul () (hi-off) ([reg hi-index] [const (size-of Fermion)]))
   (op int-mul () (lo-off) ([reg lo-index] [const (size-of Fermion)]))
-  (op pointer-add () (addr-l) ([reg x] [reg hi-off]))
-  (op pointer-add () (addr-h) ([reg x] [reg lo-off]))
+  (op pointer-add () (addr-l) ([reg x] [reg lo-off]))
+  (op pointer-add () (addr-h) ([reg x] [reg hi-off]))
   (load qcd-fermion () f-c ([reg x]))
   (op pointer-add () (x) ([reg x] [const (size-of Fermion)])))
 
 (define (get-A&x f-c f-l f-h v-c v-l v-h t x)
+  (op nop (get-A&x) () ())
   (macro get-A&addr [reg f-c] [reg a-l] [reg a-h]
                     [reg v-c] [reg v-l] [reg v-h] [reg t] [reg x])
   (load qcd-fermion-hi () f-h ([reg a-h]))
   (load qcd-fermion-lo () f-l ([reg a-l])))
 
 (define (get-A*&x f-c f-l f-h v-c v-l v-h t x)
+  (op nop (get-A*&x) () ())
   (macro get-A&addr [reg f-c] [reg a-l] [reg a-h]
                     [reg v-c] [reg v-l] [reg v-h] [reg t] [reg x])
   (load qcd-fermion-hi () f-h ([reg a-l]))
@@ -28,6 +31,7 @@
 
 ;; compute r = A x in a point, advance r, x and t
 (define (compute-A r t x)
+  (op nop (compute-A) () ())
   (macro get-A&x [reg f-c] [reg f-l] [reg f-h]
                  [reg v-c] [reg v-l] [reg v-h] [reg t] [reg x])
   (op qcd-scalef () (g-c) ([reg v-c] [reg f-c]))
