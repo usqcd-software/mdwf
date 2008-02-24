@@ -23,7 +23,8 @@ x.tests = heater.c \
 optests = op-dummy.c \
           op-ddw.c \
           op-a.c \
-          op-b.c
+          op-b.c \
+          op-f.c
 
 opdriver = optest.c
 
