@@ -2,7 +2,7 @@
 #include "../../port/mdwf.h"
 #include "optest.h"
 
-char *op_name = "Operator A+F";
+char *op_name = "Operator A+F0";
 
 /* Conservative version with contained communications */
 static Up_project up_project[Q(DIM)] = {
@@ -98,12 +98,7 @@ read_gauge(int dir,
 	   int re_im,
 	   void *env)
 {
-    return 2*(re_im + 10. * (dir + 10. *
-			     (a + 10. *
-			      (b + 10. *
-			       (pos[0] + 10. *
-				(pos[1] + 10 *
-				 (pos[2] + 10. * pos[3])))))));
+    return 0.0;
 }
 
 double
@@ -132,7 +127,7 @@ write_fermion(const int pos[5],
 	      void *env)
 {
     if (value != 0.0)
-	xprint("   fermion[%d,%d,%d,%d;%d][%d,%d].%d = %.0f",
+	xprint("   fermion[%d,%d,%d,%d;%d][%d,%d].%d = %g",
 	       pos[0], pos[1], pos[2], pos[3], pos[4],
 	       c, d, re_im, value);
 }

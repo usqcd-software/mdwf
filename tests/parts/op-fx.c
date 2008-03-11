@@ -2,36 +2,36 @@
 #include "../../port/mdwf.h"
 #include "optest.h"
 
-char *op_name = "Operator A+F";
+char *op_name = "Operator conj(A+F)";
 
 /* Conservative version with contained communications */
 static Up_project up_project[Q(DIM)] = {
-  qx(proj_Ucg0plus),
-  qx(proj_Ucg1plus),
-  qx(proj_Ucg2plus),
-  qx(proj_Ucg3plus)
+  qx(proj_Ucg0minus),
+  qx(proj_Ucg1minus),
+  qx(proj_Ucg2minus),
+  qx(proj_Ucg3minus)
 };
 
 static Down_project down_project[Q(DIM)] = {
-  qx(proj_g0minus),
-  qx(proj_g1minus),
-  qx(proj_g2minus),
-  qx(proj_g3minus)
+  qx(proj_g0plus),
+  qx(proj_g1plus),
+  qx(proj_g2plus),
+  qx(proj_g3plus)
 };
 
 static void
-compute_ApF(struct Q(State) *state,
-	    struct eo_lattice *xy,
-	    struct eo_lattice *yx,
-	    const struct Q(Parameters) *params,
-	    struct Fermion *r_x,
-	    const struct SUn *U,
-	    const struct Fermion *s_x,
-	    const struct Fermion *s_y)
+compute_AxpFx(struct Q(State) *state,
+	      struct eo_lattice *xy,
+	      struct eo_lattice *yx,
+	      const struct Q(Parameters) *params,
+	      struct Fermion *r_x,
+	      const struct SUn *U,
+	      const struct Fermion *s_x,
+	      const struct Fermion *s_y)
 {
     int Ls = state->Ls;
     int i;
-
+    
     for (i = 0; i < Q(DIM); i++) {
 	if (xy->send_up_size[i])
 	    (up_project[i])(xy->send_up_buf[i],
@@ -42,22 +42,22 @@ compute_ApF(struct Q(State) *state,
 			      xy->send_down_size[i], Ls,
 			      xy->down_pack[i], s_y);
     }
-
+    
     if (xy->h_valid)
 	QMP_start(xy->handle);
-
+    
     if (xy->body_size)
-	qx(do_ApF)(r_x, 0, xy->body_size, Ls,
-		   params->ATable, xy->body_neighbor,
-		   U, s_x, s_y, NULL);
-
+	qx(do_AxpFx)(r_x, 0, xy->body_size, Ls,
+		     params->ATable, xy->body_neighbor,
+		     U, s_x, s_y, NULL);
+    
     if (xy->h_valid)
 	QMP_wait(xy->handle);
     
     if (xy->face_size)
-	qx(do_ApF)(r_x, xy->body_size, xy->face_size, Ls,
-		   params->ATable, xy->body_neighbor,
-		   U, s_x, s_y, xy->receive_buf);
+	qx(do_AxpFx)(r_x, xy->body_size, xy->face_size, Ls,
+		     params->ATable, xy->body_neighbor,
+		     U, s_x, s_y, xy->receive_buf);
 }
 
 
@@ -73,10 +73,10 @@ operator_ApF(struct QX(Fermion) *result,
 	zprint("setup_comm() failed");
 	return 1;
     }
-    compute_ApF(state, &state->even, &state->odd, params,
-		result->even, gauge->data, fermion->even, fermion->odd);
-    compute_ApF(state, &state->odd, &state->even, params,
-		result->odd, gauge->data, fermion->odd, fermion->even);
+    compute_AxpFx(state, &state->even, &state->odd, params,
+		  result->even, gauge->data, fermion->even, fermion->odd);
+    compute_AxpFx(state, &state->odd, &state->even, params,
+		  result->odd, gauge->data, fermion->odd, fermion->even);
     return 0;
 }
 
