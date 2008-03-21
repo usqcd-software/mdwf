@@ -29,11 +29,16 @@ optests = op-dummy.c \
           op-bx.c \
           op-f0.c
 
+opxtests = op-axa.c
+
 opdriver = optest.c
+
+opxdriver = opxtest.c
 
 objects = $(tests:%.c=%.o)
 x.objects = $(x.tests:%.c=%-d.o) $(x.tests:%.c=%-f.o)
 op.objects = $(optests:%.c=%.o) $(opdriver:%.c = %.o)
+opx.objects = $(opxtests:%.c=%.o) $(opxdriver:%.c=%.o)
 
 programs = $(objects:%.o=%) $(x.objects:%.o=%)
 
@@ -50,6 +55,8 @@ endif
 all: $(programs) optests
 
 optests: $(optests:%.c=%)
+
+opxtests: $(opxtests:%.c=%)
 
 clean:
 	$E RM tests/objects
@@ -87,10 +94,23 @@ $(optests:%.c=%): %: %.o
 
 $(optests:%.c=%): $(opdriver:%.c=%.o)
 
+$(opxtests:%.c=%.o) $(opxdriver:%.c=%.o): %.o: %.c
+	$E CC-d $@
+	$C$(CC) $(TCFLAGS) -DQOP_MDWF_DEFAULT_PRECISION=\'D\' -c -o $@ $<
+
+$(opxtests:%.c=%): %: %.o
+	$E CC $@
+	$C$(CC) $(TCFLAGS) $(QMP_LDFLAGS) -L$(TOP)/$(LIMPDIR) -o $@ $^ \
+              -l$(library) $(QMP_LIBS)
+
+$(opxtests:%.c=%): $(opxdriver:%.c=%.o)
+
 $(x.objects) $(objects): $(TOP)/port/mdwf.h $(TOP)/$(LIMPDIR)/qop-mdwf3.h
 
 conjgrad.o: clear-mdwf.h do-cg.c
 
-$(optests:%.c=%) $(programs): $(TOP)/$(LIMPDIR)/lib$(library).a
+$(opxtests:%.c=%) $(optests:%.c=%) $(programs): $(TOP)/$(LIMPDIR)/lib$(library).a
 
 $(optests:%.c=%.o) $(opdriver:%.c=%.o): optest.h
+
+$(opxtests:%.c=%.o) $(opxdriver:%.c=%.o): opxtest.h
