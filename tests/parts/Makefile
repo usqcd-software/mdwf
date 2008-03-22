@@ -29,7 +29,8 @@ optests = op-dummy.c \
           op-bx.c \
           op-f0.c
 
-opxtests = op-axa.c
+opxtests = op-axa.c \
+           op-bxb.c
 
 opdriver = optest.c
 
@@ -60,11 +61,11 @@ opxtests: $(opxtests:%.c=%)
 
 clean:
 	$E RM tests/objects
-	$C$(RM) $(objects) $(x.objects)
+	$C$(RM) $(objects) $(x.objects) $(optests:%.c=%.o) $(opxtests:%.c=%.o)
 
 dist realclean: clean
 	$E RM tests/programs
-	$C$(RM) $(programs)
+	$C$(RM) $(programs) $(optests:%.c=%) $(opxtests:%.c=%)
 
 $(programs): %: %.o
 	$E LD $@

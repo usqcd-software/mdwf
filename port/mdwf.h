@@ -102,7 +102,9 @@ struct ABiTable;
 struct Q(Parameters) {
   struct Q(State) *state;
   struct ABTable  *ATable;
+  struct ABTable  *AxTable;
   struct ABTable  *BTable;
+  struct ABTable  *BxTable;
   struct ABiTable *AipTable; /* XXX */
   struct ABiTable *AimTable; /* XXX */
   struct ABiTable *BipTable; /* XXX */
@@ -276,6 +278,7 @@ unsigned int qx(do_ApF)(struct Fermion *r_x,
 			const struct Fermion *s_x,
 			const struct Fermion *s_y,
 			void *rb[]);
+#if 0
 unsigned int qx(do_AxpFx)(struct Fermion *r_x,
 			  int start, int size, int Ls,
 			  const struct ABTable *atable,
@@ -284,14 +287,12 @@ unsigned int qx(do_AxpFx)(struct Fermion *r_x,
 			  const struct Fermion *s_x,
 			  const struct Fermion *s_y,
 			  void *rb[]);
+#endif
 unsigned int qx(do_A)(struct Fermion *r_x,
 		      int size, int Ls,
 		      const struct ABTable *atable,
 		      const struct Fermion *s_x);
-unsigned int qx(do_Ax)(struct Fermion *r_x,
-		       int size, int Ls,
-		       const struct ABTable *atable,
-		       const struct Fermion *s_x);
+#if 0
 unsigned int qx(do_AxpBxFx)(struct Fermion *r_x,
 			    int start, int size, int Ls,
 			    const struct ABTable *atable,
@@ -302,7 +303,7 @@ unsigned int qx(do_AxpBxFx)(struct Fermion *r_x,
 			    const struct Fermion *s_y,
                             struct Fermion *tmp,
 			    void *rb[]);
-
+#endif
 /* XXX  other functions */
 
 /* Back end functions */

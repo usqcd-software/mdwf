@@ -44,20 +44,15 @@ x.sources = f-copy \
             f-add2-norm \
             f-add2x \
             do-A \
-            do-A-conj \
             do-A-inv \
             do-BA-inv \
-            do-A-conj-inv \
-            do-A-conj-inv-B \
             do-ApF \
             do-1pA \
             do-ApB \
-            do-AxpBxFx \
             do-F \
             do-1mF \
             do-1mFx \
             do-B-A-inv-F \
-            do-A-conj-inv-B-conj-F-conj \
             do-1mB1AF \
             do-1mB1AF-norm \
             dot-fermion \
@@ -73,6 +68,12 @@ x.sources = f-copy \
             sizeof-fermion \
             sizeof-gauge \
             sizeof-pfermion
+
+#            do-AxpBxFx \
+#            do-A-conj \
+#            do-A-conj-inv \
+#            do-A-conj-inv-B \
+#            do-A-conj-inv-B-conj-F-conj \
 
 sources = $(i.sources) \
           $(x.sources:%=%f.c) \

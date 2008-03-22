@@ -2,8 +2,8 @@
 #include "../../port/mdwf.h"
 #include "opxtest.h"
 
-char *op_a_name = "conj(A)";
-char *op_b_name = "A";
+char *op_a_name = "conj(B)";
+char *op_b_name = "B";
 
 void
 setup_bc(void)
@@ -73,7 +73,7 @@ read_fermion_b(const int pos[5],
 }
 
 static int
-operator_A(struct QX(Fermion) *result,
+operator_B(struct QX(Fermion) *result,
 	   const struct Q(Parameters) *params,
 	   const struct QX(Gauge) *gauge,
 	   const struct QX(Fermion) *fermion)
@@ -81,18 +81,18 @@ operator_A(struct QX(Fermion) *result,
     qx(do_A)(result->even,
 	     result->state->even.full_size,
 	     result->state->even.Ls,
-	     params->ATable,
+	     params->BTable,
 	     fermion->even);
     qx(do_A)(result->odd,
 	     result->state->odd.full_size,
 	     result->state->odd.Ls,
-	     params->ATable,
+	     params->BTable,
 	     fermion->odd);
     return 0;
 }
 
 static int
-operator_Ax(struct QX(Fermion) *result,
+operator_Bx(struct QX(Fermion) *result,
 	    const struct Q(Parameters) *params,
 	    const struct QX(Gauge) *gauge,
 	    const struct QX(Fermion) *fermion)
@@ -100,12 +100,12 @@ operator_Ax(struct QX(Fermion) *result,
     qx(do_A)(result->even,
 	     result->state->even.full_size,
 	     result->state->even.Ls,
-	     params->AxTable,
+	     params->BxTable,
 	     fermion->even);
     qx(do_A)(result->odd,
 	     result->state->odd.full_size,
 	     result->state->odd.Ls,
-	     params->AxTable,
+	     params->BxTable,
 	     fermion->odd);
     return 0;
 }
@@ -130,7 +130,7 @@ operator_a(void)
 {
     double x, y;
 
-    operator_A(fermion_x, params, gauge, fermion_a);
+    operator_B(fermion_x, params, gauge, fermion_a);
     dot(&x, &y, fermion_b, fermion_x);
     zprint("normal: %20.10e %20.10e", x, y);
     return 0;
@@ -141,7 +141,7 @@ operator_b(void)
 {
     double x, y;
 
-    operator_Ax(fermion_x, params, gauge, fermion_b);
+    operator_Bx(fermion_x, params, gauge, fermion_b);
     dot(&x, &y, fermion_x, fermion_a);
     zprint("conj  : %20.10e %20.10e", x, y);
     return 0;
