@@ -32,6 +32,7 @@ optests = op-dummy.c \
           op-f0.c
 
 opxtests = op-axa.c \
+           op-a1a.c \
            op-bxb.c
 
 opdriver = optest.c
