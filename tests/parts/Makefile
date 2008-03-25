@@ -40,8 +40,12 @@ objects = $(tests:%.c=%.o)
 x.objects = $(x.tests:%.c=%-d.o) $(x.tests:%.c=%-f.o)
 op.objects = $(optests:%.c=%.o) $(opdriver:%.c = %.o)
 opx.objects = $(opxtests:%.c=%.o) $(opxdriver:%.c=%.o)
+all.objects = $(objects) $(x.objects) $(op.objects) $(opx.objects)
 
-programs = $(objects:%.o=%) $(x.objects:%.o=%)
+programs = $(objects:%.o=%) \
+           $(x.objects:%.o=%) \
+           $(optests:%.c=%) \
+           $(opxtests:%.c=%)
 
 .PHONY: all clean realclean dist optests
 
@@ -61,13 +65,13 @@ opxtests: $(opxtests:%.c=%)
 
 clean:
 	$E RM tests/objects
-	$C$(RM) $(objects) $(x.objects) $(optests:%.c=%.o) $(opxtests:%.c=%.o)
+	$C$(RM) $(all.objects)
 
 dist realclean: clean
 	$E RM tests/programs
-	$C$(RM) $(programs) $(optests:%.c=%) $(opxtests:%.c=%)
+	$C$(RM) $(all.programs)
 
-$(programs): %: %.o
+$(objects:%.o=%) $(x.objects:%.o=%): %: %.o
 	$E LD $@
 	$C$(CC) $(TCFLAGS) $(QMP_LDFLAGS) -L$(TOP)/$(LIMPDIR) -o $@ $< \
               -l$(library) $(QMP_LIBS)
@@ -106,7 +110,7 @@ $(opxtests:%.c=%): %: %.o
 
 $(opxtests:%.c=%): $(opxdriver:%.c=%.o)
 
-$(x.objects) $(objects): $(TOP)/port/mdwf.h $(TOP)/$(LIMPDIR)/qop-mdwf3.h
+$(all.objects): $(TOP)/port/mdwf.h $(TOP)/$(LIMPDIR)/qop-mdwf3.h
 
 conjgrad.o: clear-mdwf.h do-cg.c
 
@@ -115,3 +119,4 @@ $(opxtests:%.c=%) $(optests:%.c=%) $(programs): $(TOP)/$(LIMPDIR)/lib$(library).
 $(optests:%.c=%.o) $(opdriver:%.c=%.o): optest.h
 
 $(opxtests:%.c=%.o) $(opxdriver:%.c=%.o): opxtest.h
+
