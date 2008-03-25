@@ -31,7 +31,6 @@ extern struct QOP_MDWF_State *state;
 extern struct QOP_MDWF_Parameters *params;
 extern struct QOP_MDWF_Fermion *fermion_a;
 extern struct QOP_MDWF_Fermion *fermion_b;
-extern struct QOP_MDWF_Fermion *fermion_x;
 extern struct QOP_MDWF_Gauge *gauge;
 extern unsigned int seed_u;
 extern unsigned int seed_a;

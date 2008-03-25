@@ -12,7 +12,6 @@ struct QOP_MDWF_Parameters *params = NULL;
 struct QOP_MDWF_Fermion *result = NULL;
 struct QOP_MDWF_Fermion *fermion_a = NULL;
 struct QOP_MDWF_Fermion *fermion_b = NULL;
-struct QOP_MDWF_Fermion *fermion_x = NULL;
 struct QOP_MDWF_Gauge *gauge = NULL;
 unsigned int seed_u;
 unsigned int seed_a;
@@ -146,16 +145,6 @@ getsub(int lo[4], int hi[4], const int node[4], void *env)
   }
 }
 
-static double
-zero_fermion(const int pos[5],
-	     int a, int b,
-	     int re_im,
-	     void *env)
-{
-  return 0.0;
-}
-
-
 int
 main(int argc, char *argv[])
 {
@@ -243,11 +232,6 @@ main(int argc, char *argv[])
 	goto no_gauge;
     }
 
-    if (QOP_MDWF_import_fermion(&fermion_x, state, zero_fermion, NULL)) {
-	zprint("Cleaning result failed");
-	goto no_result;
-    }
-
     if (operator_a()) {
 	zprint("operator A failed");
     }
@@ -259,8 +243,6 @@ main(int argc, char *argv[])
 
     status = 0;
 
-    QOP_MDWF_free_fermion(&fermion_x);
-no_result:
     QOP_MDWF_free_gauge(&gauge);
 no_gauge:
     QOP_MDWF_free_parameters(&params);

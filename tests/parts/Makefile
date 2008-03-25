@@ -23,7 +23,9 @@ x.tests = heater.c \
 optests = op-dummy.c \
           op-ddw.c \
           op-a.c \
+          op-a1.c \
           op-b.c \
+          op-b1.c \
           op-f.c \
           op-ax.c \
           op-bx.c \

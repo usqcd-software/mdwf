@@ -129,9 +129,16 @@ int
 operator_a(void)
 {
     double x, y;
+    struct QX(Fermion) *fermion_x;
+
+    if (QOP_MDWF_allocate_fermion(&fermion_x, gauge->state)) {
+	zprint("operator_B(): alloc failed");
+	return 1;
+    }
 
     operator_B(fermion_x, params, gauge, fermion_a);
     dot(&x, &y, fermion_b, fermion_x);
+    QOP_MDWF_free_fermion(&fermion_x);
     zprint("normal: %20.10e %20.10e", x, y);
     return 0;
 }
@@ -140,9 +147,16 @@ int
 operator_b(void)
 {
     double x, y;
+    struct QX(Fermion) *fermion_x;
+
+    if (QOP_MDWF_allocate_fermion(&fermion_x, gauge->state)) {
+	zprint("operator_Bx(): alloc failed");
+	return 1;
+    }
 
     operator_Bx(fermion_x, params, gauge, fermion_b);
     dot(&x, &y, fermion_x, fermion_a);
+    QOP_MDWF_free_fermion(&fermion_x);
     zprint("conj  : %20.10e %20.10e", x, y);
     return 0;
 }
