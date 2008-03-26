@@ -369,12 +369,13 @@ M^{\dagger}M\xi_e = \varphi_e
 \]
 for $\xi_e$ using Alg.~\ref{real}.
 \item Compute
-\begin{eqnarray*}
+\begin{eqnarray}
 \psi_o &=& A_{oo}^{-1}\left(\eta_o-F_{oe}\xi_e\right),\\
 \psi_e &=& B_{ee}^{-1}\xi_e.
-\end{eqnarray*}
+\end{eqnarray}
 \end{enumerate}
 
+\pagebreak
 \section{Inverting $A$ and $B$}
 Note that $A$ and $B$ have the following form:
 \begin{eqnarray}
@@ -409,15 +410,14 @@ u_\beta(s) &=&c_5(s),\\
 v_\beta(s)  &=&-m u_\beta(s),\\
 w_\beta(s) &=&b_5(s).
 \end{eqnarray}
-
 This allows us to invert $A$ and $B$ as follows.
 
 For $A_{+}$ one has (formulae for $B_{+}$ are obtained by replacing
 $\alpha$ with $\beta$, see Eqs.~(\ref{A+}) and~(\ref{B+})):
 \begin{equation}
-A_{+} = A_{L+} A_{X+} = A_{Y+} A_{L+} = 
+A_{+} = A_{Y+} A_{L+} = 
 \left(\begin{array}{cccccc}
- w_\alpha(0) & 0 & 0 & \cdots & 0 & -m u_\alpha(0)\\
+ w_\alpha(0) & 0 & 0 & \cdots & 0 & v_\alpha(0)\\
  u_\alpha(1) & w_\alpha(1) & 0 & \cdots & 0 & 0\\
  0 & u_\alpha(2) & w_\alpha(2) & \cdots & 0 & 0\\
  \vdots & \vdots & \vdots & \ddots & \vdots & \vdots \\
@@ -428,7 +428,7 @@ A_{+} = A_{L+} A_{X+} = A_{Y+} A_{L+} =
 \begin{equation}
 A_{L+} =
 \left(\begin{array}{cccccc}
- w_\alpha(0) & 0 & 0 & \cdots & 0 & 0\\
+ 1 & 0 & 0 & \cdots & 0 & 0\\
  u_\alpha(1) & w_\alpha(1) & 0 & \cdots & 0 & 0\\
  0 & u_\alpha(2) & w_\alpha(2) & \cdots & 0 & 0\\
  \vdots & \vdots & \vdots & \ddots & \vdots & \vdots  \\
@@ -437,65 +437,63 @@ A_{L+} =
 \end{array}\right),
 \end{equation}
 \begin{equation}
-A_{X+} =
-\left(\begin{array}{cccccc}
-1 & 0 & 0 & \cdots & 0 & -m\frac{u_\alpha(0)}{w_\alpha(0)}\\
-0 & 1 & 0 & \cdots & 0 &
-   m\frac{u_\alpha(0)u_\alpha(1)}{w_\alpha(0)w_\alpha(1)}\\
-0 & 0 & 1 & \cdots & 0 &
- -m\frac{u_\alpha(0)u_\alpha(1)u_\alpha(2)}{w_\alpha(0)w_\alpha(1)w_\alpha(2)}\\
-\vdots & \vdots & \vdots& \ddots & \vdots & \vdots \\
-0 & 0 & 0 & \cdots & 1 &
- m \prod_{k=0}^{L_s-2}\left(-\frac{u_\alpha(k)}{w_\alpha(k)}\right) \\
-0 & 0 & 0 & \cdots & 0 &
- 1 + m \prod_{k=0}^{L_s-1}\left(-\frac{u_\alpha(k)}{w_\alpha(k)}\right) \\
-\end{array}\right),
-\end{equation}
-\begin{equation}
 A_{Y+} =
 \left(\begin{array}{ccccc}
-1
-  -\frac{mu_\alpha(0)}{w_\alpha(L_s-1)}
-           \prod_{k=1}^{L_s-1}\left(-\frac{u_\alpha(k)}{w_\alpha(k-1)}\right)
- &
-  -\frac{mu_\alpha(0)}{w_\alpha(L_s-1)}
-           \prod_{k=2}^{L_s-1}\left(-\frac{u_\alpha(k)}{w_\alpha(k-1)}\right)
+1/z^{(+)}_\alpha
+ & a^{(+)}_\alpha(1)
  & \cdots
- & -\frac{mu_\alpha(0)}{w_\alpha(L_s-1)}\frac{-u_\alpha(L_s-1)}{w_\alpha(L_s-2)}
- & -\frac{mu_\alpha(0)}{w_\alpha(L_s-1)}\\
+ & a^{(+)}_\alpha(Ls-2)
+ & a^{(+)}_\alpha(Ls-1) \\
 0 & 1 & \cdots & 0 & 0 \\
-\vdots & \vdots& \ddots & \vdots & \vdots \\
+\vdots & \vdots & \ddots & \vdots & \vdots \\
 0 & 0 & \cdots & 1 & 0 \\
 0 & 0 & \cdots & 0 & 1 
-\end{array}\right),
+\end{array}\right).
 \end{equation}
-%R_{A+}(s,s')&=&\delta_{s,s'}+m\delta_{s',L_s-1}\prod_{k=0}^{s}\left(
-%     -\frac{u_\alpha(k)}{w_\alpha(k)}
-%     \right).
-%
-%It is convenient to present recursive definitions of $R_{A+}$ and its inverse
-%\begin{eqnarray}
-%\left(R_{A+}\right)_{kl} &=&\left\{\begin{array}{ll}
-%\delta_{kl}, & l < L_s-1\\
-%-m\frac{u_\alpha(0)}{w_\alpha(0)}, & k=0,\quad l=L_s-1\\
-%\delta_{kl}-\frac{u_\alpha(k)}{w_\alpha(k)}\left(R_{A+}\right)_{k-1,l}, &
-%            k>0,\quad l=L_s-1
-%\end{array}\right.,\\
-%\left(R_{A+}^{-1}\right)_{kl} &=&\left\{\begin{array}{ll}
-%\delta_{kl}, & l < L_s-1\\
-%1/\left(R_{A+}\right)_{kl}, & k=L_s-1, \quad l=L_s-1\\
-%-\left(R_{A+}\right)_{kl}/\left(R_{A+}\right)_{ll}, & k
-%               < L_s-1,\quad l=L_s-1
-%\end{array}\right..
-%\end{eqnarray}
-%
-%Note that $L_{A+}$ is lower triangular and therefore computing
-% $L_{A+}^{-1}\psi$ is easy.
+For the following it is convenient to define
+\begin{eqnarray}
+a^{(+)}_\alpha(Ls-1) &=& -\frac{v_\alpha(0)}{w_\alpha(L_s-1)}, \\
+a^{(+)}_\alpha(k) &=& - \frac{a^{(+)}_\alpha(k+1)u_\alpha(k)}{w_\alpha(k)}, \\
+z^{(+)}_\alpha & = & \frac{1}{w_\alpha(0)(1-a^{(+)}_\alpha(0))},\\
+b^{(+)}_\alpha(k) &=& - \frac{u_\alpha(k)}{w_\alpha(k)}, \\
+c^{(+)}_\alpha(k) &=& \frac{1}{w_\alpha(k)}.
+\end{eqnarray}
 
-\pagebreak
+Then algorithm~\ref{inv-upper} could be used to compute
+$\phi\leftarrow A_+^{-1}\psi$.
+\incmargin{20pt}
+\begin{algorithm}
+\SetKwData{Input}{input}
+\KwIn{$z$, precomputed part of $A_{Y+}$}
+\KwIn{$a$, precomputed part of $A_{Y+}$}
+\KwIn{$b$, precomputed part of $A_{L+}$}
+\KwIn{$c$, precomputed part of $A_{L+}$}
+\KwIn{$\psi$, the right hand side}
+\KwIn{$L_s$, flavor dimension}
+\KwOut{$\phi$, the result}
+\dontprintsemicolon
+\Begin{
+  $\eta\leftarrow\psi_0$\;
+  $k\leftarrow1$\;
+  \For{$k<L_s$}{
+    $\eta \leftarrow \eta + a_k\psi_k$\;
+    $k\leftarrow k + 1$\;
+  }
+  $\phi_0\leftarrow\eta\leftarrow z \eta$\;
+  $k\leftarrow1$\;
+  \For{$k<L_s$}{
+     $\phi_k\leftarrow\eta\leftarrow b_k \eta + c_k \psi_k$\;
+     $k\leftarrow k + 1$\;
+  }
+  \Return{$\phi$}.
+}
+\caption{\label{inv-upper}Computing the inverse of $A_+$.}
+\end{algorithm}
+\decmargin{20pt}
+
 For $A_{-}$ we have the following (once again, $B_{-}$ is similar.)
 \begin{equation}
-A_{-} = A_{L-} A_{X-} = A_{Y-} A_{L-} = 
+A_{-} = A_{Y-} A_{L-} = 
 \left(\begin{array}{cccccc}
  w_\alpha(0) & u_\alpha(0) & 0 & \cdots & 0 & 0\\
  0 & w_\alpha(1) & u_\alpha(1) & \cdots & 0 & 0\\
@@ -513,22 +511,7 @@ A_{L-} =
  0 & 0 & w_\alpha(2) & \cdots & 0 & 0\\
  \vdots & \vdots & \vdots & \ddots & \vdots & \vdots \\
  0 & 0 & 0 & \cdots & w_\alpha(L_s-2) & u_\alpha(L_s-2)\\
- 0 & 0 & 0 & \cdots & 0 & w_\alpha(L_s-1)
-\end{array}\right),
-\end{equation}
-\begin{equation}
-A_{X-} = \left(\begin{array}{cccccc}
-1+m\prod_{k=0}^{L_s-1}\left(-\frac{u_\alpha(k)}{w_\alpha(k)}\right)
-   & 0 & 0 &\cdots& 0 & 0 \\
-m\prod_{k=1}^{L_s-1}\left(-\frac{u_\alpha(k)}{w_\alpha(k)}\right)
-   & 1 & 0 &\cdots& 0 & 0 \\
-m\prod_{k=2}^{L_s-1}\left(-\frac{u_\alpha(k)}{w_\alpha(k)}\right)
-   & 0 & 1 &\cdots& 0 & 0 \\
-\vdots & \vdots & \vdots & \ddots & \vdots & \vdots \\
-m\frac{u_\alpha(L_s-2)u_\alpha(L_s-1)}{w_\alpha(L_s-2)w_\alpha(L_s-1)}
-   & 0 & 0 &\cdots& 1 & 0 \\
--m\frac{u_\alpha(L_s-1)}{w_\alpha(L_s-1)}
-   & 0 & 0 &\cdots& 0 & 1
+ 0 & 0 & 0 & \cdots & 0 & 1
 \end{array}\right),
 \end{equation}
 \begin{equation}
@@ -537,39 +520,55 @@ A_{Y-} = \left(\begin{array}{ccccc}
 0 & 1 & \cdots & 0 & 0 \\
 \vdots & \vdots & \ddots & \vdots & \vdots \\
 0 & 0 & \cdots & 1 & 0 \\
--\frac{mu_\alpha(L_s-1)}{w_\alpha(0)} &
--\frac{mu_\alpha(L_s-1)}{w_\alpha(0)}\frac{u_\alpha(0)}{w_\alpha(1)} &
-\cdots &
--\frac{mu_\alpha(L_s-1)}{w_\alpha(0)}\prod_{k=0}^{L_s-3}
-     \frac{u_\alpha(k)}{w_\alpha(k+1)} &
-1-\frac{mu_\alpha(L_s-1)}{w_\alpha(0)}\prod_{k=0}^{L_s-2}
-     \frac{u_\alpha(k)}{w_\alpha(k+1)}
-\end{array}\right),
+ a^{(-)}_\alpha(0) &
+ a^{(-)}_\alpha(1) &
+ \cdots
+ a^{(-)}_\alpha(L_s-2) &
+ 1/z^{(-)}_\alpha 
+\end{array}\right).
 \end{equation}
-%R_{A-}(s,s')&=&\delta_{s,s'}+
-%   (-1)^{L_s-1-s}\left(\frac{v_\alpha\prod_{k=s}^{L_s-2}u_\alpha(k)}
-%                  {\prod_{k=s}^{L_s-1}w_\alpha(k)}\right)
-%   \delta_{s',0}.
-%
-%Recurisive formulae for $R_{A-}$ and $R_{A-}^{-1}$ are
-%\begin{eqnarray}
-%\left(R_{A-}\right)_{kl} &=&\left\{\begin{array}{ll}
-%\delta_{kl},&l>0\\
-%\frac{v_\alpha}{w_\alpha(k)},&k=L_s-1,\quad l=0\\
-%\delta_{kl}-\frac{u_\alpha(k)}{w_\alpha(k)}\left(R_{A-}\right)_{k+1,l},&
-%   k<L_s-1,\quad l=0
-%\end{array}\right.,\\
-%\left(R_{A-}^{-1}\right)_{kl} &=&\left\{\begin{array}{ll}
-%\delta_{kl},& l > 0\\
-%1/\left(R_{A-}\right)_{kl},& k=0,\quad l=0\\
-%-\left(R_{A-}\right)_{kl}/\left(R_{A-}\right)_{ll},&
-%   k>0,\quad l=0
-%\end{array}\right..
-%\end{eqnarray}
-%
-%This time, $L_{A-}$ is upper triangular and computing $L_{A-}^{-1}\psi$
-%is simple.
+Once again, it is convenient to define
+\begin{eqnarray}
+a^{(-)}_\alpha(0) &=& -\frac{v_\alpha(L_s-1)}{w_\alpha(0)}, \\
+a^{(-)}_\alpha(k) &=& - \frac{a^{(-)}_\alpha(k-1)u_\alpha(k-1)}{w_\alpha(k)}, \\
+z^{(-)}_\alpha & = & \frac{1}{w_\alpha(L_s-1)(1-a^{(-)}_\alpha(L_s-1))},\\
+b^{(-)}_\alpha(k) &=& - \frac{u_\alpha(k)}{w_\alpha(k)}, \\
+c^{(-)}_\alpha(k) &=& \frac{1}{w_\alpha(k)}.
+\end{eqnarray}
 
+Then algorithm~\ref{inv-lower} could be used to compute
+$\phi\leftarrow A_-^{-1}\psi$.
+\incmargin{20pt}
+\begin{algorithm}
+\SetKwData{Input}{input}
+\KwIn{$z$, precomputed part of $A_{Y-}$}
+\KwIn{$a$, precomputed part of $A_{Y-}$}
+\KwIn{$b$, precomputed part of $A_{L-}$}
+\KwIn{$c$, precomputed part of $A_{L-}$}
+\KwIn{$\psi$, the right hand side}
+\KwIn{$L_s$, flavor dimension}
+\KwOut{$\phi$, the result}
+\dontprintsemicolon
+\Begin{
+  $\eta\leftarrow\psi_{L_s-1}$\;
+  $k\leftarrow0$\;
+  \For{$k<L_s-1$}{
+    $\eta \leftarrow \eta + a_k\psi_k$\;
+    $k\leftarrow k + 1$\;
+  }
+  $\phi_{L_s-1}\leftarrow\eta\leftarrow z \eta$\;
+  $k\leftarrow L_s-2$\;
+  \For{$k\ge 0$}{
+     $\phi_k\leftarrow\eta\leftarrow b_k \eta + c_k \psi_k$\;
+     $k\leftarrow k - 1$\;
+  }
+  \Return{$\phi$}.
+}
+\caption{\label{inv-lower}Computing the inverse of $A_-$.}
+\end{algorithm}
+\decmargin{20pt}
+
+\pagebreak
 \section{Combinations of $A$ and $B$}
 With the notations above one can write other $s$-pieces we need:
 \begin{eqnarray}
@@ -596,7 +595,7 @@ The equation
 \[
    A x = b
 \]
-can be solve by the conjugate gradient method if the condition number of A is
+can be solve by the conjugate gradient method if the condition number of $A$ is
 small enough.
 \incmargin{20pt}
 \begin{algorithm}
