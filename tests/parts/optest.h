@@ -24,7 +24,6 @@ extern void write_fermion(const int pos[5],
 			  int re_im,
 			  double value,
 			  void *env);
-extern void setup_bc(void);
 
 extern struct QOP_MDWF_State *state;
 extern struct QOP_MDWF_Parameters *params;

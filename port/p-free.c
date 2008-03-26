@@ -42,6 +42,10 @@ Q(free_parameters)(struct Q(Parameters) **parameters_ptr)
   free_aitable(state, &(*parameters_ptr)->AimTable);
   free_aitable(state, &(*parameters_ptr)->BipTable);
   free_aitable(state, &(*parameters_ptr)->BimTable);
+  free_aitable(state, &(*parameters_ptr)->AxipTable);
+  free_aitable(state, &(*parameters_ptr)->AximTable);
+  free_aitable(state, &(*parameters_ptr)->BxipTable);
+  free_aitable(state, &(*parameters_ptr)->BximTable);
   END_TIMING(state, 0, 0, 0);
   q(free)(state, *parameters_ptr, sizeof (struct Q(Parameters)));
   *parameters_ptr = 0;

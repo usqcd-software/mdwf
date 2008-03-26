@@ -3,7 +3,7 @@
 #include "opxtest.h"
 
 char *op_a_name = "1";
-char *op_b_name = "inverse(A) * A";
+char *op_b_name = "inverse(conj(A)) * conj(A)";
 
 double
 read_gauge(int dir,
@@ -70,12 +70,12 @@ operator_A(struct QX(Fermion) *result,
     qx(do_A)(result->even,
 	     result->state->even.full_size,
 	     result->state->even.Ls,
-	     params->ATable,
+	     params->AxTable,
 	     fermion->even);
     qx(do_A)(result->odd,
 	     result->state->odd.full_size,
 	     result->state->odd.Ls,
-	     params->ATable,
+	     params->AxTable,
 	     fermion->odd);
     return 0;
 }
@@ -86,18 +86,18 @@ operator_Ainv(struct QX(Fermion) *result,
 	      const struct QX(Gauge) *gauge,
 	      const struct QX(Fermion) *fermion)
 {
-    qx(do_A_inverse)(result->even,
-		     result->state->even.full_size,
-		     result->state->even.Ls,
-		     params->AipTable,
-		     params->AimTable,
-		     fermion->even);
-    qx(do_A_inverse)(result->odd,
-		     result->state->odd.full_size,
-		     result->state->odd.Ls,
-		     params->AipTable,
-		     params->AimTable,
-		     fermion->odd);
+    qx(do_A_conj_inverse)(result->even,
+			  result->state->even.full_size,
+			  result->state->even.Ls,
+			  params->AxipTable,
+			  params->AximTable,
+			  fermion->even);
+    qx(do_A_conj_inverse)(result->odd,
+			  result->state->odd.full_size,
+			  result->state->odd.Ls,
+			  params->AxipTable,
+			  params->AximTable,
+			  fermion->odd);
     return 0;
 }
 

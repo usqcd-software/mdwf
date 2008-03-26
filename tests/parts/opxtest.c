@@ -145,11 +145,29 @@ getsub(int lo[4], int hi[4], const int node[4], void *env)
   }
 }
 
+void
+setup_bc(int seed)
+{
+    int i;
+    unsigned int v;
+    
+    for (i = 0; i < lattice[4]; i++) {
+	v = sum_init(seed);
+	v = sum_add(v, i);
+	v = sum_add(v, seed);
+	b5[i] = sum_fini(v);
+	v = sum_add(v, i);
+	v = sum_add(v, seed);
+	c5[i] = sum_fini(v);
+    }
+}
+
 int
 main(int argc, char *argv[])
 {
     QMP_thread_level_t qt = QMP_THREAD_SINGLE;
     int status = 1;
+    int seed_bc;
     int i;
 
     if (QMP_init_msg_passing(&argc, &argv, qt, &qt) != QMP_SUCCESS) {
@@ -159,11 +177,11 @@ main(int argc, char *argv[])
 
     self = QMP_get_node_number();
     primary = QMP_is_primary_node();
-    if (argc != 15) {
-	zprint("15 arguments expected, found %d", argc);
+    if (argc != 16) {
+	zprint("16 arguments expected, found %d", argc);
 	zprint("Usage: operator M_5 m Nx Ny Nz Nt"
 	       "  Lx Ly Lz Lt Ls"
-	       " seed_U seed_a seed_b");
+	       " seed_bc seed_U seed_a seed_b");
 	QMP_finalize_msg_passing();
 	return 1;
     }
@@ -175,11 +193,12 @@ main(int argc, char *argv[])
 	lattice[i] = atoi(argv[i+7]);
     }
     lattice[4] = atoi(argv[11]);
-    seed_u = atoi(argv[12]);
-    seed_a = atoi(argv[13]);
-    seed_b = atoi(argv[14]);
+    seed_bc = atoi(argv[12]);
+    seed_u = atoi(argv[13]);
+    seed_a = atoi(argv[14]);
+    seed_b = atoi(argv[15]);
 
-    setup_bc();
+    setup_bc(seed_bc);
 
     zprint("Operator test: %s vs %s", op_a_name, op_b_name);
     zprint("network %d %d %d %d",

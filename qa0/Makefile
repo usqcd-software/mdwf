@@ -52,6 +52,7 @@ x.sources = f-copy.qa0 \
             f-add2x.qa0 \
             do-A.qa0 \
             do-A-inv.qa0 \
+            do-A-conj-inv.qa0 \
             do-BA-inv.qa0 \
             do-1pA.qa0 \
             do-ApB.qa0 \
@@ -76,7 +77,6 @@ x.sources = f-copy.qa0 \
             sizeof-gauge.qa0 \
             sizeof-pfermion.qa0
 
-#            do-A-conj-inv.qa0 \
 #            do-A-conj-inv-B.qa0 \
 #            do-A-conj-inv-B-conj-F-conj.qa0 \
 #            do-AxpBxFx.qa0 \
@@ -84,6 +84,7 @@ x.sources = f-copy.qa0 \
 # Who include defs-A.qa0
 A.sources = do-A.qa0 \
             do-A-inv.qa0 \
+            do-A-conj-inv.qa0 \
             do-1pA.qa0 \
             do-ApB.qa0 \
             do-ApF.qa0 \
@@ -95,7 +96,6 @@ A.sources = do-A.qa0 \
             do-1mB1AF.qa0 \
             do-1mB1AF-norm.qa0
 
-#            do-A-conj-inv.qa0 \
 #            do-A-conj-inv.qa0 \
 #            do-A-conj-inv-B.qa0 \
 #            do-A-conj-inv-B-conj-F-conj.qa0 \

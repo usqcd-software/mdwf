@@ -80,17 +80,6 @@ operator_ApF(struct QX(Fermion) *result,
     return 0;
 }
 
-void
-setup_bc(void)
-{
-    int i;
-
-    for (i = 0; i < lattice[4]; i++) {
-	b5[i] = 1.0 / (i + 2.0);
-	c5[i] = 1.0 / (lattice[4] + 1.0 - i * i);
-    }
-}
-
 double
 read_gauge(int dir,
 	   const int pos[4],

@@ -155,6 +155,55 @@ Q(set_generic)(struct Q(Parameters) **params_ptr,
       q(put_ABiTableZ)(params->BimTable, 1.0 / (w_b(Ls-1) * (1.0 - ak)));
   }
 
+  params->AxipTable = q(malloc)(state, iabs);
+  CHECK(params->AxipTable, "set_generic(): Not enough memory for 1/A* + table");
+  {
+      double ak = - v_a(0) / w_a(0);
+      for (i = 1; i < Ls; i++) {
+	  double bk = -u_a(i) / w_a(i-1);
+	  double ck = 1.0 / w_a(i-1);
+	  q(put_ABiTable)(params->AxipTable, i, ak, bk, ck);
+	  ak = - ak * u_a(i) / w_a(i);
+      }
+      q(put_ABiTableZ)(params->AxipTable, 1.0 / (w_a(Ls-1) * (1.0 - ak)));
+  }
+  params->AximTable = q(malloc)(state, iabs);
+  CHECK(params->AximTable, "set_generic(): Not enough memory for 1/A* - table");
+  {
+      double ak = - v_a(Ls-1) / w_a(Ls-1);
+      for (i = Ls; --i;) {
+	  double bk = - u_a(i-1) / w_a(i);
+	  double ck = 1.0 / w_a(i);
+	  q(put_ABiTable)(params->AximTable, i, ak, bk, ck);
+	  ak = - ak * u_a(i-1) / w_a(i-1);
+      }
+      q(put_ABiTableZ)(params->AximTable, 1.0 / (w_a(0) * (1.0 - ak)));
+  }
+  params->BxipTable = q(malloc)(state, iabs);
+  CHECK(params->BxipTable, "set_generic(): Not enough memory for 1/B* + table");
+  {
+      double ak = - v_b(0) / w_b(0);
+      for (i = 1; i < Ls; i++) {
+	  double bk = -u_b(i) / w_b(i-1);
+	  double ck = 1.0 / w_b(i-1);
+	  q(put_ABiTable)(params->BxipTable, i, ak, bk, ck);
+	  ak = - ak * u_b(i) / w_b(i);
+      }
+      q(put_ABiTableZ)(params->BxipTable, 1.0 / (w_b(Ls-1) * (1.0 - ak)));
+  }
+  params->BximTable = q(malloc)(state, iabs);
+  CHECK(params->BximTable, "set_generic(): Not enough memory for 1/B* - table");
+  {
+      double ak = - v_b(Ls-1) / w_b(Ls-1);
+      for (i = Ls; --i;) {
+	  double bk = - u_b(i-1) / w_b(i);
+	  double ck = 1.0 / w_b(i);
+	  q(put_ABiTable)(params->BximTable, i, ak, bk, ck);
+	  ak = - ak * u_b(i-1) / w_b(i-1);
+      }
+      q(put_ABiTableZ)(params->BximTable, 1.0 / (w_b(0) * (1.0 - ak)));
+  }
+
   BEGIN_TIMING(state);
   params->state = state;
   *params_ptr = params;

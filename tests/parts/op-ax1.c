@@ -1,7 +1,29 @@
 #include <qop-mdwf3.h>
+#include "../../port/mdwf.h"
 #include "optest.h"
 
-char *op_name = "Dummy operator";
+char *op_name = "Operator 1/conj(A)";
+
+static int
+operator_A(struct QX(Fermion) *result,
+	   const struct Q(Parameters) *params,
+	   const struct QX(Gauge) *gauge,
+	   const struct QX(Fermion) *fermion)
+{
+    qx(do_A_conj_inverse)(result->even,
+			  result->state->even.full_size,
+			  result->state->even.Ls,
+			  params->AxipTable,
+			  params->AximTable,
+			  fermion->even);
+    qx(do_A_conj_inverse)(result->odd,
+			  result->state->odd.full_size,
+			  result->state->odd.Ls,
+			  params->AxipTable,
+			  params->AximTable,
+			  fermion->odd);
+    return 0;
+}
 
 double
 read_gauge(int dir,
@@ -49,5 +71,5 @@ write_fermion(const int pos[5],
 
 int operator(void)
 {
-    return 0;
+    return operator_A(result, params, gauge, fermion);
 }

@@ -45,6 +45,7 @@ x.sources = f-copy \
             f-add2x \
             do-A \
             do-A-inv \
+            do-A-conj-inv \
             do-BA-inv \
             do-ApF \
             do-1pA \
@@ -70,8 +71,6 @@ x.sources = f-copy \
             sizeof-pfermion
 
 #            do-AxpBxFx \
-#            do-A-conj \
-#            do-A-conj-inv \
 #            do-A-conj-inv-B \
 #            do-A-conj-inv-B-conj-F-conj \
 

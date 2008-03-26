@@ -25,7 +25,6 @@ extern double read_fermion_b(const int pos[5],
 			     int c, int d,
 			     int re_im,
 			     void *env);
-extern void setup_bc(void);
 
 extern struct QOP_MDWF_State *state;
 extern struct QOP_MDWF_Parameters *params;

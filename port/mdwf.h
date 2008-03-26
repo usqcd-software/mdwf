@@ -109,6 +109,10 @@ struct Q(Parameters) {
   struct ABiTable *AimTable;
   struct ABiTable *BipTable;
   struct ABiTable *BimTable;
+  struct ABiTable *AxipTable;
+  struct ABiTable *AximTable;
+  struct ABiTable *BxipTable;
+  struct ABiTable *BximTable;
 };
 
 struct Q(State) {
@@ -327,6 +331,11 @@ unsigned int qx(do_A_inverse)(struct Fermion *r,
 			      const struct ABiTable *iatable_p,
 			      const struct ABiTable *iatable_m,
 			      const struct Fermion *x);
+unsigned int qx(do_A_conj_inverse)(struct Fermion *r,
+				   int size, int Ls,
+				   const struct ABiTable *iatable_p,
+				   const struct ABiTable *iatable_m,
+				   const struct Fermion *x);
 /* XXX functions for cg, need better integration with the rest */
 unsigned int qx(do_1AcBc)(struct Fermion *r,
 			  int size, int Ls,
