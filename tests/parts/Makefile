@@ -24,19 +24,21 @@ optests = op-dummy.c \
           op-ddw.c \
           op-a.c \
           op-a1.c \
+          op-ax.c \
           op-ax1.c \
           op-b.c \
           op-b1.c \
-          op-f.c \
-          op-ax.c \
           op-bx.c \
-          op-f0.c
+          op-bx1.c \
+          op-f0.c \
+          op-f.c
 
 opxtests = op-axa.c \
            op-a1a.c \
            op-ax1ax.c \
            op-bxb.c \
-           op-b1b.c
+           op-b1b.c \
+           op-bx1bx.c
 
 opdriver = optest.c
 
