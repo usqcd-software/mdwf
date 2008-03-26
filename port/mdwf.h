@@ -105,10 +105,10 @@ struct Q(Parameters) {
   struct ABTable  *AxTable;
   struct ABTable  *BTable;
   struct ABTable  *BxTable;
-  struct ABiTable *AipTable; /* XXX */
-  struct ABiTable *AimTable; /* XXX */
-  struct ABiTable *BipTable; /* XXX */
-  struct ABiTable *BimTable; /* XXX */
+  struct ABiTable *AipTable;
+  struct ABiTable *AimTable;
+  struct ABiTable *BipTable;
+  struct ABiTable *BimTable;
 };
 
 struct Q(State) {
