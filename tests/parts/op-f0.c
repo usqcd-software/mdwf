@@ -2,7 +2,7 @@
 #include "../../port/mdwf.h"
 #include "optest.h"
 
-char *op_name = "Operator A+F0";
+char *op_name = "Operator F0";
 
 /* Conservative version with contained communications */
 static Up_project up_project[Q(DIM)] = {
@@ -20,14 +20,12 @@ static Down_project down_project[Q(DIM)] = {
 };
 
 static void
-compute_ApF(struct Q(State) *state,
-	    struct eo_lattice *xy,
-	    struct eo_lattice *yx,
-	    const struct Q(Parameters) *params,
-	    struct Fermion *r_x,
-	    const struct SUn *U,
-	    const struct Fermion *s_x,
-	    const struct Fermion *s_y)
+compute_F(struct Q(State) *state,
+	  struct eo_lattice *xy,
+	  const struct Q(Parameters) *params,
+	  struct Fermion *r_x,
+	  const struct SUn *U,
+	  const struct Fermion *s_y)
 {
     int Ls = state->Ls;
     int i;
@@ -47,22 +45,22 @@ compute_ApF(struct Q(State) *state,
 	QMP_start(xy->handle);
 
     if (xy->body_size)
-	qx(do_ApF)(r_x, 0, xy->body_size, Ls,
-		   params->ATable, xy->body_neighbor,
-		   U, s_x, s_y, NULL);
+	qx(do_F)(r_x, 0, xy->body_size, Ls,
+		 xy->body_neighbor,
+		 U, s_y, NULL);
 
     if (xy->h_valid)
 	QMP_wait(xy->handle);
     
     if (xy->face_size)
-	qx(do_ApF)(r_x, xy->body_size, xy->face_size, Ls,
-		   params->ATable, xy->body_neighbor,
-		   U, s_x, s_y, xy->receive_buf);
+	qx(do_F)(r_x, xy->body_size, xy->face_size, Ls,
+		 xy->body_neighbor,
+		 U, s_y, xy->receive_buf);
 }
 
 
 static int
-operator_ApF(struct QX(Fermion) *result,
+operator_F(struct QX(Fermion) *result,
 	   const struct Q(Parameters) *params,
 	   const struct QX(Gauge) *gauge,
 	   const struct QX(Fermion) *fermion)
@@ -73,10 +71,10 @@ operator_ApF(struct QX(Fermion) *result,
 	zprint("setup_comm() failed");
 	return 1;
     }
-    compute_ApF(state, &state->even, &state->odd, params,
-		result->even, gauge->data, fermion->even, fermion->odd);
-    compute_ApF(state, &state->odd, &state->even, params,
-		result->odd, gauge->data, fermion->odd, fermion->even);
+    compute_F(state, &state->even, params,
+		result->even, gauge->data, fermion->odd);
+    compute_F(state, &state->odd, params,
+		result->odd, gauge->data, fermion->even);
     return 0;
 }
 
@@ -123,5 +121,5 @@ write_fermion(const int pos[5],
 
 int operator(void)
 {
-    return operator_ApF(result, params, gauge, fermion);
+    return operator_F(result, params, gauge, fermion);
 }

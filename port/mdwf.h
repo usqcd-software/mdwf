@@ -272,6 +272,13 @@ unsigned int qx(proj_Ucg3minus)(struct ProjectedFermion *r,
 				const struct up_pack *link,
 				const struct SUn *U,
 				const struct Fermion *f);
+/* F */
+unsigned int qx(do_F)(struct Fermion *res_x,
+		      int start, int size, int Ls,
+		      const struct neighbor *neighbor,
+		      const struct SUn *U,
+		      const struct Fermion *src_y,
+		      void *rb[]);
 
 /* A+F, A and B */
 unsigned int qx(do_ApF)(struct Fermion *r_x,

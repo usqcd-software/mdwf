@@ -23,5 +23,4 @@
     (macro S-compute-F ; [const 'plus] [const 'minus]
                        [const 'minus] [const 'plus]
                        [reg res-x] [reg l-s] [reg s-line] [reg nb] [reg U]
-                       [reg src-y] [reg buf*])
-    (op pointer-add () (src-y) ([reg src-y] [reg s-line]))))
+                       [reg src-y] [reg buf*])))

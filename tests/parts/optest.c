@@ -7,6 +7,8 @@
 
 #define NELEM(x) (sizeof (x) / sizeof ((x)[0]))
 
+int seed_u;
+
 int fermion_pos[5];
 int fermion_color;
 int fermion_dirac;
@@ -187,9 +189,9 @@ main(int argc, char *argv[])
 
     self = QMP_get_node_number();
     primary = QMP_is_primary_node();
-    if (argc != 21) {
-	zprint("21 arguments expected, found %d", argc);
-	zprint("Usage: operator M_5 m seed_bc Nx Ny Nz Nt"
+    if (argc != 22) {
+	zprint("22 arguments expected, found %d", argc);
+	zprint("Usage: operator M_5 m seed_u seed_bc Nx Ny Nz Nt"
 	       "  Lx Ly Lz Lt Ls"
 	       "  x y z t s c d re/im");
 	QMP_finalize_msg_passing();
@@ -198,17 +200,18 @@ main(int argc, char *argv[])
     
     M_5 = atof(argv[1]);
     m = atof(argv[2]);
-    seed_bc = atoi(argv[3]);
+    seed_u = atoi(argv[3]);
+    seed_bc = atoi(argv[4]);
     for (i = 0; i < 4; i++) {
-	network[i] = atoi(argv[i+4]);
-	lattice[i] = atoi(argv[i+8]);
-	fermion_pos[i] = atoi(argv[i+13]);
+	network[i] = atoi(argv[i+5]);
+	lattice[i] = atoi(argv[i+9]);
+	fermion_pos[i] = atoi(argv[i+14]);
     }
-    lattice[4] = atoi(argv[12]);
-    fermion_pos[4] = atoi(argv[17]);
-    fermion_color = atoi(argv[18]);
-    fermion_dirac = atoi(argv[19]);
-    fermion_reim = atoi(argv[20]);
+    lattice[4] = atoi(argv[13]);
+    fermion_pos[4] = atoi(argv[18]);
+    fermion_color = atoi(argv[19]);
+    fermion_dirac = atoi(argv[20]);
+    fermion_reim = atoi(argv[21]);
 
     setup_bc(seed_bc);
 

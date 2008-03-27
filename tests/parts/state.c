@@ -152,6 +152,7 @@ main(int argc, char *argv[])
     zprint("arg[%d]=%s", i, argv[i]);
   if (argc != 10) {
     zprint("10 arguments expected, found %d", argc);
+    zprint("usage: state Nx Ny Nz Ny lx ly lz lt Ls");
     QMP_finalize_msg_passing();
     return 1;
   }

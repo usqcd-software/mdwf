@@ -2,6 +2,8 @@
 #define _optest_h
 #define NELEM(x) (sizeof (x) / sizeof ((x)[0]))
 
+extern int seed_u;
+
 extern int fermion_pos[5];
 extern int fermion_color;
 extern int fermion_dirac;
@@ -42,5 +44,9 @@ extern double c5[128];
 void zflush(void);
 void xprint(char *fmt, ...);
 void zprint(char *fmt, ...);
+
+unsigned int sum_init(int);
+unsigned int sum_add(unsigned int, int);
+double sum_fini(unsigned int);
 
 #endif
