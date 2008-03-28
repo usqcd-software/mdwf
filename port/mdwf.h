@@ -280,6 +280,13 @@ unsigned int qx(do_F)(struct Fermion *res_x,
 		      const struct Fermion *src_y,
 		      void *rb[]);
 
+unsigned int qx(do_Fx)(struct Fermion *res_x,
+		       int start, int size, int Ls,
+		       const struct neighbor *neighbor,
+		       const struct SUn *U,
+		       const struct Fermion *src_y,
+		       void *rb[]);
+
 /* A+F, A and B */
 unsigned int qx(do_ApF)(struct Fermion *r_x,
 			int start, int size, int Ls,

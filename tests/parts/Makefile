@@ -38,7 +38,8 @@ opxtests = op-axa.c \
            op-ax1ax.c \
            op-bxb.c \
            op-b1b.c \
-           op-bx1bx.c
+           op-bx1bx.c \
+           op-fxf.c
 
 opdriver = optest.c
 

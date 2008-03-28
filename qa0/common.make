@@ -51,6 +51,7 @@ x.sources = f-copy \
             do-1pA \
             do-ApB \
             do-F \
+            do-Fx \
             do-1mF \
             do-1mFx \
             do-B-A-inv-F \

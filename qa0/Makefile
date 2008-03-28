@@ -57,6 +57,7 @@ x.sources = f-copy.qa0 \
             do-1pA.qa0 \
             do-ApB.qa0 \
             do-F.qa0 \
+            do-Fx.qa0 \
             do-1mF.qa0 \
             do-1mFx.qa0 \
             do-B-A-inv-F.qa0 \
