@@ -50,6 +50,7 @@ x.sources = f-copy.qa0 \
             f-add2.qa0 \
             f-add2-norm.qa0 \
             f-add2x.qa0 \
+            f-dot.qa0 \
             do-A.qa0 \
             do-A-inv.qa0 \
             do-A-conj-inv.qa0 \
@@ -64,7 +65,6 @@ x.sources = f-copy.qa0 \
             do-1mB1AF.qa0 \
             do-1mB1AF-norm.qa0 \
             do-ApF.qa0 \
-            dot-fermion.qa0 \
             get-fermion.qa0 \
             proj-minus.qa0 \
             proj-plus.qa0 \

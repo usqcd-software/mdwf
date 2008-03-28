@@ -43,6 +43,7 @@ x.sources = f-copy \
             f-add2 \
             f-add2-norm \
             f-add2x \
+	    f-dot \
             do-A \
             do-A-inv \
             do-A-conj-inv \
@@ -57,7 +58,6 @@ x.sources = f-copy \
             do-B-A-inv-F \
             do-1mB1AF \
             do-1mB1AF-norm \
-            dot-fermion \
             proj-minus \
             proj-plus \
             proj-u-minus \
