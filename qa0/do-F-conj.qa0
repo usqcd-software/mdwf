@@ -5,7 +5,7 @@
 (include "types.qa0")
 (include "defs-F.qa0")
 
-(procedure do-F ([stem "do_F"]
+(procedure do-F* ([stem "do_F_conj"]
                    prec&color
                    count-flops)
        ([res-x     pointer   "res_x"    "struct Fermion *"         ]
@@ -20,7 +20,7 @@
   (op int-mul () (x-start) ([reg start] [reg s-line]))
   (op pointer-add () (res-x) ([reg res-x] [reg x-start]))
   (loop () (i [const 0] [reg size])
-    (macro S-compute-F ; [const 'plus] [const 'minus]
-                       [const 'minus] [const 'plus]
+    (macro S-compute-F [const 'plus] [const 'minus]
+                       ; [const 'minus] [const 'plus]
                        [reg res-x] [reg l-s] [reg s-line] [reg nb] [reg U]
                        [reg src-y] [reg buf*])))

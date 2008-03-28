@@ -44,38 +44,38 @@ sources = fix-down.qa0 \
           sizeof-up-pack.qa0 \
           sizeof-neighbor.qa0
 
-x.sources = f-copy.qa0 \
+x.sources = get-fermion.qa0 \
+            put-fermion.qa0 \
+            put-gauge.qa0 \
+            sizeof-fermion.qa0 \
+            sizeof-gauge.qa0 \
+            sizeof-pfermion.qa0 \
+            f-copy.qa0 \
             f-norm.qa0 \
             f-add3.qa0 \
             f-add2.qa0 \
             f-add2-norm.qa0 \
             f-add2x.qa0 \
             f-dot.qa0 \
-            do-A.qa0 \
-            do-A-inv.qa0 \
-            do-A-conj-inv.qa0 \
-            do-BA-inv.qa0 \
-            do-1pA.qa0 \
-            do-ApB.qa0 \
-            do-F.qa0 \
-            do-Fx.qa0 \
-            do-1mF.qa0 \
-            do-1mFx.qa0 \
-            do-B-A-inv-F.qa0 \
-            do-1mB1AF.qa0 \
-            do-1mB1AF-norm.qa0 \
-            do-ApF.qa0 \
-            get-fermion.qa0 \
             proj-minus.qa0 \
             proj-plus.qa0 \
             proj-u-minus.qa0 \
             proj-u-plus.qa0 \
-            put-fermion.qa0 \
-            put-gauge.qa0 \
-            sizeof-fermion.qa0 \
-            sizeof-gauge.qa0 \
-            sizeof-pfermion.qa0
+            do-A.qa0 \
+            do-A-inv.qa0 \
+            do-A-conj-inv.qa0 \
+            do-F.qa0 \
+            do-F-conj.qa0 \
 
+#            do-BA-inv.qa0 \
+#            do-1pA.qa0 \
+#            do-ApB.qa0 \
+#            do-1mF.qa0 \
+#            do-1mFx.qa0 \
+#            do-B-A-inv-F.qa0 \
+#            do-1mB1AF.qa0 \
+#            do-1mB1AF-norm.qa0 \
+#            do-ApF.qa0
 #            do-A-conj-inv-B.qa0 \
 #            do-A-conj-inv-B-conj-F-conj.qa0 \
 #            do-AxpBxFx.qa0 \
@@ -84,17 +84,17 @@ x.sources = f-copy.qa0 \
 A.sources = do-A.qa0 \
             do-A-inv.qa0 \
             do-A-conj-inv.qa0 \
-            do-1pA.qa0 \
-            do-ApB.qa0 \
-            do-ApF.qa0 \
-            do-BA-inv.qa0 \
-            do-1pA.qa0 \
-            do-ApB.qa0 \
-            do-B-A-inv-F.qa0 \
-            do-ApF.qa0 \
-            do-1mB1AF.qa0 \
-            do-1mB1AF-norm.qa0
 
+#            do-1pA.qa0 \
+#            do-ApB.qa0 \
+#            do-ApF.qa0 \
+#            do-BA-inv.qa0 \
+#            do-1pA.qa0 \
+#            do-ApB.qa0 \
+#            do-B-A-inv-F.qa0 \
+#            do-ApF.qa0 \
+#            do-1mB1AF.qa0 \
+#            do-1mB1AF-norm.qa0
 #            do-A-conj-inv.qa0 \
 #            do-A-conj-inv-B.qa0 \
 #            do-A-conj-inv-B-conj-F-conj.qa0 \
@@ -102,13 +102,14 @@ A.sources = do-A.qa0 \
 
 # Who include defs-F.qa0 (they also need defs-spin.qa0)
 F.sources = do-F.qa0 \
-            do-ApF.qa0 \
-            do-1mF.qa0 \
-            do-1mFx.qa0 \
-            do-B-A-inv-F.qa0 \
-            do-1mB1AF.qa0 \
-            do-1mB1AF-norm.qa0
+            do-F-conj.qa0
 
+#            do-ApF.qa0 \
+#            do-1mF.qa0 \
+#            do-1mFx.qa0 \
+#            do-B-A-inv-F.qa0 \
+#            do-1mB1AF.qa0 \
+#            do-1mB1AF-norm.qa0
 #            do-A-conj-inv-B-conj-F-conj.qa0 \
 #            do-AxpBxFx.qa0 \
 

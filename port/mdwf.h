@@ -24,6 +24,11 @@
 #  define REAL float
 # endif
 
+/* Cache size */
+#define CACHE_LINE_SIZE 128
+#define ALIGN(p) ((void *)((((ptrdiff_t)(p))+CACHE_LINE_SIZE-1) & \
+                           ~(CACHE_LINE_SIZE-1)))
+
 /* QCD types (qa0 controls these definitions) */
 struct SUn;
 struct Fermion;
@@ -151,10 +156,10 @@ void q(l2v)(int x[Q(DIM)], const struct local *local, int p);
 int q(v2l)(const int x[Q(DIM)], const struct local *local);
 
 /* Implementation functions */
+int q(set_error)(struct Q(State) *state, int fatal, const char *error);
+
 int q(setup_comm)(struct Q(State) *state, int real_size);
 int q(free_comm)(struct Q(State) *state);
-
-int q(set_error)(struct Q(State) *state, int fatal, const char *error);
 
 void *q(malloc)(struct Q(State) *state, size_t bytes);
 void *q(allocate_aligned)(struct Q(State) *state,
@@ -178,7 +183,6 @@ void q(x_import)(struct eo_lattice *eo,
 				  int re_im,
 				  void *env),
 		 void *env);
-
 void q(x_export)(struct eo_lattice *eo,
 		 double r[],
 		 const struct Fermion *data, 
@@ -340,59 +344,11 @@ unsigned int qx(f_norm)(int size, int Ls,
 			double *s,
 			const struct Fermion *a);
 
-/* F */
-unsigned int qx(do_F)(struct Fermion *res_x,
-		      int start, int size, int Ls,
-		      const struct neighbor *neighbor,
-		      const struct SUn *U,
-		      const struct Fermion *src_y,
-		      void *rb[]);
-
-unsigned int qx(do_Fx)(struct Fermion *res_x,
-		       int start, int size, int Ls,
-		       const struct neighbor *neighbor,
-		       const struct SUn *U,
-		       const struct Fermion *src_y,
-		       void *rb[]);
-
-/* A+F, A and B */
-unsigned int qx(do_ApF)(struct Fermion *r_x,
-			int start, int size, int Ls,
-			const struct ABTable *atable,
-			const struct neighbor *neighbor,
-			const struct SUn *U,
-			const struct Fermion *s_x,
-			const struct Fermion *s_y,
-			void *rb[]);
-#if 0
-unsigned int qx(do_AxpFx)(struct Fermion *r_x,
-			  int start, int size, int Ls,
-			  const struct ABTable *atable,
-			  const struct neighbor *neighbor,
-			  const struct SUn *U,
-			  const struct Fermion *s_x,
-			  const struct Fermion *s_y,
-			  void *rb[]);
-#endif
+/* basic matrices */
 unsigned int qx(do_A)(struct Fermion *r_x,
 		      int size, int Ls,
 		      const struct ABTable *atable,
 		      const struct Fermion *s_x);
-#if 0
-unsigned int qx(do_AxpBxFx)(struct Fermion *r_x,
-			    int start, int size, int Ls,
-			    const struct ABTable *atable,
-			    const struct ABTable *btable,
-			    const struct neighbor *neighbor,
-			    const struct SUn *U,
-			    const struct Fermion *s_x,
-			    const struct Fermion *s_y,
-                            struct Fermion *tmp,
-			    void *rb[]);
-#endif
-/* XXX  other functions */
-
-/* Back end functions */
 unsigned int qx(do_A_inverse)(struct Fermion *r,
 			      int size, int Ls,
 			      const struct ABiTable *iatable_p,
@@ -403,6 +359,47 @@ unsigned int qx(do_A_conj_inverse)(struct Fermion *r,
 				   const struct ABiTable *iatable_p,
 				   const struct ABiTable *iatable_m,
 				   const struct Fermion *x);
+unsigned int qx(do_F)(struct Fermion *res_x,
+		      int start, int size, int Ls,
+		      const struct neighbor *neighbor,
+		      const struct SUn *U,
+		      const struct Fermion *src_y,
+		      void *rb[]);
+unsigned int qx(do_F_conj)(struct Fermion *res_x,
+			   int start, int size, int Ls,
+			   const struct neighbor *neighbor,
+			   const struct SUn *U,
+			   const struct Fermion *src_y,
+			   void *rb[]);
+
+#if 0
+/* A+F, A and B */
+unsigned int qx(do_ApF)(struct Fermion *r_x,
+			int start, int size, int Ls,
+			const struct ABTable *atable,
+			const struct neighbor *neighbor,
+			const struct SUn *U,
+			const struct Fermion *s_x,
+			const struct Fermion *s_y,
+			void *rb[]);
+unsigned int qx(do_AxpFx)(struct Fermion *r_x,
+			  int start, int size, int Ls,
+			  const struct ABTable *atable,
+			  const struct neighbor *neighbor,
+			  const struct SUn *U,
+			  const struct Fermion *s_x,
+			  const struct Fermion *s_y,
+			  void *rb[]);
+unsigned int qx(do_AxpBxFx)(struct Fermion *r_x,
+			    int start, int size, int Ls,
+			    const struct ABTable *atable,
+			    const struct ABTable *btable,
+			    const struct neighbor *neighbor,
+			    const struct SUn *U,
+			    const struct Fermion *s_x,
+			    const struct Fermion *s_y,
+                            struct Fermion *tmp,
+			    void *rb[]);
 /* XXX functions for cg, need better integration with the rest */
 unsigned int qx(do_1AcBc)(struct Fermion *r,
 			  int size, int Ls,
@@ -469,6 +466,8 @@ unsigned int qx(do_1mB1AF_norm)(struct Fermion *r_y,
 				const struct SUn *U,
 				const struct Fermion *b_x,
 				void *rb[]);
+#endif
+
 /* end of functions for cg */
 /* Timing */
 #define BEGIN_TIMING(s) do { gettimeofday(&((s)->t0), NULL); } while (0)
@@ -488,11 +487,6 @@ unsigned int qx(do_1mB1AF_norm)(struct Fermion *r_y,
       return q(set_error)(state, 0, f "(): geometry mismatch"); } while (0)
 #define CHECK_POINTER(n,f) do { if ((n) == 0)				\
       return q(set_error)(state, 0, f "(): NULL argument"); } while (0)
-
-/* Cache size */
-#define CACHE_LINE_SIZE 128
-#define ALIGN(p) ((void *)((((ptrdiff_t)(p))+CACHE_LINE_SIZE-1) & \
-                           ~(CACHE_LINE_SIZE-1)))
 
 
 #endif /* !defined(MARK_B9BA8123_0F1A_40FD_8827_42266FE32F3E) */

@@ -37,38 +37,38 @@ i.sources = put-ab.c \
             sizeof-neighbor.c \
             sizeof-up-pack.c
 
-x.sources = f-copy \
+x.sources = get-fermion \
+            put-fermion \
+            put-gauge \
+            sizeof-fermion \
+            sizeof-gauge \
+            sizeof-pfermion \
+            f-copy \
             f-norm \
             f-add3 \
             f-add2 \
             f-add2-norm \
             f-add2x \
 	    f-dot \
-            do-A \
-            do-A-inv \
-            do-A-conj-inv \
-            do-BA-inv \
-            do-ApF \
-            do-1pA \
-            do-ApB \
-            do-F \
-            do-Fx \
-            do-1mF \
-            do-1mFx \
-            do-B-A-inv-F \
-            do-1mB1AF \
-            do-1mB1AF-norm \
             proj-minus \
             proj-plus \
             proj-u-minus \
             proj-u-plus \
-            put-fermion \
-            get-fermion \
-            put-gauge \
-            sizeof-fermion \
-            sizeof-gauge \
-            sizeof-pfermion
+            do-A \
+            do-A-inv \
+            do-A-conj-inv \
+            do-F \
+            do-F-conj \
 
+#            do-BA-inv \
+#            do-ApF \
+#            do-1pA \
+#            do-ApB \
+#            do-1mF \
+#            do-1mFx \
+#            do-B-A-inv-F \
+#            do-1mB1AF \
+#            do-1mB1AF-norm \
 #            do-AxpBxFx \
 #            do-A-conj-inv-B \
 #            do-A-conj-inv-B-conj-F-conj \
