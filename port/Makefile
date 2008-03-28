@@ -41,24 +41,24 @@ x.sources = error.c \
             comm-setup.c \
             comm-free.c
 
-p.sources = f-alloc.c \
-            f-import.c \
-            f-export.c \
-            f-free.c \
-            h-alloc.c \
-            h-import.c \
-            h-export.c \
-            h-free.c \
-            g-free.c \
-            g-import.c \
+p.sources = fermion-alloc.c \
+            fermion-import.c \
+            fermion-export.c \
+            fermion-free.c \
+            fermion-madd.c \
+            fermion-dot.c \
+            fermion-norm2.c \
+            gauge-free.c \
+            gauge-import.c \
+            hfermion-alloc.c \
+            hfermion-import.c \
+            hfermion-export.c \
+            hfermion-free.c \
+            hfermion-madd.c \
+            hfermion-dot.c \
+            hfermion-norm2.c  \
             x-import.c \
-            x-export.c \
-            f-madd.c \
-            h-madd.c \
-            f-dot.c \
-            h-dot.c \
-            f-norm2.c \
-            h-norm2.c  \
+            x-export.c
 #            cg-dirac.c \
 #            op-dirac.c \
 #            op-dirac-conj.c
