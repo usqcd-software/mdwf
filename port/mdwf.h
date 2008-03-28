@@ -272,6 +272,74 @@ unsigned int qx(proj_Ucg3minus)(struct ProjectedFermion *r,
 				const struct up_pack *link,
 				const struct SUn *U,
 				const struct Fermion *f);
+
+/* Backend controled structure sizes */
+int q(sizeof_neighbor)(int volume);
+int q(sizeof_up_pack)(int volume);
+int q(sizeof_down_pack)(int volume);
+int q(sizeof_ABTable)(int Ls);
+int q(sizeof_ABiTable)(int Ls);
+int qx(sizeof_fermion)(int volume, int Ls);
+int qx(sizeof_projected_fermion)(int volume, int Ls);
+int qx(sizeof_gauge)(int volume);
+
+/* qa0 level data access routines */
+void qx(put_gauge)(struct SUn *ptr, int pos, const double r[]);
+void qx(put_fermion)(struct Fermion *data, int pos, int Ls, const double r[]);
+void qx(get_fermion)(double r[], const struct Fermion *data, int pos, int Ls);
+int q(get_down_pack_f)(const struct down_pack *up, int p);
+int q(get_up_pack_f)(const struct up_pack *up, int p);
+void q(put_down_pack)(struct down_pack *down, int p, int f);
+void q(get_down_pack)(int *f, const struct down_pack *up, int p);
+void q(put_up_pack)(struct up_pack *up, int p, int f, int u);
+void q(get_up_pack)(int *f, int *u, const struct up_pack *up, int p);
+void q(put_neighbor)(struct neighbor *n, int p,
+		     int m,
+		     const int f_up[Q(DIM)], int u_up,
+		     const int f_down[Q(DIM)], const int u_down[Q(DIM)]);
+void q(get_neighbor)(int *m, int *f_up, int *u_up,
+		     int *f_down, int *u_down,
+		     const struct neighbor *n, int p);
+void q(fix_neighbor_f_up)(struct neighbor *n, int p, int f_up, int d);
+void q(fix_neighbor_f_down)(struct neighbor *n, int p, int f_down, int d);
+void q(put_ABTable)(struct ABTable *t,
+		    int i, int ip, int im,
+		    double v, double vp, double vm);
+void q(put_ABiTableZ)(struct ABiTable *t, double z);
+void q(put_ABiTable)(struct ABiTable *t,
+		     int i,
+		     double vp, double sp, double fp);
+
+/* Linear algebra on fermions */
+void qx(f_copy)(int size, int Ls,
+		struct Fermion *dst, 
+		const struct Fermion *src);
+unsigned int qx(f_dot)(double *v_r, double *v_i,
+		       int size, int Ls,
+		       const struct Fermion *a,
+		       const struct Fermion *b);
+unsigned int qx(f_add3)(int size, int Ls,
+			struct Fermion *r,
+			const struct Fermion *a,
+			double s,
+			const struct Fermion *b);
+unsigned int qx(f_add2)(int size, int Ls,
+			struct Fermion *r,
+			double s,
+			const struct Fermion *b);
+unsigned int qx(f_add2_norm)(int size, int Ls,
+			     struct Fermion *r,
+			     double *norm,
+			     double s,
+			     const struct Fermion *b);
+unsigned int qx(f_add2x)(int size, int Ls,
+			struct Fermion *r,
+			double s,
+			const struct Fermion *b);
+unsigned int qx(f_norm)(int size, int Ls,
+			double *s,
+			const struct Fermion *a);
+
 /* F */
 unsigned int qx(do_F)(struct Fermion *res_x,
 		      int start, int size, int Ls,
@@ -325,21 +393,6 @@ unsigned int qx(do_AxpBxFx)(struct Fermion *r_x,
 /* XXX  other functions */
 
 /* Back end functions */
-void qx(put_gauge)(struct SUn *ptr, int pos, const double r[]);
-void qx(put_fermion)(struct Fermion *data, int pos, int Ls, const double r[]);
-void qx(get_fermion)(double r[], const struct Fermion *data, int pos, int Ls);
-unsigned int qx(madd_fermion)(struct Fermion *r,
-			      int size, int Ls,
-			      const struct Fermion *a,
-			      double s,
-			      const struct Fermion *b);
-unsigned int qx(dot_fermion)(double *v_r, double *v_i,
-			     int size, int Ls,
-			     const struct Fermion *a,
-			     const struct Fermion *b);
-unsigned int qx(norm2_fermion)(double *v_r,
-			       int size, int Ls,
-			       const struct Fermion *a);
 unsigned int qx(do_A_inverse)(struct Fermion *r,
 			      int size, int Ls,
 			      const struct ABiTable *iatable_p,
@@ -416,30 +469,6 @@ unsigned int qx(do_1mB1AF_norm)(struct Fermion *r_y,
 				const struct SUn *U,
 				const struct Fermion *b_x,
 				void *rb[]);
-void qx(f_copy)(int size, int Ls,
-		struct Fermion *dst, 
-		const struct Fermion *src);
-unsigned int qx(f_add3)(int size, int Ls,
-			struct Fermion *r,
-			const struct Fermion *a,
-			double s,
-			const struct Fermion *b);
-unsigned int qx(f_add2)(int size, int Ls,
-			struct Fermion *r,
-			double s,
-			const struct Fermion *b);
-unsigned int qx(f_add2_norm)(int size, int Ls,
-			     struct Fermion *r,
-			     double *norm,
-			     double s,
-			     const struct Fermion *b);
-unsigned int qx(f_add2x)(int size, int Ls,
-			struct Fermion *r,
-			double s,
-			const struct Fermion *b);
-unsigned int qx(f_norm)(int size, int Ls,
-			double *s,
-			const struct Fermion *a);
 /* end of functions for cg */
 /* Timing */
 #define BEGIN_TIMING(s) do { gettimeofday(&((s)->t0), NULL); } while (0)
@@ -465,37 +494,5 @@ unsigned int qx(f_norm)(int size, int Ls,
 #define ALIGN(p) ((void *)((((ptrdiff_t)(p))+CACHE_LINE_SIZE-1) & \
                            ~(CACHE_LINE_SIZE-1)))
 
-/* Backend controled structure sizes */
-int q(sizeof_neighbor)(int volume);
-int q(sizeof_up_pack)(int volume);
-int q(sizeof_down_pack)(int volume);
-int q(sizeof_ABTable)(int Ls);
-int q(sizeof_ABiTable)(int Ls);
-int qx(sizeof_fermion)(int volume, int Ls);
-int qx(sizeof_projected_fermion)(int volume, int Ls);
-int qx(sizeof_gauge)(int volume);
-
-int q(get_down_pack_f)(const struct down_pack *up, int p);
-int q(get_up_pack_f)(const struct up_pack *up, int p);
-void q(put_down_pack)(struct down_pack *down, int p, int f);
-void q(get_down_pack)(int *f, const struct down_pack *up, int p);
-void q(put_up_pack)(struct up_pack *up, int p, int f, int u);
-void q(get_up_pack)(int *f, int *u, const struct up_pack *up, int p);
-void q(put_neighbor)(struct neighbor *n, int p,
-		     int m,
-		     const int f_up[Q(DIM)], int u_up,
-		     const int f_down[Q(DIM)], const int u_down[Q(DIM)]);
-void q(get_neighbor)(int *m, int *f_up, int *u_up,
-		     int *f_down, int *u_down,
-		     const struct neighbor *n, int p);
-void q(fix_neighbor_f_up)(struct neighbor *n, int p, int f_up, int d);
-void q(fix_neighbor_f_down)(struct neighbor *n, int p, int f_down, int d);
-void q(put_ABTable)(struct ABTable *t,
-		    int i, int ip, int im,
-		    double v, double vp, double vm);
-void q(put_ABiTableZ)(struct ABiTable *t, double z);
-void q(put_ABiTable)(struct ABiTable *t,
-		     int i,
-		     double vp, double sp, double fp);
 
 #endif /* !defined(MARK_B9BA8123_0F1A_40FD_8827_42266FE32F3E) */

@@ -2,7 +2,7 @@
 
 (include "types.qa0")
 
-(procedure dot-fermion ([stem "dot_fermion"]
+(procedure dot-fermion ([stem "f_dot"]
                         prec&color
                         count-flops)
            ([ptr-re    pointer "r_re"      "double *"               ]

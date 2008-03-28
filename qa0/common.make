@@ -58,8 +58,6 @@ x.sources = f-copy \
             do-1mB1AF \
             do-1mB1AF-norm \
             dot-fermion \
-            madd-fermion \
-            norm2-fermion \
             proj-minus \
             proj-plus \
             proj-u-minus \

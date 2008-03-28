@@ -66,8 +66,6 @@ x.sources = f-copy.qa0 \
             do-ApF.qa0 \
             dot-fermion.qa0 \
             get-fermion.qa0 \
-            madd-fermion.qa0 \
-            norm2-fermion.qa0 \
             proj-minus.qa0 \
             proj-plus.qa0 \
             proj-u-minus.qa0 \
