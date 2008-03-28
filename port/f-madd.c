@@ -14,12 +14,12 @@ QX(madd_fermion)(struct QX(Fermion) *r,
   CHECK_ARGn(b, "madd_fermion");
 
   BEGIN_TIMING(state);
-  flops = qx(madd_fermion)(r->even,
-			   state->even.full_size, state->Ls,
-			   a->even, alpha, b->even);
-  flops += qx(madd_fermion)(r->odd,
-			    state->odd.full_size, state->Ls,
-			    a->odd, alpha, b->odd);
+  flops = qx(f_add3)(r->even,
+		     state->even.full_size, state->Ls,
+		     a->even, alpha, b->even);
+  flops += qx(f_add3)(r->odd,
+		      state->odd.full_size, state->Ls,
+		      a->odd, alpha, b->odd);
   END_TIMING(state, flops, 0, 0);
   return 0;
   

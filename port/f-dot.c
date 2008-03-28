@@ -14,12 +14,12 @@ QX(dot_fermion)(double *v_r, double *v_i,
   CHECK_POINTER(v_i, "dot_fermion");
 
   BEGIN_TIMING(state);
-  flops = qx(dot_fermion)(v_r, v_i,
-			  state->even.full_size, state->Ls,
-			  a->even, b->even);
-  flops += qx(dot_fermion)(v_r, v_i,
-			   state->odd.full_size, state->Ls,
-			   a->odd, b->odd);
+  flops = qx(f_dot)(v_r, v_i,
+		    state->even.full_size, state->Ls,
+		    a->even, b->even);
+  flops += qx(f_dot)(v_r, v_i,
+		     state->odd.full_size, state->Ls,
+		     a->odd, b->odd);
   QMP_sum_double(v_r);
   QMP_sum_double(v_i);
   END_TIMING(state, flops, 2 * sizeof (double), 2 * sizeof (double));
