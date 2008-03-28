@@ -46,7 +46,7 @@ opxdriver = opxtest.c
 
 objects = $(tests:%.c=%.o)
 x.objects = $(x.tests:%.c=%-d.o) $(x.tests:%.c=%-f.o)
-op.objects = $(optests:%.c=%.o) $(opdriver:%.c = %.o)
+op.objects = $(optests:%.c=%.o) $(opdriver:%.c=%.o)
 opx.objects = $(opxtests:%.c=%.o) $(opxdriver:%.c=%.o)
 all.objects = $(objects) $(x.objects) $(op.objects) $(opx.objects)
 
@@ -77,7 +77,7 @@ clean:
 
 dist realclean: clean
 	$E RM tests/programs
-	$C$(RM) $(all.programs)
+	$C$(RM) $(programs)
 
 $(objects:%.o=%) $(x.objects:%.o=%): %: %.o
 	$E LD $@

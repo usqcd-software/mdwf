@@ -99,8 +99,8 @@ read_gauge(int dir,
     s = sum_add(s, seed_u);
     v = sum_fini(s);
 
-    xprint(" u/2[%2d %2d %2d %2d].%1d(%1d,%1d)%d = %12.8f",
-	   pos[0], pos[1], pos[2], pos[3], dir, a, b, re_im, v/2);
+    xprint(" -u/2[%2d %2d %2d %2d].%1d(%1d,%1d)%d = %12.8f",
+	   pos[0], pos[1], pos[2], pos[3], dir, a, b, re_im, -v/2);
     return v;
 }
 
