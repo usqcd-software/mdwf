@@ -5,10 +5,10 @@
 (procedure f-add2-norm ([stem "f_add2_norm"]
                         prec&color
                         count-flops)
-           ([size      int     "size"      "int"                    ]
-            [l-s       int     "Ls"        "int"                    ]
-            [result    pointer "r"         "struct Fermion *"       ]
+           ([result    pointer "r"         "struct Fermion *"       ]
             [ptr-norm  pointer "norm"      "double *"               ]
+            [size      int     "size"      "int"                    ]
+            [l-s       int     "Ls"        "int"                    ]
             [scale     double  "s"         "double"                 ]
             [B         pointer "b"         "const struct Fermion *" ])
    (op qcd-fnorm-init () (norm) ())

@@ -5,9 +5,9 @@
 (procedure f-add2x ([stem "f_add2x"]
                     prec&color
                     count-flops)
-           ([size      int     "size"      "int"                    ]
+           ([result    pointer "r"         "struct Fermion *"       ]
+            [size      int     "size"      "int"                    ]
             [l-s       int     "Ls"        "int"                    ]
-            [result    pointer "r"         "struct Fermion *"       ]
             [scale     double  "s"         "double"                 ]
             [B         pointer "b"         "const struct Fermion *" ])
    (loop () (i [const 0] [reg size])

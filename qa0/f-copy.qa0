@@ -4,9 +4,9 @@
 
 (procedure copy-fermion ([stem "f_copy"]
                           prec&color)
-           ([size      int     "size"      "int"                    ]
+           ([R         pointer "r"         "struct Fermion *"       ]
+            [size      int     "size"      "int"                    ]
             [l-s       int     "Ls"        "int"                    ]
-            [R         pointer "r"         "struct Fermion *"       ]
             [A         pointer "a"         "const struct Fermion *" ])
    (loop () (i [const 0] [reg size])
      (loop () (s [const 0] [reg l-s])

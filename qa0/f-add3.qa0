@@ -5,9 +5,9 @@
 (procedure f-add3 ([stem "f_add3"]
                    prec&color
                    count-flops)
-           ([size      int     "size"      "int"                    ]
+           ([result    pointer "r"         "struct Fermion *"       ]
+	    [size      int     "size"      "int"                    ]
             [l-s       int     "Ls"        "int"                    ]
-            [result    pointer "r"         "struct Fermion *"       ]
             [A         pointer "a"         "const struct Fermion *" ]
             [scale     double  "s"         "double"                 ]
             [B         pointer "b"         "const struct Fermion *" ])

@@ -315,33 +315,33 @@ void q(put_ABiTable)(struct ABiTable *t,
 		     double vp, double sp, double fp);
 
 /* Linear algebra on fermions */
-void qx(f_copy)(int size, int Ls,
-		struct Fermion *dst, 
+void qx(f_copy)(struct Fermion *dst, 
+		int size, int Ls,
 		const struct Fermion *src);
 unsigned int qx(f_dot)(double *v_r, double *v_i,
 		       int size, int Ls,
 		       const struct Fermion *a,
 		       const struct Fermion *b);
-unsigned int qx(f_add3)(int size, int Ls,
-			struct Fermion *r,
+unsigned int qx(f_add3)(struct Fermion *r,
+			int size, int Ls,
 			const struct Fermion *a,
 			double s,
 			const struct Fermion *b);
-unsigned int qx(f_add2)(int size, int Ls,
-			struct Fermion *r,
+unsigned int qx(f_add2)(struct Fermion *r,
+			int size, int Ls,
 			double s,
 			const struct Fermion *b);
-unsigned int qx(f_add2_norm)(int size, int Ls,
-			     struct Fermion *r,
+unsigned int qx(f_add2_norm)(struct Fermion *r,
 			     double *norm,
+			     int size, int Ls,
 			     double s,
 			     const struct Fermion *b);
-unsigned int qx(f_add2x)(int size, int Ls,
-			struct Fermion *r,
-			double s,
-			const struct Fermion *b);
-unsigned int qx(f_norm)(int size, int Ls,
-			double *s,
+unsigned int qx(f_add2x)(struct Fermion *r,
+			 int size, int Ls,
+			 double s,
+			 const struct Fermion *b);
+unsigned int qx(f_norm)(double *s,
+			int size, int Ls,
 			const struct Fermion *a);
 
 /* basic matrices */
