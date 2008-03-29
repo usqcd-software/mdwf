@@ -46,7 +46,11 @@ opdriver = optest.c
 opxdriver = opxtest.c
 
 oproutines = op-a.c \
-             op-b.c
+             op-ax.c \
+             op-a1.c \
+             op-a1x.c \
+             op-b.c \
+             op-bx.c
 
 oplib = op
 

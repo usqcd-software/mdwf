@@ -10,6 +10,33 @@ int op_A_odd(struct Fermion *result,
 int op_A(struct QX(Fermion) *result,
 	 const struct Q(Parameters) *params,
 	 const struct QX(Fermion) *fermion);
+int op_Ax_even(struct Fermion *result,
+	       const struct Q(Parameters) *params,
+	       const struct Fermion *fermion);
+int op_Ax_odd(struct Fermion *result,
+	      const struct Q(Parameters) *params,
+	      const struct Fermion *fermion);
+int op_Ax(struct QX(Fermion) *result,
+	  const struct Q(Parameters) *params,
+	  const struct QX(Fermion) *fermion);
+int op_A1_even(struct Fermion *result,
+	      const struct Q(Parameters) *params,
+	      const struct Fermion *fermion);
+int op_A1_odd(struct Fermion *result,
+	     const struct Q(Parameters) *params,
+	     const struct Fermion *fermion);
+int op_A1(struct QX(Fermion) *result,
+	 const struct Q(Parameters) *params,
+	 const struct QX(Fermion) *fermion);
+int op_Ax1_even(struct Fermion *result,
+	       const struct Q(Parameters) *params,
+	       const struct Fermion *fermion);
+int op_Ax1_odd(struct Fermion *result,
+	      const struct Q(Parameters) *params,
+	      const struct Fermion *fermion);
+int op_Ax1(struct QX(Fermion) *result,
+	  const struct Q(Parameters) *params,
+	  const struct QX(Fermion) *fermion);
 int op_B_even(struct Fermion *result,
 	      const struct Q(Parameters) *params,
 	      const struct Fermion *fermion);
