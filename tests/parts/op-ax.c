@@ -29,9 +29,9 @@ op_Ax_odd(struct Fermion *result,
 }
 
 int
-op_A(struct QX(Fermion) *result,
-     const struct Q(Parameters) *params,
-     const struct QX(Fermion) *fermion)
+op_Ax(struct QX(Fermion) *result,
+      const struct Q(Parameters) *params,
+      const struct QX(Fermion) *fermion)
 {
     op_Ax_even(result->even, params, fermion->even);
     op_Ax_odd(result->odd, params, fermion->odd);
