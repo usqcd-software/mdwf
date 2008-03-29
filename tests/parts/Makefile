@@ -52,7 +52,9 @@ oproutines = op-a.c \
              op-b.c \
              op-bx.c \
              op-b1.c \
-             op-b1x.c
+             op-b1x.c \
+             op-f.c \
+             op-fx.c
 
 oplib = op
 
