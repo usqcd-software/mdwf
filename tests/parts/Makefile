@@ -20,26 +20,26 @@ tests = operator.c \
 x.tests = heater.c \
           localheat.c
 
-optests = op-dummy.c \
-          op-ddw.c \
-          op-a.c \
-          op-a1.c \
-          op-ax.c \
-          op-ax1.c \
-          op-b.c \
-          op-b1.c \
-          op-bx.c \
-          op-bx1.c \
-          op-f0.c \
-          op-f.c
+optests = test-op-dummy.c \
+          test-op-ddw.c \
+          test-op-a.c \
+          test-op-a1.c \
+          test-op-ax.c \
+          test-op-ax1.c \
+          test-op-b.c \
+          test-op-b1.c \
+          test-op-bx.c \
+          test-op-bx1.c \
+          test-op-f0.c \
+          test-op-f.c
 
-opxtests = op-axa.c \
-           op-a1a.c \
-           op-ax1ax.c \
-           op-bxb.c \
-           op-b1b.c \
-           op-bx1bx.c \
-           op-fxf.c
+opxtests = test-op-axa.c \
+           test-op-a1a.c \
+           test-op-ax1ax.c \
+           test-op-bxb.c \
+           test-op-b1b.c \
+           test-op-bx1bx.c \
+           test-op-fxf.c
 
 opdriver = optest.c
 
