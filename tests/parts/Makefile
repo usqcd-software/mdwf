@@ -45,10 +45,17 @@ opdriver = optest.c
 
 opxdriver = opxtest.c
 
-objects = $(tests:%.c=%.o)
-x.objects = $(x.tests:%.c=%-d.o) $(x.tests:%.c=%-f.o)
-op.objects = $(optests:%.c=%.o) $(opdriver:%.c=%.o)
+oproutines = op-a.c \
+             op-b.c
+
+oplib = op
+
+libname     = $(oplib:%=lib%.a)
+objects     = $(tests:%.c=%.o)
+x.objects   = $(x.tests:%.c=%-d.o) $(x.tests:%.c=%-f.o)
+op.objects  = $(optests:%.c=%.o) $(opdriver:%.c=%.o)
 opx.objects = $(opxtests:%.c=%.o) $(opxdriver:%.c=%.o)
+opl.objects = $(oproutines:%.c=%.o)
 all.objects = $(objects) $(x.objects) $(op.objects) $(opx.objects)
 
 programs = $(objects:%.o=%) \
@@ -129,3 +136,13 @@ $(optests:%.c=%.o) $(opdriver:%.c=%.o): optest.h
 
 $(opxtests:%.c=%.o) $(opxdriver:%.c=%.o): opxtest.h
 
+$(libname): $(opl.objects)
+	$E AR $(libname)
+	$C$(AR) cr $(libname) $(opl.objects)
+	$C$(RANLIB) $(libname)
+
+$(opl.objects): %.o: %.c
+	$E CC $@
+	$C$(CC) $(TCFLAGS) -DQOP_MDWF_DEFAULT_PRECISION=\'D\' -c -o $@ $<
+
+$(objl.objects): $(TOP)/port/mdwf.h $(TOP)/$(LIMPDIR)/qop-mdwf3.h op-routines.h
