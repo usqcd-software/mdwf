@@ -55,7 +55,8 @@ opztests = test-op-axa-2.c \
            test-op-bxb-2.c \
            test-op-bx1bx-2.c \
            test-op-b1b-2.c \
-           test-op-fxf-2.c
+           test-op-fxf-2.c \
+           test-op-md-2.c
 
 oproutines = op-a.c \
              op-ax.c \
@@ -77,6 +78,7 @@ x.objects   = $(x.tests:%.c=%-d.o) $(x.tests:%.c=%-f.o)
 op.objects  = $(optests:%.c=%.o) $(opdriver:%.c=%.o)
 opx.objects = $(opxtests:%.c=%.o) $(opxdriver:%.c=%.o)
 opy.objects = $(opytests:%.c=%.o)
+opz.objects = $(opztests:%.c=%.o)
 opl.objects = $(oproutines:%.c=%.o)
 all.objects = $(objects) \
               $(x.objects) \
