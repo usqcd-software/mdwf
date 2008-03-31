@@ -1,7 +1,9 @@
 #include <qop-mdwf3.h>
+#include "../../port/mdwf.h"
 #include "optest.h"
+#include "op-routines.h"
 
-char *op_name = "Dirac Domain Wall operator";
+char *op_name = "DDW in parts";
 
 double
 read_gauge(int dir,
@@ -10,10 +12,18 @@ read_gauge(int dir,
 	   int re_im,
 	   void *env)
 {
-    if (a == b && re_im == 0)
-	return 1.0;
-    else
-	return 0.0;
+    int i;
+    unsigned int v = sum_init(seed_u);
+
+    v = sum_add(v, re_im);
+    v = sum_add(v, a);
+    v = sum_add(v, b);
+    for (i = 0; i < 4; i++) {
+	v = sum_add(v, pos[i]);
+	v = sum_add(v, dir);
+    }
+    v = sum_add(v, seed_u);
+    return sum_fini(v);
 }
 
 double
@@ -42,12 +52,17 @@ write_fermion(const int pos[5],
 	      void *env)
 {
     if (value != 0.0)
-	xprint("   fermion[%d,%d,%d,%d;%d][%d,%d].%d = %g",
+	xprint("   fermion[%d,%d,%d,%d;%d][%d,%d].%d = %12.8f",
 	       pos[0], pos[1], pos[2], pos[3], pos[4],
 	       c, d, re_im, value);
 }
 
-int operator(void)
+int
+operator(void)
 {
-    return QOP_MDWF_DDW_operator(result, params, gauge, fermion);
+    if (QX(DDW_operator)(result, params, gauge, fermion)) {
+	zprint("operator_DDW(): failed");
+	return 1;
+    };
+    return 0;
 }

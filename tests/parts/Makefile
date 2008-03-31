@@ -38,7 +38,8 @@ optests = test-op-dummy.c \
 opytests = test-op-a-2.c \
            test-op-b-2.c \
            test-op-f-2.c \
-           test-op-ddw-2.c
+           test-op-ddw-2.c \
+           test-op-ddwq-2.c
 
 opxdriver = opxtest.c
 

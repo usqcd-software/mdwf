@@ -148,7 +148,7 @@ operator_b(void)
 	       fermion_y->odd, fermion_z->odd, fermion_y->even,
 	       fermion_a->odd, fermion_a->even);
 
-    dot_fermion(&x, &y, fermion_x, fermion_a);
+    dot_fermion(&x, &y, fermion_b, fermion_x);
     QOP_MDWF_free_fermion(&fermion_z);
     QOP_MDWF_free_fermion(&fermion_y);
     QOP_MDWF_free_fermion(&fermion_x);
