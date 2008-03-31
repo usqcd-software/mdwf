@@ -106,10 +106,10 @@ dot(double *v_r, double *v_i,
 {
     double r1, r2, i1, i2;
 
-    qx(dot_fermion)(&r1, &i1, a->state->even.full_size, a->state->even.Ls,
-		    a->even, b->even);
-    qx(dot_fermion)(&r2, &i2, a->state->odd.full_size, a->state->odd.Ls,
-		    a->odd, b->odd);
+    qx(f_dot)(&r1, &i1, a->state->even.full_size, a->state->even.Ls,
+	      a->even, b->even);
+    qx(f_dot)(&r2, &i2, a->state->odd.full_size, a->state->odd.Ls,
+	      a->odd, b->odd);
     *v_r = r1 + r2;
     *v_i = i1 + i2;
 }

@@ -1,9 +1,10 @@
 #include <qop-mdwf3.h>
 #include "../../port/mdwf.h"
 #include "opxtest.h"
+#include "op-routines.h"
 
 char *op_a_name = "1";
-char *op_b_name = "inverse(conj(B)) * conj(B)";
+char *op_b_name = "inverse(conj(lib:B)) * conj(lib:B)";
 
 double
 read_gauge(int dir,
@@ -61,67 +62,12 @@ read_fermion_b(const int pos[5],
     return read_fermion(seed_b, pos, c, d, re_im);
 }
 
-static int
-operator_A(struct QX(Fermion) *result,
-	   const struct Q(Parameters) *params,
-	   const struct QX(Gauge) *gauge,
-	   const struct QX(Fermion) *fermion)
-{
-    qx(do_A)(result->even,
-	     result->state->even.full_size,
-	     result->state->even.Ls,
-	     params->BxTable,
-	     fermion->even);
-    qx(do_A)(result->odd,
-	     result->state->odd.full_size,
-	     result->state->odd.Ls,
-	     params->BxTable,
-	     fermion->odd);
-    return 0;
-}
-
-static int
-operator_Ainv(struct QX(Fermion) *result,
-	      const struct Q(Parameters) *params,
-	      const struct QX(Gauge) *gauge,
-	      const struct QX(Fermion) *fermion)
-{
-    qx(do_A_conj_inverse)(result->even,
-			  result->state->even.full_size,
-			  result->state->even.Ls,
-			  params->BxipTable,
-			  params->BximTable,
-			  fermion->even);
-    qx(do_A_conj_inverse)(result->odd,
-			  result->state->odd.full_size,
-			  result->state->odd.Ls,
-			  params->BxipTable,
-			  params->BximTable,
-			  fermion->odd);
-    return 0;
-}
-
-static void
-dot(double *v_r, double *v_i,
-    const struct QX(Fermion) *a,
-    const struct QX(Fermion) *b)
-{
-    double r1, r2, i1, i2;
-
-    qx(f_dot)(&r1, &i1, a->state->even.full_size, a->state->even.Ls,
-	      a->even, b->even);
-    qx(f_dot)(&r2, &i2, a->state->odd.full_size, a->state->odd.Ls,
-	      a->odd, b->odd);
-    *v_r = r1 + r2;
-    *v_i = i1 + i2;
-}
-
 int
 operator_a(void)
 {
     double x, y;
 
-    dot(&x, &y, fermion_b, fermion_a);
+    dot_fermion(&x, &y, fermion_b, fermion_a);
 
     zprint("dot     : %20.10e %20.10e", x, y);
     return 0;
@@ -144,9 +90,9 @@ operator_b(void)
 	return 1;
     }
 
-    operator_A(fermion_x, params, gauge, fermion_a);
-    operator_Ainv(fermion_y, params, gauge, fermion_x);
-    dot(&x, &y, fermion_b, fermion_y);
+    op_Bx(fermion_x, params, fermion_a);
+    op_B1x(fermion_y, params, fermion_x);
+    dot_fermion(&x, &y, fermion_b, fermion_y);
     QOP_MDWF_free_fermion(&fermion_x);
     QOP_MDWF_free_fermion(&fermion_y);
     zprint("identity: %20.10e %20.10e", x, y);

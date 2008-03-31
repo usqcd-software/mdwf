@@ -3,8 +3,8 @@
 #include "opxtest.h"
 #include "op-routines.h"
 
-char *op_a_name = "conj(B)";
-char *op_b_name = "B";
+char *op_a_name = "conj(lib:F)";
+char *op_b_name = "lib:F";
 
 double
 read_gauge(int dir,
@@ -62,59 +62,6 @@ read_fermion_b(const int pos[5],
     return read_fermion(seed_b, pos, c, d, re_im);
 }
 
-static int
-operator_B(struct QX(Fermion) *result,
-	   const struct Q(Parameters) *params,
-	   const struct QX(Gauge) *gauge,
-	   const struct QX(Fermion) *fermion)
-{
-    qx(do_A)(result->even,
-	     result->state->even.full_size,
-	     result->state->even.Ls,
-	     params->BTable,
-	     fermion->even);
-    qx(do_A)(result->odd,
-	     result->state->odd.full_size,
-	     result->state->odd.Ls,
-	     params->BTable,
-	     fermion->odd);
-    return 0;
-}
-
-static int
-operator_Bx(struct QX(Fermion) *result,
-	    const struct Q(Parameters) *params,
-	    const struct QX(Gauge) *gauge,
-	    const struct QX(Fermion) *fermion)
-{
-    qx(do_A)(result->even,
-	     result->state->even.full_size,
-	     result->state->even.Ls,
-	     params->BxTable,
-	     fermion->even);
-    qx(do_A)(result->odd,
-	     result->state->odd.full_size,
-	     result->state->odd.Ls,
-	     params->BxTable,
-	     fermion->odd);
-    return 0;
-}
-
-static void
-dot(double *v_r, double *v_i,
-    const struct QX(Fermion) *a,
-    const struct QX(Fermion) *b)
-{
-    double r1, r2, i1, i2;
-
-    qx(f_dot)(&r1, &i1, a->state->even.full_size, a->state->even.Ls,
-	      a->even, b->even);
-    qx(f_dot)(&r2, &i2, a->state->odd.full_size, a->state->odd.Ls,
-	      a->odd, b->odd);
-    *v_r = r1 + r2;
-    *v_i = i1 + i2;
-}
-
 int
 operator_a(void)
 {
@@ -122,12 +69,13 @@ operator_a(void)
     struct QX(Fermion) *fermion_x;
 
     if (QOP_MDWF_allocate_fermion(&fermion_x, gauge->state)) {
-	zprint("operator_B(): alloc failed");
+	zprint("operator_A(): alloc failed");
 	return 1;
     }
 
-    operator_B(fermion_x, params, gauge, fermion_a);
-    dot(&x, &y, fermion_b, fermion_x);
+    op_F(fermion_x, gauge, fermion_a);
+    dot_fermion(&x, &y, fermion_b, fermion_x);
+
     QOP_MDWF_free_fermion(&fermion_x);
     zprint("normal: %20.10e %20.10e", x, y);
     return 0;
@@ -140,12 +88,12 @@ operator_b(void)
     struct QX(Fermion) *fermion_x;
 
     if (QOP_MDWF_allocate_fermion(&fermion_x, gauge->state)) {
-	zprint("operator_Bx(): alloc failed");
+	zprint("operator_Ax(): alloc failed");
 	return 1;
     }
 
-    operator_Bx(fermion_x, params, gauge, fermion_b);
-    dot(&x, &y, fermion_x, fermion_a);
+    op_Fx(fermion_x, gauge, fermion_b);
+    dot_fermion(&x, &y, fermion_x, fermion_a);
     QOP_MDWF_free_fermion(&fermion_x);
     zprint("conj  : %20.10e %20.10e", x, y);
     return 0;

@@ -103,14 +103,14 @@ op_Fx_odd(struct Fermion *result_odd,
 
 int
 op_Fx(struct Q(Fermion) *result,
-     struct Q(State) *state,
      const struct Q(Gauge) *gauge,
      const struct Q(Fermion) *source)
 {
+    struct Q(State) *state = gauge->state;
     int status = 0;
 
     status |= op_Fx_even(result->even, state, gauge->data, source->odd);
-    status |= op_Fx_odd(result->odd, state, gauge->data, source->odd);
+    status |= op_Fx_odd(result->odd, state, gauge->data, source->even);
 
     return status;
 }

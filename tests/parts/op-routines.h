@@ -1,6 +1,9 @@
 #ifndef MARK_0DAB983B_E5FA_4BCE_AE68_915CE2ABD086
 #define MARK_0DAB983B_E5FA_4BCE_AE68_915CE2ABD086
 
+void dot_fermion(double *v_r, double *v_i,
+		 const struct QX(Fermion) *a,
+		 const struct QX(Fermion) *b);
 int op_A_even(struct Fermion *result,
 	      const struct Q(Parameters) *params,
 	      const struct Fermion *fermion);
@@ -28,13 +31,13 @@ int op_A1_odd(struct Fermion *result,
 int op_A1(struct QX(Fermion) *result,
 	  const struct Q(Parameters) *params,
 	  const struct QX(Fermion) *fermion);
-int op_Ax1_even(struct Fermion *result,
+int op_A1x_even(struct Fermion *result,
 		const struct Q(Parameters) *params,
 		const struct Fermion *fermion);
-int op_Ax1_odd(struct Fermion *result,
+int op_A1x_odd(struct Fermion *result,
 	       const struct Q(Parameters) *params,
 	       const struct Fermion *fermion);
-int op_Ax1(struct QX(Fermion) *result,
+int op_A1x(struct QX(Fermion) *result,
 	   const struct Q(Parameters) *params,
 	   const struct QX(Fermion) *fermion);
 int op_B_even(struct Fermion *result,
@@ -64,13 +67,13 @@ int op_B1_odd(struct Fermion *result,
 int op_B1(struct QX(Fermion) *result,
 	  const struct Q(Parameters) *params,
 	  const struct QX(Fermion) *fermion);
-int op_Bx1_even(struct Fermion *result,
+int op_B1x_even(struct Fermion *result,
 		const struct Q(Parameters) *params,
 		const struct Fermion *fermion);
-int op_Bx1_odd(struct Fermion *result,
+int op_B1x_odd(struct Fermion *result,
 	       const struct Q(Parameters) *params,
 	       const struct Fermion *fermion);
-int op_Bx1(struct QX(Fermion) *result,
+int op_B1x(struct QX(Fermion) *result,
 	   const struct Q(Parameters) *params,
 	   const struct QX(Fermion) *fermion);
 int op_F_even(struct Fermion *result_even,
@@ -82,7 +85,6 @@ int op_F_odd(struct Fermion *result_odd,
 	     const struct SUn *U,
 	     const struct Fermion *src_even);
 int op_F(struct Q(Fermion) *result,
-	 struct Q(State) *state,
 	 const struct Q(Gauge) *gauge,
 	 const struct Q(Fermion) *source);
 int op_Fx_even(struct Fermion *result_even,
@@ -94,7 +96,6 @@ int op_Fx_odd(struct Fermion *result_odd,
 	      const struct SUn *U,
 	      const struct Fermion *src_even);
 int op_Fx(struct Q(Fermion) *result,
-	  struct Q(State) *state,
 	  const struct Q(Gauge) *gauge,
 	  const struct Q(Fermion) *source);
 
