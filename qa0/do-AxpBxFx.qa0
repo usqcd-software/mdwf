@@ -11,8 +11,8 @@
         [start     int       "start"    "int"                      ]
         [size      int       "size"     "int"                      ]
         [l-s       int       "Ls"       "int"        		   ]
-	[a-table   pointer   "a_table"  "const struct ABTable *"   ]
-	[b-table   pointer   "b_table"  "const struct ABTable *"   ]
+	[a*-table  pointer   "a_table"  "const struct ABTable *"   ]
+	[b*-table  pointer   "b_table"  "const struct ABTable *"   ]
 	[nb        pointer   "neighbor" "const struct neighbor *"  ]
 	[U         pointer   "U"        "const struct SUn *"       ]
 	[src-x     pointer   "src_x"    "const struct Fermion *"   ]
@@ -25,13 +25,11 @@
   (op pointer-add () (src-x) ([reg src-x] [reg x-start]))
   (loop () (i [const 0] [reg size])
     (op pointer-move () (ttt) ([reg tmp]))
-    (macro S-compute-F [const 'minus] [const 'plus]
+    (macro S-compute-F [const 'plus] [const 'minus]
                        [reg ttt] [reg l-s] [reg s-line] [reg nb] [reg U]
                        [reg src-y] [reg buf*])
     (op pointer-move () (ttt) ([reg tmp]))
-    (macro S-compute-A*+B* [reg res-x] [reg l-s]
-                           [reg a-table] [reg src-x]
-			   [reg b-table] [reg ttt])
-    (op pointer-add () (src-x) ([reg src-x] [reg s-line]))
-    (op pointer-add () (src-y) ([reg src-y] [reg s-line]))))
+    (macro S-compute-A+B [reg res-x] [reg l-s]
+                         [reg a*-table] [reg src-x]
+			 [reg b*-table] [reg ttt])))
 

@@ -372,7 +372,6 @@ unsigned int qx(do_F_conj)(struct Fermion *res_x,
 			   const struct Fermion *src_y,
 			   void *rb[]);
 
-#if 0
 /* A+F, A and B */
 unsigned int qx(do_ApF)(struct Fermion *r_x,
 			int start, int size, int Ls,
@@ -382,14 +381,6 @@ unsigned int qx(do_ApF)(struct Fermion *r_x,
 			const struct Fermion *s_x,
 			const struct Fermion *s_y,
 			void *rb[]);
-unsigned int qx(do_AxpFx)(struct Fermion *r_x,
-			  int start, int size, int Ls,
-			  const struct ABTable *atable,
-			  const struct neighbor *neighbor,
-			  const struct SUn *U,
-			  const struct Fermion *s_x,
-			  const struct Fermion *s_y,
-			  void *rb[]);
 unsigned int qx(do_AxpBxFx)(struct Fermion *r_x,
 			    int start, int size, int Ls,
 			    const struct ABTable *atable,
@@ -400,6 +391,15 @@ unsigned int qx(do_AxpBxFx)(struct Fermion *r_x,
 			    const struct Fermion *s_y,
                             struct Fermion *tmp,
 			    void *rb[]);
+#if 0
+unsigned int qx(do_AxpFx)(struct Fermion *r_x,
+			  int start, int size, int Ls,
+			  const struct ABTable *atable,
+			  const struct neighbor *neighbor,
+			  const struct SUn *U,
+			  const struct Fermion *s_x,
+			  const struct Fermion *s_y,
+			  void *rb[]);
 /* XXX functions for cg, need better integration with the rest */
 unsigned int qx(do_1AcBc)(struct Fermion *r,
 			  int size, int Ls,

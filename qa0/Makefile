@@ -66,6 +66,8 @@ x.sources = get-fermion.qa0 \
             do-A-conj-inv.qa0 \
             do-F.qa0 \
             do-F-conj.qa0 \
+            do-ApF.qa0 \
+            do-AxpBxFx.qa0 \
 
 #            do-BA-inv.qa0 \
 #            do-1pA.qa0 \
@@ -75,43 +77,40 @@ x.sources = get-fermion.qa0 \
 #            do-B-A-inv-F.qa0 \
 #            do-1mB1AF.qa0 \
 #            do-1mB1AF-norm.qa0 \
-#            do-ApF.qa0
 #            do-A-conj-inv-B.qa0 \
 #            do-A-conj-inv-B-conj-F-conj.qa0 \
-#            do-AxpBxFx.qa0 \
 
 # Who include defs-A.qa0
 A.sources = do-A.qa0 \
             do-A-inv.qa0 \
             do-A-conj-inv.qa0 \
+            do-ApF.qa0 \
+            do-AxpBxFx.qa0 \
 
 #            do-1pA.qa0 \
 #            do-ApB.qa0 \
-#            do-ApF.qa0 \
 #            do-BA-inv.qa0 \
 #            do-1pA.qa0 \
 #            do-ApB.qa0 \
 #            do-B-A-inv-F.qa0 \
-#            do-ApF.qa0 \
 #            do-1mB1AF.qa0 \
 #            do-1mB1AF-norm.qa0
 #            do-A-conj-inv.qa0 \
 #            do-A-conj-inv-B.qa0 \
 #            do-A-conj-inv-B-conj-F-conj.qa0 \
-#            do-AxpBxFx.qa0 \
 
 # Who include defs-F.qa0 (they also need defs-spin.qa0)
 F.sources = do-F.qa0 \
-            do-F-conj.qa0
+            do-F-conj.qa0 \
+            do-ApF.qa0 \
+            do-AxpBxFx.qa0 \
 
-#            do-ApF.qa0 \
 #            do-1mF.qa0 \
 #            do-1mFx.qa0 \
 #            do-B-A-inv-F.qa0 \
 #            do-1mB1AF.qa0 \
 #            do-1mB1AF-norm.qa0
 #            do-A-conj-inv-B-conj-F-conj.qa0 \
-#            do-AxpBxFx.qa0 \
 
 # Who include defs-spin.qa0
 spin.sources = $(F.sources) \
