@@ -62,6 +62,7 @@ x.sources = get-fermion \
             do-F-conj \
             do-ApF \
             do-B-A-inv-F \
+            do-1-sub-B-A-inv-F \
             do-AxpBxFx \
 
 #            do-BA-inv \
@@ -69,7 +70,6 @@ x.sources = get-fermion \
 #            do-ApB \
 #            do-1mF \
 #            do-1mFx \
-#            do-1mB1AF \
 #            do-1mB1AF-norm \
 #            do-A-conj-inv-B \
 #            do-A-conj-inv-B-conj-F-conj \

@@ -133,6 +133,30 @@
                                [reg l-s] [reg s-1-size]
 			       [reg sa-x] [reg m-table] [reg src-x]))
 
+(define (S-compute-sub-A res-x l-s s-1-size sa-x p-table m-table src-x)
+  (macro S-compute-add-A-upper [reg res-x]
+                     	       [const 'qcd-fermion-lo]
+                               [const 'qcd-msubf-lo]
+                               [reg l-s] [reg s-1-size]
+                               [reg sa-x] [reg p-table] [reg src-x])
+  (macro S-compute-add-A-lower [reg res-x]
+                               [const 'qcd-fermion-hi]
+                               [const 'qcd-msubf-hi]
+                               [reg l-s] [reg s-1-size]
+			       [reg sa-x] [reg m-table] [reg src-x]))
+
+(define (S-compute-sub-A* res-x l-s s-1-size sa-x p-table m-table src-x)
+  (macro S-compute-add-A-upper [reg res-x]
+                               [const 'qcd-fermion-hi]
+                               [const 'qcd-msubf-hi]
+                               [reg l-s] [reg s-1-size]
+			       [reg sa-x] [reg p-table] [reg src-x])
+  (macro S-compute-add-A-lower [reg res-x]
+                               [const 'qcd-fermion-lo]
+                               [const 'qcd-msubf-lo]
+                               [reg l-s] [reg s-1-size]
+			       [reg sa-x] [reg m-table] [reg src-x]))
+
 ;;; Inverses of A and A*
 (define (S-compute-A-inv-upper res-x mem-part scale-op madd-op
                                l-s p-table src-x)
