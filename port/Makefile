@@ -60,7 +60,8 @@ p.sources = fermion-alloc.c \
             x-import.c \
             x-export.c \
             op-dirac.c \
-            op-dirac-conj.c
+            op-dirac-conj.c \
+
 #            cg-dirac.c \
 
 x.objects = $(x.sources:%.c=$(LIMPDIR)/%.o)

@@ -13,12 +13,14 @@ operator_B(struct QX(Fermion) *result,
     qx(do_A)(result->even,
 	     result->state->even.full_size,
 	     result->state->even.Ls,
-	     params->BTable,
+	     params->BpTable,
+	     params->BmTable,
 	     fermion->even);
     qx(do_A)(result->odd,
 	     result->state->odd.full_size,
 	     result->state->odd.Ls,
-	     params->BTable,
+	     params->BpTable,
+	     params->BmTable,
 	     fermion->odd);
     return 0;
 }

@@ -500,7 +500,7 @@ A_{-} = A_{Y-} A_{L-} =
  0 & 0 & w_\alpha(2) & \cdots & 0 & 0\\
  \vdots & \vdots & \vdots & \ddots & \vdots & \vdots \\
  0 & 0 & 0 & \cdots & w_\alpha(L_s-2) & u_\alpha(L_s-2)\\
- -mu_\alpha(L_s-1) & 0 & 0 & \cdots & 0 & w_\alpha(L_s-1)
+ v_\alpha(L_s-1) & 0 & 0 & \cdots & 0 & w_\alpha(L_s-1)
 \end{array}\right),
 \end{equation}
 \begin{equation}

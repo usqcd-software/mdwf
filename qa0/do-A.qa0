@@ -8,10 +8,17 @@
 (procedure do-A ([stem "do_A"]
                  prec&color
                  count-flops)
-       ([res-x     pointer   "res_x"   "struct Fermion *"         ]
-        [size      int       "size"    "int"                      ]
-        [l-s       int       "Ls"      "int"        		  ]
-	[table     pointer   "table"   "const struct ABTable *"   ]
-	[src-x     pointer   "src_x"   "const struct Fermion *"   ])
+       ([res-x     pointer   "res_x"     "struct Fermion *"         ]
+        [size      int       "size"      "int"                      ]
+        [l-s       int       "Ls"        "int"        		    ]
+	[p-table   pointer   "p_table"   "const struct ABTable *"   ]
+	[m-table   pointer   "m_table"   "const struct ABTable *"   ]
+	[src-x     pointer   "src_x"     "const struct Fermion *"   ])
+  (op int-mul () (s-line) ([reg l-s] [const (size-of Fermion)]))
+  (op int-sub () (s-1-line) ([reg s-line] [const (size-of Fermion)]))
   (loop () (i [const 0] [reg size])
-    (macro S-compute-A [reg res-x] [reg l-s] [reg table] [reg src-x])))
+    (macro S-compute-A [reg res-x]
+                       [reg l-s] [reg s-1-line]
+		       [reg p-table] [reg m-table] [reg src-x])
+    (op pointer-add () (res-x) ([reg res-x] [reg s-line]))
+    (op pointer-add () (src-x) ([reg src-x] [reg s-line]))))

@@ -24,7 +24,6 @@ qx(compute_AxpBxFx)(struct Q(State) *state,
 		    const struct SUn *U,
 		    const struct Fermion *s_x,
 		    const struct Fermion *s_y,
-		    struct Fermion *tmp,
 		    long long *flops,
 		    long long *sent,
 		    long long *received)
@@ -47,19 +46,23 @@ qx(compute_AxpBxFx)(struct Q(State) *state,
     QMP_start(xy->handle);
   
   *flops += qx(do_AxpBxFx)(r_x, 0, xy->body_size, Ls,
-			   params->AxTable,
-			   params->BxTable,
+			   params->AxpTable,
+			   params->AxmTable,
+			   params->BxpTable,
+			   params->BxmTable,
 			   xy->body_neighbor,
-			   U, s_x, s_y, tmp, NULL);
+			   U, s_x, s_y, NULL);
 
   if (xy->h_valid)
     QMP_wait(xy->handle);
 
   *flops += qx(do_AxpBxFx)(r_x, xy->body_size, xy->face_size, Ls,
-			   params->AxTable,
-			   params->BxTable,
+			   params->AxpTable,
+			   params->AxmTable,
+			   params->BxpTable,
+			   params->BxmTable,
 			   xy->face_neighbor,
-			   U, s_x, s_y, tmp, xy->receive_buf);
+			   U, s_x, s_y, xy->receive_buf);
 
   *sent += xy->total_send;
   *received += xy->total_receive;
@@ -72,10 +75,6 @@ QX(DDW_operator_conjugated)(struct QX(Fermion) *result,
 			    const struct QX(Fermion) *fermion)
 {
     DECLARE_STATE;
-    int f_size;
-    size_t s;
-    void *tmp = NULL;
-    void *ptr = NULL;
     long long flops = 0;
     long long sent = 0;
     long long received = 0;
@@ -88,23 +87,16 @@ QX(DDW_operator_conjugated)(struct QX(Fermion) *result,
     if (q(setup_comm)(state, sizeof (REAL)))
 	return q(set_error)(state, 0, "DDW_operator_conjugated(): communication setup failed");
     
-    f_size = qx(sizeof_fermion)(1, state->Ls);
-    ptr = q(allocate_aligned)(state, &s, &tmp, 0, f_size);
-    if (ptr == 0)
-	return q(set_error)(state, 0, "DDW_operator_conjugated(): not enough memory");
-
     BEGIN_TIMING(state);
     qx(compute_AxpBxFx)(state, &state->even, &state->odd, params,
 			result->even, gauge->data,
-			fermion->even, fermion->odd, tmp,
+			fermion->even, fermion->odd,
 			&flops, &sent, &received);
     qx(compute_AxpBxFx)(state, &state->odd, &state->odd, params,
 			result->odd, gauge->data,
-			fermion->odd, fermion->even, tmp,
+			fermion->odd, fermion->even,
 			&flops, &sent, &received);
     END_TIMING(state, flops, sent, received);
-    
-    q(free)(state, ptr, s);
 
     return 0;
 }	

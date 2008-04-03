@@ -106,10 +106,14 @@ struct ABiTable;
 
 struct Q(Parameters) {
   struct Q(State) *state;
-  struct ABTable  *ATable;
-  struct ABTable  *AxTable;
-  struct ABTable  *BTable;
-  struct ABTable  *BxTable;
+  struct ABTable  *ApTable;
+  struct ABTable  *AmTable;
+  struct ABTable  *AxpTable;
+  struct ABTable  *AxmTable;
+  struct ABTable  *BpTable;
+  struct ABTable  *BmTable;
+  struct ABTable  *BxpTable;
+  struct ABTable  *BxmTable;
   struct ABiTable *AipTable;
   struct ABiTable *AimTable;
   struct ABiTable *BipTable;
@@ -306,9 +310,7 @@ void q(get_neighbor)(int *m, int *f_up, int *u_up,
 		     const struct neighbor *n, int p);
 void q(fix_neighbor_f_up)(struct neighbor *n, int p, int f_up, int d);
 void q(fix_neighbor_f_down)(struct neighbor *n, int p, int f_down, int d);
-void q(put_ABTable)(struct ABTable *t,
-		    int i, int ip, int im,
-		    double v, double vp, double vm);
+void q(put_ABTable)(struct ABTable *t, int i, double w, double v);
 void q(put_ABiTableZ)(struct ABiTable *t, double z);
 void q(put_ABiTable)(struct ABiTable *t,
 		     int i,
@@ -347,8 +349,14 @@ unsigned int qx(f_norm)(double *s,
 /* basic matrices */
 unsigned int qx(do_A)(struct Fermion *r_x,
 		      int size, int Ls,
-		      const struct ABTable *atable,
+		      const struct ABTable *aptable,
+		      const struct ABTable *amtable,
 		      const struct Fermion *s_x);
+unsigned int qx(do_A_conj)(struct Fermion *r_x,
+			   int size, int Ls,
+			   const struct ABTable *axptable,
+			   const struct ABTable *axmtable,
+			   const struct Fermion *s_x);
 unsigned int qx(do_A_inverse)(struct Fermion *r,
 			      int size, int Ls,
 			      const struct ABiTable *iatable_p,
@@ -375,7 +383,8 @@ unsigned int qx(do_F_conj)(struct Fermion *res_x,
 /* A+F, A and B */
 unsigned int qx(do_ApF)(struct Fermion *r_x,
 			int start, int size, int Ls,
-			const struct ABTable *atable,
+			const struct ABTable *aptable,
+			const struct ABTable *amtable,
 			const struct neighbor *neighbor,
 			const struct SUn *U,
 			const struct Fermion *s_x,
@@ -383,14 +392,26 @@ unsigned int qx(do_ApF)(struct Fermion *r_x,
 			void *rb[]);
 unsigned int qx(do_AxpBxFx)(struct Fermion *r_x,
 			    int start, int size, int Ls,
-			    const struct ABTable *atable,
-			    const struct ABTable *btable,
+			    const struct ABTable *aptable,
+			    const struct ABTable *amtable,
+			    const struct ABTable *bptable,
+			    const struct ABTable *bmtable,
 			    const struct neighbor *neighbor,
 			    const struct SUn *U,
 			    const struct Fermion *s_x,
 			    const struct Fermion *s_y,
-                            struct Fermion *tmp,
 			    void *rb[]);
+/* B 1/A F */
+unsigned int qx(do_BA1F)(struct Fermion *r_y,
+			 int start, int size, int Ls,
+			 const struct ABTable *bptable,
+			 const struct ABTable *bmtable,
+			 const struct ABiTable *iatable_p,
+			 const struct ABiTable *iatable_m,
+			 const struct neighbor *neighbor,
+			 const struct SUn *U,
+			 const struct Fermion *s_x,
+			 void *rb[]);
 #if 0
 unsigned int qx(do_AxpFx)(struct Fermion *r_x,
 			  int start, int size, int Ls,
@@ -436,15 +457,6 @@ unsigned int qx(do_1AcBcFc)(struct Fermion *r_y,
 			    const struct SUn *U,
 			    const struct Fermion *s_x,
 			    void *rb[]);
-unsigned int qx(do_B1AF)(struct Fermion *r_y,
-			 int start, int size, int Ls,
-			 const struct ABTable *btable,
-			 const struct ABiTable *iatable_p,
-			 const struct ABiTable *iatable_m,
-			 const struct neighbor *neighbor,
-			 const struct SUn *U,
-			 const struct Fermion *s_x,
-			 void *rb[]);
 unsigned int qx(do_1mB1AF)(struct Fermion *r_y,
 			   int start, int size, int Ls,
 			   const struct ABTable *btable,

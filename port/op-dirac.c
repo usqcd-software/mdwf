@@ -32,7 +32,10 @@ qx(compute_ApFB)(struct Q(State) *state,
   int Ls = state->Ls;
   int i;
 
-  *flops += qx(do_A)(By, yx->full_size, Ls, params->BTable, s_y);
+  *flops += qx(do_A)(By, yx->full_size, Ls,
+		     params->BpTable,
+		     params->BmTable,
+		     s_y);
 
   for (i = 0; i < Q(DIM); i++) {
     if (xy->send_up_size[i])
@@ -49,14 +52,17 @@ qx(compute_ApFB)(struct Q(State) *state,
     QMP_start(xy->handle);
   
   *flops += qx(do_ApF)(r_x, 0, xy->body_size, Ls,
-		       params->ATable, xy->body_neighbor,
+		       params->ApTable, params->AmTable,
+		       xy->body_neighbor,
 		       U, s_x, By, NULL);
 
   if (xy->h_valid)
     QMP_wait(xy->handle);
 
   *flops += qx(do_ApF)(r_x, xy->body_size, xy->face_size, Ls,
-		       params->ATable, xy->face_neighbor,
+		       params->ApTable,
+		       params->AmTable,
+		       xy->face_neighbor,
 		       U, s_x, By, xy->receive_buf);
 
   *sent += xy->total_send;

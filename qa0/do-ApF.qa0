@@ -11,19 +11,23 @@
         [start     int       "start"    "int"                      ]
         [size      int       "size"     "int"                      ]
         [l-s       int       "Ls"       "int"        		   ]
-	[table     pointer   "table"    "const struct ABTable *"   ]
+	[a+table   pointer   "aptable"  "const struct ABTable *"   ]
+	[a-table   pointer   "amtable"  "const struct ABTable *"   ]
 	[nb        pointer   "neighbor" "const struct neighbor *"  ]
 	[U         pointer   "U"        "const struct SUn *"       ]
 	[src-x     pointer   "src_x"    "const struct Fermion *"   ]
 	[src-y     pointer   "src_y"    "const struct Fermion *"   ]
         [buf*      pointer   "rb"       "void **"                  ])
   (op int-mul () (s-line) ([reg l-s] [const (size-of Fermion)]))
+  (op int-add () (s-1-line) ([reg s-line] [const (- (size-of Fermion))]))
   (op int-mul () (x-start) ([reg start] [reg s-line]))
   (op pointer-add () (res-x) ([reg res-x] [reg x-start]))
   (op pointer-add () (src-x) ([reg src-x] [reg x-start]))
   (loop () (i [const 0] [reg size])
-    (op pointer-move () (r-x) ([reg res-x]))
-    (macro S-compute-A [reg r-x] [reg l-s] [reg table] [reg src-x])
+    (macro S-compute-A [reg res-x]
+                       [reg l-s] [reg s-1-line]
+                       [reg a+table] [reg a-table] [reg src-x])
+    (op pointer-add () (src-x) ([reg src-x] [reg s-line]))
     (macro S-compute-add-F [const 'minus] [const 'plus]
                            [reg res-x]
                            [reg l-s] [reg s-line] [reg nb]

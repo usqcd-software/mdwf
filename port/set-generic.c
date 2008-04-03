@@ -14,7 +14,6 @@ Q(set_generic)(struct Q(Parameters) **params_ptr,
   struct Q(Parameters) *params;
   int abs;
   int iabs;
-  double u, v, w;
 
 #define CHECK(p, m) do { if ((p) == NULL) { msg = (m); goto error; }} while(0)
 #define u_a(j) (c_5[j] * (M_5 + 4) - 1)
@@ -36,75 +35,59 @@ Q(set_generic)(struct Q(Parameters) **params_ptr,
   CHECK(params, "set_generic(): Not enough memory for parameters");
   memset(params, 0, sizeof (struct Q(Parameters)));
 
+  /* size of A & B tables */
   abs = q(sizeof_ABTable)(Ls);
-  params->ATable = q(malloc)(state, abs);
-  CHECK(params->ATable, "set_generic(): Not enough memory for A table");
+  /* A tables */
+  params->ApTable = q(malloc)(state, abs);
+  CHECK(params->ApTable, "set_generic(): Not enough memory for A/+ table");
+  q(put_ABTable)(params->ApTable, 0, w_a(0), v_a(0));
+  for (i = 1; i < Ls; i++)
+      q(put_ABTable)(params->ApTable, i, w_a(i), u_a(i));
+  params->AmTable = q(malloc)(state, abs);
+  CHECK(params->AmTable, "set_generic(): Not enough memory for A/- table");
+  q(put_ABTable)(params->AmTable, 0, w_a(Ls-1), v_a(Ls-1));
+  for (i = 1; i < Ls; i++)
+      q(put_ABTable)(params->AmTable, i, w_a(Ls-1-i), u_a(Ls-1-i));
 
-  u = u_a(0);
-  v = v_a(0);
-  w = w_a(0);
-  q(put_ABTable)(params->ATable, 0, Ls-1, 1, w, v, u);
-  for (i = 1; i < Ls - 1; i++) {
-      u = u_a(i);
-      w = w_a(i);
-      q(put_ABTable)(params->ATable, i, i-1, i+1, w, u, u);
-  }
-  u = u_a(Ls-1);
-  v = v_a(Ls-1);
-  w = w_a(Ls-1);
-  q(put_ABTable)(params->ATable, Ls-1, Ls-2, 0, w, u, v);
+  /* B tables */
+  params->BpTable = q(malloc)(state, abs);
+  CHECK(params->BpTable, "set_generic(): Not enough memory for B/+ table");
+  q(put_ABTable)(params->BpTable, 0, w_b(0), v_b(0));
+  for (i = 1; i < Ls; i++)
+      q(put_ABTable)(params->BpTable, i, w_b(i), u_b(i));
+  params->BmTable = q(malloc)(state, abs);
+  CHECK(params->BmTable, "set_generic(): Not enough memory for B/- table");
+  q(put_ABTable)(params->BmTable, 0, w_b(Ls-1), v_b(Ls-1));
+  for (i = 1; i < Ls; i++)
+      q(put_ABTable)(params->BmTable, i, w_b(Ls-1-i), u_b(Ls-1-i));
 
-  params->AxTable = q(malloc)(state, abs);
-  CHECK(params->AxTable, "set_generic(): Not enough memory for A* table");
-  u = u_a(1);
-  v = v_a(Ls-1);
-  w = w_a(0);
-  q(put_ABTable)(params->AxTable, 0, 1, Ls-1, w, u, v);
-  for (i = 1; i < Ls - 1; i++) {
-      double up = u_a(i+1);
-      double um = u_a(i-1);
-      w = w_a(i);
-      q(put_ABTable)(params->AxTable, i, i+1, i-1, w, up, um);
-  }
-  u = u_a(Ls-2);
-  v = v_a(0);
-  w = w_a(Ls-1);
-  q(put_ABTable)(params->AxTable, Ls-1, 0, Ls-2, w, v, u);
-  params->BTable = q(malloc)(state, abs);
-  CHECK(params->BTable, "set_generic(): Not enough memory for B table");
+  /* A* tables */
+  params->AxpTable = q(malloc)(state, abs);
+  CHECK(params->AxpTable, "set_generic(): Not enough memory for A*/+ table");
+  q(put_ABTable)(params->AxpTable, 0, w_a(0), v_a(Ls-1));
+  for (i = 1; i < Ls; i++)
+      q(put_ABTable)(params->AxpTable, i, w_a(i), u_a(i-1));
+  params->AxmTable = q(malloc)(state, abs);
+  CHECK(params->AxmTable, "set_generic(): Not enough memory for A*/- table");
+  q(put_ABTable)(params->AxmTable, 0, w_a(Ls-1), v_a(0));
+  for (i = 1; i < Ls; i++)
+      q(put_ABTable)(params->AxmTable, i, w_a(Ls-1-i), u_a(Ls-i));
 
-  u = u_b(0);
-  v = v_b(0);
-  w = w_b(0);
-  q(put_ABTable)(params->BTable, 0, Ls-1, 1, w, v, u);
-  for (i = 1; i < Ls - 1; i++) {
-      u = u_b(i);
-      w = w_b(i);
-      q(put_ABTable)(params->BTable, i, i-1, i+1, w, u, u);
-  }
-  u = u_b(Ls-1);
-  v = v_b(Ls-1);
-  w = w_b(Ls-1);
-  q(put_ABTable)(params->BTable, Ls-1, Ls-2, 0, w, u, v);
+  /* B* tables */
+  params->BxpTable = q(malloc)(state, abs);
+  CHECK(params->BxpTable, "set_generic(): Not enough memory for B*/+ table");
+  q(put_ABTable)(params->BxpTable, 0, w_b(0), v_b(Ls-1));
+  for (i = 1; i < Ls; i++)
+      q(put_ABTable)(params->BxpTable, i, w_b(i), u_b(i-1));
+  params->BxmTable = q(malloc)(state, abs);
+  CHECK(params->BxmTable, "set_generic(): Not enough memory for B*/- table");
+  q(put_ABTable)(params->BxmTable, 0, w_b(Ls-1), v_b(0));
+  for (i = 1; i < Ls; i++)
+      q(put_ABTable)(params->BxmTable, i, w_b(Ls-1-i), u_b(Ls-i));
 
-  params->BxTable = q(malloc)(state, abs);
-  CHECK(params->BxTable, "set_generic(): Not enough memory for B* table");
-  u = u_b(1);
-  v = v_b(Ls-1);
-  w = w_b(0);
-  q(put_ABTable)(params->BxTable, 0, 1, Ls-1, w, u, v);
-  for (i = 1; i < Ls - 1; i++) {
-      double up = u_b(i+1);
-      double um = u_b(i-1);
-      w = w_b(i);
-      q(put_ABTable)(params->BxTable, i, i+1, i-1, w, up, um);
-  }
-  u = u_b(Ls-2);
-  v = v_b(0);
-  w = w_b(Ls-1);
-  q(put_ABTable)(params->BxTable, Ls-1, 0, Ls-2, w, v, u);
-
+  /* sizeof 1/A tables */
   iabs = q(sizeof_ABiTable)(Ls);
+  /* 1/A tables */
   params->AipTable = q(malloc)(state, iabs);
   CHECK(params->AipTable, "set_generic(): Not enough memory for 1/A + table");
   {
@@ -117,7 +100,6 @@ Q(set_generic)(struct Q(Parameters) **params_ptr,
       }
       q(put_ABiTableZ)(params->AipTable, 1.0 / (w_a(0) * (1.0 - ak)));
   }
-  
   params->AimTable = q(malloc)(state, iabs);
   CHECK(params->AimTable, "set_generic(): Not enough memory for 1/A - table");
   {
@@ -130,6 +112,8 @@ Q(set_generic)(struct Q(Parameters) **params_ptr,
       }
       q(put_ABiTableZ)(params->AimTable, 1.0 / (w_a(Ls-1) * (1.0 - ak)));
   }
+
+  /* 1/B tables */
   params->BipTable = q(malloc)(state, iabs);
   CHECK(params->BipTable, "set_generic(): Not enough memory for 1/B + table");
   {
@@ -155,6 +139,7 @@ Q(set_generic)(struct Q(Parameters) **params_ptr,
       q(put_ABiTableZ)(params->BimTable, 1.0 / (w_b(Ls-1) * (1.0 - ak)));
   }
 
+  /* 1/A+ tables */
   params->AxipTable = q(malloc)(state, iabs);
   CHECK(params->AxipTable, "set_generic(): Not enough memory for 1/A* + table");
   {
@@ -179,6 +164,8 @@ Q(set_generic)(struct Q(Parameters) **params_ptr,
       }
       q(put_ABiTableZ)(params->AximTable, 1.0 / (w_a(0) * (1.0 - ak)));
   }
+
+  /* 1/B+ tables */
   params->BxipTable = q(malloc)(state, iabs);
   CHECK(params->BxipTable, "set_generic(): Not enough memory for 1/B* + table");
   {

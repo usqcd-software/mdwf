@@ -7,11 +7,12 @@ op_Ax_even(struct Fermion *result,
 	  const struct Q(Parameters) *params,
 	  const struct Fermion *fermion)
 {
-    qx(do_A)(result,
-	     params->state->even.full_size,
-	     params->state->even.Ls,
-	     params->AxTable,
-	     fermion);
+    qx(do_A_conj)(result,
+		  params->state->even.full_size,
+		  params->state->even.Ls,
+		  params->AxpTable,
+		  params->AxmTable,
+		  fermion);
     return 0;
 }
 
@@ -20,11 +21,12 @@ op_Ax_odd(struct Fermion *result,
 	 const struct Q(Parameters) *params,
 	 const struct Fermion *fermion)
 {
-    qx(do_A)(result,
-	     params->state->odd.full_size,
-	     params->state->odd.Ls,
-	     params->AxTable,
-	     fermion);
+    qx(do_A_conj)(result,
+		  params->state->odd.full_size,
+		  params->state->odd.Ls,
+		  params->AxpTable,
+		  params->AxmTable,
+		  fermion);
     return 0;
 }
 

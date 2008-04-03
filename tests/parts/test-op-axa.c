@@ -70,12 +70,14 @@ operator_A(struct QX(Fermion) *result,
     qx(do_A)(result->even,
 	     result->state->even.full_size,
 	     result->state->even.Ls,
-	     params->ATable,
+	     params->ApTable,
+	     params->AmTable,
 	     fermion->even);
     qx(do_A)(result->odd,
 	     result->state->odd.full_size,
 	     result->state->odd.Ls,
-	     params->ATable,
+	     params->ApTable,
+	     params->AmTable,
 	     fermion->odd);
     return 0;
 }
@@ -86,16 +88,18 @@ operator_Ax(struct QX(Fermion) *result,
 	    const struct QX(Gauge) *gauge,
 	    const struct QX(Fermion) *fermion)
 {
-    qx(do_A)(result->even,
-	     result->state->even.full_size,
-	     result->state->even.Ls,
-	     params->AxTable,
-	     fermion->even);
-    qx(do_A)(result->odd,
-	     result->state->odd.full_size,
-	     result->state->odd.Ls,
-	     params->AxTable,
-	     fermion->odd);
+    qx(do_A_conj)(result->even,
+		  result->state->even.full_size,
+		  result->state->even.Ls,
+		  params->AxpTable,
+		  params->AxmTable,
+		  fermion->even);
+    qx(do_A_conj)(result->odd,
+		  result->state->odd.full_size,
+		  result->state->odd.Ls,
+		  params->AxpTable,
+		  params->AxmTable,
+		  fermion->odd);
     return 0;
 }
 

@@ -6,14 +6,15 @@
 (include "defs-A.qa0")
 (include "defs-F.qa0")
 
-(procedure do-B-A-inv-F ([stem "do_B1AF"]
+(procedure do-B-A-inv-F ([stem "do_BA1F"]
                          prec&color
                          count-flops)
        ([res-x     pointer   "res_x"      "struct Fermion *"         ]
         [start     int       "start"      "int"                      ]
         [size      int       "size"       "int"                      ]
         [l-s       int       "Ls"         "int"        		     ]
-        [b-table   pointer   "btable"     "const struct ABTable *"   ]
+        [b+table   pointer   "btable_p"   "const struct ABTable *"   ]
+        [b-table   pointer   "btable_m"   "const struct ABTable *"   ]
         [ai+table  pointer   "iatable_p"  "const struct ABiTable *"  ]
         [ai-table  pointer   "iatable_m"  "const struct ABiTable *"  ]
 	[nb        pointer   "neighbor"   "const struct neighbor *"  ]
@@ -30,9 +31,8 @@
                        [const 'minus] [const 'plus]
                        [reg r] [reg l-s] [reg s-line] [reg nb] [reg U]
                        [reg src-y] [reg buf*])
-    (op pointer-move () (r) ([reg res-x]))
-    (macro S-compute-Ainv [reg r] [reg l-s] [reg s-1-line]
+    (macro S-compute-Ainv [reg res-x] [reg l-s] [reg s-1-line]
                           [reg ai+table] [reg ai-table] [reg res-x])
-    (op pointer-move () (r) ([reg res-x]))
-    (macro S-compute-A [reg res-x] [reg l-s] [reg b-table] [reg r])
-    (op pointer-add () (src-y) ([reg src-y] [reg s-line]))))
+    (macro S-compute-A [reg res-x] [reg l-s] [reg s-1-line]
+                       [reg b+table] [reg b-table] [reg res-x])
+    (op pointer-add () (res-x) ([reg res-x] [reg s-line]))))

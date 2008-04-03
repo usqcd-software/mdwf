@@ -12,18 +12,20 @@ TCFLAGS = $(CFLAGS) $(QMP_CFLAGS) -I$(TOP)/$(LIMPDIR)
 
 include $(TOP)/config/$(CONFIG)
 
-tests = operator.c \
-        conjgrad.c \
-        state.c \
+tests = state.c \
         statex.c
 
-x.tests = heater.c \
-          localheat.c
+#        operator.c \
+#        conjgrad.c \
+
+x.tests =
+
+#         heater.c \
+#         localheat.c
 
 opdriver = optest.c
 
 optests = test-op-dummy.c \
-          test-op-ddw.c \
           test-op-a.c \
           test-op-a1.c \
           test-op-ax.c \
@@ -39,7 +41,8 @@ opytests = test-op-a-2.c \
            test-op-b-2.c \
            test-op-f-2.c \
            test-op-ddw-2.c \
-           test-op-ddwq-2.c
+
+#           test-op-ddwq-2.c
 
 opxdriver = opxtest.c
 
@@ -58,8 +61,10 @@ opztests = test-op-axa-2.c \
            test-op-bx1bx-2.c \
            test-op-b1b-2.c \
            test-op-fxf-2.c \
+           test-op-af-2.c \
+           test-op-baf-2.c \
            test-op-md-2.c \
-           test-op-mdxmd-2.c
+           test-op-mdxmd-2.c \
 
 oproutines = op-a.c \
              op-ax.c \

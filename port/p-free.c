@@ -34,10 +34,14 @@ Q(free_parameters)(struct Q(Parameters) **parameters_ptr)
 
   state = (*parameters_ptr)->state;
   BEGIN_TIMING(state);
-  free_atable(state, &(*parameters_ptr)->ATable);
-  free_atable(state, &(*parameters_ptr)->AxTable);
-  free_atable(state, &(*parameters_ptr)->BTable);
-  free_atable(state, &(*parameters_ptr)->BxTable);
+  free_atable(state, &(*parameters_ptr)->ApTable);
+  free_atable(state, &(*parameters_ptr)->AmTable);
+  free_atable(state, &(*parameters_ptr)->AxpTable);
+  free_atable(state, &(*parameters_ptr)->AxmTable);
+  free_atable(state, &(*parameters_ptr)->BpTable);
+  free_atable(state, &(*parameters_ptr)->BmTable);
+  free_atable(state, &(*parameters_ptr)->BxpTable);
+  free_atable(state, &(*parameters_ptr)->BxmTable);
   free_aitable(state, &(*parameters_ptr)->AipTable);
   free_aitable(state, &(*parameters_ptr)->AimTable);
   free_aitable(state, &(*parameters_ptr)->BipTable);

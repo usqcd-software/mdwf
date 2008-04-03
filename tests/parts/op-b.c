@@ -10,7 +10,8 @@ op_B_even(struct Fermion *result,
     qx(do_A)(result,
 	     params->state->even.full_size,
 	     params->state->even.Ls,
-	     params->BTable,
+	     params->BpTable,
+	     params->BmTable,
 	     fermion);
     return 0;
 }
@@ -23,7 +24,8 @@ op_B_odd(struct Fermion *result,
     qx(do_A)(result,
 	     params->state->odd.full_size,
 	     params->state->odd.Ls,
-	     params->BTable,
+	     params->BpTable,
+	     params->BmTable,
 	     fermion);
     return 0;
 }

@@ -21,11 +21,8 @@
 (structure up-pack   "up_pack"   ([fermion "fermion" int]
 	                          [gauge   "gauge"   int]))
 
-(structure AB-Table  "ABTable"   ([hi-index "h_index" int    ]
-	                          [lo-index "l_index" int    ]
-                                  [c-value  "c_val"   double ]
- 				  [lo-value "l_val"   double ]
-				  [hi-value "h_val"   double ]))
+(structure AB-Table  "ABTable"   ([v        "v"       double]
+                                  [w        "w"       double]))
 
 (structure abc "x_abc"          ([a  "a"  double]
 	       			 [b  "b"  double]

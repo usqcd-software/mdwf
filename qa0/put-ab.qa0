@@ -5,23 +5,10 @@
 (procedure put-AB-Table ([stem "put_ABTable"])
            ([ab-table  pointer "abtable"  "struct ABTable *"   ]
             [index     int     "p"         "int"               ]
-            [plus-i    int     "ip"        "int"               ]
-            [minus-i   int     "im"        "int"               ]
-            [c-val     double  "c_val"     "double"            ]
-            [p-val     double  "p_val"     "double"            ]
-            [m-val     double  "m_val"     "double"            ])
+            [w-val     double  "w_val"     "double"            ]
+            [v-val     double  "v_val"     "double"            ])
    (op int-mul () (x) ([reg index] [const (size-of AB-Table)]))
    (op pointer-add () (ptr) ([reg ab-table] [reg x]))
-   (op int-sub () (plus-i) ([reg plus-i] [reg index]))
-   (op int-sub () (minus-i) ([reg minus-i] [reg index]))
-   (store int () ([reg ptr] [const (offset-of AB-Table hi-index)])
-                 [reg minus-i])
-   (store int () ([reg ptr] [const (offset-of AB-Table lo-index)])
-                 [reg plus-i])
-   (store double () ([reg ptr] [const (offset-of AB-Table c-value)])
-                    [reg c-val])
-   (store double () ([reg ptr] [const (offset-of AB-Table hi-value)])
-                    [reg m-val])
-   (store double () ([reg ptr] [const (offset-of AB-Table lo-value)])
-                    [reg p-val])
-)
+   (store double () ([reg ptr] [const (offset-of AB-Table w)]) [reg w-val])
+   (store double () ([reg ptr] [const (offset-of AB-Table v)]) [reg v-val]))
+
