@@ -88,7 +88,7 @@ QX(DDW_operator_conjugated)(struct QX(Fermion) *result,
 	return q(set_error)(state, 0, "DDW_operator_conjugated(): communication setup failed");
     
     BEGIN_TIMING(state);
-    qx(compute_AxpBxFx)(state, &state->even, &state->odd, params,
+    qx(compute_AxpBxFx)(state, &state->even, &state->even, params,
 			result->even, gauge->data,
 			fermion->even, fermion->odd,
 			&flops, &sent, &received);

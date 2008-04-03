@@ -30,11 +30,11 @@
     (macro S-compute-F [const 'plus] [const 'minus]
                        [reg tmp] [reg l-s] [reg s-line] [reg nb] [reg U]
                        [reg src-y] [reg buf*])
-;    (macro S-compute-A [reg res-x] [reg l-s] [reg s-1-line]
-;                       [reg b*+table] [reg b*-table] [reg res-x])
-;    (macro S-compute-add-A [reg res-x] [reg l-s] [reg s-1-line]
-;    	   		   [reg res-x]
-;                           [reg a*+table] [reg a*-table] [reg src-x])
+    (macro S-compute-A* [reg res-x] [reg l-s] [reg s-1-line]
+                        [reg b*+table] [reg b*-table] [reg res-x])
+    (macro S-compute-add-A* [reg res-x] [reg l-s] [reg s-1-line]
+    	   		    [reg res-x]
+                            [reg a*+table] [reg a*-table] [reg src-x])
     (op pointer-add () (res-x) ([reg res-x] [reg s-line]))
     (op pointer-add () (src-x) ([reg src-x] [reg s-line]))))
 
