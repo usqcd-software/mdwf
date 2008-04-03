@@ -4,7 +4,7 @@
 #include "op-routines.h"
 
 char *op_a_name = "<o|lib:BA1F|e>";
-char *op_b_name = "<o|lib:BA1F|e>";
+char *op_b_name = "<o|BA1F|e>";
 
 double
 read_gauge(int dir,
