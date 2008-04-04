@@ -230,13 +230,13 @@
   (repeat ((d [const 0] [const *dim*]))
     ;; continue with up
     (macro sub-F-next-up [const up-sign]
-      	             [const d] [reg mask] [reg res-x]
-	             [reg l-s] [reg s-line] [reg nb] [reg U]
-                     [reg src-y] [reg buf*])
+      	                 [const d] [reg mask] [reg res-x]
+	                 [reg l-s] [reg s-line] [reg nb] [reg U]
+                         [reg src-y] [reg buf*])
     ;; continue with down               
     (macro sub-F-next-down [const down-sign]
-        	       [const d] [reg mask] [reg res-x]
-		       [reg l-s] [reg s-line] [reg nb] [reg U]
-                       [reg src-y] [reg buf*]))
+        	           [const d] [reg mask] [reg res-x]
+		           [reg l-s] [reg s-line] [reg nb] [reg U]
+                           [reg src-y] [reg buf*]))
   (op pointer-add () (nb) ([reg nb] [const (size-of neighbor)]))
   (op pointer-add () (res-x) ([reg res-x] [reg s-line])))
