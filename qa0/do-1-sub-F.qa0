@@ -1,0 +1,28 @@
+;; compute r = phi - B 1/A F psi
+
+(verbose [(c99 bgl/xlc) "/* $Id$ */"])
+
+(include "types.qa0")
+(include "defs-A.qa0")
+(include "defs-F.qa0")
+
+(procedure do-1-sub-F ([stem "do_1mF"]
+                       prec&color
+                       count-flops)
+       ([res-x     pointer   "res_x"      "struct Fermion *"         ]
+        [start     int       "start"      "int"                      ]
+        [size      int       "size"       "int"                      ]
+        [l-s       int       "Ls"         "int"        		     ]
+	[nb        pointer   "neighbor"   "const struct neighbor *"  ]
+	[U         pointer   "U"          "const struct SUn *"       ]
+	[src-x     pointer   "src_x"      "const struct Fermion *"   ]
+	[src-y     pointer   "src_y"      "const struct Fermion *"   ]
+        [buf*      pointer   "rb"         "void **"                  ])
+  (op int-mul () (s-line) ([reg l-s] [const (size-of Fermion)]))
+  (op int-mul () (x-start) ([reg start] [reg s-line]))
+  (op pointer-add () (res-x) ([reg res-x] [reg x-start]))
+  (op pointer-add () (src-x) ([reg src-x] [reg x-start]))
+  (loop () (i [const 0] [reg size])
+    (macro S-compute-sub-F [reg res-x] [reg l-s] [reg s-line] [reg nb]
+		           [reg src-x] [reg U] [reg src-y] [reg buf*])))
+

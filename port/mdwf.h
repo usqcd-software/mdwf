@@ -451,6 +451,13 @@ unsigned int qx(do_A1xBxFx)(struct Fermion *r_x,
 			    const struct SUn *U,
 			    const struct Fermion *s_y,
 			    void *rb[]);
+unsigned int qx(do_1mF)(struct Fermion *r_y,
+			int start, int size, int Ls,
+			const struct neighbor *neighbor,
+			const struct SUn *U,
+			const struct Fermion *a_y,
+			const struct Fermion *b_x,
+			void *rb[]);
 unsigned int qx(do_1mFx)(struct Fermion *r_y,
 			 int start, int size, int Ls,
 			 const struct neighbor *neighbor,

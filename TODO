@@ -1,3 +1,0 @@
-- Convert A and A* so that dst could be identical to src.
-- Remove extra memory write from 1/A.
-- Recheck A, A*.
