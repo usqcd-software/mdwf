@@ -63,6 +63,7 @@ opztests = test-op-axa-2.c \
            test-op-fxf-2.c \
            test-op-af-2.c \
            test-op-baf-2.c \
+           test-op-abf-2.c \
            test-op-1baf-2.c \
            test-op-1bafn-2.c \
            test-op-ab-2.c \

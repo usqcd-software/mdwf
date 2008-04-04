@@ -1,0 +1,38 @@
+;; compute r = B 1/A F psi
+
+(verbose [(c99 bgl/xlc) "/* $Id$ */"])
+
+(include "types.qa0")
+(include "defs-A.qa0")
+(include "defs-F.qa0")
+
+(procedure do-Ainv*B*F* ([stem "do_A1xBxFx"]
+                         prec&color
+                         count-flops)
+       ([res-x      pointer   "res_x"      "struct Fermion *"         ]
+        [start      int       "start"      "int"                      ]
+        [size       int       "size"       "int"                      ]
+        [l-s        int       "Ls"         "int"                      ]
+        [a*i+table  pointer   "iatable_p"  "const struct ABiTable *"  ]
+        [a*i-table  pointer   "iatable_m"  "const struct ABiTable *"  ]
+        [b*+table   pointer   "btable_p"   "const struct ABTable *"   ]
+        [b*-table   pointer   "btable_m"   "const struct ABTable *"   ]
+	[nb         pointer   "neighbor"   "const struct neighbor *"  ]
+	[U          pointer   "U"          "const struct SUn *"       ]
+	[src-y      pointer   "src_y"      "const struct Fermion *"   ]
+        [buf*       pointer   "rb"         "void **"                  ])
+  (op int-mul () (s-line) ([reg l-s] [const (size-of Fermion)]))
+  (op int-sub () (s-1-line) ([reg s-line] [const (size-of Fermion)]))
+  (op int-mul () (x-start) ([reg start] [reg s-line]))
+  (op pointer-add () (res-x) ([reg res-x] [reg x-start]))
+  (loop () (i [const 0] [reg size])
+    (op pointer-move () (r) ([reg res-x]))
+    (macro S-compute-F [const 'plus] [const 'minus]
+                       ; [const 'minus] [const 'plus]
+                       [reg r] [reg l-s] [reg s-line] [reg nb] [reg U]
+                       [reg src-y] [reg buf*])
+    (macro S-compute-A* [reg res-x] [reg l-s] [reg s-1-line]
+                        [reg b*+table] [reg b*-table] [reg res-x])
+    (macro S-compute-A*inv [reg res-x] [reg l-s] [reg s-1-line]
+                           [reg a*i+table] [reg a*i-table] [reg res-x])
+    (op pointer-add () (res-x) ([reg res-x] [reg s-line]))))

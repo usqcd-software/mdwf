@@ -57,7 +57,7 @@ x.sources = get-fermion \
             do-A \
             do-A-conj \
             do-A-inv \
-            do-A-conj-inv \
+            do-A-inv-conj \
             do-F \
             do-F-conj \
             do-A-plus-F \
@@ -66,6 +66,7 @@ x.sources = get-fermion \
             do-1-sub-B-A-inv-F-norm \
             do-A-conj-plus-B-conj-F-conj \
             do-A-inv-conj-B-conj \
+            do-A-inv-conj-B-conj-F-conj \
 
 sources = $(i.sources) \
           $(x.sources:%=%f.c) \
