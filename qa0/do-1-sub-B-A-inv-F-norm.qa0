@@ -1,0 +1,47 @@
+;; compute r = phi - B 1/A F psi
+
+(verbose [(c99 bgl/xlc) "/* $Id$ */"])
+
+(include "types.qa0")
+(include "defs-A.qa0")
+(include "defs-F.qa0")
+
+(procedure do-1-sub-B-A-inv-F-norm ([stem "do_1mBA1F_norm"]
+                                    prec&color
+                                    count-flops)
+       ([res-x     pointer   "res_x"      "struct Fermion *"         ]
+        [res-norm  pointer   "norm_x"     "double *"                 ]
+        [start     int       "start"      "int"                      ]
+        [size      int       "size"       "int"                      ]
+        [l-s       int       "Ls"         "int"        		     ]
+        [b+table   pointer   "btable_p"   "const struct ABTable *"   ]
+        [b-table   pointer   "btable_m"   "const struct ABTable *"   ]
+        [ai+table  pointer   "iatable_p"  "const struct ABiTable *"  ]
+        [ai-table  pointer   "iatable_m"  "const struct ABiTable *"  ]
+	[nb        pointer   "neighbor"   "const struct neighbor *"  ]
+	[U         pointer   "U"          "const struct SUn *"       ]
+	[src-x     pointer   "src_x"      "const struct Fermion *"   ]
+	[src-y     pointer   "src_y"      "const struct Fermion *"   ]
+        [buf*      pointer   "rb"         "void **"                  ])
+  (op qcd-fnorm-init () (norm) ())
+  (op int-mul () (s-line) ([reg l-s] [const (size-of Fermion)]))
+  (op int-sub () (s-1-line) ([reg s-line] [const (size-of Fermion)]))
+  (op int-mul () (x-start) ([reg start] [reg s-line]))
+  (op pointer-add () (res-x) ([reg res-x] [reg x-start]))
+  (op pointer-add () (src-x) ([reg src-x] [reg x-start]))
+  (loop () (i [const 0] [reg size])
+    (op pointer-move () (r) ([reg res-x]))
+    (macro S-compute-F ; [const 'plus] [const 'minus]
+                       [const 'minus] [const 'plus]
+                       [reg r] [reg l-s] [reg s-line] [reg nb] [reg U]
+                       [reg src-y] [reg buf*])
+    (macro S-compute-Ainv [reg res-x] [reg l-s] [reg s-1-line]
+                          [reg ai+table] [reg ai-table] [reg res-x])
+    (macro S-compute-sub-A-norm [reg res-x] [reg norm] [reg l-s] [reg s-1-line]
+                                [reg src-x]
+                                [reg b+table] [reg b-table] [reg res-x])
+    (op pointer-add () (res-x) ([reg res-x] [reg s-line]))
+    (op pointer-add () (src-x) ([reg src-x] [reg s-line])))
+  (op qcd-fnorm-fini () (norm-value) ([reg norm]))
+  (store double () ([reg res-norm]) [reg norm-value]))
+

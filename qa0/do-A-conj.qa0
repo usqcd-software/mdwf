@@ -1,0 +1,24 @@
+;;; compute r = A x
+
+(verbose [(c99 bgl/xlc) "/* $Id: do-A.qa0 326 2007-11-13 21:40:51Z avp $ */"])
+
+(include "types.qa0")
+(include "defs-A.qa0")
+
+(procedure do-A ([stem "do_A_conj"]
+                 prec&color
+                 count-flops)
+       ([res-x     pointer   "res_x"     "struct Fermion *"         ]
+        [size      int       "size"      "int"                      ]
+        [l-s       int       "Ls"        "int"        		    ]
+	[p-table   pointer   "p_table"   "const struct ABTable *"   ]
+	[m-table   pointer   "m_table"   "const struct ABTable *"   ]
+	[src-x     pointer   "src_x"     "const struct Fermion *"   ])
+  (op int-mul () (s-size) ([reg l-s] [const (size-of Fermion)]))
+  (op int-sub () (s-1-size) ([reg s-size] [const (size-of Fermion)]))
+  (loop () (i [const 0] [reg size])
+    (macro S-compute-A* [reg res-x]
+                        [reg l-s] [reg s-1-size]
+		        [reg p-table] [reg m-table] [reg src-x])
+    (op pointer-add () (res-x) ([reg res-x] [reg s-size]))
+    (op pointer-add () (src-x) ([reg src-x] [reg s-size]))))

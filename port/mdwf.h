@@ -420,9 +420,21 @@ unsigned int qx(do_1mBA1F)(struct Fermion *r_y,
 			   const struct ABiTable *iatable_m,
 			   const struct neighbor *neighbor,
 			   const struct SUn *U,
-			   const struct Fermion *b_y,
+			   const struct Fermion *a_y,
 			   const struct Fermion *b_x,
 			   void *rb[]);
+unsigned int qx(do_1mB1AF_norm)(struct Fermion *r_y,
+				double *norm,
+				int start, int size, int Ls,
+				const struct ABTable *bptable,
+				const struct ABTable *bmtable,
+				const struct ABiTable *iatable_p,
+				const struct ABiTable *iatable_m,
+				const struct neighbor *neighbor,
+				const struct SUn *U,
+				const struct Fermion *a_y,
+				const struct Fermion *b_x,
+				void *rb[]);
 #if 0
 unsigned int qx(do_AxpFx)(struct Fermion *r_x,
 			  int start, int size, int Ls,
@@ -468,17 +480,6 @@ unsigned int qx(do_1AcBcFc)(struct Fermion *r_y,
 			    const struct SUn *U,
 			    const struct Fermion *s_x,
 			    void *rb[]);
-unsigned int qx(do_1mB1AF_norm)(struct Fermion *r_y,
-				double *norm,
-				int start, int size, int Ls,
-				const struct ABTable *btable,
-				const struct ABiTable *iatable_p,
-				const struct ABiTable *iatable_m,
-				const struct neighbor *neighbor,
-				const struct Fermion *a_y,
-				const struct SUn *U,
-				const struct Fermion *b_x,
-				void *rb[]);
 #endif
 
 /* end of functions for cg */

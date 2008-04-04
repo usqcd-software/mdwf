@@ -157,6 +157,69 @@
                                [reg l-s] [reg s-1-size]
 			       [reg sa-x] [reg m-table] [reg src-x]))
 
+;;; a - A b and the norm of the result
+(define (S-compute-add-A-norm-upper res-x res-norm mem-part madd-op norm-op
+                                    l-s s-1-size src-ax p-table src-bx)
+  (op nop (start S-compute-A-upper) () ())
+  (op pointer-add () (src-L) ([reg src-bx] [reg s-1-size]))
+  (op pointer-move () (d) ([reg res-x]))
+  (op pointer-move () (a) ([reg src-ax]))
+  (op pointer-move () (b) ([reg src-bx]))
+  (op pointer-move () (v&w) ([reg p-table]))
+  (load mem-part () x ([reg src-L]))
+  (loop () (i [const 0] [reg l-s])
+    (load mem-part () q ([reg a]))
+    (op pointer-add () (a) ([reg a] [const (size-of Fermion)]))
+    (load double () v ([reg v&w] [const (offset-of AB-Table v)]))
+    (load double () w ([reg v&w] [const (offset-of AB-Table w)]))
+    (op pointer-add () (v&w) ([reg v&w] [const (size-of AB-Table)]))
+    (op madd-op () (y) ([reg q] [reg v] [reg x]))
+    (load mem-part () x ([reg b]))
+    (op pointer-add () (b) ([reg b] [const (size-of Fermion)]))
+    (op madd-op () (z) ([reg y] [reg w] [reg x]))
+    (op norm-op () (res-norm) ([reg res-norm] [reg z]))
+    (store mem-part () ([reg d]) [reg z])
+    (op pointer-add () (d) ([reg d] [const (size-of Fermion)])))
+  (op nop (end S-compute-A-upper) () ()))
+
+(define (S-compute-add-A-norm-lower res-x res-norm mem-part madd-op norm-op
+                                    l-s s-1-size src-ax m-table src-bx)
+  (op nop (start S-compute-A-lower) () ())
+  (op pointer-add () (d) ([reg res-x] [reg s-1-size]))
+  (op pointer-add () (a) ([reg src-ax] [reg s-1-size]))
+  (op pointer-add () (b) ([reg src-bx] [reg s-1-size]))
+  (op pointer-move () (v&w) ([reg m-table]))
+  (load mem-part () x ([reg src-bx]))
+  (loop () (i [const 0] [reg l-s])
+    (load mem-part () q ([reg a]))
+    (op pointer-add () (a) ([reg a] [const (- (size-of Fermion))]))
+    (load double () v ([reg v&w] [const (offset-of AB-Table v)]))
+    (load double () w ([reg v&w] [const (offset-of AB-Table w)]))
+    (op pointer-add () (v&w) ([reg v&w] [const (size-of AB-Table)]))
+    (op madd-op () (y) ([reg q] [reg v] [reg x]))
+    (load mem-part () x ([reg b]))
+    (op pointer-add () (b) ([reg b] [const (- (size-of Fermion))]))
+    (op madd-op () (z) ([reg y] [reg w] [reg x]))
+    (op norm-op () (res-norm) ([reg res-norm] [reg z]))
+    (store mem-part () ([reg d]) [reg z])
+    (op pointer-add () (d) ([reg d] [const (- (size-of Fermion))])))
+  (op nop (end S-compute-A-lower) () ()))
+
+(define (S-compute-sub-A-norm res-x res-norm l-s s-1-size
+                              src-ax p-table m-table src-bx)
+  (macro S-compute-add-A-norm-upper [reg res-x] [reg res-norm]
+                                    [const 'qcd-fermion-hi]
+                                    [const 'qcd-msubf-hi]
+				    [const 'qcd-fnorm-hi-add]
+                                    [reg l-s] [reg s-1-size]
+   				    [reg src-ax] [reg p-table] [reg src-bx])
+  (macro S-compute-add-A-norm-lower [reg res-x] [reg res-norm]
+                                    [const 'qcd-fermion-lo]
+                                    [const 'qcd-msubf-lo]
+				    [const 'qcd-fnorm-lo-add]
+                                    [reg l-s] [reg s-1-size]
+   				    [reg src-ax] [reg m-table] [reg src-bx]))
+
 ;;; Inverses of A and A*
 (define (S-compute-A-inv-upper res-x mem-part scale-op madd-op
                                l-s p-table src-x)
