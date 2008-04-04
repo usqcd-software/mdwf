@@ -60,19 +60,12 @@ x.sources = get-fermion \
             do-A-conj-inv \
             do-F \
             do-F-conj \
-            do-ApF \
+            do-A-plus-F \
             do-B-A-inv-F \
             do-1-sub-B-A-inv-F \
             do-1-sub-B-A-inv-F-norm \
-            do-AxpBxFx \
-
-#            do-BA-inv \
-#            do-1pA \
-#            do-ApB \
-#            do-1mF \
-#            do-1mFx \
-#            do-A-conj-inv-B \
-#            do-A-conj-inv-B-conj-F-conj \
+            do-A-conj-plus-B-conj-F-conj \
+            do-A-inv-conj-B-conj \
 
 sources = $(i.sources) \
           $(x.sources:%=%f.c) \

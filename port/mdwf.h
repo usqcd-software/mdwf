@@ -313,8 +313,7 @@ void q(fix_neighbor_f_down)(struct neighbor *n, int p, int f_down, int d);
 void q(put_ABTable)(struct ABTable *t, int i, double w, double v);
 void q(put_ABiTableZ)(struct ABiTable *t, double z);
 void q(put_ABiTable)(struct ABiTable *t,
-		     int i,
-		     double vp, double sp, double fp);
+		     int i, double vp, double sp, double fp);
 
 /* Linear algebra on fermions */
 void qx(f_copy)(struct Fermion *dst, 
@@ -435,54 +434,32 @@ unsigned int qx(do_1mBA1F_norm)(struct Fermion *r_y,
 				const struct Fermion *a_y,
 				const struct Fermion *b_x,
 				void *rb[]);
-#if 0
-unsigned int qx(do_AxpFx)(struct Fermion *r_x,
-			  int start, int size, int Ls,
-			  const struct ABTable *atable,
-			  const struct neighbor *neighbor,
-			  const struct SUn *U,
-			  const struct Fermion *s_x,
-			  const struct Fermion *s_y,
-			  void *rb[]);
-/* XXX functions for cg, need better integration with the rest */
-unsigned int qx(do_1AcBc)(struct Fermion *r,
+unsigned int qx(do_A1xBx)(struct Fermion *r_y,
 			  int size, int Ls,
+			  const struct ABTable *bptable,
+			  const struct ABTable *bmtable,
 			  const struct ABiTable *iatable_p,
 			  const struct ABiTable *iatable_m,
-			  const struct ABTable *btable,
-			  const struct Fermion *x);
-unsigned int qx(do_B1A)(struct Fermion *r,
-			int size, int Ls,
-			const struct ABTable *btable,
-			const struct ABiTable *iatable_p,
-			const struct ABiTable *iatable_m,
-			const struct Fermion *x);
-unsigned int qx(do_1mF)(struct Fermion *r_x,
-			int start, int size, int Ls,
-			const struct neighbor *neighbor,
-			const struct Fermion *s_x,
-			const struct SUn *U,
-			const struct Fermion *s_y,
-			void *rb[]);
-unsigned int qx(do_1mFc)(struct Fermion *r_y,
-			 int start, int size, int Ls,
-			 const struct neighbor *neighbor,
-			 const struct Fermion *s_y,
-			 const struct SUn *U,
-			 const struct Fermion *s_x,
-			 void *rb[]);
-unsigned int qx(do_1AcBcFc)(struct Fermion *r_y,
+			  const struct Fermion *b_y);
+unsigned int qx(do_A1xBxFx)(struct Fermion *r_x,
 			    int start, int size, int Ls,
-			    const struct ABiTable *iatable_p,
-			    const struct ABiTable *iatable_m,
-			    const struct ABTable *btable,
+			    const struct ABTable *aptable,
+			    const struct ABTable *amtable,
+			    const struct ABTable *bptable,
+			    const struct ABTable *bmtable,
 			    const struct neighbor *neighbor,
 			    const struct SUn *U,
-			    const struct Fermion *s_x,
+			    const struct Fermion *s_y,
 			    void *rb[]);
-#endif
+unsigned int qx(do_1mFx)(struct Fermion *r_y,
+			 int start, int size, int Ls,
+			 const struct neighbor *neighbor,
+			 const struct SUn *U,
+			 const struct Fermion *a_y,
+			 const struct Fermion *b_x,
+			 void *rb[]);
+/* --- other composites are here */
 
-/* end of functions for cg */
 /* Timing */
 #define BEGIN_TIMING(s) do { gettimeofday(&((s)->t0), NULL); } while (0)
 #define END_TIMING(s, f, snd, rcv) do { \
@@ -501,6 +478,5 @@ unsigned int qx(do_1AcBcFc)(struct Fermion *r_y,
       return q(set_error)(state, 0, f "(): geometry mismatch"); } while (0)
 #define CHECK_POINTER(n,f) do { if ((n) == 0)				\
       return q(set_error)(state, 0, f "(): NULL argument"); } while (0)
-
 
 #endif /* !defined(MARK_B9BA8123_0F1A_40FD_8827_42266FE32F3E) */
