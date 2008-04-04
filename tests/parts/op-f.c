@@ -2,21 +2,6 @@
 #include "../../port/mdwf.h"
 #include "op-routines.h"
 
-/* Conservative version with contained communications */
-static Up_project up_project[Q(DIM)] = {
-  qx(proj_Ucg0plus),
-  qx(proj_Ucg1plus),
-  qx(proj_Ucg2plus),
-  qx(proj_Ucg3plus)
-};
-
-static Down_project down_project[Q(DIM)] = {
-  qx(proj_g0minus),
-  qx(proj_g1minus),
-  qx(proj_g2minus),
-  qx(proj_g3minus)
-};
-
 int
 op_F_even(struct Fermion *result_even,
 	  struct Q(State) *state,
@@ -32,13 +17,13 @@ op_F_even(struct Fermion *result_even,
 
     for (i = 0; i < Q(DIM); i++) {
 	if (even->send_up_size[i])
-	    (up_project[i])(even->send_up_buf[i],
-			    even->send_up_size[i], Ls,
-			    even->up_pack[i], U, src_odd);
+	    (up_project_n[i])(even->send_up_buf[i],
+			      even->send_up_size[i], Ls,
+			      even->up_pack[i], U, src_odd);
 	if (even->send_down_size[i])
-	    (down_project[i])(even->send_down_buf[i],
-			      even->send_down_size[i], Ls,
-			      even->down_pack[i], src_odd);
+	    (down_project_n[i])(even->send_down_buf[i],
+				even->send_down_size[i], Ls,
+				even->down_pack[i], src_odd);
     }
 
     if (even->h_valid)
@@ -74,13 +59,13 @@ op_F_odd(struct Fermion *result_odd,
 
     for (i = 0; i < Q(DIM); i++) {
 	if (odd->send_up_size[i])
-	    (up_project[i])(odd->send_up_buf[i],
-			    odd->send_up_size[i], Ls,
-			    odd->up_pack[i], U, src_even);
+	    (up_project_n[i])(odd->send_up_buf[i],
+			      odd->send_up_size[i], Ls,
+			      odd->up_pack[i], U, src_even);
 	if (odd->send_down_size[i])
-	    (down_project[i])(odd->send_down_buf[i],
-			      odd->send_down_size[i], Ls,
-			      odd->down_pack[i], src_even);
+	    (down_project_n[i])(odd->send_down_buf[i],
+				odd->send_down_size[i], Ls,
+				odd->down_pack[i], src_even);
     }
 
     if (odd->h_valid)

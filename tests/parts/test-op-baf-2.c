@@ -68,60 +68,6 @@ show(const char *name, double x, double y)
 {
     zprint("%-10s: %20.10e %20.10e", name, x, y);
 }
-/***************************************************************************/
-static Up_project up_project_n[Q(DIM)] = {
-  qx(proj_Ucg0plus),
-  qx(proj_Ucg1plus),
-  qx(proj_Ucg2plus),
-  qx(proj_Ucg3plus)
-};
-
-static Down_project down_project_n[Q(DIM)] = {
-  qx(proj_g0minus),
-  qx(proj_g1minus),
-  qx(proj_g2minus),
-  qx(proj_g3minus)
-};
-
-static void
-compute_BA1F(struct Fermion *r_x,
-	     struct Q(State) *state,
-	     const struct Q(Parameters) *params,
-	     const struct SUn *U,
-	     const struct Fermion *a_y)
-{
-    struct eo_lattice *xy = &state->odd;
-    int Ls = state->Ls;
-    int i;
-
-    for (i = 0; i < Q(DIM); i++) {
-	if (xy->send_up_size[i])
-	    (up_project_n[i])(xy->send_up_buf[i],
-			      xy->send_up_size[i], Ls,
-			      xy->up_pack[i], U, a_y);
-	if (xy->send_down_size[i])
-	    (down_project_n[i])(xy->send_down_buf[i],
-				xy->send_down_size[i], Ls,
-				xy->down_pack[i], a_y);
-    }
-    if (xy->h_valid)
-	QMP_start(xy->handle);
-
-    qx(do_BA1F)(r_x, 0, xy->body_size, Ls,
-		params->BpTable, params->BmTable,
-		params->AipTable, params->AimTable,
-		xy->body_neighbor, U, a_y, NULL);
-
-    if (xy->h_valid)
-	QMP_wait(xy->handle);
-
-    qx(do_BA1F)(r_x, xy->body_size, xy->face_size, Ls,
-		params->BpTable, params->BmTable,
-		params->AipTable, params->AimTable,
-		xy->face_neighbor, U, a_y, xy->receive_buf);
-}
-
-/***************************************************************************/
 
 int
 operator_a(void)
@@ -134,7 +80,7 @@ operator_a(void)
 	return 1;
     }
 
-    compute_BA1F(fermion_x->odd, state, params, gauge->data, fermion_a->even);
+    op_BA1F_odd(fermion_x->odd, state, params, gauge->data, fermion_a->even);
 
     dot_fermion(&x, &y, fermion_b, fermion_x);
 

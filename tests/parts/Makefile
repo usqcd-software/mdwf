@@ -82,6 +82,15 @@ oproutines = op-a.c \
              op-b1x.c \
              op-f.c \
              op-fx.c \
+             op-a1xbx.c \
+             op-project-n.c \
+             op-project-x.c \
+             op-apf.c \
+             op-1mfx.c \
+             op-1mba1f.c \
+             op-1mba1fn.c \
+             op-a1xbxfx.c \
+             op-ba1f.c \
              dot-fermion.c
 
 oplib = op

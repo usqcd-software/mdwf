@@ -98,5 +98,53 @@ int op_Fx_odd(struct Fermion *result_odd,
 int op_Fx(struct Q(Fermion) *result,
 	  const struct Q(Gauge) *gauge,
 	  const struct Q(Fermion) *source);
+int op_A1xBx_even(struct Fermion *res,
+		  const struct Q(Parameters) *params,
+		  const struct Fermion *src);
+int op_A1xBx_odd(struct Fermion *res,
+		 const struct Q(Parameters) *params,
+		 const struct Fermion *src);
+int op_A1xBx(struct Q(Fermion) *res,
+	     const struct Q(Parameters) *params,
+	     const struct Q(Fermion) *src);
+int op_ApF_odd(struct Fermion *r_odd,
+	       struct Q(State) *state,
+	       const struct Q(Parameters) *params,
+	       const struct SUn *U,
+	       const struct Fermion *a_odd,
+	       const struct Fermion *a_even);
+int op_1mFx_odd(struct Fermion *r_odd,
+		struct Q(State) *state,
+		const struct SUn *U,
+		const struct Fermion *a_odd,
+		const struct Fermion *a_even);
+int op_1mBA1F_odd(struct Fermion *r_odd,
+		  struct Q(State) *state,
+		  const struct Q(Parameters) *params,
+		  const struct SUn *U,
+		  const struct Fermion *a_odd,
+		  const struct Fermion *a_even);
+int op_BA1Fn_odd(struct Fermion *r_odd,
+		 double *norm,
+		 struct Q(State) *state,
+		 const struct Q(Parameters) *params,
+		 const struct SUn *U,
+		 const struct Fermion *a_odd,
+		 const struct Fermion *a_even);
+int op_A1xBxFx_odd(struct Fermion *r_odd,
+		   struct Q(State) *state,
+		   const struct Q(Parameters) *params,
+		   const struct SUn *U,
+		   const struct Fermion *a_even);
+int op_BA1F_odd(struct Fermion *r_odd,
+		struct Q(State) *state,
+		const struct Q(Parameters) *params,
+		const struct SUn *U,
+		const struct Fermion *a_even);
+
+extern Up_project up_project_n[Q(DIM)];
+extern Up_project up_project_x[Q(DIM)];
+extern Down_project down_project_n[Q(DIM)];
+extern Down_project down_project_x[Q(DIM)];
 
 #endif /* !defined(MARK_0DAB983B_E5FA_4BCE_AE68_915CE2ABD086) */

@@ -77,27 +77,15 @@ show(const char *name, double x, double y)
 {
     zprint("%-10s: %20.10e %20.10e", name, x, y);
 }
-/***************************************************************************/
+
 static void
 compute_A1xBx(struct QX(Fermion) *r,
 	      struct Q(State) *state,
 	      const struct Q(Parameters) *params,
 	      const struct QX(Fermion) *s)
 {
-    qx(do_A1xBx)(r->even, state->even.full_size, state->even.Ls,
-		 params->BxpTable,
-		 params->BxmTable,
-		 params->AxipTable,
-		 params->AximTable,
-		 s->even);
-    qx(do_A1xBx)(r->odd, state->odd.full_size, state->odd.Ls,
-		 params->BxpTable,
-		 params->BxmTable,
-		 params->AxipTable,
-		 params->AximTable,
-		 s->odd);
+    op_A1xBx(r, params, s);
 }
-/***************************************************************************/
 
 int
 operator_a(void)
