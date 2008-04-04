@@ -93,6 +93,7 @@ Compute projection part of $U^\dagger(1\pm\gamma_d)\psi$.
 \end{center}
 
 %%%% unprojects
+\pagebreak
 \subsection{\texttt{unproject}}
 \begin{verbatim}
 (macro unproject [const p/m] [const d] [reg res] [reg q] [reg U] [reg psi])
@@ -151,6 +152,46 @@ Compute unprojection part of $M[q]+(1\pm\gamma_d)\psi$.
 \end{tabular}
 \end{center}
 
+\subsection{\texttt{sub-unproject}}
+\begin{verbatim}
+(macro sub-unproject [const p/m] [const d] [reg res] [reg q] [reg U] [reg psi])
+\end{verbatim}
+Compute unprojection part of $M[q]-(1\pm\gamma_d)\psi$.
+
+\begin{center}
+\begin{tabular}{|l|c|l|}
+\hline
+\verb|p/m|& in & either \verb|'plus| or \verb|'minus|\\
+\verb|d|& in & a number from $0$ to \verb|*dim*|$-1$ inclusive\\
+\verb|res|& out & result register\\
+\verb|q|& in& address for the fermion to be added to the unprojection\\
+\verb|U|& unused &\\
+\verb|psi|&in& register containing projected fermion to be unprojected\\
+\hline
+\end{tabular}
+\end{center}
+
+\pagebreak
+\subsection{\texttt{sub-unproject-U}}
+\begin{verbatim}
+(macro sub-unproject-U [const p/m] [const d] [reg res] [reg q] [reg U] [reg psi])
+\end{verbatim}
+% Description
+Compute unprojection part of $M[q]-U(1\pm\gamma_d)\psi$.
+
+\begin{center}
+\begin{tabular}{|l|c|l|}
+\hline
+\verb|p/m|& in & either \verb|'plus| or \verb|'minus|\\
+\verb|d|& in& a number from $0$ to \verb|*dim*|$-1$ inclusive\\
+\verb|res|&out& result register\\
+\verb|q|& in& address for the fermion to be added to the unprojection\\
+\verb|U|&in& gauge field register\\
+\verb|psi|&in& register containing a projected fermion to be unprojected\\
+\hline
+\end{tabular}
+\end{center}
+
 \subsection{\texttt{add-unproject-U}}
 \begin{verbatim}
 (macro add-unproject-U [const p/m] [const d] [reg res] [reg q] [reg U] [reg psi])
@@ -172,7 +213,6 @@ Compute unprojection part of $M[q]+U(1\pm\gamma_d)\psi$.
 \end{center}
 
 %% combined project & unproject
-\pagebreak
 \subsection{\texttt{one-x-gamma-U}}
 \begin{verbatim}
 (macro one-x-gamma-U [const 'p/m] [const d] [reg res] [reg q] [reg U] [reg psi])
@@ -211,11 +251,50 @@ Compute $U^\dagger(1\pm\gamma_d)\psi$.
 \end{tabular}
 \end{center}
 
+\pagebreak
+\subsection{\texttt{sub-one-x-gamma-U}}
+\begin{verbatim}
+(macro sub-one-x-gamma-U [const 'p/m] [const d] [reg res] [reg q] [reg U] [reg psi])
+\end{verbatim}
+Compute $M[q]-U(1\pm\gamma_d)\psi$.
+
+\begin{center}
+\begin{tabular}{|l|c|l|}
+\hline
+\verb|p/m|& in & either \verb|'plus| or \verb|'minus|\\
+\verb|d|& in& a number from $0$ to \verb|*dim*|$-1$ inclusive\\
+\verb|res|&out& result register\\
+\verb|q|& in & address of the fermion to be added.\\
+\verb|U|&in& gauge field register\\
+\verb|psi|&in& register containing a fermion\\
+\hline
+\end{tabular}
+\end{center}
+
 \subsection{\texttt{add-one-x-gamma-U}}
 \begin{verbatim}
 (macro add-one-x-gamma-U [const 'p/m] [const d] [reg res] [reg q] [reg U] [reg psi])
 \end{verbatim}
 Compute $M[q]+U(1\pm\gamma_d)\psi$.
+
+\begin{center}
+\begin{tabular}{|l|c|l|}
+\hline
+\verb|p/m|& in & either \verb|'plus| or \verb|'minus|\\
+\verb|d|& in& a number from $0$ to \verb|*dim*|$-1$ inclusive\\
+\verb|res|&out& result register\\
+\verb|q|& in & address of the fermion to be added.\\
+\verb|U|&in& gauge field register\\
+\verb|psi|&in& register containing a fermion\\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{\texttt{sub-one-x-gamma-U*}}
+\begin{verbatim}
+(macro sub-one-x-gamma-U* [const 'p/m] [const d] [reg res] [reg q] [reg U] [reg psi])
+\end{verbatim}
+Compute $M[q]-U^\dagger(1\pm\gamma_d)\psi$.
 
 \begin{center}
 \begin{tabular}{|l|c|l|}
@@ -251,285 +330,246 @@ Compute $M[q]+U^\dagger(1\pm\gamma_d)\psi$.
 
 \pagebreak
 \section{\texttt{defs-A.qa0} --- FLAVOR MATRICES}
-\subsection{\texttt{compute-A}}
-\begin{verbatim}
-(macro compute-A [reg r] [reg t] [reg x])
-\end{verbatim}
-Compute $M[r]\leftarrow A M[x]$ at one 5-d point,
-advance \verb|r|, \verb|t|, and \verb|x|.
-
-\begin{center}
-\begin{tabular}{|l|c|l|}
-\hline
-\verb|r|& in/out & address of the result \\
-\verb|t|& in/out & address of a \verb|ABTable| element for $A$\\
-\verb|x|& in/out & address of the source fermion\\
-\hline
-\end{tabular}
-\end{center}
-
-\subsection{\texttt{compute-A*}}
-\begin{verbatim}
-(macro compute-A* [reg r] [reg t] [reg x])
-\end{verbatim}
-Compute $M[r]\leftarrow A^\dagger M[x]$ at one 5-d point,
-advance \verb|r|, \verb|t|, and \verb|x|.
-
-\begin{center}
-\begin{tabular}{|l|c|l|}
-\hline
-\verb|r|& in/out & address of the result \\
-\verb|t|& in/out & address of a \verb|ABTable| element for $A$\\
-\verb|x|& in/out & address of the source fermion\\
-\hline
-\end{tabular}
-\end{center}
-
-\subsection{\texttt{compute-A+B}}
-\begin{verbatim}
-(macro compute-A+B [reg r] [reg t-a] [reg x-a] [reg t-b] [reg x-b])
-\end{verbatim}
-Compute $M[r]\leftarrow A M[x_a] + B M[x_b]$ at one 5-d point,
-advance \verb|r|, \verb|t-a|, \verb|x-a|, \verb|t-b|, and \verb|x-b|.
-
-\begin{center}
-\begin{tabular}{|l|c|l|}
-\hline
-\verb|r|& in/out & address of the result \\
-\verb|t-a|& in/out & address of a \verb|ABTable| element for $A$\\
-\verb|x-a|& in/out & address of the source fermion $x_a$\\
-\verb|t-b|& in/out & address of a \verb|ABTable| element for $B$\\
-\verb|x-b|& in/out & address of the source fermion $x_b$\\
-\hline
-\end{tabular}
-\end{center}
-
-\subsection{\texttt{compute-A*+B*}}
-\begin{verbatim}
-(macro compute-A*+B* [reg r] [reg t-a] [reg x-a] [reg t-b] [reg x-b])
-\end{verbatim}
-Compute $M[r]\leftarrow A^\dagger M[x_a] + B^\dagger M[x_b]$ at one 5-d point,
-advance \verb|r|, \verb|t-a|, \verb|x-a|, \verb|t-b|, and \verb|x-b|.
-
-\begin{center}
-\begin{tabular}{|l|c|l|}
-\hline
-\verb|r|& in/out & address of the result \\
-\verb|t-a|& in/out & address of a \verb|ABTable| element for $A$\\
-\verb|x-a|& in/out & address of the source fermion $x_a$\\
-\verb|t-b|& in/out & address of a \verb|ABTable| element for $B$\\
-\verb|x-b|& in/out & address of the source fermion $x_b$\\
-\hline
-\end{tabular}
-\end{center}
-
-\subsection{\texttt{compute-1+A}}
-\begin{verbatim}
-(macro compute-1+A [reg r] [reg x-b] [reg t-a] [reg x-a])
-\end{verbatim}
-Compute $M[r]\leftarrow M[x_b] + A M[x_a]$ at one 5-d point,
-advance \verb|r|, \verb|t-a|, \verb|x-a|, and \verb|x-b|.
-
-\begin{center}
-\begin{tabular}{|l|c|l|}
-\hline
-\verb|r|& in/out & address of the result \\
-\verb|x-b|& in/out & address of the source fermion $x_b$\\
-\verb|t-a|& in/out & address of a \verb|ABTable| element for $A$\\
-\verb|x-a|& in/out & address of the source fermion $x_a$\\
-\hline
-\end{tabular}
-\end{center}
-
-\subsection{\texttt{compute-1+A*}}
-\begin{verbatim}
-(macro compute-1+A* [reg r] [reg x-b] [reg t-a] [reg x-a])
-\end{verbatim}
-Compute $M[r]\leftarrow M[x_b] + A^\dagger M[x_a]$ at one 5-d point,
-advance \verb|r|, \verb|t-a|, \verb|x-a|, and \verb|x-b|.
-
-\begin{center}
-\begin{tabular}{|l|c|l|}
-\hline
-\verb|r|& in/out & address of the result \\
-\verb|x-b|& in/out & address of the source fermion $x_b$\\
-\verb|t-a|& in/out & address of a \verb|ABTable| element for $A$\\
-\verb|x-a|& in/out & address of the source fermion $x_a$\\
-\hline
-\end{tabular}
-\end{center}
-
 %%% S-lines
 \subsection{\texttt{S-compute-A}}
 \begin{verbatim}
-(macro S-compute-A [reg r] [reg l-s] [reg t] [reg x])
+(macro S-compute-A [reg r] [reg l-s] [reg s-1-size]
+                   [reg t-plus] [reg t-minus] [reg x])
 \end{verbatim}
-Compute $M[r]\leftarrow A M[x]$ at a flavor slice,
-advance \verb|r|, and \verb|x|.
+Compute $M[r]\leftarrow A M[x]$ at a flavor slice.
+Source \verb|x| and destination \verb|r| are \emph{not} advanced and
+are allowed to coincide.
 
 \begin{center}
 \begin{tabular}{|l|c|l|}
 \hline
-\verb|r|& in/out & address of the result \\
+\verb|r|& in & address of the result \\
 \verb|l-s| & in & value of $L_s$ \\
-\verb|t|& in & address of \verb|ABTable| for $A$\\
-\verb|x|& in/out & address of the source fermion\\
-\hline
-\end{tabular}
-\end{center}
-
-\subsection{\texttt{S-compute-A+B}}
-\begin{verbatim}
-(macro S-compute-A+B [reg r] [reg l-s] [reg t-a] [reg x-a] [reg t-b] [reg x-b])
-\end{verbatim}
-Compute $M[r]\leftarrow A M[x_a] + B M[x_b]$ at a flavor slice,
-advance \verb|r|, \verb|x-a|, and \verb|x-b|.
-
-\begin{center}
-\begin{tabular}{|l|c|l|}
-\hline
-\verb|r|& in/out & address of the result \\
-\verb|l-s| & in & value of $L_s$ \\
-\verb|t-a|& in & address of \verb|ABTable| for $A$\\
-\verb|x-a|& in/out & address of the source fermion $x_a$\\
-\verb|t-b|& in & address of \verb|ABTable| for $B$\\
-\verb|x-b|& in/out & address of the source fermion $x_b$\\
-\hline
-\end{tabular}
-\end{center}
-
-\subsection{\texttt{S-compute-1+A}}
-\begin{verbatim}
-(macro compute-1+A [reg r] [reg l-s] [reg x-b] [reg t-a] [reg x-a])
-\end{verbatim}
-Compute $M[r]\leftarrow M[x_b] + A M[x_a]$ at a flavor slice,
-advance \verb|r|, \verb|x-a|, and \verb|x-b|.
-
-\begin{center}
-\begin{tabular}{|l|c|l|}
-\hline
-\verb|r|& in/out & address of the result \\
-\verb|l-s| & in & value of $L_s$ \\
-\verb|x-b|& in/out & address of the source fermion $x_b$\\
-\verb|t-a|& in & address of \verb|ABTable| for $A$\\
-\verb|x-a|& in/out & address of the source fermion $x_a$\\
+\verb|s-1-size| & in & values of \verb|(L_s-1)*sizeof(Fermion)|\\
+\verb|t-upper|& in & address of \verb|ABTable| for the upper part of $A$\\
+\verb|t-lower|& in & address of \verb|ABTable| for the lower part of $A$\\
+\verb|x|& in & address of the source fermion\\
 \hline
 \end{tabular}
 \end{center}
 
 \subsection{\texttt{S-compute-A*}}
 \begin{verbatim}
-(macro S-compute-A* [reg r] [reg l-s] [reg t] [reg x])
+(macro S-compute-A* [reg r] [reg l-s] [reg s-1-size]
+                    [reg t-plus] [reg t-minus] [reg x])
 \end{verbatim}
-Compute $M[r]\leftarrow A^\dagger M[x]$ at a flavor slice,
-advance \verb|r|, and \verb|x|.
+Compute $M[r]\leftarrow A^\dagger M[x]$ at a flavor slice.
+Source \verb|x| and destination \verb|r| are \emph{not} advanced and
+are allowed to coincide.
 
 \begin{center}
 \begin{tabular}{|l|c|l|}
 \hline
-\verb|r|& in/out & address of the result \\
+\verb|r|& in & address of the result \\
 \verb|l-s| & in & value of $L_s$ \\
-\verb|t|& in & address of \verb|ABTable| for $A$\\
-\verb|x|& in/out & address of the source fermion\\
+\verb|s-1-size| & in & values of \verb|(L_s-1)*sizeof(Fermion)|\\
+\verb|t-upper|& in & address of \verb|ABTable| for the upper part of $A$\\
+\verb|t-lower|& in & address of \verb|ABTable| for the lower part of $A$\\
+\verb|x|& in & address of the source fermion\\
 \hline
 \end{tabular}
 \end{center}
 
-\subsection{\texttt{S-compute-A*+B*}}
+\subsection{\texttt{S-compute-add-A}}
 \begin{verbatim}
-(macro S-compute-A*+B* [reg r] [reg l-s] [reg t-a] [reg x-a] [reg t-b] [reg x-b])
+(macro S-compute-add-A [reg r] [reg l-s] [reg s-1-size]
+                       [reg x-a] [reg t-upper] [reg t-lower] [reg x-b])
 \end{verbatim}
-Compute $M[r]\leftarrow A^\dagger M[x_a] + B^\dagger M[x_b]$ at a flavor slice,
-advance \verb|r|, \verb|x-a|, and \verb|x-b|.
+Compute $M[r]\leftarrow M[x_a] + A M[x_b]$ at a flavor slice.
+Sources \verb|x-a| and \verb|x-b|, and destination \verb|r| are
+\emph{not} advanced and are allowed to coincide.
 
 \begin{center}
 \begin{tabular}{|l|c|l|}
 \hline
-\verb|r|& in/out & address of the result \\
+\verb|r|& in & address of the result \\
 \verb|l-s| & in & value of $L_s$ \\
-\verb|t-a|& in & address of \verb|ABTable| for $A$\\
-\verb|x-a|& in/out & address of the source fermion $x_a$\\
-\verb|t-b|& in & address of \verb|ABTable| for $B$\\
-\verb|x-b|& in/out & address of the source fermion $x_b$\\
+\verb|s-1-size| & in & values of \verb|(L_s-1)*sizeof(Fermion)|\\
+\verb|x-a|& in & address of the source fermion $x_a$\\
+\verb|t-upper|& in & address of \verb|ABTable| for the upper part of $A$\\
+\verb|t-lower|& in & address of \verb|ABTable| for the lower part of $A$\\
+\verb|x-b|& in & address of the source fermion $x_b$\\
 \hline
 \end{tabular}
 \end{center}
 
-\subsection{\texttt{S-compute-1+A*}}
+\subsection{\texttt{S-compute-add-A*}}
 \begin{verbatim}
-(macro compute-1+A* [reg r] [reg l-s] [reg x-b] [reg t-a] [reg x-a])
+(macro S-compute-add-A* [reg r] [reg l-s] [reg s-1-size]
+                        [reg x-a] [reg t-upper] [reg t-lower] [reg x-b])
 \end{verbatim}
-Compute $M[r]\leftarrow M[x_b] + A^\dagger M[x_a]$ at a flavor slice,
-advance \verb|r|, \verb|x-a|, and \verb|x-b|.
+Compute $M[r]\leftarrow M[x_a] + A^\dagger M[x_b]$ at a flavor slice.
+Sources \verb|x-a| and \verb|x-b|, and destination \verb|r| are
+\emph{not} advanced and are allowed to coincide.
 
 \begin{center}
 \begin{tabular}{|l|c|l|}
 \hline
-\verb|r|& in/out & address of the result \\
+\verb|r|& in & address of the result \\
 \verb|l-s| & in & value of $L_s$ \\
-\verb|x-b|& in/out & address of the source fermion $x_b$\\
-\verb|t-a|& in & address of \verb|ABTable| for $A$\\
-\verb|x-a|& in/out & address of the source fermion $x_a$\\
+\verb|s-1-size| & in & values of \verb|(L_s-1)*sizeof(Fermion)|\\
+\verb|x-a|& in & address of the source fermion $x_a$\\
+\verb|t-upper|& in & address of \verb|ABTable| for the upper part of $A$\\
+\verb|t-lower|& in & address of \verb|ABTable| for the lower part of $A$\\
+\verb|x-b|& in & address of the source fermion $x_b$\\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{\texttt{S-compute-sub-A}}
+\begin{verbatim}
+(macro S-compute-sub-A [reg r] [reg l-s] [reg s-1-size]
+                       [reg x-a] [reg t-upper] [reg t-lower] [reg x-b])
+\end{verbatim}
+Compute $M[r]\leftarrow M[x_a] - A M[x_b]$ at a flavor slice.
+Sources \verb|x-a| and \verb|x-b|, and destination \verb|r| are
+\emph{not} advanced and are allowed to coincide.
+
+\begin{center}
+\begin{tabular}{|l|c|l|}
+\hline
+\verb|r|& in & address of the result \\
+\verb|l-s| & in & value of $L_s$ \\
+\verb|s-1-size| & in & values of \verb|(L_s-1)*sizeof(Fermion)|\\
+\verb|x-a|& in & address of the source fermion $x_a$\\
+\verb|t-upper|& in & address of \verb|ABTable| for the upper part of $A$\\
+\verb|t-lower|& in & address of \verb|ABTable| for the lower part of $A$\\
+\verb|x-b|& in & address of the source fermion $x_b$\\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{\texttt{S-compute-sub-A*}}
+\begin{verbatim}
+(macro S-compute-sub-A* [reg r] [reg l-s] [reg s-1-size]
+                        [reg x-a] [reg t-upper] [reg t-lower] [reg x-b])
+\end{verbatim}
+Compute $M[r]\leftarrow M[x_a] - A^\dagger M[x_b]$ at a flavor slice.
+Sources \verb|x-a| and \verb|x-b|, and destination \verb|r| are
+\emph{not} advanced and are allowed to coincide.
+
+\begin{center}
+\begin{tabular}{|l|c|l|}
+\hline
+\verb|r|& in & address of the result \\
+\verb|l-s| & in & value of $L_s$ \\
+\verb|s-1-size| & in & values of \verb|(L_s-1)*sizeof(Fermion)|\\
+\verb|x-a|& in & address of the source fermion $x_a$\\
+\verb|t-upper|& in & address of \verb|ABTable| for the upper part of $A$\\
+\verb|t-lower|& in & address of \verb|ABTable| for the lower part of $A$\\
+\verb|x-b|& in & address of the source fermion $x_b$\\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{\texttt{S-compute-sub-A-norm}}
+\begin{verbatim}
+(macro S-compute-sub-A-norm [reg r] [reg norm] [reg l-s] [reg s-1-size]
+                            [reg x-a] [reg t-upper] [reg t-lower] [reg x-b])
+\end{verbatim}
+Compute $M[r]\leftarrow M[x_a] - A^\dagger M[x_b]$ and its contribution to
+$|r^2|$ at a flavor slice.
+Sources \verb|x-a| and \verb|x-b|, and destination \verb|r| are
+\emph{not} advanced and are allowed to coincide.
+
+\begin{center}
+\begin{tabular}{|l|c|l|}
+\hline
+\verb|r|& in & address of the result \\
+\verb|norm|& in/out & fermion norm accumulator\\
+\verb|l-s| & in & value of $L_s$ \\
+\verb|s-1-size| & in & values of \verb|(L_s-1)*sizeof(Fermion)|\\
+\verb|x-a|& in & address of the source fermion $x_a$\\
+\verb|t-upper|& in & address of \verb|ABTable| for the upper part of $A$\\
+\verb|t-lower|& in & address of \verb|ABTable| for the lower part of $A$\\
+\verb|x-b|& in & address of the source fermion $x_b$\\
 \hline
 \end{tabular}
 \end{center}
 
 \subsection{\texttt{S-compute-Ainv}}
 \begin{verbatim}
-(macro compute-Ainv [reg r] [reg l-s] [reg s-1] [reg p-t] [reg m-t] [reg x])
+(macro compute-Ainv [reg r] [reg l-s] [reg s-1-size]
+                    [reg t-upper] [reg t-lower] [reg x])
 \end{verbatim}
 Compute $M[r]\leftarrow A^{-1} M[x_a]$ at a flavor slice.
+Source \verb|x| and destination \verb|r| are
+\emph{not} advanced and are allowed to coincide.
 
 \begin{center}
 \begin{tabular}{|l|c|l|}
 \hline
 \verb|r|& in/out & address of the result \\
 \verb|l-s| & in & value of $L_s$ \\
-\verb|s-1| & in & value of $(L_s-1)*\sizeof(\Fermion)$ \\
-\verb|p-t|& in & address of \verb|AiTable| for $A_{+}$\\
-\verb|m-t|& in & address of \verb|AiTable| for $A_{-}$\\
+\verb|s-1-size| & in & value of $(L_s-1)*\sizeof(\Fermion)$ \\
+\verb|t-upper|& in & address of \verb|AiTable| for $A_{+}$\\
+\verb|t-lower|& in & address of \verb|AiTable| for $A_{-}$\\
 \verb|x|& in/out & address of the source fermion $x$\\
 \hline
 \end{tabular}
 \end{center}
-
 
 \subsection{\texttt{S-compute-A*inv}}
 \begin{verbatim}
-(macro compute-A*inv [reg r] [reg l-s] [reg s-1] [reg p-t] [reg m-t] [reg x])
+(macro compute-A*inv [reg r] [reg l-s] [reg s-1-size]
+                     [reg t-upper] [reg t-lower] [reg x])
 \end{verbatim}
 Compute $M[r]\leftarrow (A^\dagger)^{-1} M[x_a]$ at a flavor slice.
+Source \verb|x| and destination \verb|r| are
+\emph{not} advanced and are allowed to coincide.
 
 \begin{center}
 \begin{tabular}{|l|c|l|}
 \hline
 \verb|r|& in/out & address of the result \\
 \verb|l-s| & in & value of $L_s$ \\
-\verb|s-1| & in & value of $(L_s-1)*\sizeof(\Fermion)$ \\
-\verb|p-t|& in & address of \verb|AiTable| for $A_{+}$\\
-\verb|m-t|& in & address of \verb|AiTable| for $A_{-}$\\
+\verb|s-1-size| & in & value of $(L_s-1)*\sizeof(\Fermion)$ \\
+\verb|t-upper|& in & address of \verb|AiTable| for $A_{+}$\\
+\verb|t-lower|& in & address of \verb|AiTable| for $A_{-}$\\
 \verb|x|& in/out & address of the source fermion $x$\\
 \hline
 \end{tabular}
 \end{center}
 
-\pagebreak
 \section{\texttt{defs-F.qa0}---WILSON OPERATOR}
 \subsection{\texttt{S-compute-F}}
 \begin{verbatim}
-(macro S-compute-F [const 'up-sign] [const 'down-sign] [reg res]
-                   [reg l-s] [reg s-line] [reg nb]
+(macro S-compute-F [reg res] [reg l-s] [reg s-line] [reg nb]
                    [reg U] [reg src] [reg buf*])
 \end{verbatim}
-Compute $\phi\leftarrow F\psi$ or $\phi\leftarrow F^\dagger\psi$, advance
-\verb|res| and \verb|nb|.
+Compute $\phi\leftarrow F\psi$, advance \verb|res| and \verb|nb|.
 % Description
 
 \begin{center}
 \begin{tabular}{|l|c|l|}
 \hline
-\verb|up-sign|& in & \verb|plus| for $F$, \verb|minus| for $F^\dagger$\\
-\verb|down-sign|& in & \verb|minus| for $F$, \verb|plus| for $F^\dagger$\\
+\verb|res|& in/out & address of the result fermion\\
+\verb|l-s|& in & value of $L_s$\\
+\verb|s-line|& in & value of $L_s\sizeof(\Fermion)$\\
+\verb|nb|& in/out & address of be \verb|neighbor| element\\
+\verb|U|& in & address of the gauge field\\
+\verb|src|& in & address of the local fermion field\\
+\verb|buf*|& in & address of the receive buffers table\\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{\texttt{S-compute-F*}}
+\begin{verbatim}
+(macro S-compute-F* [reg res] [reg l-s] [reg s-line] [reg nb]
+                    [reg U] [reg src] [reg buf*])
+\end{verbatim}
+Compute $\phi\leftarrow F^\dagger\psi$, advance \verb|res| and \verb|nb|.
+% Description
+
+\begin{center}
+\begin{tabular}{|l|c|l|}
+\hline
 \verb|res|& in/out & address of the result fermion\\
 \verb|l-s|& in & value of $L_s$\\
 \verb|s-line|& in & value of $L_s\sizeof(\Fermion)$\\
@@ -543,19 +583,39 @@ Compute $\phi\leftarrow F\psi$ or $\phi\leftarrow F^\dagger\psi$, advance
 
 \subsection{\texttt{S-compute-add-F}}
 \begin{verbatim}
-(macro S-compute-add-F [const 'up-sign] [const 'down-sign] [reg phi]
-                       [reg l-s] [reg s-line] [reg nb]
+(macro S-compute-add-F [reg phi] [reg l-s] [reg s-line] [reg nb]
                        [reg U] [reg src] [reg buf*])
 \end{verbatim}
-Compute $\phi\leftarrow\phi+F\psi$ or $\phi\leftarrow\phi+F^\dagger\psi$,
+Compute $\phi\leftarrow\phi+F\psi$,
 advance \verb|phi| and \verb|nb|.
 % Description
 
 \begin{center}
 \begin{tabular}{|l|c|l|}
 \hline
-\verb|up-sign|& in & \verb|plus| for $F$, \verb|minus| for $F^\dagger$\\
-\verb|down-sign|& in & \verb|minus| for $F$, \verb|plus| for $F^\dagger$\\
+\verb|phi|& in/out & address of the result fermion\\
+\verb|l-s|& in & value of $L_s$\\
+\verb|s-line|& in & value of $L_s\sizeof(\Fermion)$\\
+\verb|nb|& in/out & address of be \verb|neighbor| element\\
+\verb|U|& in & address of the gauge field\\
+\verb|src|& in & address of the local fermion field\\
+\verb|buf*|& in & address of the receive buffers table\\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{\texttt{S-compute-add-F*}}
+\begin{verbatim}
+(macro S-compute-add-F* [reg phi] [reg l-s] [reg s-line] [reg nb]
+                        [reg U] [reg src] [reg buf*])
+\end{verbatim}
+Compute $\phi\leftarrow\phi+F^\dagger\psi$,
+advance \verb|phi| and \verb|nb|.
+% Description
+
+\begin{center}
+\begin{tabular}{|l|c|l|}
+\hline
 \verb|phi|& in/out & address of the result fermion\\
 \verb|l-s|& in & value of $L_s$\\
 \verb|s-line|& in & value of $L_s\sizeof(\Fermion)$\\
@@ -569,19 +629,42 @@ advance \verb|phi| and \verb|nb|.
 
 \subsection{\texttt{S-compute-sub-F}}
 \begin{verbatim}
-(macro S-compute-sub-F [const 'up-sign] [const 'down-sign] [reg phi]
+(macro S-compute-sub-F [reg phi]
                        [reg l-s] [reg s-line] [reg nb]
                        [reg src-varphi] [reg U] [reg src-psi] [reg buf*])
 \end{verbatim}
-Compute $\phi\leftarrow\varphi-F\psi$ or $\phi\leftarrow\varphi-F^\dagger\psi$,
+Compute $\phi\leftarrow\varphi-F\psi$,
 advance \verb|phi|, \verb|src-varphi|, and \verb|nb|.
 % Description
 
 \begin{center}
 \begin{tabular}{|l|c|l|}
 \hline
-\verb|up-sign|& in & \verb|plus| for $F$, \verb|minus| for $F^\dagger$\\
-\verb|down-sign|& in & \verb|minus| for $F$, \verb|plus| for $F^\dagger$\\
+\verb|phi|& in/out & address of the result fermion\\
+\verb|l-s|& in & value of $L_s$\\
+\verb|s-line|& in & value of $L_s\sizeof(\Fermion)$\\
+\verb|nb|& in/out & address of be \verb|neighbor| element\\
+\verb|src-varphi|& in/out & address of the local fermion field\\
+\verb|U|& in & address of the gauge field\\
+\verb|src-psi|& in & address of the local fermion field\\
+\verb|buf*|& in & address of the receive buffers table\\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{\texttt{S-compute-sub-F*}}
+\begin{verbatim}
+(macro S-compute-sub-F* [reg phi]
+                        [reg l-s] [reg s-line] [reg nb]
+                        [reg src-varphi] [reg U] [reg src-psi] [reg buf*])
+\end{verbatim}
+Compute $\phi\leftarrow\varphi-F^\dagger\psi$,
+advance \verb|phi|, \verb|src-varphi|, and \verb|nb|.
+% Description
+
+\begin{center}
+\begin{tabular}{|l|c|l|}
+\hline
 \verb|phi|& in/out & address of the result fermion\\
 \verb|l-s|& in & value of $L_s$\\
 \verb|s-line|& in & value of $L_s\sizeof(\Fermion)$\\
