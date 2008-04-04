@@ -423,7 +423,7 @@ unsigned int qx(do_1mBA1F)(struct Fermion *r_y,
 			   const struct Fermion *a_y,
 			   const struct Fermion *b_x,
 			   void *rb[]);
-unsigned int qx(do_1mB1AF_norm)(struct Fermion *r_y,
+unsigned int qx(do_1mBA1F_norm)(struct Fermion *r_y,
 				double *norm,
 				int start, int size, int Ls,
 				const struct ABTable *bptable,

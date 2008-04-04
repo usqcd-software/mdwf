@@ -160,7 +160,7 @@
 ;;; a - A b and the norm of the result
 (define (S-compute-add-A-norm-upper res-x res-norm mem-part madd-op norm-op
                                     l-s s-1-size src-ax p-table src-bx)
-  (op nop (start S-compute-A-upper) () ())
+  (op nop (start S-compute-A-norm-upper) () ())
   (op pointer-add () (src-L) ([reg src-bx] [reg s-1-size]))
   (op pointer-move () (d) ([reg res-x]))
   (op pointer-move () (a) ([reg src-ax]))
@@ -180,11 +180,11 @@
     (op norm-op () (res-norm) ([reg res-norm] [reg z]))
     (store mem-part () ([reg d]) [reg z])
     (op pointer-add () (d) ([reg d] [const (size-of Fermion)])))
-  (op nop (end S-compute-A-upper) () ()))
+  (op nop (end S-compute-A-norm-upper) () ()))
 
 (define (S-compute-add-A-norm-lower res-x res-norm mem-part madd-op norm-op
                                     l-s s-1-size src-ax m-table src-bx)
-  (op nop (start S-compute-A-lower) () ())
+  (op nop (start S-compute-A-norm-lower) () ())
   (op pointer-add () (d) ([reg res-x] [reg s-1-size]))
   (op pointer-add () (a) ([reg src-ax] [reg s-1-size]))
   (op pointer-add () (b) ([reg src-bx] [reg s-1-size]))
@@ -203,20 +203,20 @@
     (op norm-op () (res-norm) ([reg res-norm] [reg z]))
     (store mem-part () ([reg d]) [reg z])
     (op pointer-add () (d) ([reg d] [const (- (size-of Fermion))])))
-  (op nop (end S-compute-A-lower) () ()))
+  (op nop (end S-compute-A-norm-lower) () ()))
 
 (define (S-compute-sub-A-norm res-x res-norm l-s s-1-size
                               src-ax p-table m-table src-bx)
   (macro S-compute-add-A-norm-upper [reg res-x] [reg res-norm]
-                                    [const 'qcd-fermion-hi]
-                                    [const 'qcd-msubf-hi]
-				    [const 'qcd-fnorm-hi-add]
-                                    [reg l-s] [reg s-1-size]
-   				    [reg src-ax] [reg p-table] [reg src-bx])
-  (macro S-compute-add-A-norm-lower [reg res-x] [reg res-norm]
                                     [const 'qcd-fermion-lo]
                                     [const 'qcd-msubf-lo]
 				    [const 'qcd-fnorm-lo-add]
+                                    [reg l-s] [reg s-1-size]
+   				    [reg src-ax] [reg p-table] [reg src-bx])
+  (macro S-compute-add-A-norm-lower [reg res-x] [reg res-norm]
+                                    [const 'qcd-fermion-hi]
+                                    [const 'qcd-msubf-hi]
+				    [const 'qcd-fnorm-hi-add]
                                     [reg l-s] [reg s-1-size]
    				    [reg src-ax] [reg m-table] [reg src-bx]))
 
