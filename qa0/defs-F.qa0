@@ -155,7 +155,7 @@
 
 ;;;
 
-(define (S-compute-F up-sign down-sign res-x l-s s-line nb U src-y buf*)
+(define (S-compute$-F up-sign down-sign res-x l-s s-line nb U src-y buf*)
   (load int () mask ([reg nb] [const (offset-of neighbor mask)]))
   (op nop (First direction) () ())
   (repeat ((d [const 0] [const *dim*]))
@@ -200,8 +200,18 @@
   (op pointer-add () (nb) ([reg nb] [const (size-of neighbor)]))
   (op pointer-add () (res-x) ([reg res-x] [reg s-line])))
 
+(define (S-compute-F res-x l-s s-line nb U src-y buf*)
+  (macro S-compute$-F [const 'minus] [const 'plus]
+                      [reg res-x] [reg l-s] [reg s-line]
+                      [reg nb] [reg U] [reg src-y] [reg buf*])) 
+
+(define (S-compute-F* res-x l-s s-line nb U src-y buf*)
+  (macro S-compute$-F [const 'plus] [const 'minus]
+                      [reg res-x] [reg l-s] [reg s-line]
+                      [reg nb] [reg U] [reg src-y] [reg buf*])) 
+
 ;;
-(define (S-compute-add-F up-sign down-sign res-x l-s s-line nb U src-y buf*)
+(define (S-compute$-add-F up-sign down-sign res-x l-s s-line nb U src-y buf*)
   (load int () mask ([reg nb] [const (offset-of neighbor mask)]))
   (repeat ((d [const 0] [const *dim*]))
     ;; continue with up
@@ -217,9 +227,19 @@
   (op pointer-add () (nb) ([reg nb] [const (size-of neighbor)]))
   (op pointer-add () (res-x) ([reg res-x] [reg s-line])))
 
+(define (S-compute-add-F res-x l-s s-line nb U src-y buf*)
+  (macro S-compute$-add-F [const 'minus] [const 'plus]
+                          [reg res-x] [reg l-s] [reg s-line]
+                          [reg nb] [reg U] [reg src-y] [reg buf*])) 
+
+(define (S-compute-add-F* res-x l-s s-line nb U src-y buf*)
+  (macro S-compute$-add-F [const 'plus] [const 'minus]
+                          [reg res-x] [reg l-s] [reg s-line]
+                          [reg nb] [reg U] [reg src-y] [reg buf*]))
+
 ;;
-(define (S-compute-sub-F up-sign down-sign res-x l-s s-line nb
-                         src-x U src-y buf*)
+(define (S-compute$-sub-F up-sign down-sign res-x l-s s-line nb
+                          src-x U src-y buf*)
   (load int () mask ([reg nb] [const (offset-of neighbor mask)]))
   (op pointer-move () (r) ([reg res-x]))
   (loop () (s [const 0] [reg l-s])
@@ -240,3 +260,13 @@
                            [reg src-y] [reg buf*]))
   (op pointer-add () (nb) ([reg nb] [const (size-of neighbor)]))
   (op pointer-add () (res-x) ([reg res-x] [reg s-line])))
+
+(define (S-compute-sub-F res-x l-s s-line nb src-x U src-y buf*)
+  (macro S-compute$-sub-F [const 'minus] [const 'plus]
+                          [reg res-x] [reg l-s] [reg s-line] [reg nb]
+                          [reg src-x] [reg U] [reg src-y] [reg buf*]))
+
+(define (S-compute-sub-F* res-x l-s s-line nb src-x U src-y buf*)
+  (macro S-compute$-sub-F [const 'plus] [const 'minus]
+                          [reg res-x] [reg l-s] [reg s-line] [reg nb]
+                          [reg src-x] [reg U] [reg src-y] [reg buf*]))

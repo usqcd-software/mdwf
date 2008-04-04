@@ -20,7 +20,5 @@
   (op int-mul () (x-start) ([reg start] [reg s-line]))
   (op pointer-add () (res-x) ([reg res-x] [reg x-start]))
   (loop () (i [const 0] [reg size])
-    (macro S-compute-F [const 'plus] [const 'minus]
-                       ; [const 'minus] [const 'plus]
-                       [reg res-x] [reg l-s] [reg s-line] [reg nb] [reg U]
-                       [reg src-y] [reg buf*])))
+    (macro S-compute-F* [reg res-x] [reg l-s] [reg s-line] [reg nb] [reg U]
+                        [reg src-y] [reg buf*])))

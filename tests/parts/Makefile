@@ -119,7 +119,7 @@ else
    C=
 endif
 
-all: $(programs) optests
+all: $(programs) optests opxtests opytests opztests
 
 optests: $(optests:%.c=%)
 

@@ -31,9 +31,7 @@
   (op pointer-add () (src-x) ([reg src-x] [reg x-start]))
   (loop () (i [const 0] [reg size])
     (op pointer-move () (r) ([reg res-x]))
-    (macro S-compute-F ; [const 'plus] [const 'minus]
-                       [const 'minus] [const 'plus]
-                       [reg r] [reg l-s] [reg s-line] [reg nb] [reg U]
+    (macro S-compute-F [reg r] [reg l-s] [reg s-line] [reg nb] [reg U]
                        [reg src-y] [reg buf*])
     (macro S-compute-Ainv [reg res-x] [reg l-s] [reg s-1-line]
                           [reg ai+table] [reg ai-table] [reg res-x])
