@@ -401,6 +401,13 @@ unsigned int qx(do_AxpBxFx)(struct Fermion *r_x,
 			    const struct Fermion *s_y,
 			    void *rb[]);
 /* B 1/A F */
+unsigned int qx(do_BA1)(struct Fermion *r_x,
+			int size, int Ls,
+			const struct ABTable *bptable,
+			const struct ABTable *bmtable,
+			const struct ABiTable *iatable_p,
+			const struct ABiTable *iatable_m,
+			const struct Fermion *s_x);
 unsigned int qx(do_BA1F)(struct Fermion *r_y,
 			 int start, int size, int Ls,
 			 const struct ABTable *bptable,

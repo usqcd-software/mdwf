@@ -68,6 +68,7 @@ x.sources = get-fermion.qa0 \
             do-F.qa0 \
             do-F-conj.qa0 \
             do-A-plus-F.qa0 \
+            do-B-A-inv.qa0 \
             do-B-A-inv-F.qa0 \
             do-1-sub-F.qa0 \
             do-1-sub-F-conj.qa0 \
@@ -84,6 +85,7 @@ A.sources = do-A.qa0 \
             do-A-conj-inv.qa0 \
             do-A-plus-F.qa0 \
             do-A-conj-plus-B-conj-F-conj.qa0 \
+            do-B-A-inv.qa0 \
             do-B-A-inv-F.qa0 \
             do-1-sub-B-A-inv-F.qa0 \
             do-1-sub-B-A-inv-F-norm.qa0 \

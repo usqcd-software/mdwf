@@ -62,9 +62,11 @@ opztests = test-op-axa-2.c \
            test-op-b1b-2.c \
            test-op-fxf-2.c \
            test-op-af-2.c \
+           test-op-ba-2.c \
            test-op-baf-2.c \
            test-op-abf-2.c \
            test-op-1f-2.c \
+           test-op-1fx-2.c \
            test-op-1baf-2.c \
            test-op-1bafn-2.c \
            test-op-ab-2.c \
@@ -86,11 +88,13 @@ oproutines = op-a.c \
              op-project-n.c \
              op-project-x.c \
              op-apf.c \
+             op-1mf.c \
              op-1mfx.c \
              op-1mba1f.c \
              op-1mba1fn.c \
              op-a1xbxfx.c \
              op-ba1f.c \
+	     op-ba1.c \
              dot-fermion.c
 
 oplib = op

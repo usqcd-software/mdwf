@@ -141,6 +141,22 @@ int op_BA1F_odd(struct Fermion *r_odd,
 		const struct Q(Parameters) *params,
 		const struct SUn *U,
 		const struct Fermion *a_even);
+int op_1mF_odd(struct Fermion *r_odd,
+	       struct Q(State) *state,
+	       const struct SUn *U,
+	       const struct Fermion *a_odd,
+	       const struct Fermion *a_even);
+int op_1mF_even(struct Fermion *r_even,
+		struct Q(State) *state,
+		const struct SUn *U,
+		const struct Fermion *s_even,
+		const struct Fermion *s_odd);
+int op_BA1_odd(struct Fermion *r_odd,
+	       const struct Q(Parameters) *params,
+	       const struct Fermion *a_odd);
+int op_BA1_even(struct Fermion *r_even,
+		const struct Q(Parameters) *params,
+		const struct Fermion *a_even);
 
 extern Up_project up_project_n[Q(DIM)];
 extern Up_project up_project_x[Q(DIM)];

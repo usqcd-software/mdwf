@@ -3,8 +3,8 @@
 #include "opxtest.h"
 #include "op-routines.h"
 
-char *op_a_name = "<o|lib:1mF*|e>";
-char *op_b_name = "<o|1mF*|e>";
+char *op_a_name = "<|lib:1mF|>";
+char *op_b_name = "<|1mF*|>";
 
 double
 read_gauge(int dir,
@@ -63,6 +63,24 @@ read_fermion_b(const int pos[5],
     return read_fermion(seed_b, pos, c, d, re_im);
 }
 
+double
+read_fermion_x(const int pos[5],
+	       int c, int d,
+	       int re_im,
+	       void *env)
+{
+    return read_fermion(seed_a + seed_b, pos, c, d, re_im);
+}
+
+double
+read_fermion_z(const int pos[5],
+	       int c, int d,
+	       int re_im,
+	       void *env)
+{
+    return 0.0;
+}
+
 static void
 show(const char *name, double x, double y)
 {
@@ -73,34 +91,55 @@ int
 operator_a(void)
 {
     struct QX(Fermion) *fermion_x;
+    struct QX(Fermion) *fermion_y;
     double x, y;
 
-    if (QOP_MDWF_import_fermion(&fermion_x, state, read_fermion_a, NULL)) {
+    if (QOP_MDWF_import_fermion(&fermion_x, state, read_fermion_x, NULL)) {
 	zprint("operator_a(): alloc failed on x");
 	return 1;
     }
 
-    op_1mFx_odd(fermion_x->odd, state, gauge->data,
-		fermion_a->odd, fermion_a->even);
+    if (QOP_MDWF_import_fermion(&fermion_y, state, read_fermion_z, NULL)) {
+	zprint("operator_a(): alloc failed on x");
+	return 1;
+    }
 
-    dot_fermion(&x, &y, fermion_b, fermion_x);
+    op_1mF_odd(fermion_y->odd, state, gauge->data,
+	       fermion_x->odd, fermion_a->even);
+    op_1mF_even(fermion_y->even, state, gauge->data,
+		fermion_x->even, fermion_a->odd);
+
+    dot_fermion(&x, &y, fermion_b, fermion_y);
 
     QOP_MDWF_free_fermion(&fermion_x);
+    QOP_MDWF_free_fermion(&fermion_y);
     show("native", x, y);
     return 0;
 }
 
 /* same in parts */
 static void
-parts_1mfx(struct Fermion *r_o,
-	   struct Q(State) *state,
-	   const struct SUn *U,
-	   struct Fermion *t0_o,
-	   const struct Fermion *src_o,
-	   const struct Fermion *src_e)
+parts_1mf_o(struct Fermion *r_o,
+	    struct Q(State) *state,
+	    const struct SUn *U,
+	    struct Fermion *t0_o,
+	    const struct Fermion *src_o,
+	    const struct Fermion *src_e)
 {
-    op_Fx_odd(t0_o, state, U, src_e);
+    op_F_odd(t0_o, state, U, src_e);
     qx(f_add3)(r_o, state->odd.full_size, state->odd.Ls, src_o, -1.0, t0_o);
+}
+
+static void
+parts_1mf_e(struct Fermion *r_e,
+	    struct Q(State) *state,
+	    const struct SUn *U,
+	    struct Fermion *t0_e,
+	    const struct Fermion *src_e,
+	    const struct Fermion *src_o)
+{
+    op_F_even(t0_e, state, U, src_o);
+    qx(f_add3)(r_e, state->even.full_size, state->even.Ls, src_e, -1.0, t0_e);
 }
 
 int
@@ -110,22 +149,32 @@ operator_b(void)
     struct Q(State) *state = gauge->state;
     struct QX(Fermion) *fermion_x;
     struct QX(Fermion) *fermion_y;
+    struct QX(Fermion) *fermion_z;
 
-    if (QOP_MDWF_import_fermion(&fermion_x, state, read_fermion_a, NULL)) {
+    if (QOP_MDWF_import_fermion(&fermion_x, state, read_fermion_x, NULL)) {
 	zprint("operator_a(): alloc failed on x");
 	return 1;
     }
 
-    if (QOP_MDWF_allocate_fermion(&fermion_y, state)) {
-	zprint("operator_b(): alloc failed on y");
+    if (QOP_MDWF_import_fermion(&fermion_y, state, read_fermion_z, NULL)) {
+	zprint("operator_a(): alloc failed on y");
 	return 1;
     }
 
-    parts_1mfx(fermion_x->odd, state, gauge->data,
-	       fermion_y->odd,
-	       fermion_a->odd, fermion_a->even);
+    if (QOP_MDWF_import_fermion(&fermion_z, state, read_fermion_z, NULL)) {
+	zprint("operator_a(): alloc failed on y");
+	return 1;
+    }
 
-    dot_fermion(&x, &y, fermion_b, fermion_x);
+    parts_1mf_o(fermion_y->odd, state, gauge->data,
+		fermion_z->odd,
+		fermion_x->odd, fermion_a->even);
+    parts_1mf_e(fermion_y->even, state, gauge->data,
+		fermion_z->even,
+		fermion_x->even, fermion_a->odd);
+
+    dot_fermion(&x, &y, fermion_b, fermion_y);
+    QOP_MDWF_free_fermion(&fermion_z);
     QOP_MDWF_free_fermion(&fermion_y);
     QOP_MDWF_free_fermion(&fermion_x);
     show("parts", x, y);

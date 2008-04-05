@@ -1,0 +1,28 @@
+;; compute r = B 1/A F psi
+
+(verbose [(c99 bgl/xlc) "/* $Id$ */"])
+
+(include "types.qa0")
+(include "defs-A.qa0")
+(include "defs-F.qa0")
+
+(procedure do-B-1/A ([stem "do_BA1"]
+                     prec&color
+                     count-flops)
+       ([res-x     pointer   "res_x"      "struct Fermion *"         ]
+        [size      int       "size"       "int"                      ]
+        [l-s       int       "Ls"         "int"        		     ]
+        [b+table   pointer   "btable_p"   "const struct ABTable *"   ]
+        [b-table   pointer   "btable_m"   "const struct ABTable *"   ]
+        [ai+table  pointer   "iatable_p"  "const struct ABiTable *"  ]
+        [ai-table  pointer   "iatable_m"  "const struct ABiTable *"  ]
+	[src-x     pointer   "src_x"      "const struct Fermion *"   ])
+  (op int-mul () (s-line) ([reg l-s] [const (size-of Fermion)]))
+  (op int-sub () (s-1-line) ([reg s-line] [const (size-of Fermion)]))
+  (loop () (i [const 0] [reg size])
+    (macro S-compute-Ainv [reg res-x] [reg l-s] [reg s-1-line]
+                          [reg ai+table] [reg ai-table] [reg src-x])
+    (macro S-compute-A [reg res-x] [reg l-s] [reg s-1-line]
+                       [reg b+table] [reg b-table] [reg res-x])
+    (op pointer-add () (res-x) ([reg res-x] [reg s-line]))
+    (op pointer-add () (src-x) ([reg src-x] [reg s-line]))))

@@ -61,6 +61,7 @@ x.sources = get-fermion \
             do-F \
             do-F-conj \
             do-A-plus-F \
+            do-B-A-inv \
             do-B-A-inv-F \
             do-1-sub-B-A-inv-F \
             do-1-sub-F \
