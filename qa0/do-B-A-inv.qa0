@@ -20,8 +20,8 @@
   (op int-mul () (s-line) ([reg l-s] [const (size-of Fermion)]))
   (op int-sub () (s-1-line) ([reg s-line] [const (size-of Fermion)]))
   (loop () (i [const 0] [reg size])
-    (macro S-compute-Ainv [reg res-x] [reg l-s] [reg s-1-line]
-                          [reg ai+table] [reg ai-table] [reg src-x])
+    (macro S-compute-1/A [reg res-x] [reg l-s] [reg s-1-line]
+                         [reg ai+table] [reg ai-table] [reg src-x])
     (macro S-compute-A [reg res-x] [reg l-s] [reg s-1-line]
                        [reg b+table] [reg b-table] [reg res-x])
     (op pointer-add () (res-x) ([reg res-x] [reg s-line]))

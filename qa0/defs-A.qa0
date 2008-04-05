@@ -221,9 +221,9 @@
    				    [reg src-ax] [reg m-table] [reg src-bx]))
 
 ;;; Inverses of A and A*
-(define (S-compute-A-inv-upper res-x mem-part scale-op madd-op
+(define (S-compute-1/A-upper res-x mem-part scale-op madd-op
                                l-s p-table src-x)
-  (op nop (start S-compute-A-inv-upper) () ())
+  (op nop (start S-compute-1/A-upper) () ())
   (op pointer-add () (t) ([reg p-table] [const (offset-of AB-Inverse abc)]))
   (load mem-part () q ([reg src-x]))
   (op pointer-add () (x) ([reg src-x] [const (size-of Fermion)]))
@@ -250,11 +250,11 @@
     (op madd-op () (zq) ([reg bq] [reg c] [reg p]))
     (store mem-part () ([reg r]) [reg zq])
     (op pointer-add () (r) ([reg r] [const (size-of Fermion)])))
-  (op nop (end S-compute-A-inv-upper) () ()))
+  (op nop (end S-compute-1/A-upper) () ()))
 
-(define (S-compute-A-inv-lower res-x mem-part scale-op madd-op 
+(define (S-compute-1/A-lower res-x mem-part scale-op madd-op 
                                l-s s-1-size m-table src-x)
-  (op nop (start S-compute-A-inv-lower) () ())
+  (op nop (start S-compute-1/A-lower) () ())
   (op pointer-add () (src-n) ([reg src-x] [reg s-1-size]))
   (load mem-part () q ([reg src-n]))
   (op pointer-move () (x) ([reg src-x]))
@@ -282,32 +282,32 @@
     (op madd-op () (zq) ([reg bq] [reg c] [reg p]))
     (store mem-part () ([reg x]) [reg zq])
     (op pointer-add () (x) ([reg x] [const (- (size-of Fermion))])))
-  (op nop (end S-compute-A-inv-lower) () ()))
+  (op nop (end S-compute-1/A-lower) () ()))
 
-(define (S-compute-Ainv res-x l-s s-1-size p-table m-table src-x)
-  (macro S-compute-A-inv-upper [reg res-x]
-                               [const 'qcd-fermion-lo]
-                               [const 'qcd-scalef-lo]
-                               [const 'qcd-maddf-lo]
-                               [reg l-s] [reg p-table] [reg src-x])
-  (macro S-compute-A-inv-lower [reg res-x]
-                               [const 'qcd-fermion-hi]
-                               [const 'qcd-scalef-hi]
-                               [const 'qcd-maddf-hi]
-                               [reg l-s] [reg s-1-size]
-                               [reg m-table] [reg src-x]))
+(define (S-compute-1/A res-x l-s s-1-size p-table m-table src-x)
+  (macro S-compute-1/A-upper [reg res-x]
+                      	     [const 'qcd-fermion-lo]
+                             [const 'qcd-scalef-lo]
+                             [const 'qcd-maddf-lo]
+                             [reg l-s] [reg p-table] [reg src-x])
+  (macro S-compute-1/A-lower [reg res-x]
+                             [const 'qcd-fermion-hi]
+                             [const 'qcd-scalef-hi]
+                             [const 'qcd-maddf-hi]
+                             [reg l-s] [reg s-1-size]
+                             [reg m-table] [reg src-x]))
 
-(define (S-compute-A*inv res-x l-s s-1-size p-table m-table src-x)
-  (macro S-compute-A-inv-lower [reg res-x]
-                               [const 'qcd-fermion-lo]
-                               [const 'qcd-scalef-lo]
-                               [const 'qcd-maddf-lo]
-                               [reg l-s] [reg s-1-size]
-                               [reg p-table] [reg src-x])
-  (macro S-compute-A-inv-upper [reg res-x]
-                               [const 'qcd-fermion-hi]
-                               [const 'qcd-scalef-hi]
-                               [const 'qcd-maddf-hi]
-                               [reg l-s]
-                               [reg m-table] [reg src-x]))
+(define (S-compute-1/A* res-x l-s s-1-size p-table m-table src-x)
+  (macro S-compute-1/A-lower [reg res-x]
+                             [const 'qcd-fermion-lo]
+                             [const 'qcd-scalef-lo]
+                             [const 'qcd-maddf-lo]
+                             [reg l-s] [reg s-1-size]
+                             [reg p-table] [reg src-x])
+  (macro S-compute-1/A-upper [reg res-x]
+                             [const 'qcd-fermion-hi]
+                             [const 'qcd-scalef-hi]
+                             [const 'qcd-maddf-hi]
+                             [reg l-s]
+                             [reg m-table] [reg src-x]))
 

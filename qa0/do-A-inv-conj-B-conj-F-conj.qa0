@@ -6,9 +6,9 @@
 (include "defs-A.qa0")
 (include "defs-F.qa0")
 
-(procedure do-Ainv*B*F* ([stem "do_A1xBxFx"]
-                         prec&color
-                         count-flops)
+(procedure do-1/A*-B*-F* ([stem "do_A1xBxFx"]
+                          prec&color
+                          count-flops)
        ([res-x      pointer   "res_x"      "struct Fermion *"         ]
         [start      int       "start"      "int"                      ]
         [size       int       "size"       "int"                      ]
@@ -31,6 +31,6 @@
                         [reg src-y] [reg buf*])
     (macro S-compute-A* [reg res-x] [reg l-s] [reg s-1-line]
                         [reg b*+table] [reg b*-table] [reg res-x])
-    (macro S-compute-A*inv [reg res-x] [reg l-s] [reg s-1-line]
-                           [reg a*i+table] [reg a*i-table] [reg res-x])
+    (macro S-compute-1/A* [reg res-x] [reg l-s] [reg s-1-line]
+                          [reg a*i+table] [reg a*i-table] [reg res-x])
     (op pointer-add () (res-x) ([reg res-x] [reg s-line]))))
