@@ -30,7 +30,7 @@ double m;
 double b5[128];
 double c5[128];
 
-static FILE *xf = stdout;
+static FILE *xf = NULL;
 static char *xfname = "out";
 
 static unsigned int const table[] = {

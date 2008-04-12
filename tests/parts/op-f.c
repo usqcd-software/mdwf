@@ -2,6 +2,60 @@
 #include "../../port/mdwf.h"
 #include "op-routines.h"
 
+
+static void
+show_send(struct eo_lattice *xy)
+{
+    int i, k;
+    double *v;
+    
+    xprint("boundary start");
+    for (i = 0; i < 4; i++) {
+	if (xy->send_up_size[i]) {
+	    v = (double *)(xy->send_up_buf[i]);
+	    xprint(" snd_up[%d] of %d", i, xy->send_up_size[i]);
+	    for (k = 0; k < xy->Ls * 12 * xy->send_up_size[i]; k++, v++) {
+		if (*v != 0.0)
+		    xprint("  send_up[%4d][%4d]: %20.8f", i, k, *v);
+	    }
+	}
+	if (xy->send_down_size[i]) {
+	    v = (double *)(xy->send_down_buf[i]);
+	    xprint(" snd_down[%d] of %d", i, xy->send_down_size[i]);
+	    for (k = 0; k < xy->Ls * 12 * xy->send_down_size[i]; k++, v++) {
+		if (*v != 0.0)
+		    xprint("  send_down[%4d][%4d]: %20.8f", i, k, *v);
+	    }
+	}
+    }
+    xprint("boundary end");
+}
+
+static void
+show_receive(struct eo_lattice *xy)
+{
+    int i, k;
+    double *v;
+    xprint("buffer start");
+    for (i = 0; i < 4; i++) {
+	if (xy->receive_up_size[i]) {
+	    xprint(" rcv_up[%d] of %d", i, xy->receive_up_size[i]);
+	    v = (double *)(xy->receive_buf[i]);
+	    for (k = 0; k < xy->Ls * 12 * xy->receive_up_size[i]; k++, v++)
+		if (*v != 0.0)
+		    xprint("  rec_up[%d][%4d]: %20.8f", i, k, *v);
+	}
+	if (xy->receive_down_size[i]) {
+	    xprint(" rcv_down[%d] of %d", i, xy->receive_down_size[i]);
+	    v = (double *)(xy->receive_buf[i + 4]);
+	    for (k = 0; k < xy->Ls * 12 * xy->receive_down_size[i]; k++, v++)
+		if (*v != 0.0)
+		    xprint("  rec_down[%d][%4d]: %20.8f", i, k, *v);
+	}
+    }
+    xprint("buffer end");
+}
+
 int
 op_F_even(struct Fermion *result_even,
 	  struct Q(State) *state,
@@ -10,21 +64,12 @@ op_F_even(struct Fermion *result_even,
 {
     struct eo_lattice *even = &state->even;
     int Ls = state->Ls;
-    int i;
 
     if (q(setup_comm)(state, sizeof (REAL)))
 	return 1;
 
-    for (i = 0; i < Q(DIM); i++) {
-	if (even->send_up_size[i])
-	    (up_project_n[i])(even->send_up_buf[i],
-			      even->send_up_size[i], Ls,
-			      even->up_pack[i], U, src_odd);
-	if (even->send_down_size[i])
-	    (down_project_n[i])(even->send_down_buf[i],
-				even->send_down_size[i], Ls,
-				even->down_pack[i], src_odd);
-    }
+    op_boundary(even, Ls, up_project_n, down_project_n, U, src_odd);
+    show_send(even);
 
     if (even->h_valid)
 	QMP_start(even->handle);
@@ -36,11 +81,18 @@ op_F_even(struct Fermion *result_even,
 
     if (even->h_valid)
 	QMP_wait(even->handle);
-    
+
+    show_receive(even);
+#if 0
+/*
+    receive_buf[0..3] - from up
+    receive_buf[4..7] - from down
+*/
     if (even->face_size)
 	qx(do_F)(result_even, even->body_size, even->face_size, Ls,
 		 even->body_neighbor,
 		 U, src_odd, even->receive_buf);
+#endif
     return 0;
 }
 
@@ -52,21 +104,12 @@ op_F_odd(struct Fermion *result_odd,
 {
     struct eo_lattice *odd = &state->odd;
     int Ls = state->Ls;
-    int i;
 
     if (q(setup_comm)(state, sizeof (REAL)))
 	return 1;
 
-    for (i = 0; i < Q(DIM); i++) {
-	if (odd->send_up_size[i])
-	    (up_project_n[i])(odd->send_up_buf[i],
-			      odd->send_up_size[i], Ls,
-			      odd->up_pack[i], U, src_even);
-	if (odd->send_down_size[i])
-	    (down_project_n[i])(odd->send_down_buf[i],
-				odd->send_down_size[i], Ls,
-				odd->down_pack[i], src_even);
-    }
+    op_boundary(odd, Ls, up_project_n, down_project_n, U, src_even);
+    show_send(odd);
 
     if (odd->h_valid)
 	QMP_start(odd->handle);
@@ -78,11 +121,14 @@ op_F_odd(struct Fermion *result_odd,
 
     if (odd->h_valid)
 	QMP_wait(odd->handle);
-    
+
+    show_receive(odd);
+#if 0
     if (odd->face_size)
 	qx(do_F)(result_odd, odd->body_size, odd->face_size, Ls,
 		 odd->body_neighbor,
 		 U, src_even, odd->receive_buf);
+#endif
     return 0;
 }
 

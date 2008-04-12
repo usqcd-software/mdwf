@@ -1,7 +1,7 @@
 TOP         = ../..
 LIMPDIR     = c99
 V           = 0
-CONFIG      = macosx
+CONFIG      = macosx-mpi
 library     = qop-mdwf3
 
 QMP_CFLAGS  = $(shell $(QMP_TOP:%=%/bin/qmp-config) --cflags)
@@ -87,6 +87,7 @@ oproutines = op-a.c \
              op-a1xbx.c \
              op-project-n.c \
              op-project-x.c \
+             op-boundary.c \
              op-apf.c \
              op-1mf.c \
              op-1mfx.c \

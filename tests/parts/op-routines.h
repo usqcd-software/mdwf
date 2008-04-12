@@ -163,4 +163,11 @@ extern Up_project up_project_x[Q(DIM)];
 extern Down_project down_project_n[Q(DIM)];
 extern Down_project down_project_x[Q(DIM)];
 
+void op_boundary(struct eo_lattice *xy,
+		 int Ls,
+		 const Up_project up_proj[],
+		 const Down_project down_proj[],
+		 const struct SUn *U,
+		 const struct Fermion *src_y);
+
 #endif /* !defined(MARK_0DAB983B_E5FA_4BCE_AE68_915CE2ABD086) */

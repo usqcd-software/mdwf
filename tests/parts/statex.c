@@ -14,17 +14,26 @@ static int mynode[4];
 static double b5[128];
 static double c5[128];
 
+static FILE *xfile = NULL;
+static char *xfname = "out";
+
 void
 xprint(char *fmt, ...)
 {
   char buffer[14096];
   va_list va;
 
+  if (xfile == 0) {
+      sprintf(buffer, "%s.%06d", xfname, self);
+      xfile = fopen(buffer, "wt");
+      if (xfile == 0)
+	  return;
+  }
   va_start(va, fmt);
   vsprintf(buffer, fmt, va);
   va_end(va);
-  printf("[%04d] %s\n", self, buffer);
-  fflush(stdout);
+  fprintf(xfile, "[%04d] %s\n", self, buffer);
+  fflush(xfile);
 }
 
 static void
