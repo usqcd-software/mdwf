@@ -441,10 +441,10 @@ Q(init)(struct Q(State) **state_ptr,
   CHECK(lattice[1] % 1 != 0, "Lattice dimension Y is not even");
   CHECK(lattice[2] % 1 != 0, "Lattice dimension Z is not even");
   CHECK(lattice[3] % 1 != 0, "Lattice dimension T is not even");
-  CHECK(lattice[0] < network[0], "Network is too large in X");
-  CHECK(lattice[1] < network[1], "Network is too large in Y");
-  CHECK(lattice[2] < network[2], "Network is too large in Z");
-  CHECK(lattice[3] < network[3], "Network is too large in T");
+  CHECK(lattice[0] < 2 * network[0], "Network is too large in X");
+  CHECK(lattice[1] < 2 * network[1], "Network is too large in Y");
+  CHECK(lattice[2] < 2 * network[2], "Network is too large in Z");
+  CHECK(lattice[3] < 2 * network[3], "Network is too large in T");
   CHECK(network[0] < 1, "Network is too small in X");
   CHECK(network[1] < 1, "Network is too small in Y");
   CHECK(network[2] < 1, "Network is too small in Z");

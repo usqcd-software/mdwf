@@ -34,18 +34,40 @@
 
 ;;;
 
+;; must agree with up/down buffer layout in port/comm-setup.c
+(define (up-boundary *f d buf*)
+  (op nop (up-boundary d begin) () ())
+  (load pointer () *f ([reg buf*] [const (* (size-of pointer) d)]))
+  (op nop (up-boundary d end) () ()))
+
+(define (down-boundary *f d buf*)
+  (op nop (down-boundary d begin) () ())
+  (load pointer () *f ([reg buf*] [const (* (size-of pointer) (+ d *dim*))]))
+  (op nop (down-boundary d end) () ()))
+
+
+;(define (face-link link-op g-op d r U f)
+;  (op nop (start-face link-op g-op d) () ())
+;  (load qcd-projected-fermion () h ([reg f]))
+;  (op pointer-add () (f) ([reg f] [const (size-of Projected-Fermion)]))
+;  (macro link-op [const g-op] [const d] [reg q] [reg r] [reg U] [reg h])
+;  (store qcd-fermion () ([reg r]) [reg q])
+;  (op pointer-add () (r) ([reg r] [const (size-of Fermion)]))
+;  (op nop (end-face link-op g-op d) () ()))
+
 (define (face-link link-op g-op d r U f)
   (op nop (start-face link-op g-op d) () ())
   (load qcd-projected-fermion () h ([reg f]))
   (op pointer-add () (f) ([reg f] [const (size-of Projected-Fermion)]))
+  (op qcd-scaleh () (h) ([const 0] [reg h])) ;;; <<<<
   (macro link-op [const g-op] [const d] [reg q] [reg r] [reg U] [reg h])
   (store qcd-fermion () ([reg r]) [reg q])
   (op pointer-add () (r) ([reg r] [const (size-of Fermion)]))
   (op nop (end-face link-op g-op d) () ()))
 
-(define (face-line elem-op g-op d l-s res-x V f-off buf*)
+(define (face-line elem-op g-op d boundary l-s res-x V f-off buf*)
   (op nop (start face-line elem-op g-op d) () ())
-  (load pointer () *f ([reg buf*] [const (* d (size-of pointer))]))
+  (macro boundary [reg *f] [const d] [reg buf*])
   (op pointer-add () (f) ([reg *f] [reg f-off]))
   (op pointer-move () (r) ([reg res-x]))
   (loop () (s [const 0] [reg l-s])
@@ -81,7 +103,7 @@
   (op nop (F-start-up g-op d) () ())
   (if-else [reg remote?]
     (macro face-line [macro unproject-U] [const g-op]
-	             [const d]
+	             [const d] [macro up-boundary]
 	             [reg l-s] [reg res-x] [reg V] [reg f-off] [reg buf*])
     (macro body-line [macro one-x-gamma-U] [const g-op]
 	             [const d]
@@ -93,7 +115,7 @@
   (op nop (F-start-down g-op d) () ())
   (if-else [reg remote?]
     (macro face-line [macro unproject] [const g-op]
-	             [const d]
+	             [const d] [macro down-boundary]
                      [reg l-s] [reg res-x] [reg V] [reg f-off] [reg buf*])
     (begin
       (macro get-down-V [reg V] [const d] [reg nb] [reg U])
@@ -107,7 +129,7 @@
   (op nop (F-next-up g-op d) () ())
   (if-else [reg remote?]
     (macro face-line [macro add-unproject-U] [const g-op]
-                     [const d]
+                     [const d] [macro up-boundary]
                      [reg l-s] [reg res-x] [reg V] [reg f-off] [reg buf*])
     (macro body-line [macro add-one-x-gamma-U] [const g-op]
                      [const d]
@@ -119,7 +141,7 @@
   (op nop (F-next-down g-op d) () ())
   (if-else [reg remote?]
     (macro face-line [macro add-unproject] [const g-op]
-	             [const d]
+	             [const d] [macro down-boundary]
 		     [reg l-s] [reg res-x] [reg V] [reg f-off] [reg buf*])
     (begin
       (macro get-down-V [reg V] [const d] [reg nb] [reg U])
@@ -133,8 +155,8 @@
   (op nop (sub-F-next-up g-op d) () ())
   (if-else [reg remote?]
     (macro face-line [macro sub-unproject-U] [const g-op]
-                     [const d] [reg l-s]
-		     [reg res-x] [reg V] [reg f-off] [reg buf*])
+                     [const d] [macro up-boundary]
+		     [reg l-s] [reg res-x] [reg V] [reg f-off] [reg buf*])
     (macro body-line [macro sub-one-x-gamma-U] [const g-op]
                      [const d] [reg l-s]
 		     [reg res-x] [reg V] [reg f-off] [reg src-y])))
@@ -145,8 +167,8 @@
   (op nop (sub-F-next-down g-op d) () ())
   (if-else [reg remote?]
     (macro face-line [macro sub-unproject] [const g-op]
-	             [const d] [reg l-s]
-		     [reg res-x] [reg V] [reg f-off] [reg buf*])
+	             [const d] [macro down-boundary]
+		     [reg l-s] [reg res-x] [reg V] [reg f-off] [reg buf*])
     (begin
       (macro get-down-V [reg V] [const d] [reg nb] [reg U])
       (macro body-line [macro sub-one-x-gamma-U*] [const g-op]

@@ -70,10 +70,10 @@ op_F_even(struct Fermion *result_even,
 
     op_boundary(even, Ls, up_project_n, down_project_n, U, src_odd);
     show_send(even);
-
     if (even->h_valid)
 	QMP_start(even->handle);
 
+    xprint("even: body %d face %d", even->body_size, even->face_size);
     if (even->body_size)
 	qx(do_F)(result_even, 0, even->body_size, Ls,
 		 even->body_neighbor,
@@ -83,11 +83,11 @@ op_F_even(struct Fermion *result_even,
 	QMP_wait(even->handle);
 
     show_receive(even);
-#if 0
 /*
     receive_buf[0..3] - from up
     receive_buf[4..7] - from down
 */
+#if 1
     if (even->face_size)
 	qx(do_F)(result_even, even->body_size, even->face_size, Ls,
 		 even->body_neighbor,
@@ -114,6 +114,7 @@ op_F_odd(struct Fermion *result_odd,
     if (odd->h_valid)
 	QMP_start(odd->handle);
 
+    xprint("odd: body %d face %d", odd->body_size, odd->face_size);
     if (odd->body_size)
 	qx(do_F)(result_odd, 0, odd->body_size, Ls,
 		 odd->body_neighbor,
@@ -123,7 +124,8 @@ op_F_odd(struct Fermion *result_odd,
 	QMP_wait(odd->handle);
 
     show_receive(odd);
-#if 0
+
+#if 1
     if (odd->face_size)
 	qx(do_F)(result_odd, odd->body_size, odd->face_size, Ls,
 		 odd->body_neighbor,
