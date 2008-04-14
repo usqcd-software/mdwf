@@ -29,7 +29,7 @@ op_A1xBxFx_odd(struct Fermion *r_odd,
     qx(do_A1xBxFx)(r_odd, 0, xy->body_size, Ls,
 		   params->AxipTable, params->AximTable,
 		   params->BxpTable, params->BxmTable,
-		   xy->body_neighbor, U, a_even, NULL);
+		   xy->neighbor, U, a_even, NULL);
 
     if (xy->h_valid)
 	QMP_wait(xy->handle);
@@ -37,7 +37,7 @@ op_A1xBxFx_odd(struct Fermion *r_odd,
     qx(do_A1xBxFx)(r_odd, xy->body_size, xy->face_size, Ls,
 		   params->AxipTable, params->AximTable,
 		   params->BxpTable, params->BxmTable,
-		   xy->face_neighbor, U, a_even, xy->receive_buf);
+		   xy->neighbor, U, a_even, xy->receive_buf);
 
     return 0;
 }

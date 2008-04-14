@@ -31,7 +31,7 @@ op_Fx_even(struct Fermion *result_even,
 
     if (even->body_size)
 	qx(do_F_conj)(result_even, 0, even->body_size, Ls,
-		      even->body_neighbor,
+		      even->neighbor,
 		      U, src_odd, NULL);
 
     if (even->h_valid)
@@ -39,7 +39,7 @@ op_Fx_even(struct Fermion *result_even,
     
     if (even->face_size)
 	qx(do_F_conj)(result_even, even->body_size, even->face_size, Ls,
-		      even->body_neighbor,
+		      even->neighbor,
 		      U, src_odd, even->receive_buf);
     return 0;
 }
@@ -73,7 +73,7 @@ op_Fx_odd(struct Fermion *result_odd,
 
     if (odd->body_size)
 	qx(do_F_conj)(result_odd, 0, odd->body_size, Ls,
-		      odd->body_neighbor,
+		      odd->neighbor,
 		      U, src_even, NULL);
 
     if (odd->h_valid)
@@ -81,7 +81,7 @@ op_Fx_odd(struct Fermion *result_odd,
     
     if (odd->face_size)
 	qx(do_F_conj)(result_odd, odd->body_size, odd->face_size, Ls,
-		      odd->body_neighbor,
+		      odd->neighbor,
 		      U, src_even, odd->receive_buf);
     return 0;
 }

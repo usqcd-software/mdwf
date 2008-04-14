@@ -53,7 +53,7 @@ qx(compute_ApFB)(struct Q(State) *state,
   
   *flops += qx(do_ApF)(r_x, 0, xy->body_size, Ls,
 		       params->ApTable, params->AmTable,
-		       xy->body_neighbor,
+		       xy->neighbor,
 		       U, s_x, By, NULL);
 
   if (xy->h_valid)
@@ -62,7 +62,7 @@ qx(compute_ApFB)(struct Q(State) *state,
   *flops += qx(do_ApF)(r_x, xy->body_size, xy->face_size, Ls,
 		       params->ApTable,
 		       params->AmTable,
-		       xy->face_neighbor,
+		       xy->neighbor,
 		       U, s_x, By, xy->receive_buf);
 
   *sent += xy->total_send;

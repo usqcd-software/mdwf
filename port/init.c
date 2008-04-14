@@ -102,7 +102,7 @@ build_local_neighbors(struct eo_lattice        *eo,
       }
       x[d] += 1;
     }
-    q(put_neighbor)(eo->body_neighbor, p, mask, f_up, u_up, f_down, u_down);
+    q(put_neighbor)(eo->neighbor, p, mask, f_up, u_up, f_down, u_down);
   }
 }
 
@@ -190,7 +190,6 @@ eo_init(struct eo_lattice        *eo,
 	struct Q(State)          *state)
 {
   int ns = q(sizeof_neighbor)(eo->full_size);
-  int bs = q(sizeof_neighbor)(eo->body_size);
   int d;
 
 #define CHECK(cond, msg) do { if (cond) return msg; } while (0)
@@ -201,9 +200,8 @@ eo_init(struct eo_lattice        *eo,
   CHECK(eo->lx2v == NULL, "E/O->lx2v allocation failed");
   eo->v2lx = q(malloc)(state, state->volume * sizeof(int));
   CHECK(eo->v2lx == NULL, "E/O->v2lx allocation failed");
-  eo->body_neighbor = q(malloc) (state, ns);
-  CHECK(eo->body_neighbor == NULL, "E/O neighbor allocation failed");
-  eo->face_neighbor = (struct neighbor*)(((char *)eo->body_neighbor) + bs);
+  eo->neighbor = q(malloc) (state, ns);
+  CHECK(eo->neighbor == NULL, "E/O neighbor allocation failed");
   for (d = 0; d < Q(DIM); d++) {
     eo->send_up_size[d] = oe->receive_up_size[d];
     if (eo->send_up_size[d]) {
@@ -328,7 +326,7 @@ eo_patch_up(struct eo_lattice *eo,
     if (x[dim] < 0) x[dim] = lattice[dim] - 1;
     la = q(v2l)(x, local);
     b = eo->v2lx[la];
-    q(fix_neighbor_f_up)(eo->body_neighbor, b, p, dim);
+    q(fix_neighbor_f_up)(eo->neighbor, b, p, dim);
   }
 }
 
@@ -354,7 +352,7 @@ eo_patch_down(struct eo_lattice *eo,
     if (x[dim] == lattice[dim]) x[dim] = 0;
     la = q(v2l)(x, local);
     b = eo->v2lx[la];
-    q(fix_neighbor_f_down)(eo->body_neighbor, b, p, dim);
+    q(fix_neighbor_f_down)(eo->neighbor, b, p, dim);
   }
 }
 

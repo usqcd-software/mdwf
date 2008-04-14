@@ -55,8 +55,7 @@ struct eo_lattice {
   int              Ls;                     /* Ls */
   struct local    *local;                  /* points to state.local */
 
-  struct neighbor *body_neighbor;          /* neighbor data for the body */
-  struct neighbor *face_neighbor;          /* neighbor data for the face */
+  struct neighbor *neighbor;               /* neighbor data (body,face) */
   int              send_up_size[Q(DIM)];   /* 4-d send size in each up-dir */
   struct up_pack  *up_pack[Q(DIM)];        /* 4-d (U,f) for up-face packing */
   int              send_down_size[Q(DIM)]; /* 4-d send size in each down-dir */

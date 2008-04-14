@@ -50,7 +50,7 @@ qx(compute_AxpBxFx)(struct Q(State) *state,
 			   params->AxmTable,
 			   params->BxpTable,
 			   params->BxmTable,
-			   xy->body_neighbor,
+			   xy->neighbor,
 			   U, s_x, s_y, NULL);
 
   if (xy->h_valid)
@@ -61,7 +61,7 @@ qx(compute_AxpBxFx)(struct Q(State) *state,
 			   params->AxmTable,
 			   params->BxpTable,
 			   params->BxmTable,
-			   xy->face_neighbor,
+			   xy->neighbor,
 			   U, s_x, s_y, xy->receive_buf);
 
   *sent += xy->total_send;

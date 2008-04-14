@@ -19,8 +19,8 @@ free_eo(struct Q(State) *state, struct eo_lattice *eo)
   }
 
   ns = q(sizeof_neighbor)(eo->full_size);
-  if (eo->body_neighbor)
-    q(free)(state, eo->body_neighbor, ns);
+  if (eo->neighbor)
+    q(free)(state, eo->neighbor, ns);
 
   if (eo->lx2v)
     q(free)(state, eo->lx2v, eo->full_size * sizeof (int));

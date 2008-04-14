@@ -46,16 +46,14 @@ compute_F(struct Q(State) *state,
 
     if (xy->body_size)
 	qx(do_F)(r_x, 0, xy->body_size, Ls,
-		 xy->body_neighbor,
-		 U, s_y, NULL);
+		 xy->neighbor, U, s_y, NULL);
 
     if (xy->h_valid)
 	QMP_wait(xy->handle);
     
     if (xy->face_size)
 	qx(do_F)(r_x, xy->body_size, xy->face_size, Ls,
-		 xy->body_neighbor,
-		 U, s_y, xy->receive_buf);
+		 xy->neighbor, U, s_y, xy->receive_buf);
 }
 
 

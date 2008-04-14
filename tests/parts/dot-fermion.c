@@ -15,4 +15,6 @@ dot_fermion(double *v_r, double *v_i,
 		    a->odd, b->odd);
     *v_r = r1 + r2;
     *v_i = i1 + i2;
+    QMP_sum_double(v_r);
+    QMP_sum_double(v_i);
 }

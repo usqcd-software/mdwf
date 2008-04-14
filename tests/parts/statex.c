@@ -146,7 +146,7 @@ dump_eo(const char *name, struct QOP_MDWF_State *state,
   xprint("%p.%s face %6d", state, name, eo->face_size);
   xprint("%p.%s body %6d", state, name, eo->body_size);
   xprint("%p.%s full %6d", state, name, eo->full_size);
-  xprint("%p.%s neighbor %p", state, name, eo->body_neighbor);
+  xprint("%p.%s neighbor %p", state, name, eo->neighbor);
   show_4d(name, "local.lo", state, eo->local->lo);
   show_4d(name, "local.hi", state, eo->local->hi);
   show_4d(name, "local.dx", state, eo->local->dx);
@@ -158,7 +158,7 @@ dump_eo(const char *name, struct QOP_MDWF_State *state,
     int m, u_u;
     int x[4];
     int f_u[4], f_d[4], u_d[4];
-    q(get_neighbor)(&m, f_u, &u_u, f_d, u_d, eo->body_neighbor, i);
+    q(get_neighbor)(&m, f_u, &u_u, f_d, u_d, eo->neighbor, i);
     q(l2v)(x, eo->local, eo->lx2v[i]);
     xprint("%s.nb %5d {%5d, %5d, %5d, %5d}: %02x"
 	   " f. %5d %5d %5d %5d  :: %5d,"

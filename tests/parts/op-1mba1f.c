@@ -30,7 +30,7 @@ op_1mBA1F_odd(struct Fermion *r_odd,
     qx(do_1mBA1F)(r_odd, 0, xy->body_size, Ls,
 		  params->BpTable, params->BmTable,
 		  params->AipTable, params->AimTable,
-		  xy->body_neighbor, U, a_odd, a_even, NULL);
+		  xy->neighbor, U, a_odd, a_even, NULL);
 
     if (xy->h_valid)
 	QMP_wait(xy->handle);
@@ -38,6 +38,6 @@ op_1mBA1F_odd(struct Fermion *r_odd,
     qx(do_1mBA1F)(r_odd, xy->body_size, xy->face_size, Ls,
 		  params->BpTable, params->BmTable,
 		  params->AipTable, params->AimTable,
-		  xy->face_neighbor, U, a_odd, a_even, xy->receive_buf);
+		  xy->neighbor, U, a_odd, a_even, xy->receive_buf);
     return 0;
 }

@@ -60,13 +60,13 @@ qx(1_F)(struct Q(State) *state,
 	QMP_start(xy->handle);
 
     *flops += qx(do_1mF)(r_x, 0, xy->body_size, Ls,
-			 xy->body_neighbor, a_x, U, b_y, NULL);
+			 xy->neighbor, a_x, U, b_y, NULL);
 
     if (xy->h_valid)
 	QMP_wait(xy->handle);
 
     *flops += qx(do_1mF)(r_x, xy->body_size, xy->face_size, Ls,
-			 xy->face_neighbor, a_x, U, b_y, xy->receive_buf);
+			 xy->neighbor, a_x, U, b_y, xy->receive_buf);
     *sent += xy->total_send;
     *received += xy->total_receive;
 }
@@ -100,13 +100,13 @@ qx(1_Fc)(struct Q(State) *state,
 	QMP_start(yx->handle);
 
     *flops += qx(do_1mFc)(r_y, 0, yx->body_size, Ls,
-			  yx->body_neighbor, a_y, U, b_x, NULL);
+			  yx->neighbor, a_y, U, b_x, NULL);
 
     if (yx->h_valid)
 	QMP_wait(yx->handle);
 
     *flops += qx(do_1mFc)(r_y, yx->body_size, yx->face_size, Ls,
-			  yx->face_neighbor, a_y, U, b_x, yx->receive_buf);
+			  yx->neighbor, a_y, U, b_x, yx->receive_buf);
     *sent += yx->total_send;
     *received += yx->total_receive;
 }
@@ -141,14 +141,14 @@ qx(1AcBcFc)(struct Q(State) *state,
 
     *flops += qx(do_1AcBcFc)(r_y, 0, yx->body_size, Ls,
 			     params->AipTable, params->AimTable, params->BTable,
-			     yx->body_neighbor, U, a_x, NULL);
+			     yx->neighbor, U, a_x, NULL);
 
     if (yx->h_valid)
 	QMP_wait(yx->handle);
 
     *flops += qx(do_1AcBcFc)(r_y, yx->body_size, yx->face_size, Ls,
 			     params->AipTable, params->AimTable, params->BTable,
-			     yx->face_neighbor, U, a_x, yx->receive_buf);
+			     yx->neighbor, U, a_x, yx->receive_buf);
     *sent += yx->total_send;
     *received += yx->total_receive;
 }
@@ -183,14 +183,14 @@ qx(B1AF)(struct Q(State) *state,
 
     *flops += qx(do_B1AF)(r_x, 0, xy->body_size, Ls,
 			  params->BTable, params->AipTable, params->AimTable,
-			  xy->body_neighbor, U, a_y, NULL);
+			  xy->neighbor, U, a_y, NULL);
 
     if (xy->h_valid)
 	QMP_wait(xy->handle);
 
     *flops += qx(do_B1AF)(r_x, xy->body_size, xy->face_size, Ls,
 			  params->BTable, params->AipTable, params->AimTable,
-			  xy->face_neighbor, U, a_y, xy->receive_buf);
+			  xy->neighbor, U, a_y, xy->receive_buf);
     *sent += xy->total_send;
     *received += xy->total_receive;
 }
@@ -226,14 +226,14 @@ qx(1_B1AF)(struct Q(State) *state,
 
     *flops += qx(do_1mB1AF)(r_x, 0, xy->body_size, Ls,
 			    params->BTable, params->AipTable, params->AimTable,
-			    xy->body_neighbor, a_x, U, b_y, NULL);
+			    xy->neighbor, a_x, U, b_y, NULL);
 
     if (xy->h_valid)
 	QMP_wait(xy->handle);
 
     *flops += qx(do_1mB1AF)(r_x, xy->body_size, xy->face_size, Ls,
 			    params->BTable, params->AipTable, params->AimTable,
-			    xy->face_neighbor, a_x, U, b_y, xy->receive_buf);
+			    xy->neighbor, a_x, U, b_y, xy->receive_buf);
     *sent += xy->total_send;
     *received += xy->total_receive;
 }
@@ -273,7 +273,7 @@ qx(1_B1AF_norm)(struct Q(State) *state,
     *flops += qx(do_1mB1AF_norm)(r_x, norm, 0, xy->body_size, Ls,
 				 params->BTable,
 				 params->AipTable, params->AimTable,
-				 xy->body_neighbor, a_x, U, b_y, NULL);
+				 xy->neighbor, a_x, U, b_y, NULL);
 
     if (xy->h_valid)
 	QMP_wait(xy->handle);
@@ -281,7 +281,7 @@ qx(1_B1AF_norm)(struct Q(State) *state,
     *flops += qx(do_1mB1AF_norm)(r_x, norm, xy->body_size, xy->face_size, Ls,
 				 params->BTable,
 				 params->AipTable, params->AimTable,
-				 xy->face_neighbor, a_x, U, b_y,
+				 xy->neighbor, a_x, U, b_y,
 				 xy->receive_buf);
     *sent += xy->total_send;
     *received += xy->total_receive;
