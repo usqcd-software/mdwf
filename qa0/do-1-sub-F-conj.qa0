@@ -18,11 +18,15 @@
 	[src-x     pointer   "src_x"      "const struct Fermion *"   ]
 	[src-y     pointer   "src_y"      "const struct Fermion *"   ]
         [buf*      pointer   "rb"         "void **"                  ])
-  (op int-mul () (s-line) ([reg l-s] [const (size-of Fermion)]))
-  (op int-mul () (x-start) ([reg start] [reg s-line]))
+  (op int-mul () (s-h-line) ([reg l-s] [const (size-of Projected-Fermion)]))
+  (op int-mul () (s-f-line) ([reg l-s] [const (size-of Fermion)]))
+  (op int-mul () (x-start) ([reg start] [reg s-f-line]))
   (op pointer-add () (res-x) ([reg res-x] [reg x-start]))
   (op pointer-add () (src-x) ([reg src-x] [reg x-start]))
+  (op int-mul () (nb-start) ([reg start] [const (size-of neighbor)]))
+  (op pointer-add () (nb) ([reg nb] [reg nb-start]))
   (loop () (i [const 0] [reg size])
-    (macro S-compute-sub-F* [reg res-x] [reg l-s] [reg s-line] [reg nb]
-		            [reg src-x] [reg U] [reg src-y] [reg buf*])))
+    (macro S-compute-sub-F* [reg res-x] [reg l-s] [reg s-f-line] [reg s-h-line]
+    	   		    [reg nb] [reg src-x] [reg U]
+			    [reg src-y] [reg buf*])))
 

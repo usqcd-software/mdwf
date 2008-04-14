@@ -14,10 +14,10 @@
         [p-table   pointer   "p_table"  "const struct ABiTable *"  ]
         [m-table   pointer   "m_table"  "const struct ABiTable *"  ]
 	[src-x     pointer   "src_x"    "const struct Fermion *"   ])
-  (op int-mul () (s-line) ([reg l-s] [const (size-of Fermion)]))
-  (op int-sub () (s-1-size) ([reg s-line] [const (size-of Fermion)]))
+  (op int-mul () (s-f-line) ([reg l-s] [const (size-of Fermion)]))
+  (op int-sub () (s-1-size) ([reg s-f-line] [const (size-of Fermion)]))
   (loop () (i [const 0] [reg size])
     (macro S-compute-1/A [reg res-x] [reg l-s] [reg s-1-size]
     	   		 [reg p-table] [reg m-table] [reg src-x])
-    (op pointer-add () (src-x) ([reg src-x] [reg s-line]))
-    (op pointer-add () (res-x) ([reg res-x] [reg s-line]))))
+    (op pointer-add () (src-x) ([reg src-x] [reg s-f-line]))
+    (op pointer-add () (res-x) ([reg res-x] [reg s-f-line]))))
