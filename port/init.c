@@ -194,6 +194,7 @@ eo_init(struct eo_lattice        *eo,
 
 #define CHECK(cond, msg) do { if (cond) return msg; } while (0)
 
+  eo->state = state;
   eo->Ls = state->Ls;
   eo->local = &state->local;
   eo->lx2v = q(malloc)(state, eo->full_size * sizeof(int));

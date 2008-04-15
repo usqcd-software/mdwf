@@ -59,9 +59,31 @@ p.sources = fermion-alloc.c \
             hfermion-norm2.c  \
             x-import.c \
             x-export.c \
-            op-dirac.c \
-            op-dirac-conj.c \
-
+            boundary-n.c \
+            boundary-x.c \
+            op-boundary.c \
+            op-a.c \
+            op-ax.c \
+	    op-a1.c \
+            op-a1x.c \
+            op-b.c \
+            op-bx.c \
+	    op-b1.c \
+            op-b1x.c \
+            op-f.c \
+            op-fx.c \
+            op-a1xbx.c \
+            op-apf.c \
+            op-1mf.c \
+            op-1mfx.c \
+            op-1mba1f.c \
+            op-1mba1fn.c \
+            op-a1xbxfx.c \
+            op-ba1f.c \
+            op-ba1.c
+#            op-dirac.c \
+#            op-dirac-conj.c \
+#
 #            cg-dirac.c \
 
 x.objects = $(x.sources:%.c=$(LIMPDIR)/%.o)

@@ -47,6 +47,7 @@ struct up_pack;
 struct down_pack;
 
 struct eo_lattice {
+  struct Q(State) *state;                  /* back pointer to state */
   int              face_size;              /* 4-d size of the face */
   int              body_size;              /* 4-d size of the body */
   int              full_size;              /* face + body */
@@ -280,6 +281,22 @@ unsigned int qx(proj_Ucg3minus)(struct ProjectedFermion *r,
 				const struct SUn *U,
 				const struct Fermion *f);
 
+/* projection tables */
+/*  normal projection */
+extern Up_project qx(up_project_n)[Q(DIM)];
+extern Down_project qx(down_project_n)[Q(DIM)];
+/*  conjugated projection */
+extern Up_project qx(up_project_x)[Q(DIM)];
+extern Down_project qx(down_project_x)[Q(DIM)];
+/* compute projections on the boundary and fill the send buffers */
+void qx(boundary)(struct eo_lattice *xy,
+		  int Ls,
+		  const Up_project up_proj[],
+		  const Down_project down_proj[],
+		  const struct SUn *U,
+		  const struct Fermion *src_y,
+		  long long *flops);
+
 /* Backend controled structure sizes */
 int q(sizeof_neighbor)(int volume);
 int q(sizeof_up_pack)(int volume);
@@ -378,7 +395,7 @@ unsigned int qx(do_F_conj)(struct Fermion *res_x,
 			   const struct Fermion *src_y,
 			   void *rb[]);
 
-/* A+F, A and B */
+/* basic A+F, A and B */
 unsigned int qx(do_ApF)(struct Fermion *r_x,
 			int start, int size, int Ls,
 			const struct ABTable *aptable,
@@ -399,7 +416,7 @@ unsigned int qx(do_AxpBxFx)(struct Fermion *r_x,
 			    const struct Fermion *s_x,
 			    const struct Fermion *s_y,
 			    void *rb[]);
-/* B 1/A F */
+/* basic B 1/A F */
 unsigned int qx(do_BA1)(struct Fermion *r_x,
 			int size, int Ls,
 			const struct ABTable *bptable,
@@ -429,7 +446,7 @@ unsigned int qx(do_1mBA1F)(struct Fermion *r_y,
 			   const struct Fermion *b_x,
 			   void *rb[]);
 unsigned int qx(do_1mBA1F_norm)(struct Fermion *r_y,
-				double *norm,
+				double *local_norm,
 				int start, int size, int Ls,
 				const struct ABTable *bptable,
 				const struct ABTable *bmtable,
@@ -471,6 +488,133 @@ unsigned int qx(do_1mFx)(struct Fermion *r_y,
 			 const struct Fermion *a_y,
 			 const struct Fermion *b_x,
 			 void *rb[]);
+
+/* even/odd level routines */
+void qx(op_A)(struct Fermion *r_x,
+	      struct eo_lattice *xy,
+	      const struct Q(Parameters) *params,
+	      const struct Fermion *s_x,
+	      long long *flops);
+void qx(op_Ax)(struct Fermion *r_x,
+	       struct eo_lattice *xy,
+	       const struct Q(Parameters) *params,
+	       const struct Fermion *s_x,
+	       long long *flops);
+void qx(op_A1)(struct Fermion *r_x,
+	       struct eo_lattice *xy,
+	       const struct Q(Parameters) *params,
+	       const struct Fermion *s_x,
+	       long long *flops);
+void qx(op_A1x)(struct Fermion *r_x,
+		struct eo_lattice *xy,
+		const struct Q(Parameters) *params,
+		const struct Fermion *s_x,
+		long long *flops);
+void qx(op_B)(struct Fermion *r_x,
+	      struct eo_lattice *xy,
+	      const struct Q(Parameters) *params,
+	      const struct Fermion *s_x,
+	      long long *flops);
+void qx(op_Bx)(struct Fermion *r_x,
+	       struct eo_lattice *xy,
+	       const struct Q(Parameters) *params,
+	       const struct Fermion *s_x,
+	       long long *flops);
+void qx(op_B1)(struct Fermion *r_x,
+	       struct eo_lattice *xy,
+	       const struct Q(Parameters) *params,
+	       const struct Fermion *s_x,
+	       long long *flops);
+void qx(op_B1x)(struct Fermion *r_x,
+		struct eo_lattice *xy,
+		const struct Q(Parameters) *params,
+		const struct Fermion *s_x,
+		long long *flops);
+void qx(op_F)(struct Fermion *r_x,
+	      struct eo_lattice *xy,
+	      const struct SUn *U,
+	      const struct Fermion *s_y,
+	      long long *flops,
+	      long long *sent,
+	      long long *received);
+void qx(op_Fx)(struct Fermion *r_x,
+	       struct eo_lattice *xy,
+	       const struct SUn *U,
+	       const struct Fermion *s_y,
+	       long long *flops,
+	       long long *sent,
+	       long long *received);
+void qx(op_A1xBx)(struct Fermion *r_x,
+		  struct eo_lattice *xy,
+		  const struct Q(Parameters) *params,
+		  const struct Fermion *s_x,
+		  long long *flops);
+void qx(op_ApF)(struct Fermion *r_x,
+		struct eo_lattice *xy,
+		const struct Q(Parameters) *params,
+		const struct SUn *U,
+		const struct Fermion *a_x,
+		const struct Fermion *a_y,
+		long long *flops,
+		long long *sent,
+		long long *received);
+void qx(op_1mF)(struct Fermion *r_x,
+		struct eo_lattice *xy,
+		const struct SUn *U,
+		const struct Fermion *a_x,
+		const struct Fermion *a_y,
+		long long *flops,
+		long long *sent,
+		long long *received);
+void qx(op_1mFx)(struct Fermion *r_x,
+		 struct eo_lattice *xy,
+		 const struct SUn *U,
+		 const struct Fermion *a_x,
+		 const struct Fermion *a_y,
+		 long long *flops,
+		 long long *sent,
+		 long long *received);
+void qx(op_1mBA1F)(struct Fermion *r_x,
+		   struct eo_lattice *xy,
+		   const struct Q(Parameters) *params,
+		   const struct SUn *U,
+		   const struct Fermion *a_x,
+		   const struct Fermion *a_y,
+		   long long *flops,
+		   long long *sent,
+		   long long *received);
+void qx(op_1mBA1Fn)(struct Fermion *r_x,
+		    double *norm,
+		    struct eo_lattice *xy,
+		    const struct Q(Parameters) *params,
+		    const struct SUn *U,
+		    const struct Fermion *a_x,
+		    const struct Fermion *a_y,
+		    long long *flops,
+		    long long *sent,
+		    long long *received);
+void qx(op_A1xBxFx)(struct Fermion *r_x,
+		    struct eo_lattice *xy,
+		    const struct Q(Parameters) *params,
+		    const struct SUn *U,
+		    const struct Fermion *a_y,
+		    long long *flops,
+		    long long *sent,
+		    long long *received);
+void qx(op_BA1F)(struct Fermion *r_x,
+		 struct eo_lattice *xy,
+		 const struct Q(Parameters) *params,
+		 const struct SUn *U,
+		 const struct Fermion *a_y,
+		 long long *flops,
+		 long long *sent,
+		 long long *received);
+void qx(op_BA1)(struct Fermion *r_x,
+		struct eo_lattice *xy,
+		const struct Q(Parameters) *params,
+		const struct Fermion *a_x,
+		long long *flops);
+
 /* --- other composites are here */
 
 /* Timing */
