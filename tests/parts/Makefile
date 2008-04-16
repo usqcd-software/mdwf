@@ -76,18 +76,18 @@ opztests = test-op-axa-2.c \
            test-op-axa-3.c \
            test-op-ax1ax-3.c \
            test-op-a1a-3.c \
-#           test-op-bxb-3.c \
-#           test-op-bx1bx-3.c \
-#           test-op-b1b-3.c \
-#           test-op-fxf-3.c \
-#           test-op-af-3.c \
-#           test-op-ba-3.c \
-#           test-op-baf-3.c \
-#           test-op-abf-3.c \
-#           test-op-1f-3.c \
-#           test-op-1fx-3.c \
-#           test-op-1baf-3.c \
-#           test-op-1bafn-3.c \
+           test-op-bxb-3.c \
+           test-op-bx1bx-3.c \
+           test-op-b1b-3.c \
+           test-op-fxf-3.c \
+           test-op-af-3.c \
+           test-op-ba-3.c \
+           test-op-baf-3.c \
+           test-op-abf-3.c \
+           test-op-1f-3.c \
+           test-op-1fx-3.c \
+           test-op-1baf-3.c \
+           test-op-1bafn-3.c \
 
 oproutines = op-a.c \
              op-ax.c \
