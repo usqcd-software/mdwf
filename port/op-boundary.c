@@ -1,13 +1,13 @@
 #include <mdwf.h>
 
 void
-qx(op_boundary)(struct eo_lattice *xy,
-		int Ls,
-		const Up_project up_proj[],
-		const Down_project down_proj[],
-		const struct SUn *U,
-		const struct Fermion *src_y,
-		long long *flops)
+qx(boundary)(struct eo_lattice *xy,
+	     int Ls,
+	     const Up_project up_proj[],
+	     const Down_project down_proj[],
+	     const struct SUn *U,
+	     const struct Fermion *src_y,
+	     long long *flops)
 {
     int i;
 

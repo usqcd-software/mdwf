@@ -1,0 +1,13 @@
+#!/bin/sh -f
+
+if [ $# -ne 1 ]; then
+   echo "usage: check23 stem"
+   exit 1
+fi
+
+stem="$1"
+
+for s in 2 3 ; do
+  echo "$stem"-$s
+  $stem-$s 5.2346 7.345345  1 1 1 1  6 8 4 10 12  645 7567 8679 32456
+done
