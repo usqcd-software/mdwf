@@ -79,12 +79,15 @@ p.sources = fermion-alloc.c \
             op-1mba1f.c \
             op-1mba1fn.c \
             op-a1xbxfx.c \
+            op-axpbxfx.c \
             op-ba1f.c \
             op-ba1.c \
-          op-dirac.c \
-          op-dirac-conj.c \
-#
+            op-dirac.c \
+            op-dirac-conj.c \
+#  op-m.c \
+#  op-m-conj.c \
 #            cg-dirac.c \
+
 
 x.objects = $(x.sources:%.c=$(LIMPDIR)/%.o)
 
