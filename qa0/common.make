@@ -50,6 +50,7 @@ x.sources = get-fermion \
             f-add2-norm \
             f-add2x \
 	    f-dot \
+            cg-xp \
             proj-minus \
             proj-plus \
             proj-u-minus \

@@ -620,11 +620,14 @@ small enough.
     $q\leftarrow M^{\dagger}z$\;
     $\alpha\leftarrow \rho/\langle z,z\rangle$\;
     $r\leftarrow r-\alpha q$\;
-    $x\leftarrow x+\alpha p$\;
     $\gamma\leftarrow \langle r,r\rangle$\;
-    \If{$\gamma<\epsilon$}{$\rho\leftarrow\gamma$\; \Break}
+    \If{$\gamma<\epsilon$}{
+       $x\leftarrow x+\alpha p$\;
+       $\rho\leftarrow\gamma$\;
+       \Break}
     $\beta\leftarrow\gamma/\rho$\;
     $\rho\leftarrow\gamma$\;
+    $x\leftarrow x+\alpha p$\;
     $p\leftarrow r+\beta p$\;
     $k\leftarrow k+1$\;
   }

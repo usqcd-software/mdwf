@@ -360,6 +360,16 @@ unsigned int qx(f_add2x)(struct Fermion *r,
 unsigned int qx(f_norm)(double *s,
 			int size, int Ls,
 			const struct Fermion *a);
+/*
+ *  compute x <- x + alpha p
+ *          p <- r + beta p
+ */
+unsigned int qx(cg_xp)(struct Fermion *x,
+		       struct Fermion *p,
+		       int size, int Ls,
+		       double alpha,
+		       double beta,
+		       const struct Fermion *r);
 
 /* basic matrices */
 unsigned int qx(do_A)(struct Fermion *r_x,
