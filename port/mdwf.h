@@ -623,6 +623,25 @@ void qx(op_BA1)(struct Fermion *r_x,
 		const struct Q(Parameters) *params,
 		const struct Fermion *a_x,
 		long long *flops);
+void qx(op_M)(struct Fermion *r_x,
+	      struct eo_lattice *xy,
+	      const struct Q(Parameters) *params,
+	      const struct SUn *U,
+	      const struct Fermion *a_x,
+	      long long *flops,
+	      long long *sent,
+	      long long *received,
+	      struct Fermion *tmp_y);
+void qx(op_Mx)(struct Fermion *r_x,
+	       struct eo_lattice *xy,
+	       const struct Q(Parameters) *params,
+	       const struct SUn *U,
+	       const struct Fermion *a_x,
+	       long long *flops,
+	       long long *sent,
+	       long long *received,
+	       struct Fermion *tmp_x,
+	       struct Fermion *tmp_y);
 
 /* --- other composites are here */
 

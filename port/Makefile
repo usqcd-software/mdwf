@@ -84,8 +84,11 @@ p.sources = fermion-alloc.c \
             op-ba1.c \
             op-dirac.c \
             op-dirac-conj.c \
-#  op-m.c \
-#  op-m-conj.c \
+            op-precond.c \
+#  op-precond-conj.c \
+#            op-m.c \
+#  op-mx.c \
+#  op-mxn.c \
 #            cg-dirac.c \
 
 
