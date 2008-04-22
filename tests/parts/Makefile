@@ -89,6 +89,7 @@ opztests = test-op-axa-2.c \
            test-op-1baf-3.c \
            test-op-1bafn-3.c \
            test-op-m-3.c \
+           test-op-mx-3.c \
            test-op-mxn-3.c \
 
 oproutines = op-a.c \
