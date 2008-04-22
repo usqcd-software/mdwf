@@ -1,10 +1,10 @@
 #include <mdwf.h>
 
 int
-QX(M_operator)(struct QX(HalfFermion) *result,
-	       const struct Q(Parameters) *params,
-	       const struct QX(Gauge) *gauge,
-	       const struct QX(HalfFermion) *fermion)
+QX(M_operator_conjugated)(struct QX(HalfFermion) *result,
+			  const struct Q(Parameters) *params,
+			  const struct QX(Gauge) *gauge,
+			  const struct QX(HalfFermion) *fermion)
 {
     DECLARE_STATE;
     long long flops = 0;
@@ -13,6 +13,7 @@ QX(M_operator)(struct QX(HalfFermion) *result,
     size_t alloc_size;
     void *alloc_ptr;
     void *aligned_ptr;
+    struct Fermion *even_b;
     struct Fermion *odd_b;
     
     CHECK_ARG0(result);
@@ -25,16 +26,17 @@ QX(M_operator)(struct QX(HalfFermion) *result,
 			    "M_operator(): communication setup failed");
 
     alloc_ptr = q(allocate_eo)(state, &alloc_size, &aligned_ptr,
-			       0, 0, 1, sizeof (REAL));
+			       0, 1, 1, sizeof (REAL));
     if (alloc_ptr == 0)
 	return q(set_error)(state, 0, "DDW_operator(): not enough memory");
-    odd_b = aligned_ptr;
+    even_b = aligned_ptr;
+    odd_b = q(step_even)(state, even_b, sizeof (REAL));
     
     BEGIN_TIMING(state);
-    qx(op_even_M)(result->even, state, params,
-		  gauge->data, fermion->even,
-		  &flops, &sent, &received,
-		  odd_b);
+    qx(op_even_Mx)(result->even, state, params,
+		   gauge->data, fermion->even,
+		   &flops, &sent, &received,
+		   even_b, odd_b);
     END_TIMING(state, flops, sent, received);
 
     q(free)(state, alloc_ptr, alloc_size);

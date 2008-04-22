@@ -295,3 +295,38 @@
   (macro S-compute$-sub-F [const 'plus] [const 'minus]
                           [reg res-x] [reg l-s] [reg s-f-line] [reg s-h-line]
 			  [reg nb] [reg src-x] [reg U] [reg src-y] [reg buf*]))
+;;
+(define (S-compute$-sub-F-norm up-sign down-sign res-x norm
+                               l-s s-f-line s-h-line
+	 		       nb src-x U src-y buf*)
+  (load int () mask ([reg nb] [const (offset-of neighbor mask)]))
+  (op pointer-move () (r) ([reg res-x]))
+  (loop () (s [const 0] [reg l-s])
+    (load qcd-fermion () f ([reg src-x]))
+    (op pointer-add () (src-x) ([reg src-x] [const (size-of Fermion)]))
+    (store qcd-fermion () ([reg r]) [reg f])
+    (op pointer-add () (r) ([reg r] [const (size-of Fermion)])))
+  (repeat ((d [const 0] [const *dim*]))
+    ;; continue with up
+    (macro F-sub-up [const up-sign]
+      	            [const d] [reg mask] [reg res-x]
+	            [reg l-s] [reg s-f-line] [reg s-h-line]
+		    [reg nb] [reg U] [reg src-y] [reg buf*])
+    ;; continue with down               
+    (macro F-sub-down [const down-sign]
+        	      [const d] [reg mask] [reg res-x]
+		      [reg l-s] [reg s-f-line] [reg s-h-line]
+		      [reg nb] [reg U] [reg src-y] [reg buf*]))
+  (loop () (s [const 0] [reg l-s])
+    (load qcd-fermion () f-n ([reg res-x]))
+    (op pointer-add () (res-x) ([reg res-x] [const (size-of Fermion)]))
+    (op qcd-fnorm-add () (norm) ([reg norm] [reg f-n])))
+  (op pointer-add () (nb) ([reg nb] [const (size-of neighbor)])))
+
+(define (S-compute-sub-F*-norm res-x norm l-s s-f-line s-h-line
+                               nb src-x U src-y buf*)
+  (macro S-compute$-sub-F-norm [const 'plus] [const 'minus]
+                               [reg res-x] [reg norm]
+                               [reg l-s] [reg s-f-line] [reg s-h-line]
+			       [reg nb] [reg src-x] [reg U] [reg src-y]
+                               [reg buf*]))
