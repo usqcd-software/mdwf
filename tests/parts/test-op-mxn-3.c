@@ -3,8 +3,8 @@
 #include "opxtest.h"
 #include "op-routines.h"
 
-char *op_a_name = "<o|mlib:M*|e>";
-char *op_b_name = "<o|M*|e>";
+char *op_a_name = "<o|mlib:M*&norm|e>";
+char *op_b_name = "<o|M*&norm|e>";
 
 double
 read_gauge(int dir,
@@ -74,9 +74,9 @@ read_fermion_x(const int pos[5],
 }
 
 static void
-show(const char *name, double x, double y)
+show(const char *name, double x, double y, double n)
 {
-    zprint("%-10s: %20.10e %20.10e", name, x, y);
+    zprint("%-10s: %20.10e %20.10e %20.10e", name, x, y, n);
 }
 
 int
@@ -85,7 +85,16 @@ operator_a(void)
     struct QX(HalfFermion) *f_a;
     struct QX(HalfFermion) *f_b;
     struct QX(HalfFermion) *f_x;
-    double x, y;
+    struct QX(Fermion) *t;
+    long long flops = 0;
+    long long sent = 0;
+    long long received = 0;
+    double x, y, norm;
+
+    if (q(setup_comm)(state, sizeof (REAL))) {
+	zprint("opetator_a(): setup_comm failed");
+	return 1;
+    }
 
     if (QX(import_half_fermion)(&f_a, state, read_fermion_x, &seed_a)) {
 	zprint("operator_a(): alloc failed on x");
@@ -93,7 +102,7 @@ operator_a(void)
     }
 
     if (QX(import_half_fermion)(&f_b, state, read_fermion_x, &seed_b)) {
-	zprint("operator_a(): alloc failed on x");
+	zprint("operator_a(): alloc failed on b");
 	return 1;
     }
 
@@ -101,18 +110,22 @@ operator_a(void)
 	zprint("operator_a(): alloc failed on x");
 	return 1;
     }
-
-    if (QX(M_operator_conjugated)(f_x, params, gauge, f_a)) {
-	zprint("operator_a(): M_operator failed");
+    
+    if (QX(allocate_fermion)(&t, state)) {
+	zprint("operator_a(): alloc failed on t");
 	return 1;
     }
 
+    qx(op_even_Mxn)(f_x->even, &norm, state, params, gauge->data,
+		    f_a->even, &flops, &sent, &received, t->even, t->odd);
+
     QX(dot_half_fermion)(&x, &y, f_b, f_x);
 
+    QOP_MDWF_free_fermion(&t);
     QOP_MDWF_free_half_fermion(&f_x);
     QOP_MDWF_free_half_fermion(&f_a);
     QOP_MDWF_free_half_fermion(&f_b);
-    show("native", x, y);
+    show("native", x, y, norm);
     return 0;
 }
 
@@ -146,6 +159,7 @@ int
 operator_b(void)
 {
     double x, y;
+    double norm = 0;
     struct Q(State) *state = gauge->state;
     struct QX(HalfFermion) *f_a;
     struct QX(HalfFermion) *f_b;
@@ -187,12 +201,15 @@ operator_b(void)
     parts_m(f_x->even, state, params, gauge->data, f_a->even,
 	    f_y->even, f_z->even, f_y->odd, f_z->odd);
 
+    norm = 0;
+    QX(norm2_half_fermion)(&norm, f_x);
+
     QX(dot_half_fermion)(&x, &y, f_b, f_x);
     QOP_MDWF_free_fermion(&f_z);
     QOP_MDWF_free_fermion(&f_y);
     QOP_MDWF_free_half_fermion(&f_x);
     QOP_MDWF_free_half_fermion(&f_a);
     QOP_MDWF_free_half_fermion(&f_b);
-    show("parts", x, y);
+    show("parts", x, y, norm);
     return 0;
 }

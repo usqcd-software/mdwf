@@ -153,6 +153,10 @@ operator_b(void)
     struct QX(Fermion) *f_y;
     struct QX(Fermion) *f_z;
 
+    if (q(setup_comm)(state, sizeof (REAL))) {
+	zprint("opetator_b(): setup_comm failed");
+	return 1;
+    }
 
     if (QX(import_half_fermion)(&f_a, state, read_fermion_x, &seed_a)) {
 	zprint("operator_b(): alloc failed on a");
