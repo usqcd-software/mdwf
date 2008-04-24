@@ -13,10 +13,8 @@ TCFLAGS = $(CFLAGS) $(QMP_CFLAGS) -I$(TOP)/$(LIMPDIR)
 include $(TOP)/config/$(CONFIG)
 
 tests = state.c \
-        statex.c
-
-#        operator.c \
-#        conjgrad.c \
+        statex.c \
+        conjgrad.c
 
 x.tests =
 
@@ -89,6 +87,7 @@ opztests = test-op-axa-2.c \
            test-op-1baf-3.c \
            test-op-1bafn-3.c \
            test-op-m-3.c \
+           test-op-mn-3.c \
            test-op-mx-3.c \
            test-op-mxn-3.c \
 

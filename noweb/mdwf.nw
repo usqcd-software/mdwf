@@ -1202,7 +1202,21 @@ Also the default precision macros
 @
 
 \section{Solvers}
-We provide three solvers for the Dirac operator.
+We provide three solvers for the Dirac operator. All solvers can optionally
+compute true CG and Dirac residuals on each iteration. Constants below can be
+bitwise combined to select which residual are computed and printed. The
+behavior of the solvers do not change when residuals are selected. Applications
+should not assume particular values of the constants except that
+[[QOP_MDWF_LOG_NONE]] is zero.
+<<Interface types>>=
+enum {
+   `QOP_MDWF_LOG_NONE = 0,
+   `QOP_MDWF_LOG_CG_RESIDUAL = 1,
+   `QOP_MDWF_LOG_TRUE_RESIDUAL = 2,
+   `QOP_MDWF_LOG_DIRAC_RESIDUAL = 4,
+   `QOP_MDWF_LOG_EVERYTHING = 7
+};
+@
 
 First, the convenience routine to solve $D_{DW}\psi=\eta$. At most
 [[max_iterations]] are performed, the CG stops when the iterative precontioned
@@ -1218,7 +1232,8 @@ int `QOP_F3_MDWF_DDW_CG(struct QOP_F3_MDWF_Fermion *result,
                        const struct QOP_F3_MDWF_Gauge *gauge,
                        const struct QOP_F3_MDWF_Fermion *rhs,
                        int max_iteration,
-                       double epsilon);
+                       double epsilon,
+                       unsigned int options);
 int `QOP_D3_MDWF_DDW_CG(struct QOP_D3_MDWF_Fermion *result,
                        int *out_iterations,
                        double *out_epsilon,
@@ -1227,11 +1242,12 @@ int `QOP_D3_MDWF_DDW_CG(struct QOP_D3_MDWF_Fermion *result,
                        const struct QOP_D3_MDWF_Gauge *gauge,
                        const struct QOP_D3_MDWF_Fermion *rhs,
                        int max_iteration,
-                       double epsilon);
+                       double epsilon,
+                       unsigned int options);
 @
 
 We also expose the preconditioned hermitian solver for
-$M^\dagger M\psi_o=\phi_o$. In this case the CG starts from $\psi_o=0$.
+$M^\dagger M\psi_e=\phi_e$. In this case the CG starts from $\psi_o=0$.
 <<Interface functions>>=
 int `QOP_F3_MDWF_MxM_CG(struct QOP_F3_MDWF_HalfFermion *result,
                        int *out_iterations,
@@ -1240,7 +1256,8 @@ int `QOP_F3_MDWF_MxM_CG(struct QOP_F3_MDWF_HalfFermion *result,
                        const struct QOP_F3_MDWF_Gauge *gauge,
                        const struct QOP_F3_MDWF_HalfFermion *rhs,
                        int max_iteration,
-                       double epsilon);
+                       double epsilon,
+		       unsigned int options);
 int `QOP_D3_MDWF_MxM_CG(struct QOP_D3_MDWF_HalfFermion *result,
                        int *out_iterations,
                        double *out_epsilon,
@@ -1248,7 +1265,8 @@ int `QOP_D3_MDWF_MxM_CG(struct QOP_D3_MDWF_HalfFermion *result,
                        const struct QOP_D3_MDWF_Gauge *gauge,
                        const struct QOP_D3_MDWF_HalfFermion *rhs,
                        int max_iteration,
-                       double epsilon);
+                       double epsilon,
+		       unsigned int options);
 @
 
 The last solver is the SCG for multiple $\sigma_n$. We only need it to solve for

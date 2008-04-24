@@ -1,16 +1,16 @@
 #include <mdwf.h>
 
 void
-qx(op_1mBA1Fn)(struct Fermion *r_x,
-	       double *local_norm,
-	       struct eo_lattice *xy,
-	       const struct Q(Parameters) *params,
-	       const struct SUn *U,
-	       const struct Fermion *a_x,
-	       const struct Fermion *a_y,
-	       long long *flops,
-	       long long *sent,
-	       long long *received)
+qx(op_1mBA1F_norm)(struct Fermion *r_x,
+		   double *local_norm,
+		   struct eo_lattice *xy,
+		   const struct Q(Parameters) *params,
+		   const struct SUn *U,
+		   const struct Fermion *a_x,
+		   const struct Fermion *a_y,
+		   long long *flops,
+		   long long *sent,
+		   long long *received)
 {
     double n_body, n_face;
     int Ls = xy->Ls;

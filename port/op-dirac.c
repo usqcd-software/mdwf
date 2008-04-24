@@ -36,14 +36,12 @@ QX(DDW_operator)(struct QX(Fermion) *result,
     odd_b = q(step_even)(state, even_b, sizeof (REAL));
     
     BEGIN_TIMING(state);
-    qx(op_B)(even_b, &state->even, params, source->even, &flops);
-    qx(op_B)(odd_b, &state->odd, params, source->odd, &flops);
-    qx(op_ApF)(result->even, &state->even, params,
-	       gauge->data, source->even, odd_b,
-	       &flops, &sent, &received);
-    qx(op_ApF)(result->odd, &state->odd, params,
-	       gauge->data, source->odd, even_b,
-	       &flops, &sent, &received);
+    qx(op_D)(result->even, &state->even, &state->odd, params, gauge->data,
+	     source->even, source->odd,
+	     &flops, &sent, &received, odd_b);
+    qx(op_D)(result->odd, &state->odd, &state->even, params, gauge->data,
+	     source->odd, source->even,
+	     &flops, &sent, &received, even_b);
     END_TIMING(state, flops, sent, received);
     
     q(free)(state, alloc_ptr, alloc_size);

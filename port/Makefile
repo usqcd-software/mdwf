@@ -83,7 +83,9 @@ p.sources = fermion-alloc.c \
             op-axpbxfx.c \
             op-ba1f.c \
             op-ba1.c \
+            op-d.c \
             op-m.c \
+            op-mn.c \
             op-mx.c \
             op-mxn.c \
             op-dirac.c \
