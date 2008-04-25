@@ -1,4 +1,4 @@
-#define QOP_MDWF_DEFAULT_PRECISION 'D'
+#define QOP_MDWF_DEFAULT_PRECISION 'F'
 #include <qop-mdwf3.h>
 #include <mdwf.h>
 #include <qmp.h>

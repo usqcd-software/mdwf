@@ -376,6 +376,9 @@ unsigned int qx(cg_xp)(struct Fermion *x,
 		       const struct Fermion *r);
 
 /* basic matrices */
+unsigned int qx(op_norm2)(double *global_norm,
+			  const struct QX(Fermion) *psi,
+			  struct Q(State) *state);
 unsigned int qx(do_A)(struct Fermion *r_x,
 		      int size, int Ls,
 		      const struct ABTable *aptable,

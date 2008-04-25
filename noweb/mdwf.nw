@@ -347,25 +347,22 @@ F_{eo}B_{oo} & A_{ee}
 \]
 one performs the following steps:
 \begin{enumerate}
-\item Compute
-\[
-\phi_e = B_{ee}A_{ee}^{-1}\left(\eta_e - F_{eo}B_{oo}A_{oo}^{-1}\eta_o\right).
-\]
 \item Use $M=I_{ee}-B_{ee}A_{ee}^{-1}F_{eo}B_{oo}A_{oo}^{-1}F_{oe}$ in the
 following.
-\item Compute
-\[
-\varphi_e = M^{\dagger}\phi_e.
-\]
-where $M^\dagger=I_{ee}-\left(F_{oe}\right)^\dagger
+\item Use $M^\dagger=I_{ee}-\left(F_{oe}\right)^\dagger
 \left(A_{oo}^{-1}\right)^\dagger
 \left(B_{oo}\right)^\dagger
 \left(F_{eo}\right)^\dagger
 \left(A_{ee}^{-1}\right)^\dagger
-\left(B_{ee}\right)^\dagger$.
+\left(B_{ee}\right)^\dagger$ in the following.
+\item Compute
+\[
+\chi_e =M^{\dagger} B_{ee}A_{ee}^{-1}\left(\eta_e
+            - F_{eo}B_{oo}A_{oo}^{-1}\eta_o\right).
+\]
 \item Solve
 \[
-M^{\dagger}M\xi_e = \varphi_e
+M^{\dagger}M\xi_e = \chi_e
 \]
 for $\xi_e$ using Alg.~\ref{real}.
 \item Compute
@@ -589,49 +586,49 @@ B^\dagger &=& B_{+}^\dagger P_{+}+ B_{-}^\dagger P_{-}\\
 \end{eqnarray}
 
 \chapter{ALGORITHMS}
-In this chapter we assume that $A=M^\dagger M$.
 \section{Conjugate gradient}
 The equation
 \[
-   A x = b
+   M^\dagger M \xi = \chi
 \]
-can be solve by the conjugate gradient method if the condition number of $A$ is
-small enough.
+can be solve by the conjugate gradient method if the condition number of
+ $M^\dagger M$ is small enough.
 \incmargin{20pt}
 \begin{algorithm}
 \SetKwData{Input}{input}
 \KwIn{$M$, the matrix}
-\KwIn{$b$, the right hand side of the linear equation}
-\KwIn{$x_0$, an initial guess}
+\KwIn{$\chi$, the right hand side of the linear equation}
+\KwIn{$\xi_0$, an initial guess}
 \KwIn{$n$, the maximum number of iterations}
 \KwIn{$\epsilon$, required precision}
-\KwOut{$x$, approximate solution}
-\KwOut{$\rho$, final residue}
+\KwOut{$\xi$, approximate solution}
+\KwOut{$r$, final residue}
 \KwOut{$k$, number of iterations used}
 \SetKw{Break}{break}
 \dontprintsemicolon
 \Begin{
-  $x\leftarrow x_0$\;
-  $p\leftarrow r\leftarrow b - M^{\dagger}Mx$\;
-  $\rho\leftarrow\langle r,r\rangle$\;
+  $\xi\leftarrow \xi_0$\;
+  $\rho\leftarrow \chi - M^{\dagger}M\xi$\;
+  $\pi\leftarrow \rho$\;
+  $r\leftarrow\langle \rho,\rho\rangle$\;
   $k\leftarrow 0$\;
-  \While{$\rho>\epsilon$ or $k < n$}{
-    $z\leftarrow Mp$\;
-    $q\leftarrow M^{\dagger}z$\;
-    $\alpha\leftarrow \rho/\langle z,z\rangle$\;
-    $r\leftarrow r-\alpha q$\;
-    $\gamma\leftarrow \langle r,r\rangle$\;
-    \If{$\gamma<\epsilon$}{
-       $x\leftarrow x+\alpha p$\;
-       $\rho\leftarrow\gamma$\;
+  \While{$r > \epsilon$ or $k < n$}{
+    $\omega\leftarrow Mp$\;
+    $\zeta\leftarrow M^{\dagger}\omega$\;
+    $a\leftarrow r/\langle \omega,\omega\rangle$\;
+    $\rho\leftarrow \rho - a \zeta$\;
+    $ g \leftarrow \langle \rho,\rho\rangle$\;
+    \If{$ g<\epsilon$}{
+       $\xi\leftarrow \xi+ a \pi$\;
+       $r \leftarrow g$\;
        \Break}
-    $\beta\leftarrow\gamma/\rho$\;
-    $\rho\leftarrow\gamma$\;
-    $x\leftarrow x+\alpha p$\;
-    $p\leftarrow r+\beta p$\;
-    $k\leftarrow k+1$\;
+    $b\leftarrow g/r$\;
+    $r\leftarrow g$\;
+    $\xi\leftarrow \xi + a \pi$\;
+    $\pi\leftarrow \rho + b \pi$\;
+    $k\leftarrow k + 1$\;
   }
-  \Return {$x$, $\rho$, $k$}.
+  \Return {$\xi$, $r$, $k$}.
 }
 \caption{\label{real}Conjugate Gradient Solver.}
 \end{algorithm}
@@ -1214,7 +1211,8 @@ enum {
    `QOP_MDWF_LOG_CG_RESIDUAL = 1,
    `QOP_MDWF_LOG_TRUE_RESIDUAL = 2,
    `QOP_MDWF_LOG_DIRAC_RESIDUAL = 4,
-   `QOP_MDWF_LOG_EVERYTHING = 7
+   `QOP_MDWF_FINAL_DIRAC_RESIDUAL = 8,
+   `QOP_MDWF_LOG_EVERYTHING = 15
 };
 @
 
