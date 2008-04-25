@@ -15,7 +15,8 @@ include $(TOP)/config/$(CONFIG)
 tests = state.c \
         statex.c \
         conjgrad.c \
-        conjgrad-f.c
+        conjgrad-f.c \
+        conjgrad-fx.c
 
 x.tests =
 

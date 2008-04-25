@@ -376,17 +376,6 @@ cg(struct QX(Fermion)                *psi,       /* result                  */
     t0_o  = temps = q(step_even)(state, temps, sizeof (REAL));
     t1_o  = temps = q(step_odd)(state, temps, sizeof (REAL));
 
-    qx(zprint)(state, "t0_e   = %p", t0_e);
-    qx(zprint)(state, "t1_e   = %p", t1_e);
-    qx(zprint)(state, "t2_e   = %p", t2_e);
-    qx(zprint)(state, "xi_e   = %p", xi_e);
-    qx(zprint)(state, "chi_e  = %p", chi_e);
-    qx(zprint)(state, "rho_e  = %p", rho_e);
-    qx(zprint)(state, "pi_e   = %p", pi_e);
-    qx(zprint)(state, "zeta_e = %p", zeta_e);
-    qx(zprint)(state, "t0_o   = %p", t0_o);
-    qx(zprint)(state, "t1_o   = %p", t1_o);
-
     BEGIN_TIMING(state);
     /* precondition */
     qx(cg_precondition)(xi_e, chi_e, state, params,
