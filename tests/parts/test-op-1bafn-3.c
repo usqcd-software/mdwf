@@ -93,8 +93,8 @@ operator_a(void)
 	return 1;
     }
 
-    qx(op_1mBA1Fn)(fermion_x->odd, &n, &state->odd, params, gauge->data,
-		   fermion_a->odd, fermion_a->even, &flp, &snd, &rec);
+    qx(op_1mBA1F_norm)(fermion_x->odd, &n, &state->odd, params, gauge->data,
+		       fermion_a->odd, fermion_a->even, &flp, &snd, &rec);
 
     dot_fermion(&x, &y, fermion_b, fermion_x);
 
