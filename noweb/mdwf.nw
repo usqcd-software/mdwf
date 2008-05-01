@@ -1268,43 +1268,14 @@ int `QOP_D3_MDWF_MxM_CG(struct QOP_D3_MDWF_HalfFermion *result,
 		       unsigned int options);
 @
 
-The last solver is the SCG for multiple $\sigma_n$. We only need it to solve for
-$M^\dagger M$. Here [[m]] should be positive and all $\sigma_n >0$.
-<<Interface functions>>=
-int `QOP_F3_MDWF_MxM_SCG(struct QOP_F3_MDWF_HalfFermion *result,
-                        struct QOP_F3_MDWF_HalfFermion *res_sigma[],
-                        int *out_iterations,
-                        double *out_epsilon,
-                        const struct QOP_MDWF_Parameters *params,
-                        const struct QOP_F3_MDWF_Gauge *gauge,
-                        int m,
-			const double sigma[],
-                        const struct QOP_F3_MDWF_HalfFermion *rhs,
-                        int max_iteration,
-                        double epsilon);
-int `QOP_D3_MDWF_MxM_SCG(struct QOP_D3_MDWF_HalfFermion *result,
-                        struct QOP_D3_MDWF_HalfFermion *res_sigma[],
-                        int *out_iterations,
-                        double *out_epsilon,
-                        const struct QOP_MDWF_Parameters *params,
-                        const struct QOP_D3_MDWF_Gauge *gauge,
-                        int m,
-			const double sigma[],
-                        const struct QOP_D3_MDWF_HalfFermion *rhs,
-                        int max_iteration,
-                        double epsilon);
-@
-
 Again, macros
 <<Single precision defaults>>=
 #define `QOP_MDWF_DDW_CG QOP_F3_MDWF_DDW_CG
 #define `QOP_MDWF_MxM_CG QOP_F3_MDWF_MxM_CG
-#define `QOP_MDWF_MxM_SCG QOP_F3_MDWF_MxM_SCG
 @
 <<Double precision defaults>>=
 #define `QOP_MDWF_DDW_CG QOP_D3_MDWF_DDW_CG
 #define `QOP_MDWF_MxM_CG QOP_D3_MDWF_MxM_CG
-#define `QOP_MDWF_MxM_SCG QOP_D3_MDWF_MxM_SCG
 @
 
 \section{Helper routines}
