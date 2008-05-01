@@ -202,9 +202,12 @@ run_it(struct QOP_MDWF_State *state, struct QOP_MDWF_Parameters *params,
 	goto no_R;
     }
 
-    cg(R, &out_iter, &out_eps,
-       params, guess, U, rhs, max_iter, eps,
-       Q(FINAL_DIRAC_RESIDUAL));
+    if (cg(R, &out_iter, &out_eps,
+	   params, guess, U, rhs, max_iter, eps,
+	   Q(FINAL_DIRAC_RESIDUAL))) {
+	zprint("%s: erorr in cg: %s", name, QOP_MDWF_error(state));
+	goto no_cg;
+    }
 
     Q(performance)(&run_time, &flops, &sent, &received, state);
 
@@ -224,6 +227,8 @@ run_it(struct QOP_MDWF_State *state, struct QOP_MDWF_Parameters *params,
 	   received * 1e-6 / run_time);
     return 0;
 
+no_cg:
+    QOP_MDWF_free_fermion(&R);
 no_R:
     QOP_MDWF_free_fermion(&guess);
 no_guess:

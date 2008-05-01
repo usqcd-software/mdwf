@@ -364,6 +364,9 @@ cg(struct QX(Fermion)                *psi,       /* result                  */
 			 8, /* evens */
 			 2, /* odds */
 			 sizeof (REAL));
+    if (ptr == 0) {
+	return q(set_error)(state, 0, "MDWF_CG(): not enough memory");
+    }
     U = gauge->data;
     t0_e  = temps;
     t1_e  = temps = q(step_even)(state, temps, sizeof (REAL));
