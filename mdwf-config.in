@@ -1,0 +1,41 @@
+#!/bin/sh -f
+
+version='$Id$'
+
+cc="@cc@"
+cflags="-I@incdir@ @qmp_cflags@ @cflags@"
+ld="@ld@"
+ldflags="-L@libdir@ @qmp_ldflags@ @ldflags@"
+libs="-lqop-mdwf3 @qmp_libs@ @libs@"
+qmp="@qmp@"
+target="@target@"
+
+# usage status
+usage() {
+  cat << EOF
+    usage: mdwf-config option
+    options:
+       --version
+       --cc
+       --cflags
+       --ld
+       --ldflags
+       --libs
+       --qmp
+       --target
+EOF
+}
+
+
+case "$1" in
+   --version)  echo "$version" ;;
+   --cc)       echo "$cc" ;;
+   --cflags)   echo "$cflags" ;;
+   --ld)       echo "$ld" ;;
+   --ldflags)  echo "$ldflags" ;;
+   --libs)     echo "$libs" ;;
+   --qmp)      echo "$qmp" ;;
+   --target)   echo "$target" ;;
+   *) usage 1 1>&2 ;;
+esac
+exit 0
