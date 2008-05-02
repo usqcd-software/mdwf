@@ -1,0 +1,7 @@
+# make configuration for build template
+#
+QMP_TOP    = @qmp@
+CC         = @cc@
+CFLAGS     = @cflags@ $(QMP_CFLAGS)
+AR         = @ar@
+RANLIB     = @ranlib@

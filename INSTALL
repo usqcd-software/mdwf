@@ -1,18 +1,44 @@
-A quick way to build and intall MDWF is to unpack the sources (which you have
-probably already done as you are reading this file), create a build directory,
-and run configure and make. E.g., 
+LIBRARY INSTALLATION
 
-$ bunzip < mdwf-X.X.X.tar.bz2 | tar -xvf -
-$ mkdir build
-$ cd build
-$ ../mdwf-X.X.X/configure --target=bluelight --prefix=$HOME
-$ make
-$ make install
+1. Determine the back end most suitable for your platform. See README for
+   details. You will need an installed QMP (version 2.3.0 or newer) to build.
 
-Though the configure script is hand written, I tried to follow general
-principles of GNU configures. Because the script is short, I hope one can grasp
-what's going by looking into it.
+2. Run configure script, with extra parameters if necessary.
 
-In the ./config/ there are two kinds of files: (a) host.xxx are parts of
-the configuration process specific for build hosts, and (b) target.yyy contain
-definitions for corresponding targets.
+ $ ./configure --target=<YOUR-TARGET>
+
+To see how to specify configuration in more details, say
+
+ $ ./configure --help
+
+3. Run make to build the library
+
+ $ make
+
+4. (optional) Build the tests.
+
+ $ make tests
+
+5. Install the library. You may provide DESTDIR variable to help with
+   packaging, e.g., RPM.
+
+ $ make install
+
+
+BUILDING THE DISTRIBUTION (for maintainers)
+
+1. Have qa0 installed on your system. Version 1.3.1 or newer is required.
+
+2. Build the documentation and inferface header files
+
+   $ make -C noweb; make -C noweb clean
+
+
+3. Build the target sources
+
+   $ make -C qa0
+
+4. Roll out the tarball
+
+   $ (cd ..; tar -xf - mdwf-1.0.0.tar.bz2) | bzip2 -9 > mdwf-1.0.0.tar.bz2
+

@@ -1,0 +1,33 @@
+# makefile template
+
+LIMPDIR = @limpdir@
+BINDIR  = @bindir@
+INCDIR  = @incdir@
+LIBDIR  = @libdir@
+DOCDIR  = @docdir@
+V=0
+
+docs=AUTHORS COPYRIGHT CHANGES README config.log doc/mdwf.pdf
+
+.PHONY: all clean install tests
+
+all:
+	$(MAKE) V=$V -C $(LIMPDIR) CONFIG=../target all
+
+clean:
+	$(MAKE) V=$V -C $(LIMPDIR) CONFIG=../target clean
+
+tests: all
+	$(MAKE) V=$V -C tests/parts CONFIG=../target LIMPDIR=$(LIMPDIR)
+
+install: all mdwf-config
+	[ -d $(DESTDIR)$(BINDIR) ] || mkdir -p $(DESTDIR)$(BINDIR)
+	cp  mdwf-config $(DESTDIR)$(BINDIR)/
+	[ -d $(DESTDIR)$(LIBDIR) ] || mkdir -p $(DESTDIR)$(LIBDIR)
+	cp $(LIMPDIR)/libqop-mdwf3.a $(DESTDIR)$(LIBDIR)/
+	[ -d $(DESTDIR)$(INCDIR) ] || mkdir -p $(DESTDIR)$(INCDIR)
+	cp $(LIMPDIR)/qop-mdwf3.h $(DESTDIR)$(INCDIR)/
+	[ -d $(DESTDIR)$(DOCDIR) ] || mkdir -p $(DESTDIR)$(DOCDIR)
+	for f in $(docs) ; do \
+	  cp $$f $(DESTDIR)$(DOCDIR)/`basename $$f`; \
+	done

@@ -1,6 +1,6 @@
 # Configuration for my laptop
 #
-QMP_TOP    = /opt/SciDAC/fen64/qmp-2.1.7
+QMP_TOP    = /opt/SciDAC/fen64/qmp-2.3.0
 CC         = gcc -m64
 CFLAGS     = -Wall -g $(QMP_CFLAGS)
 AR         = ar
