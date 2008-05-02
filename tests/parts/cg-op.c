@@ -1,7 +1,6 @@
 /* checking the solver for Shamir fermions and a known solution */
 #define QOP_MDWF_DEFAULT_PRECISION 'D'
 #include <qop-mdwf3.h>
-#include <mdwf.h>
 #include <qmp.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -185,20 +184,20 @@ run_it(struct QOP_MDWF_State *state, struct QOP_MDWF_Parameters *params,
 	goto no_R;
     }
 
-    if (QX(madd_fermion)(R, guess, delta, rhs)) {
+    if (QOP_MDWF_madd_fermion(R, guess, delta, rhs)) {
 	zzprint("%s: perturbing guess failed", name);
 	goto no_madd;
     }
 
-    if (QX(DDW_operator)(rhs, params, U, R)) {
+    if (QOP_MDWF_DDW_operator(rhs, params, U, R)) {
 	zzprint("%s: computing rhs failed", name);
 	goto no_op;
     }
 
 
-    status = QX(DDW_CG)(R, &out_iter, &out_eps,
-			params, guess, U, rhs, max_iter, eps,
-			QOP_MDWF_LOG_EVERYTHING);
+    status = QOP_MDWF_DDW_CG(R, &out_iter, &out_eps,
+			     params, guess, U, rhs, max_iter, eps,
+			     QOP_MDWF_LOG_EVERYTHING);
 
     QOP_MDWF_free_fermion(&R);
     QOP_MDWF_free_fermion(&rhs);
@@ -322,7 +321,7 @@ main(int argc, char *argv[])
     }
     zzprint("MDWF_init() done");
 
-    if (QOP_MDWF_set_Shamir(&mdwf_params, mdwf_state, kappa, 1.56123, 0.041)) {
+    if (QOP_MDWF_set_Shamir(&mdwf_params, mdwf_state, kappa, M, m_5)) {
 	zzprint("MDW_set_Shamir() failed");
 	goto end;
     }
