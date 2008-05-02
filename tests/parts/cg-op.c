@@ -1,4 +1,5 @@
-#define QOP_MDWF_DEFAULT_PRECISION 'F'
+/* checking the solver for Shamir fermions and a known solution */
+#define QOP_MDWF_DEFAULT_PRECISION 'D'
 #include <qop-mdwf3.h>
 #include <mdwf.h>
 #include <qmp.h>
@@ -14,10 +15,10 @@ static unsigned int sX;
 static unsigned int sY;
 static double M;
 static double m_5;
+static double delta;
+static double Ud;
 static int mylattice[5];
 static int mynetwork[4];
-static double b5[128];
-static double c5[128];
 static int mynode[4];
 
 static unsigned int const table[] = {
@@ -73,25 +74,6 @@ sum_fini(unsigned int state)
 }
 
 void
-setup_bc(unsigned int sB, unsigned int sC)
-{
-    int i;
-    unsigned int v;
-    
-    for (i = 0; i < mylattice[4]; i++) {
-	v = sum_init(sB);
-	v = sum_add(v, i);
-	v = sum_add(v, sC);
-	b5[i] = sum_fini(v);
-	v = sum_init(sC);
-	v = sum_add(v, i);
-	v = sum_add(v, sB);
-	v = sum_add(v, sC);
-	c5[i] = sum_fini(v);
-    }
-}
-
-void
 zflush(void)
 {
     if (primary == 0)
@@ -142,7 +124,10 @@ read_gauge(int dir,
 	v = sum_add(v, pos[i]);
 	v = sum_add(v, dir);
     }
-    v = sum_add(v, *(int *)env);
+    v = Ud * sum_add(v, *(int *)env);
+    if ((a == b) && (re_im == 0))
+	v += 1.0;
+    
     return sum_fini(v);
 }
 
@@ -170,68 +155,67 @@ static int
 run_it(struct QOP_MDWF_State *state, struct QOP_MDWF_Parameters *params,
        int max_iter, double eps)
 {
+    int status;
     char *name = "run_it";
     struct QOP_MDWF_Gauge *U;
     struct QOP_MDWF_Fermion *rhs;
     struct QOP_MDWF_Fermion *guess;
     struct QOP_MDWF_Fermion *R;
-    long long flops, sent, received;
-    double run_time;
     int out_iter;
     double out_eps;
 
     zzprint("%s: starting conjugate gradient test in precision %c",
-	   name, QOP_MDWF_DEFAULT_PRECISION);
+	    name, QOP_MDWF_DEFAULT_PRECISION);
 
     if (QOP_MDWF_import_gauge(&U, state, read_gauge, &sU)) {
 	zzprint("%s: import gauge failed", name);
 	goto no_U;
     }
-    if (QOP_MDWF_import_fermion(&rhs, state, read_fermion, &sY)) {
-	zzprint("%s: import rhs failed", name);
-	goto no_rhs;
-    }
     if (QOP_MDWF_import_fermion(&guess, state, read_fermion, &sX)) {
 	zzprint("%s: import initial guess failed", name);
 	goto no_guess;
     }
+    if (QOP_MDWF_import_fermion(&rhs, state, read_fermion, &sY)) {
+	zzprint("%s: allocating rhs failed", name);
+	goto no_rhs;
+    }
+
     if (QOP_MDWF_allocate_fermion(&R, state)) {
 	zzprint("%s: allocating solution failed", name);
 	goto no_R;
     }
 
-    if (QX(DDW_CG)(R, &out_iter, &out_eps,
-		   params, guess, U, rhs, max_iter, eps,
-		   Q(FINAL_DIRAC_RESIDUAL))) {
-	zzprint("%s: erorr in cg: %s", name, QOP_MDWF_error(state));
-	goto no_cg;
+    if (QX(madd_fermion)(R, guess, delta, rhs)) {
+	zzprint("%s: perturbing guess failed", name);
+	goto no_madd;
     }
 
-    Q(performance)(&run_time, &flops, &sent, &received, state);
+    if (QX(DDW_operator)(rhs, params, U, R)) {
+	zzprint("%s: computing rhs failed", name);
+	goto no_op;
+    }
+
+
+    status = QX(DDW_CG)(R, &out_iter, &out_eps,
+			params, guess, U, rhs, max_iter, eps,
+			QOP_MDWF_LOG_EVERYTHING);
 
     QOP_MDWF_free_fermion(&R);
-    QOP_MDWF_free_fermion(&guess);
     QOP_MDWF_free_fermion(&rhs);
+    QOP_MDWF_free_fermion(&guess);
     QOP_MDWF_free_gauge(&U);
-    zzprint("%s: end max_iter=%d, esp=%g", name, max_iter, eps);
-    zzprint("CG performance:"
-	   "  runtime  %e sec"
-	   "  perf %.3e MFlop/s"
-	   "  snd %.3e MB/sec"
-	   "  rcv %.3e MB/sec",
-	   run_time,
-	   flops * 1e-6 / run_time,
-	   sent * 1e-6 / run_time,
-	   received * 1e-6 / run_time);
+    zzprint("%s: end max_iter=%d, esp=%e, status=%d",
+	    name, max_iter, eps, status);
     return 0;
 
-no_cg:
+no_op:
+no_madd:
     QOP_MDWF_free_fermion(&R);
 no_R:
-    QOP_MDWF_free_fermion(&guess);
-no_guess:
     QOP_MDWF_free_fermion(&rhs);
 no_rhs:
+    QOP_MDWF_free_fermion(&guess);
+no_guess:
     QOP_MDWF_free_gauge(&U);
 no_U:
     return 1;
@@ -259,6 +243,7 @@ main(int argc, char *argv[])
     unsigned int sC;
     int max_iter;
     double min_prec;
+    double kappa;
     int status = 1;
     int i;
     
@@ -269,10 +254,11 @@ main(int argc, char *argv[])
     
     self = QMP_get_node_number();
     primary = QMP_is_primary_node();
-    if (argc != 19) {
-	zzprint("17 arguments expected, found %d", argc);
+    if (argc != 22) {
+	zzprint("22 arguments expected, found %d", argc);
 	zzprint("Usage: conjgrad M m sB sC "
-	       "Nx Ny Nz Nt Lx Ly Lz Lt Ls sU sX sY iter eps");
+	       "Nx Ny Nz Nt Lx Ly Lz Lt Ls sU sX sY iter eps"
+		" delta U-delta kappa");
 	QMP_finalize_msg_passing();
 	return 1;
     }
@@ -291,6 +277,9 @@ main(int argc, char *argv[])
     sY = atoi(argv[16]);
     max_iter = atoi(argv[17]);
     min_prec = atof(argv[18]);
+    delta = atof(argv[19]);
+    Ud = atof(argv[20]);
+    kappa = atof(argv[21]);
     
     zzprint("lattice %d %d %d %d %d",
 	   mylattice[0],
@@ -307,16 +296,15 @@ main(int argc, char *argv[])
     zzprint("m = %8.6f", m_5);
     zzprint("iter = %d", max_iter);
     zzprint("epsilon = %e", min_prec);
+    zzprint("delta = %e", delta);
+    zzprint("U-delta = %e", Ud);
+    zzprint("kappa = %8.6f", kappa);
     zzprint("sB = %d", sB);
     zzprint("sC = %d", sC);
     zzprint("sU = %d", sU);
     zzprint("sX = %d", sX);
     zzprint("sY = %d", sY);
     
-    setup_bc(sB, sC);
-    for (i = 0; i < mylattice[4]; i++)
-	zzprint("  [%2d] b = %16.8f   c = %16.8f", i, b5[i], c5[i]);
-
     if (QMP_declare_logical_topology(mynetwork, 4) != QMP_SUCCESS) {
 	zzprint("declare_logical_top failed");
 	goto end;
@@ -334,11 +322,11 @@ main(int argc, char *argv[])
     }
     zzprint("MDWF_init() done");
 
-    if (QOP_MDWF_set_generic(&mdwf_params, mdwf_state, b5, c5, 0.123, 0.05)) {
-	zzprint("MDW_set_generic() failed");
+    if (QOP_MDWF_set_Shamir(&mdwf_params, mdwf_state, kappa, 1.56123, 0.041)) {
+	zzprint("MDW_set_Shamir() failed");
 	goto end;
     }
-    zzprint("MDWF_set_generic() done");
+    zzprint("MDWF_set_Shamir() done");
 
     if (run_it(mdwf_state, mdwf_params, max_iter, min_prec)) {
 	zzprint("test failed");

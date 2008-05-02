@@ -17,7 +17,8 @@ tests = state.c \
         conjgrad.c \
         conjgrad-2.c \
         conjgrad-f.c \
-        conjgrad-fx.c
+        conjgrad-fx.c \
+        cg-op.c
 
 x.tests =
 
@@ -279,6 +280,6 @@ conjgrad-2.o: clear-mdwf.h
 
 conjgrad.o: clear-mdwf.h do-cg.c
 
-conjgrad-f.o: clear-mdwf.h do-cg.c
+conjgrad-f.o: clear-mdwf.h
 
-conjgrad-fx.o: clear-mdwf.h do-cg.c
+conjgrad-fx.o: clear-mdwf.h

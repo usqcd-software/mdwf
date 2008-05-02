@@ -126,8 +126,6 @@ getsub(int lo[4], int hi[4], const int node[4], void *env)
     }
 }
 
-#include "do-cg.c"
-
 static double
 read_gauge(int dir,
 	   const int pos[4],
@@ -200,9 +198,9 @@ run_it(struct QOP_MDWF_State *state, struct QOP_MDWF_Parameters *params,
 	goto no_R;
     }
 
-    cg(R, &out_iter, &out_eps,
-       params, guess, U, rhs, max_iter, eps,
-       QOP_MDWF_LOG_EVERYTHING);
+    QX(DDW_CG)(R, &out_iter, &out_eps,
+	       params, guess, U, rhs, max_iter, eps,
+	       QOP_MDWF_LOG_EVERYTHING);
 
     QOP_MDWF_free_fermion(&R);
     QOP_MDWF_free_fermion(&guess);

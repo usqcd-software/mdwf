@@ -131,7 +131,7 @@ QX(DDW_CG)(struct QX(Fermion)          *psi,
 	double norm = rhs_norm == 0? 1: rhs_norm;
 
 	qx(zprint)(state, "DDW CG", "solver residual %e normalized %e",
-		   *out_epsilon / norm, *out_epsilon);
+		   *out_epsilon, *out_epsilon / norm);
     }
     if (options & (Q(FINAL_DIRAC_RESIDUAL) | Q(LOG_DIRAC_RESIDUAL))) {
 	double norm = rhs_norm == 0? 1: rhs_norm;
