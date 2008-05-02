@@ -21,14 +21,14 @@
 \author{Andrew Pochinsky}
 \catcode`\$=11
 \date{$Id$\\
-WORKING COPY}
+Version 1.0.0}
 \catcode`\$=3
 
 \begin{document}
 \maketitle
 \thispagestyle{empty}\hbox{}
 \vfill
-\copyright 2007 Massachusetts Institute of Technology
+\copyright 2008 Massachusetts Institute of Technology
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
