@@ -364,17 +364,6 @@ unsigned int qx(f_diff_norm)(double *s,
 			     int size, int Ls,
 			     const struct Fermion *a,
 			     const struct Fermion *b);
-/*
- *  compute x <- x + alpha p
- *          p <- r + beta p
- */
-unsigned int qx(cg_xp)(struct Fermion *x,
-		       struct Fermion *p,
-		       int size, int Ls,
-		       double alpha,
-		       double beta,
-		       const struct Fermion *r);
-
 /* basic matrices */
 unsigned int qx(op_norm2)(double *global_norm,
 			  const struct QX(Fermion) *psi,
@@ -708,6 +697,104 @@ void qx(op_even_Mxn)(struct Fermion *r_x,
 		     long long *received,
 		     struct Fermion *tmp_x,
 		     struct Fermion *tmp_y);
+/* logging */
+void qx(zprint)(struct Q(State) *state,
+		const char *source,
+		const char *fmt,
+		...);
+/* parts of the CG solver */
+void qx(cg_precondition)(struct Fermion *xi0_e,
+			 struct Fermion *chi_e,
+			 struct Q(State) *state,
+			 const struct Q(Parameters) *params,
+			 const struct SUn *U,
+			 const struct Fermion *psi0_e,
+			 const struct Fermion *eta_e,
+			 const struct Fermion *eta_o,
+			 long long *flops,
+			 long long *sent,
+			 long long *received,
+			 struct Fermion *t0_e,
+			 struct Fermion *t1_e,
+			 struct Fermion *t0_o);
+
+void qx(cg_inflate)(struct Fermion *psi_e,
+		    struct Fermion *psi_o,
+		    struct Q(State) *state,
+		    const struct Q(Parameters) *params,
+		    const struct SUn *U,
+		    const struct Fermion *eta_o,
+		    const struct Fermion *xi_e,
+		    long long *flops,
+		    long long *sent,
+		    long long *received,
+		    struct Fermion *t_o);
+double qx(cg_dirac_error)(const struct Fermion *psi_e,
+			  const struct Fermion *psi_o,
+			  struct Q(State) *state,
+			  const struct Q(Parameters) *params,
+			  const struct SUn *U,
+			  const struct Fermion *eta_e,
+			  const struct Fermion *eta_o,
+			  long long *flops,
+			  long long *sent,
+			  long long *received,
+			  struct Fermion *t0_e,
+			  struct Fermion *t1_e,
+			  struct Fermion *t0_o);
+void qx(cg_log)(double cg_res, const char *source, int iter,
+		const struct Fermion *xi_e,
+		struct Q(State) *state,
+		const struct Q(Parameters) *params,
+		const struct SUn *U,
+		const struct Fermion *chi_e,
+		const struct Fermion *eta_e,
+		const struct Fermion *eta_o,
+		long long *flops,
+		long long *sent,
+		long long *received,
+		unsigned int options,
+		struct Fermion *t0_e,
+		struct Fermion *t1_e,
+		struct Fermion *t2_e,
+		struct Fermion *t0_o,
+		struct Fermion *t1_o);
+int qx(cg_solver)(struct Fermion *xi_e,
+		  const char *source,
+		  int *out_iter,
+		  double *out_epsilon,
+		  struct Q(State) *state,
+		  const struct Q(Parameters) *params,
+		  const struct SUn *U,
+		  const struct Fermion *chi_e,
+		  const struct Fermion *eta_e,
+		  const struct Fermion *eta_o,
+		  int max_iter,
+		  double epsilon,
+		  unsigned options,
+		  long long *flops,
+		  long long *sent,
+		  long long *received,
+		  struct Fermion *rho_e,
+		  struct Fermion *pi_e,
+		  struct Fermion *zeta_e,
+		  struct Fermion *t0_e,
+		  struct Fermion *t1_e,
+		  struct Fermion *t2_e,
+		  struct Fermion *t0_o,
+		  struct Fermion *t1_o);
+/*
+ *  compute x <- x + alpha p
+ *          p <- r + beta p
+ */
+unsigned int qx(cg_xp)(struct Fermion *x,
+		       struct Fermion *p,
+		       int size, int Ls,
+		       double alpha,
+		       double beta,
+		       const struct Fermion *r);
+
+
 /* --- other composites are here */
 
 /* Timing */

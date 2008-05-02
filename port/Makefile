@@ -92,7 +92,13 @@ p.sources = fermion-alloc.c \
             op-dirac-conj.c \
             op-precond.c \
             op-precond-conj.c \
-#            cg-dirac.c \
+            op-print.c \
+	    cg-precondition.c \
+            cg-solver.c \
+            cg-inflate.c \
+            cg-log.c \
+            cg-dirac-error.c \
+            solver-dirac.c
 
 
 x.objects = $(x.sources:%.c=$(LIMPDIR)/%.o)

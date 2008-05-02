@@ -1,9 +1,9 @@
 /* Follow conventions of the mdwf.pdf */
 #include <stdarg.h>
 static void
-qx(zprint)(struct Q(State) *state,
-	   const char *fmt,
-	   ...)
+zprint(struct Q(State) *state,
+       const char *fmt,
+       ...)
 {
     va_list va;
     char buffer[4096];
@@ -19,20 +19,20 @@ qx(zprint)(struct Q(State) *state,
 
 
 static void
-qx(cg_precondition)(struct Fermion *xi0_e,
-		    struct Fermion *chi_e,
-		    struct Q(State) *state,
-		    const struct Q(Parameters) *params,
-		    const struct SUn *U,
-		    const struct Fermion *psi0_e,
-		    const struct Fermion *eta_e,
-		    const struct Fermion *eta_o,
-		    long long *flops,
-		    long long *sent,
-		    long long *received,
-		    struct Fermion *t0_e,
-		    struct Fermion *t1_e,
-		    struct Fermion *t0_o)
+cg_precondition(struct Fermion *xi0_e,
+		struct Fermion *chi_e,
+		struct Q(State) *state,
+		const struct Q(Parameters) *params,
+		const struct SUn *U,
+		const struct Fermion *psi0_e,
+		const struct Fermion *eta_e,
+		const struct Fermion *eta_o,
+		long long *flops,
+		long long *sent,
+		long long *received,
+		struct Fermion *t0_e,
+		struct Fermion *t1_e,
+		struct Fermion *t0_o)
 {
     qx(op_BA1)(t0_o, &state->odd, params, eta_o, flops);
     qx(op_1mF)(t0_e, &state->even, U, eta_e, t0_o, flops, sent, received);
@@ -43,17 +43,17 @@ qx(cg_precondition)(struct Fermion *xi0_e,
 }
 
 static void
-qx(cg_inflate)(struct Fermion *psi_e,
-	       struct Fermion *psi_o,
-	       struct Q(State) *state,
-	       const struct Q(Parameters) *params,
-	       const struct SUn *U,
-	       const struct Fermion *eta_o,
-	       const struct Fermion *xi_e,
-	       long long *flops,
-	       long long *sent,
-	       long long *received,
-	       struct Fermion *t_o)
+cg_inflate(struct Fermion *psi_e,
+	   struct Fermion *psi_o,
+	   struct Q(State) *state,
+	   const struct Q(Parameters) *params,
+	   const struct SUn *U,
+	   const struct Fermion *eta_o,
+	   const struct Fermion *xi_e,
+	   long long *flops,
+	   long long *sent,
+	   long long *received,
+	   struct Fermion *t_o)
 {
     qx(op_B1)(psi_e, &state->even, params, xi_e, flops);
     qx(op_1mF)(t_o, &state->odd, U, eta_o, xi_e, flops, sent, received);
@@ -61,18 +61,18 @@ qx(cg_inflate)(struct Fermion *psi_e,
 }
 
 static double
-qx(cg_true_residual)(const struct Fermion *xi_e,
-		     struct Q(State) *state,
-		     const struct Q(Parameters) *params,
-		     const struct SUn *U,
-		     const struct Fermion *chi_e,
-		     long long *flops,
-		     long long *sent,
-		     long long *received,
-		     struct Fermion *t0_e,
-		     struct Fermion *t1_e,
-		     struct Fermion *t2_e,
-		     struct Fermion *t0_o)
+cg_true_residual(const struct Fermion *xi_e,
+		 struct Q(State) *state,
+		 const struct Q(Parameters) *params,
+		 const struct SUn *U,
+		 const struct Fermion *chi_e,
+		 long long *flops,
+		 long long *sent,
+		 long long *received,
+		 struct Fermion *t0_e,
+		 struct Fermion *t1_e,
+		 struct Fermion *t2_e,
+		 struct Fermion *t0_o)
 {
     double norm;
 
@@ -88,7 +88,7 @@ qx(cg_true_residual)(const struct Fermion *xi_e,
 }
 
 static double
-qx(cg_dirac_error)(const struct Fermion *psi_e,
+cg_dirac_error(const struct Fermion *psi_e,
 		   const struct Fermion *psi_o,
 		   struct Q(State) *state,
 		   const struct Q(Parameters) *params,
@@ -123,60 +123,60 @@ qx(cg_dirac_error)(const struct Fermion *psi_e,
 }
 
 static double
-qx(cg_dirac_residual)(const struct Fermion *xi_e,
-		      struct Q(State) *state,
-		      const struct Q(Parameters) *params,
-		      const struct SUn *U,
-		      const struct Fermion *eta_e,
-		      const struct Fermion *eta_o,
-		      long long *flops,
-		      long long *sent,
-		      long long *received,
-		      struct Fermion *t0_e,
-		      struct Fermion *t1_e,
-		      struct Fermion *t2_e,
-		      struct Fermion *t0_o,
-		      struct Fermion *t1_o)
+cg_dirac_residual(const struct Fermion *xi_e,
+		  struct Q(State) *state,
+		  const struct Q(Parameters) *params,
+		  const struct SUn *U,
+		  const struct Fermion *eta_e,
+		  const struct Fermion *eta_o,
+		  long long *flops,
+		  long long *sent,
+		  long long *received,
+		  struct Fermion *t0_e,
+		  struct Fermion *t1_e,
+		  struct Fermion *t2_e,
+		  struct Fermion *t0_o,
+		  struct Fermion *t1_o)
 {
-    qx(cg_inflate)(t0_e, t0_o, state, params, U, eta_o, xi_e,
-		   flops, sent, received,
-		   t1_o);
-    return qx(cg_dirac_error)(t0_e, t0_o, state, params, U, eta_e, eta_o,
-			      flops, sent, received,
-			      t1_e, t2_e, t1_o);
+    cg_inflate(t0_e, t0_o, state, params, U, eta_o, xi_e,
+	       flops, sent, received,
+	       t1_o);
+    return cg_dirac_error(t0_e, t0_o, state, params, U, eta_e, eta_o,
+			  flops, sent, received,
+			  t1_e, t2_e, t1_o);
 }
 
 static void
-qx(cg_log)(double cg_res, int iter,
-	   const struct Fermion *xi_e,
-	   struct Q(State) *state,
-	   const struct Q(Parameters) *params,
-	   const struct SUn *U,
-	   const struct Fermion *chi_e,
-	   const struct Fermion *eta_e,
-	   const struct Fermion *eta_o,
-	   long long *flops,
-	   long long *sent,
-	   long long *received,
-	   unsigned int options,
-	   struct Fermion *t0_e,
-	   struct Fermion *t1_e,
-	   struct Fermion *t2_e,
-	   struct Fermion *t0_o,
-	   struct Fermion *t1_o)
+cg_log(double cg_res, int iter,
+       const struct Fermion *xi_e,
+       struct Q(State) *state,
+       const struct Q(Parameters) *params,
+       const struct SUn *U,
+       const struct Fermion *chi_e,
+       const struct Fermion *eta_e,
+       const struct Fermion *eta_o,
+       long long *flops,
+       long long *sent,
+       long long *received,
+       unsigned int options,
+       struct Fermion *t0_e,
+       struct Fermion *t1_e,
+       struct Fermion *t2_e,
+       struct Fermion *t0_o,
+       struct Fermion *t1_o)
 {
     double true_res = 0.0;
     double dirac_res = 0.0;
 
     if (options & Q(LOG_TRUE_RESIDUAL)) {
-	true_res = qx(cg_true_residual)(xi_e, state, params, U, chi_e,
-					flops, sent, received,
-					t0_e, t1_e, t2_e, t0_o);
+	true_res = cg_true_residual(xi_e, state, params, U, chi_e,
+				    flops, sent, received,
+				    t0_e, t1_e, t2_e, t0_o);
     }
     if (options & Q(LOG_DIRAC_RESIDUAL)) {
-	dirac_res = qx(cg_dirac_residual)(xi_e, state, params, U, eta_e, eta_o,
-					  flops, sent, received,
-					  t0_e, t1_e, t2_e, t0_o, t1_o);
+	dirac_res = cg_dirac_residual(xi_e, state, params, U, eta_e, eta_o,
+				      flops, sent, received,
+				      t0_e, t1_e, t2_e, t0_o, t1_o);
     }
 #define ITER_LOG (Q(LOG_CG_RESIDUAL) |	  \
                   Q(LOG_TRUE_RESIDUAL) |  \
@@ -186,79 +186,79 @@ qx(cg_log)(double cg_res, int iter,
     default:
 	break;
     case Q(LOG_CG_RESIDUAL):
-	qx(zprint)(state,
-		   "CG step %5d"
-		   "  CG residual %11.4e",
-		   iter, cg_res);
+	zprint(state,
+	       "CG step %5d"
+	       "  CG residual %11.4e",
+	       iter, cg_res);
 	break;
     case Q(LOG_TRUE_RESIDUAL):
-	qx(zprint)(state,
-		   "CG step %5d"
-		   "  true residual %11.4e",
-		   iter, true_res);
+	zprint(state,
+	       "CG step %5d"
+	       "  true residual %11.4e",
+	       iter, true_res);
 	break;
     case Q(LOG_CG_RESIDUAL) | Q(LOG_TRUE_RESIDUAL):
-	qx(zprint)(state, 
-		   "CG step %5d"
-		   "  CG residual %11.4e"
-		   "  true residual %11.4e",
-		   iter, cg_res, true_res);
+	zprint(state, 
+	       "CG step %5d"
+	       "  CG residual %11.4e"
+	       "  true residual %11.4e",
+	       iter, cg_res, true_res);
 	break;
     case Q(LOG_DIRAC_RESIDUAL):
-	qx(zprint)(state,
-		   "CG step %5d"
-		   "  Dirac residual %11.4e",
-		   iter, dirac_res);
+	zprint(state,
+	       "CG step %5d"
+	       "  Dirac residual %11.4e",
+	       iter, dirac_res);
 	break;
     case Q(LOG_DIRAC_RESIDUAL) | Q(LOG_CG_RESIDUAL):
-	qx(zprint)(state,
-		   "CG step %5d"
-		   "  Dirac residual %11.4e"
-		   "  CG residual %11.4e",
-		   iter, dirac_res, cg_res);
+	zprint(state,
+	       "CG step %5d"
+	       "  Dirac residual %11.4e"
+	       "  CG residual %11.4e",
+	       iter, dirac_res, cg_res);
 	break;
     case Q(LOG_DIRAC_RESIDUAL) | Q(LOG_TRUE_RESIDUAL):
-	qx(zprint)(state,
-		   "CG step %5d"
-		   "  Dirac residual %11.4e"
-		   "  true residual %11.4e",
-		   iter, dirac_res, true_res);
+	zprint(state,
+	       "CG step %5d"
+	       "  Dirac residual %11.4e"
+	       "  true residual %11.4e",
+	       iter, dirac_res, true_res);
 	break;
     case Q(LOG_DIRAC_RESIDUAL) | Q(LOG_CG_RESIDUAL) | Q(LOG_TRUE_RESIDUAL):
-	qx(zprint)(state,
-		   "CG step %5d"
-		   "  Dirac residual %11.4e"
-		   "  CG residual %11.4e"
-		   "  true residual %11.4e",
-		   iter, dirac_res, cg_res, true_res);
+	zprint(state,
+	       "CG step %5d"
+	       "  Dirac residual %11.4e"
+	       "  CG residual %11.4e"
+	       "  true residual %11.4e",
+	       iter, dirac_res, cg_res, true_res);
 	break;
     }
 }
 
 static int
-qx(cg_solver)(struct Fermion *xi_e,
-	      int *out_iter,
-	      double *out_epsilon,
-	      struct Q(State) *state,
-	      const struct Q(Parameters) *params,
-	      const struct SUn *U,
-	      const struct Fermion *chi_e,
-	      const struct Fermion *eta_e,
-	      const struct Fermion *eta_o,
-	      int max_iter,
-	      double epsilon,
-	      unsigned options,
-	      long long *flops,
-	      long long *sent,
-	      long long *received,
-	      struct Fermion *rho_e,
-	      struct Fermion *pi_e,
-	      struct Fermion *zeta_e,
-	      struct Fermion *t0_e,
-	      struct Fermion *t1_e,
-	      struct Fermion *t2_e,
-	      struct Fermion *t0_o,
-	      struct Fermion *t1_o)
+cg_solver(struct Fermion *xi_e,
+	  int *out_iter,
+	  double *out_epsilon,
+	  struct Q(State) *state,
+	  const struct Q(Parameters) *params,
+	  const struct SUn *U,
+	  const struct Fermion *chi_e,
+	  const struct Fermion *eta_e,
+	  const struct Fermion *eta_o,
+	  int max_iter,
+	  double epsilon,
+	  unsigned options,
+	  long long *flops,
+	  long long *sent,
+	  long long *received,
+	  struct Fermion *rho_e,
+	  struct Fermion *pi_e,
+	  struct Fermion *zeta_e,
+	  struct Fermion *t0_e,
+	  struct Fermion *t1_e,
+	  struct Fermion *t2_e,
+	  struct Fermion *t0_o,
+	  struct Fermion *t1_o)
 {
     int e_size = state->even.full_size;
     int Ls = state->Ls;
@@ -297,10 +297,10 @@ qx(cg_solver)(struct Fermion *xi_e,
 	r = g;
 	qx(cg_xp)(xi_e, pi_e, e_size, Ls, a, b, rho_e);
 	if (options)
-	    qx(cg_log)(r, i, xi_e, state, params, U, chi_e, eta_e, eta_o,
-		       flops, sent, received,
-		       options,
-		       t0_e, t1_e, t2_e, t0_o, t1_o);
+	    cg_log(r, i, xi_e, state, params, U, chi_e, eta_e, eta_o,
+		   flops, sent, received,
+		   options,
+		   t0_e, t1_e, t2_e, t0_o, t1_o);
     }
 end:
     *out_iter = i;
@@ -381,40 +381,40 @@ cg(struct QX(Fermion)                *psi,       /* result                  */
 
     BEGIN_TIMING(state);
     /* precondition */
-    qx(cg_precondition)(xi_e, chi_e, state, params,
-			U, psi0->even, eta->even, eta->odd,
-			&flops, &sent, &received,
-			t0_e, t1_e, t0_o);
+    cg_precondition(xi_e, chi_e, state, params,
+		    U, psi0->even, eta->even, eta->odd,
+		    &flops, &sent, &received,
+		    t0_e, t1_e, t0_o);
     /* solve */
-    status = qx(cg_solver)(xi_e, out_iters, out_eps,
-			   state, params, U,
-			   chi_e, eta->even, eta->odd,
-			   max_iters, epsilon, options,
-			   &flops, &sent, &received,
-			   rho_e, pi_e, zeta_e,
-			   t0_e, t1_e, t2_e, t0_o, t1_o);
-
+    status = cg_solver(xi_e, out_iters, out_eps,
+		       state, params, U,
+		       chi_e, eta->even, eta->odd,
+		       max_iters, epsilon, options,
+		       &flops, &sent, &received,
+		       rho_e, pi_e, zeta_e,
+		       t0_e, t1_e, t2_e, t0_o, t1_o);
+    
     /* unprecondition */
-    qx(cg_inflate)(psi->even, psi->odd,
-		   state, params, U, eta->odd, xi_e,
-		   &flops, &sent, &received,
-		   t0_o);
+    cg_inflate(psi->even, psi->odd,
+	       state, params, U, eta->odd, xi_e,
+	       &flops, &sent, &received,
+	       t0_o);
     if (options & (Q(FINAL_DIRAC_RESIDUAL) | Q(LOG_DIRAC_RESIDUAL))) {
-	dirac_residual = qx(cg_dirac_error)(psi->even, psi->odd,
-					    state, params, U,
-					    eta->even, eta->odd,
-					    &flops, &sent, &received,
-					    t0_e, t1_e, t0_o);
+	dirac_residual = cg_dirac_error(psi->even, psi->odd,
+					state, params, U,
+					eta->even, eta->odd,
+					&flops, &sent, &received,
+					t0_e, t1_e, t0_o);
 	flops += qx(op_norm2)(&rhs_norm, eta, state);
     }
     END_TIMING(state, flops, sent, received);
 
-    qx(zprint)(state, "CG results: status %d, iterations %d, residual %e",
-	       status, *out_iters, *out_eps);
-
+    zprint(state, "CG results: status %d, iterations %d, residual %e",
+	   status, *out_iters, *out_eps);
+    
     if (options & (Q(FINAL_DIRAC_RESIDUAL) | Q(LOG_DIRAC_RESIDUAL))) {
-	qx(zprint)(state, "CG Dirac residual: %e rhs norm %e",
-		   dirac_residual, rhs_norm);
+	zprint(state, "CG Dirac residual: %e rhs norm %e",
+	       dirac_residual, rhs_norm);
     }
 
     q(free)(state, ptr, ptr_size);

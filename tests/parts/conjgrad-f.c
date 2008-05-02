@@ -100,7 +100,7 @@ zflush(void)
 }
 
 void
-zprint(char *fmt, ...)
+zzprint(char *fmt, ...)
 {
     char buffer[4096];
     va_list va;
@@ -180,23 +180,23 @@ run_it(struct QOP_MDWF_State *state, struct QOP_MDWF_Parameters *params,
     int out_iter;
     double out_eps;
 
-    zprint("%s: starting conjugate gradient test in precision %c",
+    zzprint("%s: starting conjugate gradient test in precision %c",
 	   name, QOP_MDWF_DEFAULT_PRECISION);
 
     if (QOP_MDWF_import_gauge(&U, state, read_gauge, &sU)) {
-	zprint("%s: import gauge failed", name);
+	zzprint("%s: import gauge failed", name);
 	goto no_U;
     }
     if (QOP_MDWF_import_fermion(&rhs, state, read_fermion, &sY)) {
-	zprint("%s: import rhs failed", name);
+	zzprint("%s: import rhs failed", name);
 	goto no_rhs;
     }
     if (QOP_MDWF_import_fermion(&guess, state, read_fermion, &sX)) {
-	zprint("%s: import initial guess failed", name);
+	zzprint("%s: import initial guess failed", name);
 	goto no_guess;
     }
     if (QOP_MDWF_allocate_fermion(&R, state)) {
-	zprint("%s: allocating solution failed", name);
+	zzprint("%s: allocating solution failed", name);
 	goto no_R;
     }
 
@@ -208,7 +208,7 @@ run_it(struct QOP_MDWF_State *state, struct QOP_MDWF_Parameters *params,
     QOP_MDWF_free_fermion(&guess);
     QOP_MDWF_free_fermion(&rhs);
     QOP_MDWF_free_gauge(&U);
-    zprint("%s: end max_iter=%d, esp=%g", name, max_iter, eps);
+    zzprint("%s: end max_iter=%d, esp=%g", name, max_iter, eps);
     return 0;
 
 no_R:
@@ -254,8 +254,8 @@ main(int argc, char *argv[])
     self = QMP_get_node_number();
     primary = QMP_is_primary_node();
     if (argc != 19) {
-	zprint("17 arguments expected, found %d", argc);
-	zprint("Usage: conjgrad M m sB sC "
+	zzprint("17 arguments expected, found %d", argc);
+	zzprint("Usage: conjgrad M m sB sC "
 	       "Nx Ny Nz Nt Lx Ly Lz Lt Ls sU sX sY iter eps");
 	QMP_finalize_msg_passing();
 	return 1;
@@ -276,33 +276,33 @@ main(int argc, char *argv[])
     max_iter = atoi(argv[17]);
     min_prec = atof(argv[18]);
     
-    zprint("lattice %d %d %d %d %d",
+    zzprint("lattice %d %d %d %d %d",
 	   mylattice[0],
 	   mylattice[1],
 	   mylattice[2],
 	   mylattice[3],
 	   mylattice[4]);
-    zprint("network %d %d %d %d",
+    zzprint("network %d %d %d %d",
 	   mynetwork[0],
 	   mynetwork[1],
 	   mynetwork[2],
 	   mynetwork[3]);
-    zprint("M = %8.6f", M);
-    zprint("m = %8.6f", m_5);
-    zprint("iter = %d", max_iter);
-    zprint("epsilon = %e", min_prec);
-    zprint("sB = %d", sB);
-    zprint("sC = %d", sC);
-    zprint("sU = %d", sU);
-    zprint("sX = %d", sX);
-    zprint("sY = %d", sY);
+    zzprint("M = %8.6f", M);
+    zzprint("m = %8.6f", m_5);
+    zzprint("iter = %d", max_iter);
+    zzprint("epsilon = %e", min_prec);
+    zzprint("sB = %d", sB);
+    zzprint("sC = %d", sC);
+    zzprint("sU = %d", sU);
+    zzprint("sX = %d", sX);
+    zzprint("sY = %d", sY);
     
     setup_bc(sB, sC);
     for (i = 0; i < mylattice[4]; i++)
-	zprint("  [%2d] b = %16.8f   c = %16.8f", i, b5[i], c5[i]);
+	zzprint("  [%2d] b = %16.8f   c = %16.8f", i, b5[i], c5[i]);
 
     if (QMP_declare_logical_topology(mynetwork, 4) != QMP_SUCCESS) {
-	zprint("declare_logical_top failed");
+	zzprint("declare_logical_top failed");
 	goto end;
     }
 
@@ -313,25 +313,25 @@ main(int argc, char *argv[])
     if (QOP_MDWF_init(&mdwf_state,
 		      mylattice, mynetwork, mynode, primary,
 		      getsub, NULL)) {
-	zprint("MDWF_init() failed");
+	zzprint("MDWF_init() failed");
 	goto end;
     }
-    zprint("MDWF_init() done");
+    zzprint("MDWF_init() done");
 
     if (QOP_MDWF_set_generic(&mdwf_params, mdwf_state, b5, c5, 0.123, 0.05)) {
-	zprint("MDW_set_generic() failed");
+	zzprint("MDW_set_generic() failed");
 	goto end;
     }
-    zprint("MDWF_set_generic() done");
+    zzprint("MDWF_set_generic() done");
 
     if (run_it(mdwf_state, mdwf_params, max_iter, min_prec)) {
-	zprint("test failed");
+	zzprint("test failed");
 	goto end;
     }
 
     QOP_MDWF_free_parameters(&mdwf_params);
     QOP_MDWF_fini(&mdwf_state);
-    zprint("Conjugate gradient test finished");
+    zzprint("Conjugate gradient test finished");
     status = 0;
  end:
     QMP_finalize_msg_passing();

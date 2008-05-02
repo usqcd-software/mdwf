@@ -15,6 +15,7 @@ include $(TOP)/config/$(CONFIG)
 tests = state.c \
         statex.c \
         conjgrad.c \
+        conjgrad-2.c \
         conjgrad-f.c \
         conjgrad-fx.c
 
@@ -273,6 +274,8 @@ $(objl.objects): $(TOP)/port/mdwf.h $(TOP)/$(LIMPDIR)/qop-mdwf3.h op-routines.h
 $(all.objects): $(TOP)/port/mdwf.h $(TOP)/$(LIMPDIR)/qop-mdwf3.h
 
 $(programs): $(TOP)/$(LIMPDIR)/lib$(library).a
+
+conjgrad-2.o: clear-mdwf.h
 
 conjgrad.o: clear-mdwf.h do-cg.c
 
