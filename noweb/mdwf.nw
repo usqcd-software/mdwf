@@ -635,61 +635,65 @@ can be solve by the conjugate gradient method if the condition number of
 \decmargin{20pt}
 
 \section{Shifted Conjugate Gradient}
-We also need the ability to solve equations $(A+\sigma_n I)x_n = b$
-for several $\sigma_n$ and the same RHS $b$. It is possible to do this with
-little extra work because Krylov's spaces of $A$ and $A+\sigma_n I$ are the
-same. We assume that the solution of $Ax=b$ is also needed and that all
- $\sigma_n>0$. Under these assumptions the following algorithm could be used.
+We also need the ability to solve equations $(A+s_n I)\xi_n = \chi$,
+$A=M^\dagger M$
+for several $s_n$ and the same RHS $\chi$. It is possible to do this with
+little extra work because Krylov's spaces of $A$ and $A+s_n I$ are the
+same. We assume that the solution of $A\xi=\chi$ is also needed and that
+ $s_n>0$ for all $n$. Under these assumptions the following algorithm
+could be used.
 
 For the details of the algorithm see van~der~Eshof and Sleijpen,~2003.
 
-Notice that SCG always starts with $x_0=0$.
+Notice that SCG always starts with $\xi_0=0$.
 
 \incmargin{20pt}
 \begin{algorithm}
 \SetKwData{Input}{input}
 \KwIn{$M$, the matrix}
-\KwIn{$\sigma[m]$, the vector of shifts}
-\KwIn{$b$, the right hand side}
+\KwIn{$s[m]$, the vector of shifts}
+\KwIn{$\chi$, the right hand side}
 \KwIn{$n$, the maximal number of iterations}
 \KwIn{$\epsilon$, required precision for $\sigma=0$}
-\KwOut{$x[m]$, vector of approximate solutions}
-\KwOut{$x$, approximate solution for $\sigma=0$}
-\KwOut{$\rho$, final residue for $\sigma=0$}
+\KwOut{$\xi[m]$, vector of approximate solutions}
+\KwOut{$\xi$, approximate solution for $\sigma=0$}
+\KwOut{$r$, final residue for $s=0$}
 \KwOut{$k$, number of iterations used}
 \SetKw{Break}{break}
 \dontprintsemicolon
 \Begin{
   $k\leftarrow 0$\;
-  $x\leftarrow 0$\;
-  $r \leftarrow p \leftarrow b$\;
-  $\rho \leftarrow \langle r,r \rangle$\;
-  $\alpha_{-1}\leftarrow 1$\;
-  $\beta_{-1}\leftarrow 1$\;
-  \lForEach{$i$}{$x[i]\leftarrow 0$\;}
-  \lForEach{$i$}{$p[i]\leftarrow r$\;}
-  \lForEach{$i$}{$\delta_{-1}[i]\leftarrow\delta_{0}[i]\leftarrow 1$\;}
+  $\xi\leftarrow 0$\;
+  $\rho \leftarrow \pi \leftarrow \chi$\;
+  $r \leftarrow \langle \rho,\rho \rangle$\;
+  $a_{-1}\leftarrow 1$\;
+  $b_{-1}\leftarrow 1$\;
+  \lForEach{$i$}{$\xi[i]\leftarrow 0$\;}
+  \lForEach{$i$}{$\pi[i]\leftarrow \rho$\;}
+  \lForEach{$i$}{$d_{-1}[i]\leftarrow d_{0}[i]\leftarrow 1$\;}
   \While{$k < n$}{
-    $q\leftarrow M^\dagger M p$\;
-    $\alpha\leftarrow \rho/\langle q,p\rangle$\;
-    $x\leftarrow x + \alpha * p$\;
-    \lForEach{$i$}{$\delta_{1}[i]\leftarrow \delta_{0}[i]*(1+\alpha*\sigma[i])+
-               \alpha*\beta_{-1}*(\delta_{0}[i]-\delta_{-1}[i])/\alpha_{-1}$\;}
-    \lForEach{$i$}{$x[i]\leftarrow x[i] + (\alpha / \delta_1[i]) * p[i]$\;}
-    $r\leftarrow r - \alpha * q$\;
-    $\gamma \leftarrow \langle r,r \rangle$\;
-    $\beta\leftarrow\gamma/\rho$\;
-    $\rho\leftarrow\gamma$\;
-    \lIf{$\rho<\epsilon$}{\Break\;}
-    $p\leftarrow r + \beta * p$\;
-    \lForEach{$i$}{$p[i]\leftarrow r+(\beta*\delta_0[i]/\delta_{1}[i])*p[i]$\;}
-    \lForEach{$i$}{$\delta_{-1}[i]\leftarrow\delta_{0}[i]$\;}
-    \lForEach{$i$}{$\delta_{0}[i]\leftarrow\delta_{1}[i]$\;}
-    $\beta_{-1}\leftarrow\beta$\;
-    $\alpha_{-1}\leftarrow\alpha$\;
+    $\omega\leftarrow M \pi$\;
+    $z \leftarrow \langle \omega, \omega\rangle$\;
+    $\zeta \leftarrow M^\dagger \omega$\;
+    $a\leftarrow r / z$\;
+    $\xi\leftarrow \xi + a * \pi$\;
+    \lForEach{$i$}{$d_{1}[i]\leftarrow d_{0}[i]*(1+a*s[i])+
+               a*b_{-1}*(d_{0}[i]-d_{-1}[i])/a_{-1}$\;}
+    \lForEach{$i$}{$\xi[i]\leftarrow \xi[i] + (a / d_1[i]) * \pi[i]$\;}
+    $\rho\leftarrow \rho - a * \zeta$\;
+    $g \leftarrow \langle \rho,\rho \rangle$\;
+    $b\leftarrow g / r$\;
+    $r\leftarrow g$\;
+    \lIf{$ r<\epsilon$}{\Break\;}
+    $\pi\leftarrow \rho + b * \pi$\;
+    \lForEach{$i$}{$\pi[i]\leftarrow \rho+ (b*d_0[i]/d_{1}[i])*\pi[i]$\;}
+    \lForEach{$i$}{$d_{-1}[i]\leftarrow d_{0}[i]$\;}
+    \lForEach{$i$}{$d_{0}[i]\leftarrow d_{1}[i]$\;}
+    $b_{-1}\leftarrow b$\;
+    $a_{-1}\leftarrow a$\;
     $k\leftarrow k+1$\;
   }
-  \Return {$x[m]$,$x$, $\rho$, $k$}.
+  \Return {$\xi[m]$, $\xi$, $r$, $k$}.
 }
 \caption{\label{shifted}Shifted Conjugate Gradient Solver.}
 \end{algorithm}
@@ -1219,8 +1223,10 @@ enum {
 
 First, the convenience routine to solve $D_{DW}\psi=\eta$. At most
 [[max_iterations]] are performed, the CG stops when the iterative precontioned
-residue becomes $\epsilon$ or less. The initial guess $\chi_0$ is used as a
-starting point for the CG.
+residue becomes $\epsilon$ or less.
+If conjugate gradient converges, zero is returned. In this case
+[[out_iterations]] contains the number of iterations and [[out_epsilon]]
+contains normalized iterative CG residual.
 
 <<Interface functions>>=
 int `QOP_F3_MDWF_DDW_CG(struct QOP_F3_MDWF_Fermion *result,
@@ -1247,6 +1253,9 @@ int `QOP_D3_MDWF_DDW_CG(struct QOP_D3_MDWF_Fermion *result,
 
 We also expose the preconditioned hermitian solver for
 $M^\dagger M\psi_e=\phi_e$. In this case the CG starts from $\psi_e$.
+If conjugate gradient converges, zero is returned. In this case
+[[out_iterations]] contains the number of iterations and [[out_epsilon]]
+contains normalized iterative CG residual.
 <<Interface functions>>=
 int `QOP_F3_MDWF_MxM_CG(struct QOP_F3_MDWF_HalfFermion *result,
                        int *out_iterations,
