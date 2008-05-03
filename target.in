@@ -5,3 +5,4 @@ CC         = @cc@
 CFLAGS     = @cflags@ $(QMP_CFLAGS)
 AR         = @ar@
 RANLIB     = @ranlib@
+LIMPDIR    = @limpdir@

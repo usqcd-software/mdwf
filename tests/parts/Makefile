@@ -1,7 +1,6 @@
 TOP         = ../..
-LIMPDIR     = c99
 V           = 0
-CONFIG      = macosx-mpi
+CONFIG      = ../target
 library     = qop-mdwf3
 
 QMP_CFLAGS  = $(shell $(QMP_TOP:%=%/bin/qmp-config) --cflags)

@@ -1,0 +1,10 @@
+#!/bin/sh -f
+
+targets="bgl/xlc c99 c99-64 cee cee-64"
+
+set -e
+make -C noweb
+make -C noweb clean
+make -C qa0 TARGETS="$targets"
+version=`basename $PWD`
+tar -cf - -C .. $version | bzip2 -9 > ../$version.tar.bz2

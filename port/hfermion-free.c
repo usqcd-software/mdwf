@@ -6,9 +6,9 @@ QX(free_half_fermion)(struct QX(HalfFermion) **hf_ptr)
 
   if (hf_ptr == 0 || *hf_ptr == 0)
     return;
-  BEGIN_TIMING(state);
   state = (*hf_ptr)->state;
-  END_TIMING(state, 0, 0, 0);
+  BEGIN_TIMING(state);
   q(free)(state, *hf_ptr, (*hf_ptr)->size);
+  END_TIMING(state, 0, 0, 0);
   *hf_ptr = 0;
 }

@@ -1245,12 +1245,37 @@ int `QOP_D3_MDWF_DDW_CG(struct QOP_D3_MDWF_Fermion *result,
                        unsigned int options);
 @
 
+We also expose the preconditioned hermitian solver for
+$M^\dagger M\psi_e=\phi_e$. In this case the CG starts from $\psi_e$.
+<<Interface functions>>=
+int `QOP_F3_MDWF_MxM_CG(struct QOP_F3_MDWF_HalfFermion *result,
+                       int *out_iterations,
+                       double *out_epsilon,
+                       const struct QOP_MDWF_Parameters *params,
+                       const struct QOP_F3_MDWF_Gauge *gauge,
+                       const struct QOP_F3_MDWF_HalfFermion *rhs,
+                       int max_iteration,
+                       double epsilon,
+                      unsigned int options);
+int `QOP_D3_MDWF_MxM_CG(struct QOP_D3_MDWF_HalfFermion *result,
+                       int *out_iterations,
+                       double *out_epsilon,
+                       const struct QOP_MDWF_Parameters *params,
+                       const struct QOP_D3_MDWF_Gauge *gauge,
+                       const struct QOP_D3_MDWF_HalfFermion *rhs,
+                       int max_iteration,
+                       double epsilon,
+                      unsigned int options);
+@
+
 Again, macros
 <<Single precision defaults>>=
 #define `QOP_MDWF_DDW_CG QOP_F3_MDWF_DDW_CG
+#define `QOP_MDWF_MxM_CG QOP_F3_MDWF_MxM_CG
 @
 <<Double precision defaults>>=
 #define `QOP_MDWF_DDW_CG QOP_D3_MDWF_DDW_CG
+#define `QOP_MDWF_MxM_CG QOP_D3_MDWF_MxM_CG
 @
 
 \section{Helper routines}

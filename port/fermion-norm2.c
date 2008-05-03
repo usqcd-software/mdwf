@@ -20,7 +20,7 @@ int
 QX(norm2_fermion)(double *v_r,
 		  const struct QX(Fermion) *a)
 {
-  long long flops;
+  long long flops = 0;
   DECLARE_STATE;
 
   CHECK_ARG0(a);
@@ -29,6 +29,6 @@ QX(norm2_fermion)(double *v_r,
   BEGIN_TIMING(state);
   qx(op_norm2)(v_r, a, state);
   END_TIMING(state, flops, sizeof (double), sizeof (double));
-  return 0;
-  
+
+  return 0;  
 }
