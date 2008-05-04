@@ -106,6 +106,8 @@ QX(MxM_CG)(struct QX(HalfFermion)          *psi,             /* in/out */
 	qx(zprint)(state, "MxM CG", "solver residual %e normalized %e",
 		   *out_epsilon, *out_epsilon / norm);
     }
+    if (rhs_norm != 0.0)
+	*out_epsilon = *out_epsilon / rhs_norm;
 
     /* free memory */
     q(free)(state, ptr, ptr_size);

@@ -12,7 +12,7 @@
 \setlength{\oddsidemargin}{-16pt}
 \setlength{\evensidemargin}{-16pt}
 \setlength{\textwidth}{522pt}
-\setlength{\textheight}{680pt}
+\setlength{\textheight}{710pt}
 \setcounter{secnumdepth}{3}
 \setcounter{tocdepth}{3}
 \newcommand{\Cee}{\texttt{C}}
@@ -565,7 +565,6 @@ $\phi\leftarrow A_-^{-1}\psi$.
 \end{algorithm}
 \decmargin{20pt}
 
-\pagebreak
 \section{Combinations of $A$ and $B$}
 With the notations above one can write other $s$-pieces we need:
 \begin{eqnarray}
@@ -640,11 +639,10 @@ $A=M^\dagger M$
 for several $s_n$ and the same RHS $\chi$. It is possible to do this with
 little extra work because Krylov's spaces of $A$ and $A+s_n I$ are the
 same. We assume that the solution of $A\xi=\chi$ is also needed and that
- $s_n>0$ for all $n$. Under these assumptions the following algorithm
+ $s_n>0$ for all $n$.
+% Under these assumptions the following algorithm
 could be used.
-
 For the details of the algorithm see van~der~Eshof and Sleijpen,~2003.
-
 Notice that SCG always starts with $\xi_0=0$.
 
 \incmargin{20pt}
@@ -666,8 +664,7 @@ Notice that SCG always starts with $\xi_0=0$.
   $\xi\leftarrow 0$\;
   $\rho \leftarrow \pi \leftarrow \chi$\;
   $r \leftarrow \langle \rho,\rho \rangle$\;
-  $a_{-1}\leftarrow 1$\;
-  $b_{-1}\leftarrow 1$\;
+  $a_{-1}\leftarrow b_{-1}\leftarrow 1$\;
   \lForEach{$i$}{$\xi[i]\leftarrow 0$\;}
   \lForEach{$i$}{$\pi[i]\leftarrow \rho$\;}
   \lForEach{$i$}{$d_{-1}[i]\leftarrow d_{0}[i]\leftarrow 1$\;}
@@ -676,15 +673,18 @@ Notice that SCG always starts with $\xi_0=0$.
     $z \leftarrow \langle \omega, \omega\rangle$\;
     $\zeta \leftarrow M^\dagger \omega$\;
     $a\leftarrow r / z$\;
-    $\xi\leftarrow \xi + a * \pi$\;
     \lForEach{$i$}{$d_{1}[i]\leftarrow d_{0}[i]*(1+a*s[i])+
                a*b_{-1}*(d_{0}[i]-d_{-1}[i])/a_{-1}$\;}
-    \lForEach{$i$}{$\xi[i]\leftarrow \xi[i] + (a / d_1[i]) * \pi[i]$\;}
     $\rho\leftarrow \rho - a * \zeta$\;
     $g \leftarrow \langle \rho,\rho \rangle$\;
     $b\leftarrow g / r$\;
     $r\leftarrow g$\;
-    \lIf{$ r<\epsilon$}{\Break\;}
+    \If{$ r<\epsilon$}{
+        $\xi\leftarrow \xi + a * \pi$\;
+        \lForEach{$i$}{$\xi[i]\leftarrow \xi[i] + (a / d_1[i]) * \pi[i]$\;}
+        \Break}
+    $\xi\leftarrow \xi + a * \pi$\;
+    \lForEach{$i$}{$\xi[i]\leftarrow \xi[i] + (a / d_1[i]) * \pi[i]$\;}
     $\pi\leftarrow \rho + b * \pi$\;
     \lForEach{$i$}{$\pi[i]\leftarrow \rho+ (b*d_0[i]/d_{1}[i])*\pi[i]$\;}
     \lForEach{$i$}{$d_{-1}[i]\leftarrow d_{0}[i]$\;}
@@ -1367,6 +1367,10 @@ Also, the macros
 
 \chapter{CHANGES}
 \begin{tabular}{|l|l|l|}
+\hline
+XXX & avp & Version 1.1.0. \\
+\hline
+May 2, 2008 & avp & Version 1.0.0. \\
 \hline
 October 9, 2007 & avp & Initial version. \\
 \hline

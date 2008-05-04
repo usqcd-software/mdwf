@@ -139,6 +139,8 @@ QX(DDW_CG)(struct QX(Fermion)          *psi,
 	qx(zprint)(state, "DDW CG", "Dirac residual %e normalized %e",
 		   dirac_residual, dirac_residual / norm);
     }
+    if (rhs_norm != 0.0)
+	*out_epsilon = *out_epsilon / rhs_norm;
 
     /* free memory */
     q(free)(state, ptr, ptr_size);
