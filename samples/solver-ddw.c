@@ -30,11 +30,10 @@ main(int argc, char *argv[])
     int status;
     int out_iterations;
     double out_epsilon;
-    double total_time;
-    long long total_flops;
 
     /* begin substrate */
-    if (init_qmp(argc, argv, SELF "solver example"))
+    if (init_qmp(argc, argv, SELF " solver example",
+		 QOP_MDWF_DEFAULT_PRECISION))
 	goto end;
 
     /* start MDWF */
@@ -70,18 +69,7 @@ main(int argc, char *argv[])
     /* In real life one would like to export sol to this side now ... */
 
     /* Get statistics from the MDWF layer */
-    if (QOP_MDWF_performance(&total_time,
-			     &total_flops,
-			     NULL, NULL,
-			     state)) {
-	zprint(SELF, "perf() returned error? This is strange but possible");
-    } else if (total_time == 0.0) {
-	zprint(SELF, "too short time interval");
-    } else {
-	zprint(SELF, "total time %.3f sec, performance %.3f MFlop/s",
-	       total_time, total_flops * 1e-6 / total_time);
-    }
-
+    report_performance(state, SELF);
 
     /* free fields -- it's ok to free a NULL */
 no_memory:

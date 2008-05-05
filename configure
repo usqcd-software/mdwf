@@ -171,20 +171,20 @@ normalize() {
 show_config() {
    echo "MDWF configuration summary:"
    echo "====================================="
-   echo "prefix                 " $prefix
-   echo "binaries directory     " $bindir
-   echo "libraries directory    " $libdir
-   echo "headers directory      " $incdir
-   echo "doc directory          " $docdir
-   echo "C compiler             " $cc
-   echo "Compiler flags         " $cflags
-   echo "Link editor            " $ld
-   echo "Linking flags          " $ldflags
-   echo "Extra libraries        " $libs
-   echo "Archiver               " $ar
-   echo "Ranlib                 " $ranlib
-   echo "QMP location           " $qmp
-   echo "Build target           " $target
+   echo "prefix                  $prefix"
+   echo "binaries directory      $bindir"
+   echo "libraries directory     $libdir"
+   echo "headers directory       $incdir"
+   echo "doc directory           $docdir"
+   echo "C compiler              $cc"
+   echo "Compiler flags          $cflags"
+   echo "Link editor             $ld"
+   echo "Linking flags           $ldflags"
+   echo "Extra libraries         $libs"
+   echo "Archiver                $ar"
+   echo "Ranlib                  $ranlib"
+   echo "QMP location            $qmp"
+   echo "Build target            $target"
    echo "====================================="
 }
 

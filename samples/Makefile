@@ -21,34 +21,37 @@ endif
 sources = solver-ddw.c \
           solver-mxm.c
 
+xsources = solver-mixed.c
+
 common = common.c
 
 headers = common.h
 
-f.objects = $(sources:%.c=%-f.o) $(common:%.c=%-f.o)
-d.objects = $(sources:%.c=%-d.o) $(common:%.c=%-d.o)
+f.objects = $(sources:%.c=%-f.o)
+d.objects = $(sources:%.c=%-d.o)
+x.objects = $(xsources:%.c=%.o) $(common:%.c=%.o)
 
 f.programs = $(sources:%.c=%-f)
 d.programs = $(sources:%.c=%-d)
+x.programs = $(xsources:%.c=%)
 
+programs = $(f.programs) $(d.programs) $(x.programs)
 
-all: $(f.programs) $(d.programs)
+all: $(programs)
 
 clean:
-	$(RM) $(f.objects) $(d.objects)
+	$(RM) $(f.objects) $(d.objects) $(x.objects)
 
 realclean: clean
-	$(RM) $(f.programs) $(d.programs)
+	$(RM) $(programs)
 
 
-$(d.programs) $(f.programs): %: %.o
+$(programs): %: %.o
 	$E LD $@
 	$C$(CC) $(CFLAGS) $(QMP_LDFLAGS) -L$(TOP)/$(LIMPDIR) -o $@ $^ \
 	  -lqop-mdwf3 $(QMP_LIBS)
 
-$(f.programs): $(common:%.c=%-f.o)
-
-$(d.programs): $(common:%.c=%-d.o)
+$(programs): $(common:%.c=%.o)
 
 $(f.objects): %-f.o: %.c
 	$E CC $@
@@ -62,4 +65,10 @@ $(d.objects): %-d.o: %.c
             -DQOP_MDWF_DEFAULT_PRECISION=\'D\' \
             -c -o $@ $<
 
-$(d.objects) $(f.objects): $(headers)
+$(x.objects): %.o: %.c
+	$E CC $@
+	$C$(CC) $(CFLAGS) -I$(TOP)/$(LIMPDIR) \
+            -c -o $@ $<
+
+$(x.objects) $(d.objects) $(f.objects): $(headers)
+

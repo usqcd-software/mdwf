@@ -162,6 +162,16 @@ get_sublattice(int lo[4], int hi[4], const int node[4], void *env)
     }
 }
 
+/* empty fermion writer */
+void
+write_fermion(const int pos[5],
+	      int c, int d,
+	      int re_im,
+	      double value,
+	      void *env)
+{
+}
+
 /* read fermion. Produce a random number from -1 to +1 for each component */
 double
 read_fermion(const int pos[5],
@@ -226,7 +236,7 @@ zprint(const char *who, const char *fmt, ...)
 }
 
 int
-init_qmp(int argc, char *argv[], const char *who)
+init_qmp(int argc, char *argv[], const char *who, char prec)
 {
     QMP_thread_level_t qt = QMP_THREAD_SINGLE;
     int i;
@@ -237,8 +247,7 @@ init_qmp(int argc, char *argv[], const char *who)
     }
     primary_p = QMP_is_primary_node();
     
-    zprint(who, "Starting precision %c example",
-	QOP_MDWF_DEFAULT_PRECISION);
+    zprint(who, "Starting precision (%c) example", prec);
 
     /* get parameters */
     if (argc != 20) {
@@ -305,4 +314,40 @@ fini_qmp(void)
 	return;
 
     QMP_finalize_msg_passing();
+}
+
+
+void
+report_performance(struct QOP_MDWF_State *state, char *name)
+{
+    double total_time;
+    long long total_flops;
+
+    /* Get statistics from the MDWF layer */
+    if (QOP_MDWF_performance(&total_time,
+			     &total_flops,
+			     NULL, NULL,
+			     state)) {
+	zprint(name, "perf() returned error? This is strange but possible");
+    } else if (total_time == 0.0) {
+	zprint(name, "too short time interval");
+    } else {
+	zprint(name, "total time %.3f sec, performance %.3f MFlop/s",
+	       total_time, total_flops * 1e-6 / total_time);
+    }
+}
+
+void
+report_time(struct QOP_MDWF_State *state, char *name)
+{
+    double total_time;
+
+    /* Get statistics from the MDWF layer */
+    if (QOP_MDWF_performance(&total_time,
+			     NULL, NULL, NULL,
+			     state)) {
+	zprint(name, "perf() returned error? This is strange but possible");
+	return;
+    }
+    zprint(name, "total time %.3f sec", total_time);
 }
