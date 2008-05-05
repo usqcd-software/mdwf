@@ -178,25 +178,25 @@ void q(cleanup_state)(struct Q(State) *state);
 void *q(step_even)(struct Q(State) *state, void *aligned_ptr, size_t fsize);
 void *q(step_odd)(struct Q(State) *state, void *aligned_ptr, size_t fsize);
 
-void q(x_import)(struct eo_lattice *eo,
-		 double r[],
-		 struct Fermion *data, 
-		 double (*reader)(const int pos[Q(DIM)+1],
-				  int color,
-				  int dirac, 
-				  int re_im,
-				  void *env),
-		 void *env);
-void q(x_export)(struct eo_lattice *eo,
-		 double r[],
-		 const struct Fermion *data, 
-		 void (*writer)(const int pos[Q(DIM)+1],
-				int color,
-				int dirac, 
-				int re_im,
-				double value,
-				void *env),
-		 void *env);
+void qx(x_import)(struct eo_lattice *eo,
+		  double r[],
+		  struct Fermion *data, 
+		  double (*reader)(const int pos[Q(DIM)+1],
+				   int color,
+				   int dirac, 
+				   int re_im,
+				   void *env),
+		  void *env);
+void qx(x_export)(struct eo_lattice *eo,
+		  double r[],
+		  const struct Fermion *data, 
+		  void (*writer)(const int pos[Q(DIM)+1],
+				 int color,
+				 int dirac, 
+				 int re_im,
+				 double value,
+				 void *env),
+		  void *env);
 
 /* Projections */
 typedef unsigned int (*Up_project)(struct ProjectedFermion *r,

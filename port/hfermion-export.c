@@ -24,7 +24,7 @@ QX(export_half_fermion)(void (*writer)(const int pos[5],
     return q(set_error)(state, 0, "export_half_fermion(): not enough space");
   }
   BEGIN_TIMING(state);
-  q(x_export)(&state->even, m, half_fermion->even, writer, env);
+  qx(x_export)(&state->even, m, half_fermion->even, writer, env);
   END_TIMING(state, 0, 0, 0);
   q(free)(state, m, size);
   return 0;

@@ -23,8 +23,8 @@ QX(import_fermion)(struct QX(Fermion) **fermion_ptr,
     return q(set_error)(state, 0, "import_fermion(): not enough space");
   }
   BEGIN_TIMING(state);
-  q(x_import)(&state->even, m, (*fermion_ptr)->even, reader, env);
-  q(x_import)(&state->odd, m, (*fermion_ptr)->odd, reader, env);
+  qx(x_import)(&state->even, m, (*fermion_ptr)->even, reader, env);
+  qx(x_import)(&state->odd, m, (*fermion_ptr)->odd, reader, env);
   END_TIMING(state, 0, 0, 0);
 
   q(free)(state, m, size);

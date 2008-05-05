@@ -23,7 +23,7 @@ QX(import_half_fermion)(struct QX(HalfFermion) **half_fermion_ptr,
     return q(set_error)(state, 0, "import_half_fermion(): not enough space");
   }
   BEGIN_TIMING(state);
-  q(x_import)(&state->even, m, (*half_fermion_ptr)->even, reader, env);
+  qx(x_import)(&state->even, m, (*half_fermion_ptr)->even, reader, env);
   END_TIMING(state, 0, 0, 0);
 
   q(free)(state, m, size);

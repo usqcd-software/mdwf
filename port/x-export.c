@@ -1,16 +1,16 @@
 #include <mdwf.h>
 
 void
-q(x_export)(struct eo_lattice *eo,
-	    double r[],
-	    const struct Fermion *data,
-	    void (*writer)(const int pos[Q(DIM)+1],
-			   int color,
-			   int dirac,
-			   int re_im,
-			   double v,
-			   void *env),
-	    void *env)
+qx(x_export)(struct eo_lattice *eo,
+	     double r[],
+	     const struct Fermion *data,
+	     void (*writer)(const int pos[Q(DIM)+1],
+			    int color,
+			    int dirac,
+			    int re_im,
+			    double v,
+			    void *env),
+	     void *env)
 {
   int size = eo->full_size;
   int Ls = eo->Ls;
