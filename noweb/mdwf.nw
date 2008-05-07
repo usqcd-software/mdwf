@@ -1151,10 +1151,6 @@ struct QOP_F3_MDWF_VectorFermion;
 struct QOP_D3_MDWF_VectorFermion;
 @
 
-XXX Currently we only provide a constructor and destructor for vector fermions.
-The only other routine that uses vectors is the shifted solver.
-Other procedures will be provided as needed.
-
  First, the allocator. It takes a number of elements in the vector and
 returns an opaque vector fermion object.
 <<Interface functions>>=
@@ -1171,15 +1167,36 @@ void `QOP_F3_MDWF_free_vector_fermion(struct QOP_F3_MDWF_VectorFermion **vf_ptr)
 void `QOP_D3_MDWF_free_vector_fermion(struct QOP_D3_MDWF_VectorFermion **vf_ptr);
 @
 
+We also provide primitive access procedures (mnemonic convention is
+``get from vector'' and ``put into vector''):
+<<Interface functions>>=
+int `QOP_F3_MDWF_get_vector_fermion(struct QOP_F3_MDWF_HalfFermion *hf,
+                                   const struct QOP_F3_MDWF_VectorFermion *vf,
+ 	  	  	           int index);
+int `QOP_D3_MDWF_get_vector_fermion(struct QOP_D3_MDWF_HalfFermion *hf,
+                                   const struct QOP_D3_MDWF_VectorFermion *vf,
+ 	  		           int index);
+int `QOP_F3_MDWF_put_vector_fermion(struct QOP_F3_MDWF_VectorFermion *vf,
+                                   int index,
+                                   const struct QOP_F3_MDWF_HalfFermion *hf);
+int `QOP_D3_MDWF_put_vector_fermion(struct QOP_D3_MDWF_VectorFermion *vf,
+                                   int index,
+                                   const struct QOP_D3_MDWF_HalfFermion *hf);
+@
+
 Macros for default precision:
 <<Single precision defaults>>=
 #define `QOP_MDWF_allocate_vector_fermion QOP_F3_MDWF_allocate_vector_fermion
 #define `QOP_MDWF_free_vector_fermion QOP_F3_MDWF_free_vector_fermion
+#define `QOP_MDWF_get_vector_fermion QOP_F3_MDWF_get_vector_fermion
+#define `QOP_MDWF_put_vector_fermion QOP_F3_MDWF_put_vector_fermion
 #define `QOP_MDWF_VectorFermion QOP_F3_MDWF_VectorFermion
 @
 <<Double precision defaults>>=
 #define `QOP_MDWF_allocate_vector_fermion QOP_D3_MDWF_allocate_vector_fermion
 #define `QOP_MDWF_free_vector_fermion QOP_D3_MDWF_free_vector_fermion
+#define `QOP_MDWF_get_vector_fermion QOP_D3_MDWF_get_vector_fermion
+#define `QOP_MDWF_put_vector_fermion QOP_D3_MDWF_put_vector_fermion
 #define `QOP_MDWF_VectorFermion QOP_D3_MDWF_VectorFermion
 @
 
@@ -1352,7 +1369,7 @@ Again, macros
 @
 <<Double precision defaults>>=
 #define `QOP_MDWF_DDW_CG QOP_D3_MDWF_DDW_CG
-#define `QOP_MDWF_MxM_SCG QOP_D3_MDWF_MxM_SCG
+#define `QOP_MDWF_MxM_CG QOP_D3_MDWF_MxM_CG
 #define `QOP_MDWF_MxM_SCG QOP_D3_MDWF_MxM_SCG
 @
 

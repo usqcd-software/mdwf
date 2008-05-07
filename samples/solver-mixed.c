@@ -36,7 +36,7 @@ main(int argc, char *argv[])
     double out_epsilon;
 
     /* begin substrate */
-    if (init_qmp(argc, argv, SELF "  solver example", 'm'))
+    if (init_qmp(argc, argv, SELF "  solver example", 'm', NULL, NULL))
 	goto end;
 
     /* start MDWF */

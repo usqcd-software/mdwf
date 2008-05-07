@@ -19,7 +19,8 @@ endif
 .PHONY: all clean realclean
 
 sources = solver-ddw.c \
-          solver-mxm.c
+          solver-mxm.c \
+          solver-shifted.c
 
 xsources = solver-mixed.c
 

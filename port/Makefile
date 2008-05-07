@@ -57,6 +57,10 @@ p.sources = fermion-alloc.c \
             hfermion-madd.c \
             hfermion-dot.c \
             hfermion-norm2.c  \
+            vfermion-alloc.c \
+            vfermion-free.c \
+            vfermion-get.c \
+            vfermion-put.c \
             x-import.c \
             x-export.c \
             boundary-n.c \

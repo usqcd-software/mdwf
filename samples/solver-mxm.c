@@ -32,7 +32,7 @@ main(int argc, char *argv[])
 
     /* begin substrate */
     if (init_qmp(argc, argv, SELF " solver example",
-		 QOP_MDWF_DEFAULT_PRECISION))
+		 QOP_MDWF_DEFAULT_PRECISION, NULL, NULL))
 	goto end;
 
     /* start MDWF */

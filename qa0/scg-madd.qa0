@@ -1,6 +1,6 @@
-;; Update x and p in the CG:
-;;  x <- x + alpha p
-;;  p <- r + beta p
+;; Update xi and v_xi in the SCG:
+;;  xi <- xi + a pi
+;;  v_xi[i] <- v_xi[i] + ad[i] pi
 ;;
 (verbose [(c99 bgl/xlc) "/* $Id$ */"])
 

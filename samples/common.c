@@ -236,7 +236,8 @@ zprint(const char *who, const char *fmt, ...)
 }
 
 int
-init_qmp(int argc, char *argv[], const char *who, char prec)
+init_qmp(int argc, char *argv[], const char *who, char prec,
+	 int *count, double **shift)
 {
     QMP_thread_level_t qt = QMP_THREAD_SINGLE;
     int i;
@@ -250,12 +251,14 @@ init_qmp(int argc, char *argv[], const char *who, char prec)
     zprint(who, "Starting precision (%c) example", prec);
 
     /* get parameters */
-    if (argc != 20) {
+    if (((count == NULL) && (argc != 20)) ||
+	((count != NULL) && (argc <= 21))) {
 	zprint(who,
 	       "usage: solver-mxm Nx Ny Nz Nt Lx Ly Lz Lt Ls"
 	       " M m_5 kappa"
 	       " guess-seed source-seed gauge-seed gauge-scale"
-	       " max-iterations min-epsilon verbose-p");
+	       " max-iterations min-epsilon verbose-p%s",
+	       count? " shift ...": "");
 	goto err_0;
     }
     for (i = 0; i < 4; i++)
@@ -274,6 +277,19 @@ init_qmp(int argc, char *argv[], const char *who, char prec)
     options = atoi(argv[19]);
     if (options)
 	options = QOP_MDWF_LOG_EVERYTHING;
+    if (count) {
+	int i;
+
+	*count = argc - 20;
+	*shift = malloc(*count * sizeof (double));
+	if (shift == 0) {
+	    zprint(who, "not enough memory");
+	    return 1;
+	}
+	for (i = 0; i < *count; i++)
+	    (*shift)[i] = atof(argv[20 + i]);
+    }
+
 
     /* print what we've got */
     zprint(who, "QMP nodes: %d", QMP_get_number_of_nodes());
@@ -293,6 +309,14 @@ init_qmp(int argc, char *argv[], const char *who, char prec)
     zprint(who, "max iterations = %d", max_iterations);
     zprint(who, "min epsilon = %e", min_epsilon);
     zprint(who, "options = %d", options);
+    if (count) {
+	int i;
+
+	zprint(who, "shift count = %d", *count);
+	for (i = 0; i < *count; i++) {
+	    zprint(who, "shift[%d] = %8.6f", i, (*shift)[i]);
+	}
+    }
 
     if (QMP_declare_logical_topology(network, 4) != QMP_SUCCESS) {
 	zprint("ERROR", "declare_logical_topology failed");

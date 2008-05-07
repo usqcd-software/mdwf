@@ -1,0 +1,21 @@
+(verbose [(c99 bgl/xlc) "/* $Id$ */"])
+
+(include "types.qa0")
+
+(procedure vector-fermion-get ([stem "fv_get"]
+                                prec&color)
+           ([A         pointer "a"         "struct Fermion *"             ]
+            [size      int     "size"      "int"                          ]
+            [l-s       int     "Ls"        "int"                          ]
+            [count     int     "count"     "int"                          ]
+            [R         pointer "r"         "const struct VectorFermion *" ]
+	    [k         int     "k"         "int"                          ])
+   (op int-mul () (k-offset) ([reg k] [const (size-of Fermion)]))
+   (op int-mul () (v-step) ([reg count] [const (size-of Fermion)]))
+   (op pointer-add () (R) ([reg R] [reg k-offset]))
+   (loop () (i [const 0] [reg size])
+     (loop () (s [const 0] [reg l-s])
+       (load qcd-fermion () vA ([reg R]))
+       (op pointer-add () (R) ([reg R] [reg v-step]))
+       (store qcd-fermion () ([reg A]) [reg vA])
+       (op pointer-add () (A) ([reg A] [const (size-of Fermion)])))))

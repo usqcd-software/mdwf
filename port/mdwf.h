@@ -379,6 +379,12 @@ void qx(fv_zero)(struct VectorFermion *vf,
 void qx(fv_copy)(struct VectorFermion *vf,
 		 int size, int Ls, int count,
                  const struct Fermion *f);
+void qx(fv_get)(struct Fermion *f,
+		int size, int Ls, int count,
+		const struct VectorFermion *vf, int k);
+void qx(fv_put)(struct VectorFermion *vf, int k,
+		int size, int Ls, int count,
+		const struct Fermion *f);
 /* basic matrices */
 unsigned int qx(op_norm2)(double *global_norm,
 			  const struct QX(Fermion) *psi,
@@ -839,30 +845,30 @@ unsigned int qx(cg_xp)(struct Fermion *x,
 		       double beta,
 		       const struct Fermion *r);
 /*
- * compute x <- x + alpha * p
- *         xv[i] <- xv[i] + delta[i] * p
-  */
+ * compute xi <- xi + a * pi
+ *         v_xi[i] <- v_xi[i] + ad[i] * pi
+ */
 unsigned int qx(scg_madd)(struct Fermion *xi_e,
 			  struct VectorFermion *v_xi_e,
 			  int size, int Ls, int count,
 			  double a,
-			  const double ad[],
+			  const double *ad,
 			  const struct Fermion *pi_e);
 /*
- * compute x <- x + alpha * p
- *         xv[i] <- xv[i] + delta[i] * p
- *         p <- r + beta * p
- *         pv[i] <- r + gamma[i] * pv[i]
+ * compute xi <- xi + a * pi
+ *         pi <- rho + b * pi
+ *         v_xi[i] <- v_xi[i] + ad[i] * v_pi[i]
+ *         v_pi[i] <- rho + bdd[i] * v_pi[i]
  */
 unsigned int qx(scg_xp)(struct Fermion *xi_e,
-                        struct VectorFermion *v_xi_e,
 			struct Fermion *pi_e,
+                        struct VectorFermion *v_xi_e,
                         struct VectorFermion *v_pi_e,
 			int size, int Ls, int count,
 			double a,
-			const double ad[],
 			double b,
-			const double bdd[],
+			const double *ad,
+			const double *bdd,
 			const struct Fermion *rho_e);
 
 /* --- other composites are here */

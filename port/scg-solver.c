@@ -76,15 +76,24 @@ qx(scg_solver)(struct VectorFermion *v_xi_e,
 	    qx(scg_madd)(xi_e, v_xi_e, e_size, Ls, count, a, ad, pi_e);
 	    break;
 	}
-	qx(scg_xp)(xi_e, v_xi_e, pi_e, v_pi_e,
+	qx(scg_xp)(xi_e, pi_e,
+		   v_xi_e, v_pi_e,
 		   e_size, Ls, count,
-		   a, ad, b, bdd, rho_e);
+		   a, b,
+		   ad, bdd,
+		   rho_e);
 	for (j = 0; j < count; j++) {
 	    dp[j] = d[j];
 	    d[j] = dn[j];
 	}
 	bp = b;
 	ap = a;
+	if (options)
+	    qx(cg_log)(r, "MxM SCG",
+		       k, xi_e, state, params, U, chi_e, NULL, NULL,
+		       flops, sent, received,
+		       options,
+		       t0_e, t1_e, t2_e, t0_o, NULL);
     }
 end:
     *out_iterations = k;

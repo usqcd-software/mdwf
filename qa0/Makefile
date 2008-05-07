@@ -52,6 +52,8 @@ x.sources = get-fermion.qa0 \
             sizeof-pfermion.qa0 \
             fv-zero.qa0 \
             fv-copy.qa0 \
+            fv-get.qa0 \
+            fv-put.qa0 \
             f-zero.qa0 \
             f-copy.qa0 \
             f-norm.qa0 \
@@ -63,6 +65,7 @@ x.sources = get-fermion.qa0 \
             f-diff-norm.qa0 \
             cg-xp.qa0 \
             scg-madd.qa0 \
+            scg-xp.qa0 \
             proj-minus.qa0 \
             proj-plus.qa0 \
             proj-u-minus.qa0 \
