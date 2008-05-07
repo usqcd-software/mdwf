@@ -1,0 +1,35 @@
+;; Update x and p in the CG:
+;;  x <- x + alpha p
+;;  p <- r + beta p
+;;
+(verbose [(c99 bgl/xlc) "/* $Id$ */"])
+
+(include "types.qa0")
+
+(procedure scg-madd ([stem "scg_madd"]
+                     prec&color
+                     count-flops)
+           ([xi        pointer "xi"        "struct Fermion *"       ]
+            [v-xi      pointer "v_xi"      "struct VectorFermion *" ]
+            [size      int     "size"      "int"                    ]
+            [l-s       int     "Ls"        "int"                    ]
+            [count     int     "count"     "int"                    ]
+            [a         double  "a"         "double"                 ]
+            [ad        pointer "ad"        "const double *"         ]
+            [pi        pointer "pi"        "const struct Fermion *" ])
+   (loop () (i [const 0] [reg size])
+     (loop () (s [const 0] [reg l-s])   
+       (load qcd-fermion () f-p ([reg pi]))
+       (op pointer-add () (pi) ([reg pi] [const (size-of Fermion)]))
+       (load qcd-fermion () f-x ([reg xi]))
+       (op qcd-maddf () (g-x) ([reg f-x] [reg a] [reg f-p]))
+       (store qcd-fermion () ([reg xi]) [reg g-x])
+       (op pointer-add () (xi) ([reg xi] [const (size-of Fermion)]))
+       (op pointer-move () (d-ptr) ([reg ad]))
+       (loop () (j [const 0] [reg count])
+         (load double () d ([reg d-ptr]))
+         (op pointer-add () (d-ptr) ([reg d-ptr] [const (size-of double)]))
+         (load qcd-fermion () f-v ([reg v-xi]))
+         (op qcd-maddf () (g-v) ([reg f-v] [reg d] [reg f-p]))
+         (store qcd-fermion () ([reg v-xi]) [reg g-v])
+         (op pointer-add () (v-xi) ([reg v-xi] [const (size-of Fermion)]))))))

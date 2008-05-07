@@ -43,6 +43,9 @@ x.sources = get-fermion \
             sizeof-fermion \
             sizeof-gauge \
             sizeof-pfermion \
+            fv-zero \
+            fv-copy \
+            f-zero \
             f-copy \
             f-norm \
             f-add3 \
@@ -52,6 +55,7 @@ x.sources = get-fermion \
 	    f-dot \
             f-diff-norm \
             cg-xp \
+            scg-madd \
             proj-minus \
             proj-plus \
             proj-u-minus \
