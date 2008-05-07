@@ -1,0 +1,15 @@
+#!/bin/sh -f
+
+if [ $# -ne 1 ]; then
+   echo "usage: check-names target"
+   exit 1
+fi
+
+lib="$1/libqop-mdwf3.a"
+
+nm $lib \
+| awk '/ U /{ u[$2]++;} \
+       / [TD] /{ t[$3]++;} \
+       END{ for (f in t) u[f]=0; \
+            for (f in u) { if (u[f] > 0) printf "%s\n", f;}}' \
+| sort
