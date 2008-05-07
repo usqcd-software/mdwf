@@ -1,0 +1,16 @@
+(verbose [(c99 bgl/xlc) "/* $Id$ */"])
+
+(include "types.qa0")
+
+(procedure zero-fermion ([stem "f_zero"]
+                          prec&color)
+           ([R         pointer "r"         "struct Fermion *"       ]
+            [size      int     "size"      "int"                    ]
+            [l-s       int     "Ls"        "int"                    ])
+   (op qcd-zerof () (vA) ())
+   (loop () (i [const 0] [reg size])
+     (loop () (s [const 0] [reg l-s])
+       (store qcd-fermion () ([reg R]) [reg vA])
+       (op pointer-add () (R) ([reg R] [const (size-of Fermion)])))))
+
+

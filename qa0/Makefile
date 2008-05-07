@@ -50,6 +50,9 @@ x.sources = get-fermion.qa0 \
             sizeof-fermion.qa0 \
             sizeof-gauge.qa0 \
             sizeof-pfermion.qa0 \
+            fv-zero.qa0 \
+            fv-copy.qa0 \
+            f-zero.qa0 \
             f-copy.qa0 \
             f-norm.qa0 \
             f-add3.qa0 \
