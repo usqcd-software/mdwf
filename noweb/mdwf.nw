@@ -1454,7 +1454,9 @@ Also, the macros
 \chapter{CHANGES}
 \begin{tabular}{|l|l|l|}
 \hline
-XXX & avp & Version 1.1.0. \\
+XXX & avp & Version 1.X.X. \\
+\hline
+May 7 & avp & Version 1.1.0. Shifted solver added, samples installed.\\
 \hline
 May 5 & avp & Version 1.0.1. Mixed precision bug fixed.\\
 \hline

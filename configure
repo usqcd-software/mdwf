@@ -224,5 +224,6 @@ build mdwf-config.in mdwf-config
 chmod +x mdwf-config
 build Makefile.in Makefile
 build target.in target
+build samples/Makefile.in samples/Makefile
 show_config
 show_config > config.log

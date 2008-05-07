@@ -31,3 +31,9 @@ install: all mdwf-config
 	for f in $(docs) ; do \
 	  cp $$f $(DESTDIR)$(DOCDIR)/`basename $$f`; \
 	done
+	[ -d $(DESTDIR)$(DOCDIR)/samples ] || \
+           mkdir -p $(DESTDIR)$(DOCDIR)/samples
+	for f in samples/* ; do \
+	  cp $$f $(DESTDIR)$(DOCDIR)/$$f ; \
+	done
+	cp target $(DESTDIR)/$(DOCDIR)/samples/target
