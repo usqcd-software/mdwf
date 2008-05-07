@@ -12,7 +12,7 @@
 \setlength{\oddsidemargin}{-16pt}
 \setlength{\evensidemargin}{-16pt}
 \setlength{\textwidth}{522pt}
-\setlength{\textheight}{710pt}
+\setlength{\textheight}{700pt}
 \setcounter{secnumdepth}{3}
 \setcounter{tocdepth}{3}
 \newcommand{\Cee}{\texttt{C}}
@@ -1143,6 +1143,46 @@ Finally, macros for prefered precision
 #define `QOP_MDWF_HalfFermion QOP_D3_MDWF_HalfFermion
 @
 
+\section{Fermion Vectors}
+For shifted conjugate gradient solver we need vectors of preconditioned
+fermions. To the user only an opaque data type is presented.
+<<Interface types>>=
+struct QOP_F3_MDWF_VectorFermion;
+struct QOP_D3_MDWF_VectorFermion;
+@
+
+XXX Currently we only provide a constructor and destructor for vector fermions.
+The only other routine that uses vectors is the shifted solver.
+Other procedures will be provided as needed.
+
+ First, the allocator. It takes a number of elements in the vector and
+returns an opaque vector fermion object.
+<<Interface functions>>=
+int `QOP_F3_MDWF_allocate_vector_fermion(struct QOP_F3_MDWF_VectorFermion **vf_ptr,
+                                        struct QOP_MDWF_State *state,
+                                        int n);
+int `QOP_D3_MDWF_allocate_vector_fermion(struct QOP_D3_MDWF_VectorFermion **vf_ptr,
+                                       struct QOP_MDWF_State *state,
+                                       int n);
+@
+Destructors of the vector fermions accept [[NULL]] in addition to a valid vector fermion pointer.
+<<Interface functions>>=
+void `QOP_F3_MDWF_free_vector_fermion(struct QOP_F3_MDWF_VectorFermion **vf_ptr);
+void `QOP_D3_MDWF_free_vector_fermion(struct QOP_D3_MDWF_VectorFermion **vf_ptr);
+@
+
+Macros for default precision:
+<<Single precision defaults>>=
+#define `QOP_MDWF_allocate_vector_fermion QOP_F3_MDWF_allocate_vector_fermion
+#define `QOP_MDWF_free_vector_fermion QOP_F3_MDWF_free_vector_fermion
+#define `QOP_MDWF_VectorFermion QOP_F3_MDWF_VectorFermion
+@
+<<Double precision defaults>>=
+#define `QOP_MDWF_allocate_vector_fermion QOP_D3_MDWF_allocate_vector_fermion
+#define `QOP_MDWF_free_vector_fermion QOP_D3_MDWF_free_vector_fermion
+#define `QOP_MDWF_VectorFermion QOP_D3_MDWF_VectorFermion
+@
+
 \section{Dirac Operator}
 We provide both normal and conjugated Dirac Operator for the full fermion as
 well as the precondition operator and its conjugate both in single and double
@@ -1265,7 +1305,7 @@ int `QOP_F3_MDWF_MxM_CG(struct QOP_F3_MDWF_HalfFermion *result,
                        const struct QOP_F3_MDWF_HalfFermion *rhs,
                        int max_iteration,
                        double epsilon,
-                      unsigned int options);
+                       unsigned int options);
 int `QOP_D3_MDWF_MxM_CG(struct QOP_D3_MDWF_HalfFermion *result,
                        int *out_iterations,
                        double *out_epsilon,
@@ -1274,17 +1314,46 @@ int `QOP_D3_MDWF_MxM_CG(struct QOP_D3_MDWF_HalfFermion *result,
                        const struct QOP_D3_MDWF_HalfFermion *rhs,
                        int max_iteration,
                        double epsilon,
-                      unsigned int options);
+                       unsigned int options);
+@
+
+A collection of preconditioned equations with different positive shifts can be
+solved with very little extra cost using Algorithm~\ref{shifted}.
+<<Interface functions>>=
+int `QOP_F3_MDWF_MxM_SCG(struct QOP_F3_MDWF_VectorFermion *vector_result,
+                        struct QOP_F3_MDWF_HalfFermion *scalar_result,
+                        int *out_iterations,
+                        double *out_epsilon,
+                        const struct QOP_MDWF_Parameters *params,
+                        const double shift[],
+                        const struct QOP_F3_MDWF_Gauge *gauge,
+                        const struct QOP_F3_MDWF_HalfFermion *rhs,
+                        int max_iterations,
+                        double min_epsilon,
+                        unsigned int options);
+int `QOP_D3_MDWF_MxM_SCG(struct QOP_D3_MDWF_VectorFermion *vector_result,
+                        struct QOP_D3_MDWF_HalfFermion *scalar_result,
+                        int *out_iterations,
+                        double *out_epsilon,
+                        const struct QOP_MDWF_Parameters *params,
+                        const double shift[],
+                        const struct QOP_D3_MDWF_Gauge *gauge,
+                        const struct QOP_D3_MDWF_HalfFermion *rhs,
+                        int max_iterations,
+                        double min_epsilon,
+                        unsigned int options);
 @
 
 Again, macros
 <<Single precision defaults>>=
 #define `QOP_MDWF_DDW_CG QOP_F3_MDWF_DDW_CG
 #define `QOP_MDWF_MxM_CG QOP_F3_MDWF_MxM_CG
+#define `QOP_MDWF_MxM_SCG QOP_F3_MDWF_MxM_SCG
 @
 <<Double precision defaults>>=
 #define `QOP_MDWF_DDW_CG QOP_D3_MDWF_DDW_CG
-#define `QOP_MDWF_MxM_CG QOP_D3_MDWF_MxM_CG
+#define `QOP_MDWF_MxM_SCG QOP_D3_MDWF_MxM_SCG
+#define `QOP_MDWF_MxM_SCG QOP_D3_MDWF_MxM_SCG
 @
 
 \section{Helper routines}
@@ -1369,6 +1438,8 @@ Also, the macros
 \begin{tabular}{|l|l|l|}
 \hline
 XXX & avp & Version 1.1.0. \\
+\hline
+May 5 & avp & Version 1.0.1. Mixed precision bug fixed.\\
 \hline
 May 2, 2008 & avp & Version 1.0.0. \\
 \hline

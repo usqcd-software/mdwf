@@ -98,8 +98,10 @@ p.sources = fermion-alloc.c \
             cg-inflate.c \
             cg-log.c \
             cg-dirac-error.c \
+            scg-solver.c \
             solver-dirac.c \
-            solver-mxm.c
+            solver-mxm.c \
+            solver-shifted.c
 
 
 x.objects = $(x.sources:%.c=$(LIMPDIR)/%.o)

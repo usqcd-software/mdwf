@@ -32,6 +32,7 @@
 /* QCD types (qa0 controls these definitions) */
 struct SUn;
 struct Fermion;
+struct VectorFermion;
 struct ProjectedFermion;
 
 /* Internal types */
@@ -92,6 +93,13 @@ struct QX(HalfFermion) {
   struct Q(State) *state;
   size_t size;
   struct Fermion *even;  
+};
+
+struct QX(VectorFermion) {
+  struct Q(State) *state;
+  size_t size;
+  int    count;
+  struct VectorFermion *even;  
 };
 
 struct QX(Gauge) {
@@ -332,6 +340,8 @@ void q(put_ABiTable)(struct ABiTable *t,
 		     int i, double vp, double sp, double fp);
 
 /* Linear algebra on fermions */
+void qx(f_zero)(struct Fermion *dst, 
+		int size, int Ls);
 void qx(f_copy)(struct Fermion *dst, 
 		int size, int Ls,
 		const struct Fermion *src);
@@ -364,6 +374,11 @@ unsigned int qx(f_diff_norm)(double *s,
 			     int size, int Ls,
 			     const struct Fermion *a,
 			     const struct Fermion *b);
+void qx(fv_zero)(struct VectorFermion *vf,
+		 int size, int Ls, int count);
+void qx(fv_copy)(struct VectorFermion *vf,
+		 int size, int Ls, int count,
+                 const struct Fermion *f);
 /* basic matrices */
 unsigned int qx(op_norm2)(double *global_norm,
 			  const struct QX(Fermion) *psi,
@@ -783,6 +798,36 @@ int qx(cg_solver)(struct Fermion *xi_e,
 		  struct Fermion *t2_e,
 		  struct Fermion *t0_o,
 		  struct Fermion *t1_o);
+int qx(scg_solver)(struct VectorFermion *v_xi_e,
+		   struct Fermion *xi_e,
+		   int count,
+		   const char *source,
+		   int *out_iterations,
+		   double *out_epsilon,
+		   struct Q(State) *state,
+		   const struct Q(Parameters) *params,
+		   const double shift[],
+		   const struct SUn *U,
+		   const struct Fermion *chi_e,
+		   int max_iterations,
+		   double min_epsilon,
+		   unsigned options,
+		   long long *flops,
+		   long long *sent,
+		   long long *received,
+		   double dp[],
+		   double d[],
+		   double dn[],
+		   double ad[],
+		   double bdd[],
+		   struct Fermion *rho_e,
+		   struct VectorFermion *vpi_e,
+		   struct Fermion *pi_e,
+		   struct Fermion *zeta_e,
+		   struct Fermion *t0_e,
+		   struct Fermion *t1_e,
+		   struct Fermion *t2_e,
+		   struct Fermion *t0_o);
 /*
  *  compute x <- x + alpha p
  *          p <- r + beta p
@@ -793,7 +838,32 @@ unsigned int qx(cg_xp)(struct Fermion *x,
 		       double alpha,
 		       double beta,
 		       const struct Fermion *r);
-
+/*
+ * compute x <- x + alpha * p
+ *         xv[i] <- xv[i] + delta[i] * p
+  */
+unsigned int qx(scg_madd)(struct Fermion *xi_e,
+			  struct VectorFermion *v_xi_e,
+			  int size, int Ls, int count,
+			  double a,
+			  const double ad[],
+			  const struct Fermion *pi_e);
+/*
+ * compute x <- x + alpha * p
+ *         xv[i] <- xv[i] + delta[i] * p
+ *         p <- r + beta * p
+ *         pv[i] <- r + gamma[i] * pv[i]
+ */
+unsigned int qx(scg_xp)(struct Fermion *xi_e,
+                        struct VectorFermion *v_xi_e,
+			struct Fermion *pi_e,
+                        struct VectorFermion *v_pi_e,
+			int size, int Ls, int count,
+			double a,
+			const double ad[],
+			double b,
+			const double bdd[],
+			const struct Fermion *rho_e);
 
 /* --- other composites are here */
 
