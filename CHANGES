@@ -1,5 +1,9 @@
-05/03/2008 -- Version 1.1.0
-	       MxM solver added.
+05/06/2008 -- Version 1.1.0
+                Shifted multisolver added.
+                Samples installed in docs.
+
+05/03/2008 -- transitory
+               MxM solver added.
 	       Sample codes added.
 
 05/02/2008 -- Version 1.0.0 original release
