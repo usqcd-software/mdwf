@@ -1,4 +1,5 @@
-TOP     = ..
+INCDIR  = @incdir@
+LIBDIR  = @libdir@
 CONFIG  = @docdir@/samples/target
 V       = 0
 
@@ -49,26 +50,26 @@ realclean: clean
 
 $(programs): %: %.o
 	$E LD $@
-	$C$(CC) $(CFLAGS) $(QMP_LDFLAGS) -L$(TOP)/$(LIMPDIR) -o $@ $^ \
+	$C$(CC) $(CFLAGS) $(QMP_LDFLAGS) -L$(LIBDIR) -o $@ $^ \
 	  -lqop-mdwf3 $(QMP_LIBS)
 
 $(programs): $(common:%.c=%.o)
 
 $(f.objects): %-f.o: %.c
 	$E CC $@
-	$C$(CC) $(CFLAGS) -I$(TOP)/$(LIMPDIR) \
+	$C$(CC) $(CFLAGS) -I$(INCDIR) \
             -DQOP_MDWF_DEFAULT_PRECISION=\'F\' \
             -c -o $@ $<
 
 $(d.objects): %-d.o: %.c
 	$E CC $@
-	$C$(CC) $(CFLAGS) -I$(TOP)/$(LIMPDIR) $(QMP_CFLAGS) \
+	$C$(CC) $(CFLAGS) -I$(INCDIR) $(QMP_CFLAGS) \
             -DQOP_MDWF_DEFAULT_PRECISION=\'D\' \
             -c -o $@ $<
 
 $(x.objects): %.o: %.c
 	$E CC $@
-	$C$(CC) $(CFLAGS) -I$(TOP)/$(LIMPDIR) \
+	$C$(CC) $(CFLAGS) -I$(INCDIR) \
             -c -o $@ $<
 
 $(x.objects) $(d.objects) $(f.objects): $(headers)
