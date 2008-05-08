@@ -21,7 +21,7 @@
 \author{Andrew Pochinsky}
 \catcode`\$=11
 \date{$Id$\\
-XXX WORKING COPY}
+Release 1.1.1}
 \catcode`\$=3
 
 \begin{document}
@@ -1453,8 +1453,6 @@ Also, the macros
 
 \chapter{CHANGES}
 \begin{tabular}{|l|l|l|}
-\hline
-XXX & avp & Version 1.X.X. \\
 \hline
 May 8 & avp & Version 1.1.1. A nasty bug in [[samples]] fixed.\\
 \hline
