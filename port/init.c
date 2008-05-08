@@ -435,7 +435,9 @@ Q(init)(struct Q(State) **state_ptr,
   *state_ptr = state = q(malloc) (NULL, sizeof(struct Q(State)));
   if (state == 0)
     return 1;
-  
+
+  memset(*state_ptr, 0, sizeof (struct Q(State)));
+
   CHECK(lattice[0] % 1 != 0, "Lattice dimension X is not even");
   CHECK(lattice[1] % 1 != 0, "Lattice dimension Y is not even");
   CHECK(lattice[2] % 1 != 0, "Lattice dimension Z is not even");

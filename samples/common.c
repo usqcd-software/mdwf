@@ -282,7 +282,7 @@ init_qmp(int argc, char *argv[], const char *who, char prec,
 
 	*count = argc - 20;
 	*shift = malloc(*count * sizeof (double));
-	if (shift == 0) {
+	if (*shift == 0) {
 	    zprint(who, "not enough memory");
 	    return 1;
 	}
@@ -309,6 +309,7 @@ init_qmp(int argc, char *argv[], const char *who, char prec,
     zprint(who, "max iterations = %d", max_iterations);
     zprint(who, "min epsilon = %e", min_epsilon);
     zprint(who, "options = %d", options);
+    zprint(who, "count=%p, shift=%p", count, shift);
     if (count) {
 	int i;
 
