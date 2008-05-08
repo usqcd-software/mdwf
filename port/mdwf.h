@@ -133,6 +133,7 @@ struct Q(Parameters) {
 };
 
 struct Q(State) {
+  const char        *version;         /* to get version string into app */
   int                used;            /* gc ref counter */
   int                saved;           /* gc internal counter */
   size_t             allocated;       /* currently allocated bytes */

@@ -9,9 +9,9 @@
 static int qmp_inited = 0;
 
 double U_scale;
-int lattice[5];
-int network[4];
-int this_node[4];
+int lattice[5] = { -1, -2, -3, -4, -5}; /* fly tape begins */
+int network[4] = { -6, -7, -8, -9};
+int this_node[4] = { -10, -11, -12, -13}; /* fly tape ends */
 int primary_p;
 
 double M;
@@ -157,8 +157,8 @@ get_sublattice(int lo[4], int hi[4], const int node[4], void *env)
     int i;
 
     for (i = 0; i < 4; i++) {
-	lo[i] = (lattice[i] * this_node[i]) / network[i];
-	hi[i] = (lattice[i] * (this_node[i] + 1)) / network[i];
+	lo[i] = (lattice[i] * node[i]) / network[i];
+	hi[i] = (lattice[i] * (node[i] + 1)) / network[i];
     }
 }
 
@@ -240,6 +240,8 @@ init_qmp(int argc, char *argv[], const char *who, char prec,
 	 int *count, double **shift)
 {
     QMP_thread_level_t qt = QMP_THREAD_SINGLE;
+    const int *qmp_addr;
+    int qmp_dim;
     int i;
 
     if (QMP_init_msg_passing(&argc, &argv, qt, &qt) != QMP_SUCCESS) {
@@ -249,6 +251,7 @@ init_qmp(int argc, char *argv[], const char *who, char prec,
     primary_p = QMP_is_primary_node();
     
     zprint(who, "Starting precision (%c) example", prec);
+    zprint(who, "MDWF version: %s", QOP_MDWF_version());
 
     /* get parameters */
     if (((count == NULL) && (argc != 20)) ||
@@ -323,6 +326,13 @@ init_qmp(int argc, char *argv[], const char *who, char prec,
 	zprint("ERROR", "declare_logical_topology failed");
 	goto err_0;
     }
+
+    qmp_dim = QMP_get_logical_number_of_dimensions();
+    qmp_addr = QMP_get_logical_coordinates();
+    for (i = 0; i < 4 && i < qmp_dim; i++)
+	this_node[i] = qmp_addr[i];
+    for (; i < 4; i++)
+	this_node[i] = 0;
 
     qmp_inited = 1;
     return 0;

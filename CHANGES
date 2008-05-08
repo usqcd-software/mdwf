@@ -1,3 +1,9 @@
+05/08/2008 -- Version 1.1.1
+	        Samples now really work.
+		Some cleanup in top Makefile.in
+		Extra defence in port/init.c, but still foolable.
+		Configure error reporting improved.
+
 05/06/2008 -- Version 1.1.0
                 Shifted multisolver added.
                 Samples installed in docs.

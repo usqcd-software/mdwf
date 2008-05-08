@@ -21,7 +21,7 @@
 \author{Andrew Pochinsky}
 \catcode`\$=11
 \date{$Id$\\
-WORKING COPY}
+XXX WORKING COPY}
 \catcode`\$=3
 
 \begin{document}
@@ -1455,6 +1455,8 @@ Also, the macros
 \begin{tabular}{|l|l|l|}
 \hline
 XXX & avp & Version 1.X.X. \\
+\hline
+May 8 & avp & Version 1.1.1. A nasty bug in [[samples]] fixed.\\
 \hline
 May 7 & avp & Version 1.1.0. Shifted solver added, samples installed.\\
 \hline

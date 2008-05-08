@@ -75,7 +75,7 @@ process_args() {
       --docdir=*)       docdir=`echo "$1" | sed -e 's/--docdir=//'`   ;;
       --with-qmp=*)     qmp=`echo "$1" | sed -e 's/--with-qmp=//'`    ;;
       --target=*)       target=`echo "$1" | sed -e 's/--target=//'`   ;;
-      *) show_error "Unknown argument" $arg ;;
+      *) show_error "Unknown argument $1" ;;
     esac
     shift
   done

@@ -240,6 +240,7 @@ state_init(struct Q(State)  *state,
 #define CHECK(c,m) do { if (c) { msg = (m); goto err; } } while (0)
 
   memset(state, 0, sizeof (struct Q(State)));
+  state->version = QOP_MDWF_version();
   state->Ls = lattice[Q(DIM)];
   state->master_p = master_p;
   local(state->local.lo, state->local.hi, node, env);
