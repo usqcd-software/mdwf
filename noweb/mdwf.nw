@@ -1452,15 +1452,18 @@ Also, the macros
 @
 
 \chapter{CHANGES}
-\begin{tabular}{|l|l|l|}
+\begin{tabular}{|p{72pt}|l|p{350pt}|}
 \hline
 XXX & avp & Version 1.X.X. \\
 \hline
-May 8 & avp & Version 1.1.1. A nasty bug in [[samples]] fixed.\\
+May 14, 2008 & avp & Version 1.1.2. Solvers set error in the state if they
+                     do not converge. Samples print a helpful marker. \\
 \hline
-May 7 & avp & Version 1.1.0. Shifted solver added, samples installed.\\
+May 8, 2008 & avp & Version 1.1.1. A nasty bug in [[samples]] fixed.\\
 \hline
-May 5 & avp & Version 1.0.1. Mixed precision bug fixed.\\
+May 7, 2008 & avp & Version 1.1.0. Shifted solver added, samples installed.\\
+\hline
+May 5, 2008 & avp & Version 1.0.1. Mixed precision bug fixed.\\
 \hline
 May 2, 2008 & avp & Version 1.0.0. \\
 \hline

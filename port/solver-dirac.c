@@ -56,7 +56,7 @@ QX(DDW_CG)(struct QX(Fermion)          *psi,
 
     /* setup communication */
     if (q(setup_comm)(state, sizeof (REAL))) {
-	return q(set_error)(state, 0, "MDWF_CG(): communication setup failed");
+	return q(set_error)(state, 0, "DDW_CG(): communication setup failed");
     }
 
     /* allocate locals */
@@ -66,7 +66,7 @@ QX(DDW_CG)(struct QX(Fermion)          *psi,
 			 2, /* odds */
 			 sizeof (REAL));
     if (ptr == 0) {
-	return q(set_error)(state, 0, "MDWF_CG(): not enough memory");
+	return q(set_error)(state, 0, "DDW_CG(): not enough memory");
     }
     U = gauge->data;
     t0_e  = temps;
@@ -144,5 +144,8 @@ QX(DDW_CG)(struct QX(Fermion)          *psi,
 
     /* free memory */
     q(free)(state, ptr, ptr_size);
+    if (status != 0) {
+	q(set_error)(state, 0, "DDW_CG() solver failed to converge");
+    }
     return status;
 }

@@ -241,6 +241,7 @@ init_qmp(int argc, char *argv[], const char *who, char prec,
 {
     QMP_thread_level_t qt = QMP_THREAD_SINGLE;
     const int *qmp_addr;
+    const char *marker;
     int qmp_dim;
     int i;
 
@@ -254,13 +255,13 @@ init_qmp(int argc, char *argv[], const char *who, char prec,
     zprint(who, "MDWF version: %s", QOP_MDWF_version());
 
     /* get parameters */
-    if (((count == NULL) && (argc != 20)) ||
-	((count != NULL) && (argc <= 21))) {
+    if (((count == NULL) && (argc != 21)) ||
+	((count != NULL) && (argc <= 22))) {
 	zprint(who,
 	       "usage: solver-mxm Nx Ny Nz Nt Lx Ly Lz Lt Ls"
 	       " M m_5 kappa"
 	       " guess-seed source-seed gauge-seed gauge-scale"
-	       " max-iterations min-epsilon verbose-p%s",
+	       " max-iterations min-epsilon verbose-p marker%s",
 	       count? " shift ...": "");
 	goto err_0;
     }
@@ -278,24 +279,26 @@ init_qmp(int argc, char *argv[], const char *who, char prec,
     max_iterations = atoi(argv[17]);
     min_epsilon = atof(argv[18]);
     options = atoi(argv[19]);
+    marker = argv[20];
     if (options)
 	options = QOP_MDWF_LOG_EVERYTHING;
     if (count) {
 	int i;
 
-	*count = argc - 20;
+	*count = argc - 21;
 	*shift = malloc(*count * sizeof (double));
 	if (*shift == 0) {
 	    zprint(who, "not enough memory");
 	    return 1;
 	}
 	for (i = 0; i < *count; i++)
-	    (*shift)[i] = atof(argv[20 + i]);
+	    (*shift)[i] = atof(argv[21 + i]);
     }
 
 
     /* print what we've got */
     zprint(who, "QMP nodes: %d", QMP_get_number_of_nodes());
+    zprint(who, "marker: %s", marker);
     zprint(who, "requesting %d nodes",
 	   network[0] * network[1] * network[2] * network[3]);
     zprint(who, "network: %d %d %d %d",

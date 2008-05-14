@@ -1,3 +1,8 @@
+05/14/2008 -- Version 1.1.2
+                Samples take an extra parameter that is only written
+                to output. It is useful for performance measurement.
+                All solvers set the error string in the state if CG fails to
+                converge.
 05/08/2008 -- Version 1.1.1
 	        Samples now really work.
 		Some cleanup in top Makefile.in

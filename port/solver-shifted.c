@@ -141,5 +141,8 @@ QX(MxM_SCG)(struct QX(VectorFermion)       *v_psi,
     /* free memory */
     q(free)(state, pptr, pptr_size);
     q(free)(state, sptr, sptr_size);
+    if (status != 0) {
+	q(set_error)(state, 0, "MxM_SCG() solver failed to converge");
+    }
     return status;
 }

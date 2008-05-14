@@ -111,5 +111,8 @@ QX(MxM_CG)(struct QX(HalfFermion)          *psi,             /* in/out */
 
     /* free memory */
     q(free)(state, ptr, ptr_size);
+    if (status != 0) {
+	q(set_error)(state, 0, "MxM_CG() solver failed to converge");
+    }
     return status;
 }
