@@ -794,7 +794,7 @@ Arguments of [[init()]] are
 \item[\texttt{lattice}] 5--d lattice geometry. $L_s$ is [[lattice[4]]].
 \item[\texttt{network}] 4--d network geometry. Each element should be positive.
 \item[\texttt{node}] 4--d address of this node.
-\item[\texttt{master\_p}] is zero on the master node, nonzero otherwise.
+\item[\texttt{master\_p}] is non-zero on the master node, zero otherwise.
 \item[\texttt{sublattice}] Function giving sublattice dimensions on an arbitrary node.
 \item[\texttt{env}] Common environment for [[sublattice()]].
 \end{itemize}
