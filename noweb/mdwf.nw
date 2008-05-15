@@ -21,7 +21,7 @@
 \author{Andrew Pochinsky}
 \catcode`\$=11
 \date{$Id$\\
-Release 1.1.2}
+Release 1.1.3}
 \catcode`\$=3
 
 \begin{document}
@@ -1453,6 +1453,8 @@ Also, the macros
 
 \chapter{CHANGES}
 \begin{tabular}{|p{72pt}|l|p{350pt}|}
+\hline
+May 15, 2008 & avp & Version 1.1.3. Documentation fix.\\
 \hline
 May 14, 2008 & avp & Version 1.1.2. Solvers set error in the state if they
                      do not converge. Samples print a helpful marker. \\
