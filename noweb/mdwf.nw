@@ -1456,6 +1456,8 @@ Also, the macros
 \hline
 XXX & avp & Version 1.X.X. \\
 \hline
+May 15, 2008 & avp & Bug in the docs fixed (master node definition). \\
+\hline
 May 14, 2008 & avp & Version 1.1.2. Solvers set error in the state if they
                      do not converge. Samples print a helpful marker. \\
 \hline
