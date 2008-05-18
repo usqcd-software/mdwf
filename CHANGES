@@ -1,6 +1,7 @@
-05/17/2008 -- Version 1.1.4 XXX
+05/17/2008 -- Version 1.1.4
                 Error handling bug fixed.
                 Samples report performance number even if not converged.
+                Zero mode handling improved in solvers.
 
 05/15/2008 -- Version 1.1.3
                 Documentation fixed regarding the meaning of master_p.

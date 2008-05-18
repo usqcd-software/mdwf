@@ -21,7 +21,7 @@
 \author{Andrew Pochinsky}
 \catcode`\$=11
 \date{$Id$\\
-XXX WORKING COPY}
+Release 1.1.4}
 \catcode`\$=3
 
 \begin{document}
@@ -1453,8 +1453,6 @@ Also, the macros
 
 \chapter{CHANGES}
 \begin{tabular}{|p{72pt}|l|p{350pt}|}
-\hline
-XXX & avp & Version 1.X.X. \\
 \hline
 May 17, 2008 & avp & Bug in error handling fixed. \\
 \hline
