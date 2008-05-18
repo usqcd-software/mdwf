@@ -105,6 +105,11 @@ QX(DDW_CG)(struct QX(Fermion)          *psi,
 			   &flops, &sent, &received,
 			   rho_e, pi_e, zeta_e,
 			   t0_e, t1_e, t2_e, t0_o, t1_o);
+    /* handle zero mode properly */
+    if (status > 1) {
+	END_TIMING(state, flops, sent, received);
+	goto end;
+    }
 
     /* inflate */
     qx(cg_inflate)(psi->even, psi->odd,
@@ -142,6 +147,7 @@ QX(DDW_CG)(struct QX(Fermion)          *psi,
     if (rhs_norm != 0.0)
 	*out_epsilon = *out_epsilon / rhs_norm;
 
+end:
     /* free memory */
     q(free)(state, ptr, ptr_size);
     if (status != 0) {

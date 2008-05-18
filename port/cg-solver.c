@@ -49,7 +49,12 @@ qx(cg_solver)(struct Fermion *xi_e, const char *source,
 	qx(op_even_Mx)(zeta_e, state, params, U, t0_e,
 		       flops, sent, received,
 		       t1_e, t0_o);
-	/* XXX could z_n == 0? -- if so, we are stuck on a zero mode */
+        if (norm_omega == 0.0) {
+	    *out_iter = i;
+	    *out_epsilon = r;
+	    q(set_error)(state, 0, "cg_solver() hit zero mode");
+	    return 2;
+	}
 	a = r / norm_omega;
 	*flops += qx(f_add2_norm)(rho_e, &g, e_size, Ls, -a, zeta_e);
 	QMP_sum_double(&g);

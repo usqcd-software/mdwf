@@ -95,6 +95,10 @@ QX(MxM_CG)(struct QX(HalfFermion)          *psi,             /* in/out */
 
     END_TIMING(state, flops, sent, received);
 
+    /* handle zero mode properly */
+    if (status > 1)
+	goto end;
+
     /* output final residuals if desired */
     if (options) {
 	qx(zprint)(state, "MxM CG", "status %d, total iterations %d",
@@ -109,6 +113,7 @@ QX(MxM_CG)(struct QX(HalfFermion)          *psi,             /* in/out */
     if (rhs_norm != 0.0)
 	*out_epsilon = *out_epsilon / rhs_norm;
 
+end:
     /* free memory */
     q(free)(state, ptr, ptr_size);
     if (status != 0) {

@@ -65,6 +65,9 @@ main(int argc, char *argv[])
 	   status, out_iterations, out_epsilon);
 
     /* In real life one would like to export sol to this side now ... */
+    if (status) {
+	zprint(SELF, "CG error: %s", QOP_MDWF_error(state));
+    }
 
     /* Get statistics from the MDWF layer */
     report_performance(state, SELF);

@@ -19,8 +19,10 @@ Q(error)(struct Q(State) *state)
 int
 q(set_error)(struct Q(State) *state, int fatal, const char *error)
 {
-  state->error_latched = 1;
-  state->error = error;
-  state->fatal_error = fatal;
-  return 1;
+    if (state->error_latched == 0) {
+	state->error_latched = 1;
+	state->error = error;
+	state->fatal_error = fatal;
+    }
+    return 1;
 }

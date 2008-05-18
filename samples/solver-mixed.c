@@ -67,13 +67,16 @@ main(int argc, char *argv[])
 				max_iterations, min_epsilon,
 				options);
 
-    zprint(SELF, "(signle) status %d, iterations %d, epsilon %e",
+    zprint(SELF "(signle)", "status %d, iterations %d, epsilon %e",
 	   status, out_iterations, out_epsilon);
 
     /* In real life one would like to export sol to this side now ... */
+    if (status) {
+	zprint(SELF "(single)", "CG error: %s", QOP_MDWF_error(state));
+    }
 
     /* Get statistics from the MDWF layer */
-    report_performance(state, SELF " (single)");
+    report_performance(state, SELF "(single)");
 
     /* export the solution */
     if (QOP_F3_MDWF_export_fermion(write_fermion, NULL, f_sol)) {
@@ -82,7 +85,7 @@ main(int argc, char *argv[])
     }
 
     /* how long it takes to export a fermion? */
-    report_time(state, SELF " (single) export_fermion()");
+    report_time(state, SELF "(single) export_fermion()");
 
     /* release all parallel data */
     QOP_F3_MDWF_free_fermion(&f_sol);
@@ -105,22 +108,26 @@ main(int argc, char *argv[])
 				max_iterations, min_epsilon,
 				options);
 
-    zprint(SELF, "(double) status %d, iterations %d, epsilon %e",
+    zprint(SELF "(double)", "status %d, iterations %d, epsilon %e",
 	   status, out_iterations, out_epsilon);
 
     /* In real life one would like to export sol to this side now ... */
+    if (status) {
+	zprint(SELF "(double)", "CG error: %s", QOP_MDWF_error(state));
+    }
+
 
     /* Get statistics from the MDWF layer */
-    report_performance(state, SELF " (double)");
+    report_performance(state, SELF "(double)");
 
     /* export the solution */
     if (QOP_D3_MDWF_export_fermion(write_fermion, NULL, d_sol)) {
-	zprint(SELF, "error exporting double solution");
+	zprint(SELF "(double)", "error exporting double solution");
 	goto no_memory;
     }
 
     /* how long it takes to export a fermion? */
-    report_time(state, SELF " (double) export_fermion()");
+    report_time(state, SELF "(double) export_fermion()");
 
     /* release all parallel data */
     QOP_D3_MDWF_free_fermion(&d_sol);

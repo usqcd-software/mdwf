@@ -101,6 +101,10 @@ main(int argc, char *argv[])
     zprint(SELF, "status %d, iterations %d, epsilon %e",
 	   status, out_iterations, out_epsilon);
 
+    if (status) {
+	zprint(SELF, "SCG error: %s", QOP_MDWF_error(state));
+    }
+
     /* In real life one would like to export sol to this side now ... */
     check_solution(rhs, ssol, params, gauge, t1, t2, 0.0, -1);
     for (i = 0; i < count; i++) {

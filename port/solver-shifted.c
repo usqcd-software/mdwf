@@ -123,6 +123,10 @@ QX(MxM_SCG)(struct QX(VectorFermion)       *v_psi,
 
     END_TIMING(state, flops, sent, received);
 
+    /* handle zero mode properly */
+    if (status > 1)
+	goto end;
+
     /* output final residuals if desired */
     if (options) {
 	qx(zprint)(state, "MxM SCG", "status %d, total iterations %d",
@@ -138,6 +142,7 @@ QX(MxM_SCG)(struct QX(VectorFermion)       *v_psi,
     if (rhs_norm != 0.0)
 	*out_epsilon = *out_epsilon / rhs_norm;
 
+end:
     /* free memory */
     q(free)(state, pptr, pptr_size);
     q(free)(state, sptr, sptr_size);
