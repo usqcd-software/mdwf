@@ -36,6 +36,7 @@ optests = test-op-dummy.c \
           test-op-bx.c \
           test-op-bx1.c \
           test-op-f0.c \
+          test-op-f1.c \
           test-op-f.c
 
 opytests = test-op-a-2.c \

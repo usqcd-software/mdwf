@@ -16,7 +16,7 @@ q(allocate_aligned)(struct Q(State) *state,
     *aligned_ptr = NULL;
   } else {
     *size = total_size;
-    *aligned_ptr = ALIGN(ptr + hdr_size);
+    *aligned_ptr = ALIGN(ptr, hdr_size);
   }
   return ptr;
 }

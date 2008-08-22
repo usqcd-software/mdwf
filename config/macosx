@@ -1,6 +1,6 @@
 # Configuration for my laptop
 #
-QMP_TOP    = $$HOME/QDP/qmp-2.3.0-mpi
+QMP_TOP    = /usr/local/packages/qmp-2.3.1
 CC         = gcc
 CFLAGS     = -Wall -g $(QMP_CFLAGS)
 AR         = ar
