@@ -99,7 +99,7 @@ qx(scg_solver)(struct VectorFermion *v_xi_e,
                        flops, sent, received,
                        options,
                        t0_e, t1_e, t2_e, t0_o, NULL,
-                       1.0, 1.0, 0.0, 0.0, 0.0);
+                       1.0, 1.0, 0.0, 0.0);
     }
 end:
     *out_iterations = k;

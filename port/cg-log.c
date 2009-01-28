@@ -75,8 +75,7 @@ qx(cg_log)(double cg_res, const char *source, int iter,
            double norm_p1p1,
            double norm_p0p0,
            double diff_p1p0,
-           double diff_p1r1,
-           double diff_p0r1)
+           double diff_p1r1)
 {
     double true_res = 0.0;
     double dirac_res = 0.0;
@@ -88,7 +87,6 @@ qx(cg_log)(double cg_res, const char *source, int iter,
         double n_p0 = sqrt(norm_p0p0);
         double v_p1p0 = VCOS(norm_p1p1, norm_p0p0, diff_p1p0, n_p0, n_p1);
         double v_p1r1 = VCOS(norm_p1p1, cg_res, diff_p1r1, n_p1, n_r1);
-        double v_p0r1 = VCOS(norm_p0p0, cg_res, diff_p0r1, n_p0, n_r1);
 #undef VCOS
 
         qx(zprint)(state, source,
@@ -96,8 +94,7 @@ qx(cg_log)(double cg_res, const char *source, int iter,
                    "  res %13.6e"
                    "  p1p0 %13.6e"
                    "  p1r1 %13.6e"
-                   "  p0r1 %13.6e",
-                   iter, n_r1, v_p1p0, v_p1r1, v_p0r1);
+                   iter, n_r1, v_p1p0, v_p1r1);
 
         return;
     }

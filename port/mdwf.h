@@ -784,8 +784,7 @@ void qx(cg_log)(double cg_res, const char *source, int iter,
                 double norm_p1p1,
                 double norm_p0p0,
                 double diff_p1p0,
-                double diff_p1r1,
-                double diff_p0r1);
+                double diff_p1r1);
 int qx(cg_solver)(struct Fermion *xi_e,
                   const char *source,
                   int *out_iter,
@@ -855,7 +854,6 @@ unsigned int qx(cg_xp)(struct Fermion *x,
  *         p' <- r + beta p
  *         norm_p1 <- <p'|p>
  *         dot_p1r1 <- | p' - r |^2
- *         dot_p0r1 <- | p - r |^2
  *         dot_p1p0 <- | p' - p |^2
  *         p <- p'
  */
@@ -864,7 +862,6 @@ unsigned int qx(cg_xp_grad)(struct Fermion *x,
                             double *norm_p1,
                             double *dot_p1p0,
                             double *dot_p1r1,
-                            double *dot_p0r1,
                             int size, int Ls,
                             double alpha,
                             double beta,
