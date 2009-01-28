@@ -93,7 +93,7 @@ qx(cg_log)(double cg_res, const char *source, int iter,
                    "CG step %5d"
                    "  res %13.6e"
                    "  p1p0 %13.6e"
-                   "  p1r1 %13.6e"
+                   "  p1r1 %13.6e",
                    iter, n_r1, v_p1p0, v_p1r1);
 
         return;
