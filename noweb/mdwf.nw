@@ -21,7 +21,7 @@
 \author{Andrew Pochinsky}
 \catcode`\$=11
 \date{$Id$\\
-Release 1.1.4}
+Release 1.1.4-pp}
 \catcode`\$=3
 
 \begin{document}
@@ -119,23 +119,23 @@ for now.
 \end{equation}
 <<Project $(1+\gamma_0)$>>=
 ((project 0 plus) . ((plus-one 0 plus-i 3)
-	             (plus-one 1 plus-i 2)))
+                     (plus-one 1 plus-i 2)))
 @
 <<Unproject $(1+\gamma_0)$>>=
 ((unproject 0 plus) . ((plus-one 0)
                        (plus-one 1)
-		       (minus-i 1)
-		       (minus-i 0)))
+                       (minus-i 1)
+                       (minus-i 0)))
 @
 <<Project $(1-\gamma_0)$>>=
 ((project 0 minus) . ((plus-one 0 minus-i 3)
-   	              (plus-one 1 minus-i 2)))
+                      (plus-one 1 minus-i 2)))
 @
 <<Unproject $(1-\gamma_0)$>>=
 ((unproject 0 minus) . ((plus-one 0)
-	     	        (plus-one 1)
-		        (plus-i 1)
-		        (plus-i 0)))
+                        (plus-one 1)
+                        (plus-i 1)
+                        (plus-i 0)))
 @
 
 \pagebreak
@@ -154,23 +154,23 @@ for now.
 \end{equation}
 <<Project $(1+\gamma_1)$>>=
 ((project 1 plus) . ((plus-one 0 minus-one 3)
-	   	     (plus-one 1 plus-one 2)))
+                     (plus-one 1 plus-one 2)))
 @
 <<Unproject $(1+\gamma_1)$>>=
 ((unproject 1 plus) . ((plus-one 0)
-	     	       (plus-one 1)
-		       (plus-one 1)
-		       (minus-one 0)))
+                       (plus-one 1)
+                       (plus-one 1)
+                       (minus-one 0)))
 @
 <<Project $(1-\gamma_1)$>>=
 ((project 1 minus) . ((plus-one 0 plus-one 3)
-	   	      (plus-one 1 minus-one 2)))
+                      (plus-one 1 minus-one 2)))
 @
 <<Unproject $(1-\gamma_1)$>>=
 ((unproject 1 minus) . ((plus-one 0)
-	     	        (plus-one 1)
-		        (minus-one 1)
-		        (plus-one 0)))
+                        (plus-one 1)
+                        (minus-one 1)
+                        (plus-one 0)))
 @
 
 \pagebreak
@@ -189,23 +189,23 @@ for now.
 \end{equation}
 <<Project $(1+\gamma_2)$>>=
 ((project 2 plus) . ((plus-one 0 plus-i 2)
-	   	     (plus-one 1 minus-i 3)))
+                     (plus-one 1 minus-i 3)))
 @
 <<Unproject $(1+\gamma_2)$>>=
 ((unproject 2 plus) . ((plus-one 0)
-	     	       (plus-one 1)
-		       (minus-i 0)
-		       (plus-i 1)))
+                       (plus-one 1)
+                       (minus-i 0)
+                       (plus-i 1)))
 @
 <<Project $(1-\gamma_2)$>>=
 ((project 2 minus) . ((plus-one 0 minus-i 2)
-	   	      (plus-one 1 plus-i 3)))
+                      (plus-one 1 plus-i 3)))
 @
 <<Unproject $(1-\gamma_2)$>>=
 ((unproject 2 minus) . ((plus-one 0)
-	     	        (plus-one 1)
-		        (plus-i 0)
-		        (minus-i 1)))
+                        (plus-one 1)
+                        (plus-i 0)
+                        (minus-i 1)))
 @
 
 \pagebreak
@@ -224,13 +224,13 @@ for now.
 \end{equation}
 <<Project $(1+\gamma_3)$>>=
 ((project 3 plus) . ((plus-one 0 plus-one 2)
-	   	     (plus-one 1 plus-one 3)))
+                     (plus-one 1 plus-one 3)))
 @
 <<Unproject $(1+\gamma_3)$>>=
 ((unproject 3 plus) . ((plus-one 0)
-	     	       (plus-one 1)
-		       (plus-one 0)
-		       (plus-one 1)))
+                       (plus-one 1)
+                       (plus-one 0)
+                       (plus-one 1)))
 @
 This is our starting point in sums over directions
 <<Start $\mu$ sum>>=
@@ -240,13 +240,13 @@ This is our starting point in sums over directions
 
 <<Project $(1-\gamma_3)$>>=
 ((project 3 minus) . ((plus-one 0 minus-one 2)
-	   	      (plus-one 1 minus-one 3)))
+                      (plus-one 1 minus-one 3)))
 @
 <<Unproject $(1-\gamma_3)$>>=
 ((unproject 3 minus) . ((plus-one 0)
-	     	        (plus-one 1)
-		        (minus-one 0)
-		        (minus-one 1)))
+                        (plus-one 1)
+                        (minus-one 0)
+                        (minus-one 1)))
 @
 
 Now let us collect the $\gamma$-matrix projections and reconstructions. We
@@ -612,7 +612,7 @@ can be solve by the conjugate gradient method if the condition number of
   $r\leftarrow\langle \rho,\rho\rangle$\;
   $k\leftarrow 0$\;
   \While{$r > \epsilon$ or $k < n$}{
-    $\omega\leftarrow Mp$\;
+    $\omega\leftarrow M\pi$\;
     $\zeta\leftarrow M^{\dagger}\omega$\;
     $a\leftarrow r/\langle \omega,\omega\rangle$\;
     $\rho\leftarrow \rho - a \zeta$\;
@@ -780,10 +780,10 @@ library functions.
 int `QOP_MDWF_init(struct QOP_MDWF_State **state_ptr,
                   const int lattice[QOP_MDWF_DIM + 1],
                   const int network[QOP_MDWF_DIM],
-		  const int node[QOP_MDWF_DIM],
-	          int master_p,
+                  const int node[QOP_MDWF_DIM],
+                  int master_p,
                   void (*sublattice)(int lo[],
-	                             int hi[],
+                                     int hi[],
                                      const int node[],
                                      void *env),
                   void *env);
@@ -914,7 +914,7 @@ int `QOP_D3_MDWF_import_gauge(struct QOP_D3_MDWF_Gauge **gauge_ptr,
                                               int b,
                                               int re_im,
                                               void *env),
-			     void *env);
+                             void *env);
 @
 The [[reader()]] points to a function that provides a value of the gauge field
 at a given point on the lattice, e.g., it returns the value of
@@ -1172,10 +1172,10 @@ We also provide primitive access procedures (mnemonic convention is
 <<Interface functions>>=
 int `QOP_F3_MDWF_get_vector_fermion(struct QOP_F3_MDWF_HalfFermion *hf,
                                    const struct QOP_F3_MDWF_VectorFermion *vf,
- 	  	  	           int index);
+                                   int index);
 int `QOP_D3_MDWF_get_vector_fermion(struct QOP_D3_MDWF_HalfFermion *hf,
                                    const struct QOP_D3_MDWF_VectorFermion *vf,
- 	  		           int index);
+                                   int index);
 int `QOP_F3_MDWF_put_vector_fermion(struct QOP_F3_MDWF_VectorFermion *vf,
                                    int index,
                                    const struct QOP_F3_MDWF_HalfFermion *hf);
@@ -1207,42 +1207,42 @@ precision.
 <<Interface functions>>=
 int `QOP_F3_MDWF_DDW_operator(struct QOP_F3_MDWF_Fermion *result,
                              const struct QOP_MDWF_Parameters *params,
-	 		     const struct QOP_F3_MDWF_Gauge *gauge,
-		 	     const struct QOP_F3_MDWF_Fermion *fermion);
+                             const struct QOP_F3_MDWF_Gauge *gauge,
+                             const struct QOP_F3_MDWF_Fermion *fermion);
 int `QOP_D3_MDWF_DDW_operator(struct QOP_D3_MDWF_Fermion *result,
-			     const struct QOP_MDWF_Parameters *params,
+                             const struct QOP_MDWF_Parameters *params,
                              const struct QOP_D3_MDWF_Gauge *gauge,
-			     const struct QOP_D3_MDWF_Fermion *fermion);
+                             const struct QOP_D3_MDWF_Fermion *fermion);
 @
 <<Interface functions>>=
 int `QOP_F3_MDWF_DDW_operator_conjugated(struct QOP_F3_MDWF_Fermion *result,
-	 	                        const struct QOP_MDWF_Parameters *params,
+                                        const struct QOP_MDWF_Parameters *params,
                                         const struct QOP_F3_MDWF_Gauge *gauge,
-		 	                const struct QOP_F3_MDWF_Fermion *fermion);
+                                        const struct QOP_F3_MDWF_Fermion *fermion);
 int `QOP_D3_MDWF_DDW_operator_conjugated(struct QOP_D3_MDWF_Fermion *result,
                                         const struct QOP_MDWF_Parameters *params,
                                         const struct QOP_D3_MDWF_Gauge *gauge,
-			                const struct QOP_D3_MDWF_Fermion *fermion);
+                                        const struct QOP_D3_MDWF_Fermion *fermion);
 @
 <<Interface functions>>=
 int `QOP_F3_MDWF_M_operator(struct QOP_F3_MDWF_HalfFermion *result,
-	  	           const struct QOP_MDWF_Parameters *params,
+                           const struct QOP_MDWF_Parameters *params,
                            const struct QOP_F3_MDWF_Gauge *gauge,
-		 	   const struct QOP_F3_MDWF_HalfFermion *fermion);
+                           const struct QOP_F3_MDWF_HalfFermion *fermion);
 int `QOP_D3_MDWF_M_operator(struct QOP_D3_MDWF_HalfFermion *result,
-	 	           const struct QOP_MDWF_Parameters *params,
+                           const struct QOP_MDWF_Parameters *params,
                            const struct QOP_D3_MDWF_Gauge *gauge,
-			   const struct QOP_D3_MDWF_HalfFermion *fermion);
+                           const struct QOP_D3_MDWF_HalfFermion *fermion);
 @
 <<Interface functions>>=
 int `QOP_F3_MDWF_M_operator_conjugated(struct QOP_F3_MDWF_HalfFermion *result,
-	  	                      const struct QOP_MDWF_Parameters *params,
+                                      const struct QOP_MDWF_Parameters *params,
                                       const struct QOP_F3_MDWF_Gauge *gauge,
-			              const struct QOP_F3_MDWF_HalfFermion *fermion);
+                                      const struct QOP_F3_MDWF_HalfFermion *fermion);
 int `QOP_D3_MDWF_M_operator_conjugated(struct QOP_D3_MDWF_HalfFermion *result,
-	   	                      const struct QOP_MDWF_Parameters *params,
+                                      const struct QOP_MDWF_Parameters *params,
                                       const struct QOP_D3_MDWF_Gauge *gauge,
-			              const struct QOP_D3_MDWF_HalfFermion *fermion);
+                                      const struct QOP_D3_MDWF_HalfFermion *fermion);
 @
 
 Also the default precision macros
@@ -1274,7 +1274,8 @@ enum {
    `QOP_MDWF_LOG_DIRAC_RESIDUAL = 4,
    `QOP_MDWF_FINAL_CG_RESIDUAL = 8,
    `QOP_MDWF_FINAL_DIRAC_RESIDUAL = 16,
-   `QOP_MDWF_LOG_EVERYTHING = 31
+   `QOP_MDWF_LOG_GRADIENT = 32,
+   `QOP_MDWF_LOG_EVERYTHING = 63
 };
 @
 

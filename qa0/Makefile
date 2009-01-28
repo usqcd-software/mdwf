@@ -64,6 +64,7 @@ x.sources = get-fermion.qa0 \
             f-dot.qa0 \
             f-diff-norm.qa0 \
             cg-xp.qa0 \
+            cg-xp-grad.qa0 \
             scg-madd.qa0 \
             scg-xp.qa0 \
             proj-minus.qa0 \

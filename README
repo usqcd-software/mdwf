@@ -1,3 +1,7 @@
+*** This is an experimental branch from 1.1.4.
+
+gradient dump is added to CG core routine.
+
 This is a SciDAC L3 Moebius domain wall fermion implementation. It targets
 the following backends:
 

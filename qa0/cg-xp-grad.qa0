@@ -1,0 +1,53 @@
+;; Update x and p in the CG:
+;;  x <- x + alpha p
+;;  p <- r + beta p
+;;
+(verbose [(c99 bgl/xlc) "/* $Id$ */"])
+
+(include "types.qa0")
+
+(procedure cg-x&p-grad ([stem "cg_xp_grad"]
+                        prec&color
+                        count-flops)
+           ([x         pointer "x"         "struct Fermion *"       ]
+            [p         pointer "p"         "struct Fermion *"       ]
+            [n-p1      pointer "norm_p1"   "double *"               ]
+            [d-p1p0    pointer "dot_p1p0"  "double *"               ]
+            [d-p1r1    pointer "dot_p1r1"  "double *"               ]
+            [d-p0r1    pointer "dot_p0r1"  "double *"               ]
+            [size      int     "size"      "int"                    ]
+            [l-s       int     "Ls"        "int"                    ]
+            [alpha     double  "alpha"     "double"                 ]
+            [beta      double  "beta"      "double"                 ]
+            [r         pointer "r"         "const struct Fermion *" ])
+   (op qcd-fnorm-init () (v-p1p1) ())
+   (op qcd-fnorm-init () (v-p1p0) ())
+   (op qcd-fnorm-init () (v-p1r1) ())
+   (op qcd-fnorm-init () (v-p0r1) ())
+   (loop () (i [const 0] [reg size])
+     (loop () (s [const 0] [reg l-s])
+       (load qcd-fermion () f-x ([reg x]))
+       (load qcd-fermion () f-p ([reg p]))
+       (load qcd-fermion () f-r ([reg r]))
+       (op qcd-maddf () (g-x) ([reg f-x] [reg alpha] [reg f-p]))
+       (op qcd-maddf () (g-p) ([reg f-r] [reg beta] [reg f-p]))
+       (op qcd-fnorm-add () (v-p1p1) ([reg v-p1p1] [reg g-p]))
+       (op qcd-subf () (p0-p1) ([reg f-p] [reg g-p]))
+       (op qcd-subf () (p0-r1) ([reg f-p] [reg f-r]))
+       (op qcd-subf () (r1-p1) ([reg f-r] [reg g-p]))
+       (op qcd-fnorm-add () (v-p1p0) ([reg v-p1p0] [reg p0-p1]))
+       (op qcd-fnorm-add () (v-p1r1) ([reg v-p1r1] [reg r1-p1]))
+       (op qcd-fnorm-add () (v-p0r1) ([reg v-p0r1] [reg p0-r1]))
+       (store qcd-fermion () ([reg x]) [reg g-x])
+       (store qcd-fermion () ([reg p]) [reg g-p])
+       (op pointer-add () (x) ([reg x] [const (size-of Fermion)]))
+       (op pointer-add () (p) ([reg p] [const (size-of Fermion)]))
+       (op pointer-add () (r) ([reg r] [const (size-of Fermion)]))))
+   (op qcd-fnorm-fini () (w-p1p1) ([reg v-p1p1]))
+   (op qcd-fnorm-fini () (w-p1p0) ([reg v-p1p0]))
+   (op qcd-fnorm-fini () (w-p1r1) ([reg v-p1r1]))
+   (op qcd-fnorm-fini () (w-p0r1) ([reg v-p0r1]))
+   (store double () ([reg n-p1])   [reg w-p1p1])
+   (store double () ([reg d-p1p0]) [reg w-p1p0])
+   (store double () ([reg d-p1r1]) [reg w-p1r1])
+   (store double () ([reg d-p0r1]) [reg w-p0r1]))
