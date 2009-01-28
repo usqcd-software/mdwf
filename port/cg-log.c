@@ -82,7 +82,7 @@ qx(cg_log)(double cg_res, const char *source, int iter,
     double dirac_res = 0.0;
 
     if (options & Q(LOG_GRADIENT)) {
-        double n_r1 = sqrt(cg_reg);
+        double n_r1 = sqrt(cg_res);
         double n_p1 = sqrt(norm_p1p1);
         double n_p0 = sqrt(norm_p0p0);
         double v_p1p0 = 0.5*(norm_p1p1 + norm_p0p0 - diff_p1p0)/(n_p0 * n_p1);
@@ -95,7 +95,7 @@ qx(cg_log)(double cg_res, const char *source, int iter,
                    "  p1p0 %13.6e"
                    "  p1r1 %13.6e"
                    "  p0r1 %13.6e",
-                   iter, cg_res, v_p1p0, v_p1r1, v_p0r1);
+                   iter, n_r1, v_p1p0, v_p1r1, v_p0r1);
 
         return;
     }

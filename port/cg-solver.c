@@ -28,7 +28,7 @@ qx(cg_solver)(struct Fermion *xi_e, const char *source,
     int e_size = state->even.full_size;
     int Ls = state->Ls;
     double a, b, g, r, norm_omega;
-    double norm_p0 = 1, norm_p1 = 1, dot_p0p1 = 0, dot_p0r1 = 0, dot_p1r1 = 0;
+    double norm_p0 = 1, norm_p1 = 1, dot_p1p0 = 0, dot_p0r1 = 0, dot_p1r1 = 0;
     int i;
 
     qx(op_even_M)(t1_e, state, params, U, xi_e, flops, sent, received,
@@ -73,7 +73,7 @@ qx(cg_solver)(struct Fermion *xi_e, const char *source,
                            e_size, Ls, a, b, rho_e);
             QMP_sum_double(&norm_p1);
             QMP_sum_double(&dot_p1p0);
-            QMP_sum_double(&dot_p1e1);
+            QMP_sum_double(&dot_p1r1);
             QMP_sum_double(&dot_p0r1);
         } else {
             qx(cg_xp)(xi_e, pi_e, e_size, Ls, a, b, rho_e);
@@ -84,7 +84,7 @@ qx(cg_solver)(struct Fermion *xi_e, const char *source,
                        flops, sent, received,
                        options,
                        t0_e, t1_e, t2_e, t0_o, t1_o,
-                       norm_p1, norm_p0, r, dot_p1p0, dot_p1r1, dot_p0r1);
+                       norm_p1, norm_p0, dot_p1p0, dot_p1r1, dot_p0r1);
         norm_p0 = norm_p1;
     }
 end:
