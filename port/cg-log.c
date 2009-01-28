@@ -82,12 +82,14 @@ qx(cg_log)(double cg_res, const char *source, int iter,
     double dirac_res = 0.0;
 
     if (options & Q(LOG_GRADIENT)) {
+#define VCOS(a,b,ab,na,nb) (1-((a)+(b)-(ab))/(2*(na)*(nb)))
         double n_r1 = sqrt(cg_res);
         double n_p1 = sqrt(norm_p1p1);
         double n_p0 = sqrt(norm_p0p0);
-        double v_p1p0 = 0.5*(norm_p1p1 + norm_p0p0 - diff_p1p0)/(n_p0 * n_p1);
-        double v_p1r1 = 0.5*(norm_p1p1 + cg_res - diff_p1r1)/(n_p1 * n_r1);
-        double v_p0r1 = 0.5*(norm_p0p0 + cg_res - diff_p0r1)/(n_p0 * n_r1);
+        double v_p1p0 = VCOS(norm_p1p1, norm_p0p0, diff_p1p0, n_p0, n_p1);
+        double v_p1r1 = VCOS(norm_p1p1, cg_res, diff_p1r1, n_p1, n_r1);
+        double v_p0r1 = VCOS(norm_p0p0, cg_res, diff_p0r1, n_p0, n_r1);
+#undef VCOS
 
         qx(zprint)(state, source,
                    "CG step %5d"
