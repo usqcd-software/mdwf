@@ -7,5 +7,5 @@
 const char *
 Q(version)(void)
 {
-  return "XXX working copy";
+  return "MDWF version 1.2.0-rc1";
 }

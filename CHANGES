@@ -1,4 +1,7 @@
-05/17/2008 -- Version 1.1.4 XXX
+08/10/2009 -- Version 1.2.0 rc1
+                D^\dagger D solver added.
+
+05/17/2008 -- Version 1.1.4
                 Error handling bug fixed.
                 Samples report performance number even if not converged.
 
