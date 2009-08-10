@@ -119,23 +119,23 @@ for now.
 \end{equation}
 <<Project $(1+\gamma_0)$>>=
 ((project 0 plus) . ((plus-one 0 plus-i 3)
-	             (plus-one 1 plus-i 2)))
+                     (plus-one 1 plus-i 2)))
 @
 <<Unproject $(1+\gamma_0)$>>=
 ((unproject 0 plus) . ((plus-one 0)
                        (plus-one 1)
-		       (minus-i 1)
-		       (minus-i 0)))
+                       (minus-i 1)
+                       (minus-i 0)))
 @
 <<Project $(1-\gamma_0)$>>=
 ((project 0 minus) . ((plus-one 0 minus-i 3)
-   	              (plus-one 1 minus-i 2)))
+                      (plus-one 1 minus-i 2)))
 @
 <<Unproject $(1-\gamma_0)$>>=
 ((unproject 0 minus) . ((plus-one 0)
-	     	        (plus-one 1)
-		        (plus-i 1)
-		        (plus-i 0)))
+                        (plus-one 1)
+                        (plus-i 1)
+                        (plus-i 0)))
 @
 
 \pagebreak
@@ -154,23 +154,23 @@ for now.
 \end{equation}
 <<Project $(1+\gamma_1)$>>=
 ((project 1 plus) . ((plus-one 0 minus-one 3)
-	   	     (plus-one 1 plus-one 2)))
+                     (plus-one 1 plus-one 2)))
 @
 <<Unproject $(1+\gamma_1)$>>=
 ((unproject 1 plus) . ((plus-one 0)
-	     	       (plus-one 1)
-		       (plus-one 1)
-		       (minus-one 0)))
+                       (plus-one 1)
+                       (plus-one 1)
+                       (minus-one 0)))
 @
 <<Project $(1-\gamma_1)$>>=
 ((project 1 minus) . ((plus-one 0 plus-one 3)
-	   	      (plus-one 1 minus-one 2)))
+                      (plus-one 1 minus-one 2)))
 @
 <<Unproject $(1-\gamma_1)$>>=
 ((unproject 1 minus) . ((plus-one 0)
-	     	        (plus-one 1)
-		        (minus-one 1)
-		        (plus-one 0)))
+                        (plus-one 1)
+                        (minus-one 1)
+                        (plus-one 0)))
 @
 
 \pagebreak
@@ -189,23 +189,23 @@ for now.
 \end{equation}
 <<Project $(1+\gamma_2)$>>=
 ((project 2 plus) . ((plus-one 0 plus-i 2)
-	   	     (plus-one 1 minus-i 3)))
+                     (plus-one 1 minus-i 3)))
 @
 <<Unproject $(1+\gamma_2)$>>=
 ((unproject 2 plus) . ((plus-one 0)
-	     	       (plus-one 1)
-		       (minus-i 0)
-		       (plus-i 1)))
+                       (plus-one 1)
+                       (minus-i 0)
+                       (plus-i 1)))
 @
 <<Project $(1-\gamma_2)$>>=
 ((project 2 minus) . ((plus-one 0 minus-i 2)
-	   	      (plus-one 1 plus-i 3)))
+                      (plus-one 1 plus-i 3)))
 @
 <<Unproject $(1-\gamma_2)$>>=
 ((unproject 2 minus) . ((plus-one 0)
-	     	        (plus-one 1)
-		        (plus-i 0)
-		        (minus-i 1)))
+                        (plus-one 1)
+                        (plus-i 0)
+                        (minus-i 1)))
 @
 
 \pagebreak
@@ -224,13 +224,13 @@ for now.
 \end{equation}
 <<Project $(1+\gamma_3)$>>=
 ((project 3 plus) . ((plus-one 0 plus-one 2)
-	   	     (plus-one 1 plus-one 3)))
+                     (plus-one 1 plus-one 3)))
 @
 <<Unproject $(1+\gamma_3)$>>=
 ((unproject 3 plus) . ((plus-one 0)
-	     	       (plus-one 1)
-		       (plus-one 0)
-		       (plus-one 1)))
+                       (plus-one 1)
+                       (plus-one 0)
+                       (plus-one 1)))
 @
 This is our starting point in sums over directions
 <<Start $\mu$ sum>>=
@@ -240,13 +240,13 @@ This is our starting point in sums over directions
 
 <<Project $(1-\gamma_3)$>>=
 ((project 3 minus) . ((plus-one 0 minus-one 2)
-	   	      (plus-one 1 minus-one 3)))
+                      (plus-one 1 minus-one 3)))
 @
 <<Unproject $(1-\gamma_3)$>>=
 ((unproject 3 minus) . ((plus-one 0)
-	     	        (plus-one 1)
-		        (minus-one 0)
-		        (minus-one 1)))
+                        (plus-one 1)
+                        (minus-one 0)
+                        (minus-one 1)))
 @
 
 Now let us collect the $\gamma$-matrix projections and reconstructions. We
@@ -612,7 +612,7 @@ can be solve by the conjugate gradient method if the condition number of
   $r\leftarrow\langle \rho,\rho\rangle$\;
   $k\leftarrow 0$\;
   \While{$r > \epsilon$ or $k < n$}{
-    $\omega\leftarrow Mp$\;
+    $\omega\leftarrow M\pi$\;
     $\zeta\leftarrow M^{\dagger}\omega$\;
     $a\leftarrow r/\langle \omega,\omega\rangle$\;
     $\rho\leftarrow \rho - a \zeta$\;
@@ -780,10 +780,10 @@ library functions.
 int `QOP_MDWF_init(struct QOP_MDWF_State **state_ptr,
                   const int lattice[QOP_MDWF_DIM + 1],
                   const int network[QOP_MDWF_DIM],
-		  const int node[QOP_MDWF_DIM],
-	          int master_p,
+                  const int node[QOP_MDWF_DIM],
+                  int master_p,
                   void (*sublattice)(int lo[],
-	                             int hi[],
+                                     int hi[],
                                      const int node[],
                                      void *env),
                   void *env);
@@ -914,7 +914,7 @@ int `QOP_D3_MDWF_import_gauge(struct QOP_D3_MDWF_Gauge **gauge_ptr,
                                               int b,
                                               int re_im,
                                               void *env),
-			     void *env);
+                             void *env);
 @
 The [[reader()]] points to a function that provides a value of the gauge field
 at a given point on the lattice, e.g., it returns the value of
@@ -1172,10 +1172,10 @@ We also provide primitive access procedures (mnemonic convention is
 <<Interface functions>>=
 int `QOP_F3_MDWF_get_vector_fermion(struct QOP_F3_MDWF_HalfFermion *hf,
                                    const struct QOP_F3_MDWF_VectorFermion *vf,
- 	  	  	           int index);
+                                   int index);
 int `QOP_D3_MDWF_get_vector_fermion(struct QOP_D3_MDWF_HalfFermion *hf,
                                    const struct QOP_D3_MDWF_VectorFermion *vf,
- 	  		           int index);
+                                   int index);
 int `QOP_F3_MDWF_put_vector_fermion(struct QOP_F3_MDWF_VectorFermion *vf,
                                    int index,
                                    const struct QOP_F3_MDWF_HalfFermion *hf);
@@ -1207,42 +1207,42 @@ precision.
 <<Interface functions>>=
 int `QOP_F3_MDWF_DDW_operator(struct QOP_F3_MDWF_Fermion *result,
                              const struct QOP_MDWF_Parameters *params,
-	 		     const struct QOP_F3_MDWF_Gauge *gauge,
-		 	     const struct QOP_F3_MDWF_Fermion *fermion);
+                             const struct QOP_F3_MDWF_Gauge *gauge,
+                             const struct QOP_F3_MDWF_Fermion *fermion);
 int `QOP_D3_MDWF_DDW_operator(struct QOP_D3_MDWF_Fermion *result,
-			     const struct QOP_MDWF_Parameters *params,
+                             const struct QOP_MDWF_Parameters *params,
                              const struct QOP_D3_MDWF_Gauge *gauge,
-			     const struct QOP_D3_MDWF_Fermion *fermion);
+                             const struct QOP_D3_MDWF_Fermion *fermion);
 @
 <<Interface functions>>=
 int `QOP_F3_MDWF_DDW_operator_conjugated(struct QOP_F3_MDWF_Fermion *result,
-	 	                        const struct QOP_MDWF_Parameters *params,
+                                        const struct QOP_MDWF_Parameters *params,
                                         const struct QOP_F3_MDWF_Gauge *gauge,
-		 	                const struct QOP_F3_MDWF_Fermion *fermion);
+                                        const struct QOP_F3_MDWF_Fermion *fermion);
 int `QOP_D3_MDWF_DDW_operator_conjugated(struct QOP_D3_MDWF_Fermion *result,
                                         const struct QOP_MDWF_Parameters *params,
                                         const struct QOP_D3_MDWF_Gauge *gauge,
-			                const struct QOP_D3_MDWF_Fermion *fermion);
+                                        const struct QOP_D3_MDWF_Fermion *fermion);
 @
 <<Interface functions>>=
 int `QOP_F3_MDWF_M_operator(struct QOP_F3_MDWF_HalfFermion *result,
-	  	           const struct QOP_MDWF_Parameters *params,
+                           const struct QOP_MDWF_Parameters *params,
                            const struct QOP_F3_MDWF_Gauge *gauge,
-		 	   const struct QOP_F3_MDWF_HalfFermion *fermion);
+                           const struct QOP_F3_MDWF_HalfFermion *fermion);
 int `QOP_D3_MDWF_M_operator(struct QOP_D3_MDWF_HalfFermion *result,
-	 	           const struct QOP_MDWF_Parameters *params,
+                           const struct QOP_MDWF_Parameters *params,
                            const struct QOP_D3_MDWF_Gauge *gauge,
-			   const struct QOP_D3_MDWF_HalfFermion *fermion);
+                           const struct QOP_D3_MDWF_HalfFermion *fermion);
 @
 <<Interface functions>>=
 int `QOP_F3_MDWF_M_operator_conjugated(struct QOP_F3_MDWF_HalfFermion *result,
-	  	                      const struct QOP_MDWF_Parameters *params,
+                                      const struct QOP_MDWF_Parameters *params,
                                       const struct QOP_F3_MDWF_Gauge *gauge,
-			              const struct QOP_F3_MDWF_HalfFermion *fermion);
+                                      const struct QOP_F3_MDWF_HalfFermion *fermion);
 int `QOP_D3_MDWF_M_operator_conjugated(struct QOP_D3_MDWF_HalfFermion *result,
-	   	                      const struct QOP_MDWF_Parameters *params,
+                                      const struct QOP_MDWF_Parameters *params,
                                       const struct QOP_D3_MDWF_Gauge *gauge,
-			              const struct QOP_D3_MDWF_HalfFermion *fermion);
+                                      const struct QOP_D3_MDWF_HalfFermion *fermion);
 @
 
 Also the default precision macros
@@ -1308,6 +1308,30 @@ int `QOP_D3_MDWF_DDW_CG(struct QOP_D3_MDWF_Fermion *result,
                        unsigned int options);
 @
 
+A solver for $D^\dagger D\psi = \eta$ is also provided:
+<<Interface functions>>=
+int `QOP_F3_MDWF_DxD_CG(struct QOP_F3_MDWF_Fermion *psi,
+                       int *out_iterations,
+                       double *out_epsilon,
+                       const struct QOP_MDWF_Parameters *params,
+                       const struct QOP_F3_MDWF_Fermion *psi_0,
+                       const struct QOP_F3_MDWF_Gauge *gauge,
+                       const struct QOP_F3_MDWF_Fermion *rhs,
+                       int max_iteration,
+                       double epsilon,
+                       unsigned int options);
+int `QOP_D3_MDWF_DxD_CG(struct QOP_D3_MDWF_Fermion *psi,
+                       int *out_iterations,
+                       double *out_epsilon,
+                       const struct QOP_MDWF_Parameters *params,
+                       const struct QOP_D3_MDWF_Fermion *psi_0,
+                       const struct QOP_D3_MDWF_Gauge *gauge,
+                       const struct QOP_D3_MDWF_Fermion *rhs,
+                       int max_iteration,
+                       double epsilon,
+                       unsigned int options);
+@
+
 We also expose the preconditioned hermitian solver for
 $M^\dagger M\psi_e=\phi_e$. In this case the CG starts from $\psi_e$.
 If conjugate gradient converges, zero is returned. In this case
@@ -1364,11 +1388,13 @@ int `QOP_D3_MDWF_MxM_SCG(struct QOP_D3_MDWF_VectorFermion *vector_result,
 Again, macros
 <<Single precision defaults>>=
 #define `QOP_MDWF_DDW_CG QOP_F3_MDWF_DDW_CG
+#define `QDP_MDWF_DxD_CG QOP_F3_MDWF_DxD_CG
 #define `QOP_MDWF_MxM_CG QOP_F3_MDWF_MxM_CG
 #define `QOP_MDWF_MxM_SCG QOP_F3_MDWF_MxM_SCG
 @
 <<Double precision defaults>>=
 #define `QOP_MDWF_DDW_CG QOP_D3_MDWF_DDW_CG
+#define `QDP_MDWF_DxD_CG QOP_D3_MDWF_DxD_CG
 #define `QOP_MDWF_MxM_CG QOP_D3_MDWF_MxM_CG
 #define `QOP_MDWF_MxM_SCG QOP_D3_MDWF_MxM_SCG
 @
@@ -1450,31 +1476,6 @@ Also, the macros
 #define `QOP_MDWF_norm2_fermion QOP_D3_MDWF_norm2_fermion
 #define `QOP_MDWF_norm2_half_fermion QOP_D3_MDWF_norm2_half_fermion
 @
-
-\chapter{CHANGES}
-\begin{tabular}{|p{72pt}|l|p{350pt}|}
-\hline
-XXX & avp & Version 1.X.X. \\
-\hline
-May 17, 2008 & avp & Bug in error handling fixed. \\
-\hline
-May 15, 2008 & avp & Version 1.1.3. Bug in the docs fixed
-                           (master node definition). \\
-\hline
-May 14, 2008 & avp & Version 1.1.2. Solvers set error in the state if they
-                     do not converge. Samples print a helpful marker. \\
-\hline
-May 8, 2008 & avp & Version 1.1.1. A nasty bug in [[samples]] fixed.\\
-\hline
-May 7, 2008 & avp & Version 1.1.0. Shifted solver added, samples installed.\\
-\hline
-May 5, 2008 & avp & Version 1.0.1. Mixed precision bug fixed.\\
-\hline
-May 2, 2008 & avp & Version 1.0.0. \\
-\hline
-October 9, 2007 & avp & Initial version. \\
-\hline
-\end{tabular}
 
 \appendix
 \chapter{CODE CHUNKS}

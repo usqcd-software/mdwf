@@ -1,0 +1,40 @@
+(verbose [(c99 bgl/xlc) "/* $Id$ */"])
+
+(include "types.qa0")
+(include "defs-A.qa0")
+(include "defs-F.qa0")
+
+(procedure do-ApF ([stem "do_ApF"]
+                   prec&color
+                   count-flops)
+       ([res-x     pointer   "res_x"    "struct Fermion *"         ]
+        [l-norm    pointer   "l_norm"   "double *"                 ]
+        [start     int       "start"    "int"                      ]
+        [size      int       "size"     "int"                      ]
+        [l-s       int       "Ls"       "int"                      ]
+        [a+table   pointer   "aptable"  "const struct ABTable *"   ]
+        [a-table   pointer   "amtable"  "const struct ABTable *"   ]
+        [nb        pointer   "neighbor" "const struct neighbor *"  ]
+        [U         pointer   "U"        "const struct SUn *"       ]
+        [src-x     pointer   "src_x"    "const struct Fermion *"   ]
+        [src-y     pointer   "src_y"    "const struct Fermion *"   ]
+        [buf*      pointer   "rb"       "void **"                  ])
+  (op int-mul () (s-h-line) ([reg l-s] [const (size-of Projected-Fermion)]))
+  (op int-mul () (s-f-line) ([reg l-s] [const (size-of Fermion)]))
+  (op int-add () (s-1-line) ([reg s-f-line] [const (- (size-of Fermion))]))
+  (op int-mul () (x-start) ([reg start] [reg s-f-line]))
+  (op pointer-add () (res-x) ([reg res-x] [reg x-start]))
+  (op pointer-add () (src-x) ([reg src-x] [reg x-start]))
+  (op int-mul () (nb-start) ([reg start] [const (size-of neighbor)]))
+  (op pointer-add () (nb) ([reg nb] [reg nb-start]))
+  (op qcd-fnorm-init () (norm) ())
+  (loop () (i [const 0] [reg size])
+    (macro S-compute-A [reg res-x]
+                       [reg l-s] [reg s-1-line]
+                       [reg a+table] [reg a-table] [reg src-x])
+    (op pointer-add () (src-x) ([reg src-x] [reg s-f-line]))
+    (macro S-compute-add-F-norm [reg res-x] [reg norm]
+                                [reg l-s] [reg s-f-line] [reg s-h-line]
+                                [reg nb] [reg U] [reg src-y] [reg buf*]))
+  (op qcd-fnorm-fini () (norm-value) ([reg norm]))
+  (store double () ([reg l-norm]) [reg norm-value]))

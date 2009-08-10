@@ -78,6 +78,7 @@ p.sources = fermion-alloc.c \
             op-fx.c \
             op-a1xbx.c \
             op-apf.c \
+            op-apfn.c \
             op-1mf.c \
             op-1mfx.c \
             op-1mfxn.c \
@@ -88,6 +89,7 @@ p.sources = fermion-alloc.c \
             op-ba1f.c \
             op-ba1.c \
             op-d.c \
+            op-dn.c \
             op-m.c \
             op-mn.c \
             op-mx.c \
@@ -105,6 +107,7 @@ p.sources = fermion-alloc.c \
             scg-solver.c \
             solver-dirac.c \
             solver-mxm.c \
+            solver-dxd.c \
             solver-shifted.c
 
 
