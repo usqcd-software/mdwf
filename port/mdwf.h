@@ -26,7 +26,7 @@
 
 /* Cache size */
 #define CACHE_LINE_SIZE 128
-#define ALIGN(p,d) ((void *)((((intptr_t)(p))+(d)+CACHE_LINE_SIZE-1) &  \
+#define ALIGN(p,d) ((void *)((((ptrdiff_t)(p))+(d)+CACHE_LINE_SIZE-1) &  \
                             ~(CACHE_LINE_SIZE-1)))
 
 /* QCD types (qa0 controls these definitions) */
