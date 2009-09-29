@@ -2,9 +2,9 @@
 
 int
 QX(M_operator)(struct QX(HalfFermion) *result,
-	       const struct Q(Parameters) *params,
-	       const struct QX(Gauge) *gauge,
-	       const struct QX(HalfFermion) *fermion)
+               const struct Q(Parameters) *params,
+               const struct QX(Gauge) *gauge,
+               const struct QX(HalfFermion) *fermion)
 {
     DECLARE_STATE;
     long long flops = 0;
@@ -21,23 +21,22 @@ QX(M_operator)(struct QX(HalfFermion) *result,
     CHECK_ARGn(fermion, "M_operator");
     
     if (q(setup_comm)(state, sizeof (REAL)))
-	return q(set_error)(state, 0,
-			    "M_operator(): communication setup failed");
+        return q(set_error)(state, 0,
+                            "M_operator(): communication setup failed");
 
-    alloc_ptr = q(allocate_eo)(state, &alloc_size, &aligned_ptr,
-			       0, 0, 1, sizeof (REAL));
+    alloc_ptr = qx(allocate_eo)(state, &alloc_size, &aligned_ptr, 0, 0, 1);
     if (alloc_ptr == 0)
-	return q(set_error)(state, 0, "DDW_operator(): not enough memory");
+        return q(set_error)(state, 0, "DDW_operator(): not enough memory");
     odd_b = aligned_ptr;
     
     BEGIN_TIMING(state);
     qx(op_even_M)(result->even, state, params,
-		  gauge->data, fermion->even,
-		  &flops, &sent, &received,
-		  odd_b);
+                  gauge->data, fermion->even,
+                  &flops, &sent, &received,
+                  odd_b);
     END_TIMING(state, flops, sent, received);
 
     q(free)(state, alloc_ptr, alloc_size);
 
     return 0;
-}	
+}       

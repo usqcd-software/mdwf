@@ -218,16 +218,15 @@ QX(DxD_CG)(struct QX(Fermion)            *psi,
     }
 
     /* allocate locals */
-    ptr = q(allocate_eo)(state, &ptr_size, &temps,
-                         0, /* header */
-                         1, /* evens */
-                         1, /* odds */
-                         sizeof (REAL));
+    ptr = qx(allocate_eo)(state, &ptr_size, &temps,
+                          0, /* header */
+                          1, /* evens */
+                          1); /* odds */
     if (ptr == 0)
         CG_ERROR(no_mem);
 
     tmp_e  = temps;
-    tmp_o  = temps = q(step_even)(state, temps, sizeof (REAL));
+    tmp_o  = temps = qx(step_even)(state, temps);
 
     if (QX(allocate_fermion)(&rho, state) ||
         QX(allocate_fermion)(&pi, state) ||

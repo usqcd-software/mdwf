@@ -31,6 +31,9 @@ i.sources = put-ab.c \
             get-neighbor.c \
             fix-down.c \
             fix-up.c \
+            f-f-eq-d-minus-d.c \
+            f-d-plus-eq-f.c \
+            g-f-eq-d.c \
             sizeof-ab-table.c \
             sizeof-abi-table.c \
             sizeof-down-pack.c \

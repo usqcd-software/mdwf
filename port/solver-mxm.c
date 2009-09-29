@@ -13,14 +13,14 @@
 
 int
 QX(MxM_CG)(struct QX(HalfFermion)          *psi,             /* in/out */
-	   int                             *out_iterations,
-	   double                          *out_epsilon,
-	   const struct Q(Parameters)      *params,
-	   const struct QX(Gauge)          *gauge,
-	   const struct QX(HalfFermion)    *eta,
-	   int                              max_iterations,
-	   double                           min_epsilon,
-	   unsigned int                     options)
+           int                             *out_iterations,
+           double                          *out_epsilon,
+           const struct Q(Parameters)      *params,
+           const struct QX(Gauge)          *gauge,
+           const struct QX(HalfFermion)    *eta,
+           int                              max_iterations,
+           double                           min_epsilon,
+           unsigned int                     options)
 {
     DECLARE_STATE;
     long long flops = 0;
@@ -50,28 +50,27 @@ QX(MxM_CG)(struct QX(HalfFermion)          *psi,             /* in/out */
 
     /* setup communication */
     if (q(setup_comm)(state, sizeof (REAL))) {
-	return q(set_error)(state, 0, "MxM_CG(): communication setup failed");
+        return q(set_error)(state, 0, "MxM_CG(): communication setup failed");
     }
 
     /* allocate locals */
-    ptr = q(allocate_eo)(state, &ptr_size, &temps,
-			 0, /* header */
-			 8, /* evens */
-			 1, /* odds */
-			 sizeof (REAL));
+    ptr = qx(allocate_eo)(state, &ptr_size, &temps,
+                          0, /* header */
+                          8, /* evens */
+                          1); /* odds */
     if (ptr == 0) {
-	return q(set_error)(state, 0, "MxM_CG(): not enough memory");
+        return q(set_error)(state, 0, "MxM_CG(): not enough memory");
     }
     U = gauge->data;
-    t0_e  = temps;
-    t1_e  = temps = q(step_even)(state, temps, sizeof (REAL));
-    t2_e  = temps = q(step_even)(state, temps, sizeof (REAL));
-    xi_e  = temps = q(step_even)(state, temps, sizeof (REAL));
-    chi_e = temps = q(step_even)(state, temps, sizeof (REAL));
-    rho_e = temps = q(step_even)(state, temps, sizeof (REAL));
-    pi_e = temps = q(step_even)(state, temps, sizeof (REAL));
-    zeta_e = temps = q(step_even)(state, temps, sizeof (REAL));
-    t0_o  = temps = q(step_even)(state, temps, sizeof (REAL));
+    t0_e   = temps;
+    t1_e   = temps = qx(step_even)(state, temps);
+    t2_e   = temps = qx(step_even)(state, temps);
+    xi_e   = temps = qx(step_even)(state, temps);
+    chi_e  = temps = qx(step_even)(state, temps);
+    rho_e  = temps = qx(step_even)(state, temps);
+    pi_e   = temps = qx(step_even)(state, temps);
+    zeta_e = temps = qx(step_even)(state, temps);
+    t0_o   = temps = qx(step_even)(state, temps);
 
     /* clear bits we do not understand */
     options = options & MAX_OPTIONS;
@@ -80,44 +79,44 @@ QX(MxM_CG)(struct QX(HalfFermion)          *psi,             /* in/out */
     /* compute the norm of the RHS */
     flops += qx(f_norm)(&rhs_norm, state->even.full_size, state->Ls, eta->even);
     if (options) {
-	qx(zprint)(state, "MxM CG", "rhs norm %e normalized epsilon %e",
-		   rhs_norm, min_epsilon * rhs_norm);
+        qx(zprint)(state, "MxM CG", "rhs norm %e normalized epsilon %e",
+                   rhs_norm, min_epsilon * rhs_norm);
     }
     
     /* solve */
     status = qx(cg_solver)(psi->even, "MxM CG", out_iterations, out_epsilon,
-			   state, params, U,
-			   eta->even, NULL, NULL,
-			   max_iterations, min_epsilon * rhs_norm, options,
-			   &flops, &sent, &received,
-			   rho_e, pi_e, zeta_e,
-			   t0_e, t1_e, t2_e, t0_o, NULL);
+                           state, params, U,
+                           eta->even, NULL, NULL,
+                           max_iterations, min_epsilon * rhs_norm, options,
+                           &flops, &sent, &received,
+                           rho_e, pi_e, zeta_e,
+                           t0_e, t1_e, t2_e, t0_o, NULL);
 
     END_TIMING(state, flops, sent, received);
 
     /* handle zero mode properly */
     if (status > 1)
-	goto end;
+        goto end;
 
     /* output final residuals if desired */
     if (options) {
-	qx(zprint)(state, "MxM CG", "status %d, total iterations %d",
-		  status, *out_iterations);
+        qx(zprint)(state, "MxM CG", "status %d, total iterations %d",
+                  status, *out_iterations);
     }
     if (options & (Q(FINAL_CG_RESIDUAL) | Q(LOG_CG_RESIDUAL))) {
-	double norm = rhs_norm == 0? 1: rhs_norm;
+        double norm = rhs_norm == 0? 1: rhs_norm;
 
-	qx(zprint)(state, "MxM CG", "solver residual %e normalized %e",
-		   *out_epsilon, *out_epsilon / norm);
+        qx(zprint)(state, "MxM CG", "solver residual %e normalized %e",
+                   *out_epsilon, *out_epsilon / norm);
     }
     if (rhs_norm != 0.0)
-	*out_epsilon = *out_epsilon / rhs_norm;
+        *out_epsilon = *out_epsilon / rhs_norm;
 
 end:
     /* free memory */
     q(free)(state, ptr, ptr_size);
     if (status != 0) {
-	q(set_error)(state, 0, "MxM_CG() solver failed to converge");
+        q(set_error)(state, 0, "MxM_CG() solver failed to converge");
     }
     return status;
 }

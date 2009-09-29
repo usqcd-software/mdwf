@@ -1,0 +1,15 @@
+(verbose [(c99 bgl/xlc) "/* $Id$ */"])
+
+(include "types.qa0")
+
+(procedure gauge-f=d ([stem "g_f_eq_d"])
+           ([R         pointer "r"         "struct SUnF *"       ]
+            [size      int     "size"      "int"                 ]
+            [A         pointer "a"         "const struct SUnD *" ])
+   (loop () (i [const 0] [reg size])
+     (load qcd-su-n-double () vA ([reg A]))
+     (op pointer-add () (A) ([reg A] [const (size-of SU-n-double)]))
+     (store qcd-su-n-float () ([reg R]) [reg vA])
+     (op pointer-add () (R) ([reg R] [const (size-of SU-n-float)]))))
+
+

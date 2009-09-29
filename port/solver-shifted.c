@@ -16,15 +16,15 @@
 int
 QX(MxM_SCG)(struct QX(VectorFermion)       *v_psi,
             struct QX(HalfFermion)         *psi,
-  	    int                             *out_iterations,
-	    double                          *out_epsilon,
-	    const struct Q(Parameters)      *params,
-	    const double                     shift[],
-	    const struct QX(Gauge)          *gauge,
-	    const struct QX(HalfFermion)    *eta,
-	    int                              max_iterations,
-	    double                           min_epsilon,
-	    unsigned int                     options)
+            int                             *out_iterations,
+            double                          *out_epsilon,
+            const struct Q(Parameters)      *params,
+            const double                     shift[],
+            const struct QX(Gauge)          *gauge,
+            const struct QX(HalfFermion)    *eta,
+            int                              max_iterations,
+            double                           min_epsilon,
+            unsigned int                     options)
 {
     DECLARE_STATE;
     int count = 0;
@@ -65,13 +65,13 @@ QX(MxM_SCG)(struct QX(VectorFermion)       *v_psi,
 
     /* setup communication */
     if (q(setup_comm)(state, sizeof (REAL))) {
-	return q(set_error)(state, 0, "MxM_SCG(): communication setup failed");
+        return q(set_error)(state, 0, "MxM_SCG(): communication setup failed");
     }
 
     sptr_size = count * 5 * sizeof (double);
     sptr = q(malloc)(state, sptr_size);
     if (sptr == 0) {
-	return q(set_error)(state, 0, "MxM_SCG(): not enough memory");
+        return q(set_error)(state, 0, "MxM_SCG(): not enough memory");
     }
     dp = sptr;
     d = dp + count;
@@ -80,25 +80,24 @@ QX(MxM_SCG)(struct QX(VectorFermion)       *v_psi,
     bdd = adn + count;
 
     /* allocate locals */
-    pptr = q(allocate_eo)(state, &pptr_size, &temps,
-			  0, /* header */
-			  7 + count, /* evens */
-			  1, /* odds */
-			  sizeof (REAL));
+    pptr = qx(allocate_eo)(state, &pptr_size, &temps,
+                           0, /* header */
+                           7 + count, /* evens */
+                           1); /* odds */
     if (pptr == 0) {
-	q(free)(state, sptr, sptr_size);
-	return q(set_error)(state, 0, "MxM_CG(): not enough memory");
+        q(free)(state, sptr, sptr_size);
+        return q(set_error)(state, 0, "MxM_CG(): not enough memory");
     }
     U = gauge->data;
-    t0_e  = temps;
-    t1_e  = temps = q(step_even)(state, temps, sizeof (REAL));
-    t2_e  = temps = q(step_even)(state, temps, sizeof (REAL));
-    chi_e = temps = q(step_even)(state, temps, sizeof (REAL));
-    rho_e = temps = q(step_even)(state, temps, sizeof (REAL));
-    pi_e = temps = q(step_even)(state, temps, sizeof (REAL));
-    zeta_e = temps = q(step_even)(state, temps, sizeof (REAL));
-    t0_o  = temps = q(step_even)(state, temps, sizeof (REAL));
-    vpi_e = temps = q(step_odd)(state, temps, sizeof (REAL));
+    t0_e   = temps;
+    t1_e   = temps = qx(step_even)(state, temps);
+    t2_e   = temps = qx(step_even)(state, temps);
+    chi_e  = temps = qx(step_even)(state, temps);
+    rho_e  = temps = qx(step_even)(state, temps);
+    pi_e   = temps = qx(step_even)(state, temps);
+    zeta_e = temps = qx(step_even)(state, temps);
+    t0_o   = temps = qx(step_even)(state, temps);
+    vpi_e  = temps = qx(step_odd)(state, temps);
 
     /* clear bits we do not understand */
     options = options & MAX_OPTIONS;
@@ -107,47 +106,47 @@ QX(MxM_SCG)(struct QX(VectorFermion)       *v_psi,
     /* compute the norm of the RHS */
     flops += qx(f_norm)(&rhs_norm, state->even.full_size, state->Ls, eta->even);
     if (options) {
-	qx(zprint)(state, "MxM SCG", "rhs norm %e normalized epsilon %e",
-		   rhs_norm, min_epsilon * rhs_norm);
+        qx(zprint)(state, "MxM SCG", "rhs norm %e normalized epsilon %e",
+                   rhs_norm, min_epsilon * rhs_norm);
     }
     
     /* solve */
     status = qx(scg_solver)(v_psi->even, psi->even, count, "MxM SCG",
-			    out_iterations, out_epsilon,
-			    state, params, shift, U, eta->even, 
-			    max_iterations, min_epsilon * rhs_norm, options,
-			    &flops, &sent, &received,
-			    dp, d, dn, adn, bdd,
-			    rho_e, vpi_e, pi_e, zeta_e,
-			    t0_e, t1_e, t2_e, t0_o);
+                            out_iterations, out_epsilon,
+                            state, params, shift, U, eta->even, 
+                            max_iterations, min_epsilon * rhs_norm, options,
+                            &flops, &sent, &received,
+                            dp, d, dn, adn, bdd,
+                            rho_e, vpi_e, pi_e, zeta_e,
+                            t0_e, t1_e, t2_e, t0_o);
 
     END_TIMING(state, flops, sent, received);
 
     /* handle zero mode properly */
     if (status > 1)
-	goto end;
+        goto end;
 
     /* output final residuals if desired */
     if (options) {
-	qx(zprint)(state, "MxM SCG", "status %d, total iterations %d",
-		  status, *out_iterations);
+        qx(zprint)(state, "MxM SCG", "status %d, total iterations %d",
+                  status, *out_iterations);
     }
     if (options & (Q(FINAL_CG_RESIDUAL) | Q(LOG_CG_RESIDUAL))) {
-	double norm = rhs_norm == 0? 1: rhs_norm;
+        double norm = rhs_norm == 0? 1: rhs_norm;
 
-	qx(zprint)(state, "MxM SCG",
-		   "zero shift residual %e normalized %e",
-		   *out_epsilon, *out_epsilon / norm);
+        qx(zprint)(state, "MxM SCG",
+                   "zero shift residual %e normalized %e",
+                   *out_epsilon, *out_epsilon / norm);
     }
     if (rhs_norm != 0.0)
-	*out_epsilon = *out_epsilon / rhs_norm;
+        *out_epsilon = *out_epsilon / rhs_norm;
 
 end:
     /* free memory */
     q(free)(state, pptr, pptr_size);
     q(free)(state, sptr, sptr_size);
     if (status != 0) {
-	q(set_error)(state, 0, "MxM_SCG() solver failed to converge");
+        q(set_error)(state, 0, "MxM_SCG() solver failed to converge");
     }
     return status;
 }

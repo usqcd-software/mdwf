@@ -1,9 +1,9 @@
 #include <mdwf.h>
 
 void *
-q(allocate_eo)(struct Q(State) *state,
-               size_t *size, void **aligned_ptr,
-               size_t hdr_size, int even_count, int odd_count, size_t fsize)
+qx(allocate_eo)(struct Q(State) *state,
+                size_t *size, void **aligned_ptr,
+                size_t hdr_size, int even_count, int odd_count)
 {
   int es = qx(sizeof_fermion)(state->even.full_size, state->Ls);
   int os = qx(sizeof_fermion)(state->odd.full_size, state->Ls);

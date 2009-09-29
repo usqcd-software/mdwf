@@ -1,0 +1,18 @@
+(verbose [(c99 bgl/xlc) "/* $Id$ */"])
+
+(include "types.qa0")
+
+(procedure fermion-d+=f ([stem "f_d_peq_f"]
+                          count-flops)
+           ([R         pointer "r"         "struct FermionD *"      ]
+            [size      int     "size"      "int"                    ]
+            [l-s       int     "Ls"        "int"                    ]
+            [A         pointer "a"         "const struct FermionF *"])
+   (loop () (i [const 0] [reg size])
+     (loop () (s [const 0] [reg l-s])
+       (load qcd-fermion-double () vR ([reg R]))
+       (load qcd-fermion-float () vA ([reg A]))
+       (op pointer-add () (A) ([reg A] [const (size-of Fermion-float)]))
+       (op qcd-addf () (R+A) ([reg vR] [reg vA]))
+       (store qcd-fermion () ([reg R]) [reg R+A])
+       (op pointer-add () (R) ([reg R] [const (size-of Fermion-double)])))))

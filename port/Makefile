@@ -23,7 +23,6 @@ endif
 
 x.sources = error.c \
             alloc-aligned.c \
-            alloc-eo.c \
             alloc.c \
             dealloc.c \
             perf.c \
@@ -33,15 +32,17 @@ x.sources = error.c \
             set-shamir.c \
             set-generic.c \
             p-free.c \
-            step-even.c \
-            step-odd.c \
             version.c \
             init.c \
             fini.c \
             comm-setup.c \
-            comm-free.c
+            comm-free.c \
+            solver-dirac-mixed.c
 
-p.sources = fermion-alloc.c \
+p.sources = alloc-eo.c \
+            step-even.c \
+            step-odd.c \
+            fermion-alloc.c \
             fermion-import.c \
             fermion-export.c \
             fermion-free.c \

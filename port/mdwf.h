@@ -1,9 +1,9 @@
-#ifndef MARK_B9BA8123_0F1A_40FD_8827_42266FE32F3E
-#define MARK_B9BA8123_0F1A_40FD_8827_42266FE32F3E
-
 # ifndef QOP_MDWF_DEFAULT_PRECISION
 #  define QOP_MDWF_DEFAULT_PRECISION 'D'
 # endif
+
+#ifndef MARK_B9BA8123_0F1A_40FD_8827_42266FE32F3E
+#define MARK_B9BA8123_0F1A_40FD_8827_42266FE32F3E
 
 # include <qop-mdwf3.h>
 # include <stdlib.h>
@@ -12,17 +12,11 @@
 # include <sys/time.h>
 
 # define q(x) qop_mdwf_##x
+# define qf(x) qop_f3_mdwf_##x
+# define qd(x) qop_d3_mdwf_##x
 # define Q(x) QOP_MDWF_##x
-# if QOP_MDWF_DEFAULT_PRECISION=='D'
-#  define qx(x) qop_d3_mdwf_##x
-#  define QX(x) QOP_D3_MDWF_##x
-#  define REAL double
-# endif
-# if QOP_MDWF_DEFAULT_PRECISION=='F'
-#  define qx(x) qop_f3_mdwf_##x
-#  define QX(x) QOP_F3_MDWF_##x
-#  define REAL float
-# endif
+# define QF(x) QOP_F3_MDWF_##x
+# define QD(x) QOP_D3_MDWF_##x
 
 /* Cache size */
 #define CACHE_LINE_SIZE 128
@@ -30,10 +24,14 @@
                             ~(CACHE_LINE_SIZE-1)))
 
 /* QCD types (qa0 controls these definitions) */
-struct SUn;
-struct Fermion;
-struct VectorFermion;
-struct ProjectedFermion;
+struct SUnD;
+struct SUnF;
+struct FermionF;
+struct FermionD;
+struct VectorFermionF;
+struct VectorFermionD;
+struct ProjectedFermionF;
+struct ProjectedFermionD;
 
 /* Internal types */
 struct local {
@@ -79,33 +77,6 @@ struct eo_lattice {
   void            *receive_buf[2*Q(DIM)];  /* pf receive bufs (up[], down[]) */
   int              total_send;             /* bytes to send */
   int              total_receive;          /* bytes to receive */
-};
-
-/* MDWF types */
-struct QX(Fermion) {
-  struct Q(State) *state;
-  size_t size;
-  struct Fermion *even;  
-  struct Fermion *odd;
-};
-
-struct QX(HalfFermion) {
-  struct Q(State) *state;
-  size_t size;
-  struct Fermion *even;  
-};
-
-struct QX(VectorFermion) {
-  struct Q(State) *state;
-  size_t size;
-  int    count;
-  struct VectorFermion *even;  
-};
-
-struct QX(Gauge) {
-  struct Q(State) *state;
-  size_t size;
-  struct SUn *data;
 };
 
 /* structs ABTable and ABiTable are defined by qa0 */
@@ -164,6 +135,96 @@ struct Q(State) {
   int               *v2lx;            /* Only for init */
 };
 
+/* Timing */
+#define BEGIN_TIMING(s) do { gettimeofday(&((s)->t0), NULL); } while (0)
+#define END_TIMING(s, f, snd, rcv) do { \
+    gettimeofday(&((s)->t1), NULL); \
+    (s)->time_sec = ((s)->t1.tv_sec - (s)->t0.tv_sec) \
+      + 1e-6 * ((s)->t1.tv_usec - (s)->t0.tv_usec); \
+    (s)->flops = (f); (s)->sent = (snd); (s)->received = (rcv); } while (0)
+
+/* Argument checking */
+#define DECLARE_STATE struct Q(State) *state = NULL
+#define CHECK_ARG0(n) do { if ((n) == 0) return 1;      \
+    state = (n)->state; } while (0)
+#define CHECK_ARGn(n,f) do { if ((n) == 0)                              \
+      return q(set_error)(state, 0, f "(): NULL argument");             \
+    if ((n)->state != state)                                            \
+      return q(set_error)(state, 0, f "(): geometry mismatch"); } while (0)
+#define CHECK_POINTER(n,f) do { if ((n) == 0)                           \
+      return q(set_error)(state, 0, f "(): NULL argument"); } while (0)
+
+#endif /* !defined(MARK_B9BA8123_0F1A_40FD_8827_42266FE32F3E) */
+
+# undef qx
+# undef QX
+# undef REAL
+# undef SUn
+# undef Fermion
+# undef VectorFermion
+# undef ProjectedFermion
+# if QOP_MDWF_DEFAULT_PRECISION=='D'
+#  define qx(x) qop_d3_mdwf_##x
+#  define QX(x) QOP_D3_MDWF_##x
+#  define REAL double
+#  define SUn  SUnD
+#  define Fermion FermionD
+#  define VectorFermion VectorFermionD
+#  define ProjectedFermion ProjectedFermionD
+# endif
+# if QOP_MDWF_DEFAULT_PRECISION=='F'
+#  define qx(x) qop_f3_mdwf_##x
+#  define QX(x) QOP_F3_MDWF_##x
+#  define REAL float
+#  define SUn  SUnF
+#  define Fermion FermionF
+#  define VectorFermion VectorFermionF
+#  define ProjectedFermion ProjectedFermionF
+# endif
+
+/* MDWF types */
+struct QX(Fermion) {
+  struct Q(State) *state;
+  size_t size;
+  struct Fermion *even;  
+  struct Fermion *odd;
+};
+
+struct QX(HalfFermion) {
+  struct Q(State) *state;
+  size_t size;
+  struct Fermion *even;  
+};
+
+struct QX(VectorFermion) {
+  struct Q(State) *state;
+  size_t size;
+  int    count;
+  struct VectorFermion *even;  
+};
+
+struct QX(Gauge) {
+  struct Q(State) *state;
+  size_t size;
+  struct SUn *data;
+};
+
+/* mixed precision operations */
+/* Fd = Fd + Ff */
+unsigned int q(f_d_peq_f)(struct FermionD *dst,
+                          int size, int Ls,
+                          const struct FermionF *src_f);
+/* Ff = Fd - Fd */
+unsigned int q(f_f_eq_dmd)(struct FermionF *dst,
+                           int size, int Ls,
+                           const struct FermionD *src_a,
+                           const struct FermionD *src_b);
+
+/* converting gauge from double down to float */
+void q(g_f_eq_d)(struct SUnF *dst,
+                 int size,
+                 const struct SUnD *src);
+
 /* layout translation */
 void q(l2v)(int x[Q(DIM)], const struct local *local, int p);
 int q(v2l)(const int x[Q(DIM)], const struct local *local);
@@ -178,14 +239,13 @@ void *q(malloc)(struct Q(State) *state, size_t bytes);
 void *q(allocate_aligned)(struct Q(State) *state,
                           size_t *size, void **aligned_ptr,
                           size_t hdr_size, size_t bulk_size);
-void *q(allocate_eo)(struct Q(State) *state,
-                     size_t *size, void **aligned_ptr,
-                     size_t hdr_size, int even_count, int odd_count,
-                     size_t f_size);
+void *qx(allocate_eo)(struct Q(State) *state,
+                      size_t *size, void **aligned_ptr,
+                      size_t hdr_size, int even_count, int odd_count);
 void q(free)(struct Q(State) *state, void *ptr, size_t bytes);
 void q(cleanup_state)(struct Q(State) *state);
-void *q(step_even)(struct Q(State) *state, void *aligned_ptr, size_t fsize);
-void *q(step_odd)(struct Q(State) *state, void *aligned_ptr, size_t fsize);
+void *qx(step_even)(struct Q(State) *state, void *aligned_ptr);
+void *qx(step_odd)(struct Q(State) *state, void *aligned_ptr);
 
 void qx(x_import)(struct eo_lattice *eo,
                   double r[],
@@ -208,15 +268,15 @@ void qx(x_export)(struct eo_lattice *eo,
                   void *env);
 
 /* Projections */
-typedef unsigned int (*Up_project)(struct ProjectedFermion *r,
-                                   int size, int Ls,
-                                   const struct up_pack *link,
-                                   const struct SUn *U,
-                                   const struct Fermion *f);
-typedef unsigned int (*Down_project)(struct ProjectedFermion *r,
-                                     int size, int Ls,
-                                     const struct down_pack *link,
-                                     const struct Fermion *f);
+typedef unsigned int (*qx(Up_project))(struct ProjectedFermion *r,
+                                       int size, int Ls,
+                                       const struct up_pack *link,
+                                       const struct SUn *U,
+                                       const struct Fermion *f);
+typedef unsigned int (*qx(Down_project))(struct ProjectedFermion *r,
+                                         int size, int Ls,
+                                         const struct down_pack *link,
+                                         const struct Fermion *f);
 unsigned int qx(proj_g0plus)(struct ProjectedFermion *r,
                              int size, int Ls,
                              const struct down_pack *link,
@@ -292,16 +352,16 @@ unsigned int qx(proj_Ucg3minus)(struct ProjectedFermion *r,
 
 /* projection tables */
 /*  normal projection */
-extern Up_project qx(up_project_n)[Q(DIM)];
-extern Down_project qx(down_project_n)[Q(DIM)];
+extern qx(Up_project) qx(up_project_n)[Q(DIM)];
+extern qx(Down_project) qx(down_project_n)[Q(DIM)];
 /*  conjugated projection */
-extern Up_project qx(up_project_x)[Q(DIM)];
-extern Down_project qx(down_project_x)[Q(DIM)];
+extern qx(Up_project) qx(up_project_x)[Q(DIM)];
+extern qx(Down_project) qx(down_project_x)[Q(DIM)];
 /* compute projections on the boundary and fill the send buffers */
 void qx(boundary)(struct eo_lattice *xy,
                   int Ls,
-                  const Up_project up_proj[],
-                  const Down_project down_proj[],
+                  const qx(Up_project) up_proj[],
+                  const qx(Down_project) down_proj[],
                   const struct SUn *U,
                   const struct Fermion *src_y,
                   long long *flops);
@@ -905,24 +965,3 @@ unsigned int qx(scg_xp)(struct Fermion *xi_e,
                         const struct Fermion *rho_e);
 
 /* --- other composites are here */
-
-/* Timing */
-#define BEGIN_TIMING(s) do { gettimeofday(&((s)->t0), NULL); } while (0)
-#define END_TIMING(s, f, snd, rcv) do { \
-    gettimeofday(&((s)->t1), NULL); \
-    (s)->time_sec = ((s)->t1.tv_sec - (s)->t0.tv_sec) \
-      + 1e-6 * ((s)->t1.tv_usec - (s)->t0.tv_usec); \
-    (s)->flops = (f); (s)->sent = (snd); (s)->received = (rcv); } while (0)
-
-/* Argument checking */
-#define DECLARE_STATE struct Q(State) *state = NULL
-#define CHECK_ARG0(n) do { if ((n) == 0) return 1;      \
-    state = (n)->state; } while (0)
-#define CHECK_ARGn(n,f) do { if ((n) == 0)                              \
-      return q(set_error)(state, 0, f "(): NULL argument");             \
-    if ((n)->state != state)                                            \
-      return q(set_error)(state, 0, f "(): geometry mismatch"); } while (0)
-#define CHECK_POINTER(n,f) do { if ((n) == 0)                           \
-      return q(set_error)(state, 0, f "(): NULL argument"); } while (0)
-
-#endif /* !defined(MARK_B9BA8123_0F1A_40FD_8827_42266FE32F3E) */

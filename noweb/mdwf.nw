@@ -342,8 +342,8 @@ D_{DW}\psi=
 A_{oo} & F_{oe}B_{ee}\\
 F_{eo}B_{oo} & A_{ee}
 \end{array}\right)
-\left(\begin{array}{c}\psi_e\\\psi_o\end{array}\right) =
-   \left(\begin{array}{c}\eta_e\\\eta_o\end{array}\right),
+\left(\begin{array}{c}\psi_o\\\psi_e\end{array}\right) =
+   \left(\begin{array}{c}\eta_o\\\eta_e\end{array}\right),
 \]
 one performs the following steps:
 \begin{enumerate}
@@ -1307,6 +1307,23 @@ int `QOP_D3_MDWF_DDW_CG(struct QOP_D3_MDWF_Fermion *result,
                        double epsilon,
                        unsigned int options);
 @
+The mixed precision solver uses the trick communicated by Stefan Krieg: run the
+CG in single precision while accumulating the result in double. It has only
+a double precision version and takes an extra parameter [[f_iterations]] which
+controls the number of float CG iterations between double updates.
+<<Interface functions>>=
+int `QOP_MDWF_mixed_DDW_CG(struct QOP_D3_MDWF_Fermion *result,
+                           int *out_iterations,
+                           double *out_epsilon,
+                           const struct QOP_MDWF_Parameters *params,
+                           const struct QOP_D3_MDWF_Fermion *x_0,
+                           const struct QOP_D3_MDWF_Gauge *gauge,
+                           const struct QOP_D3_MDWF_Fermion *rhs,
+                           int f_iterations,
+                           int max_iteration,
+                           double epsilon,
+                           unsigned int options);
+@                      
 
 A solver for $D^\dagger D\psi = \eta$ is also provided:
 <<Interface functions>>=

@@ -42,7 +42,10 @@ sources = fix-down.qa0 \
           sizeof-abi-table.qa0 \
           sizeof-down-pack.qa0 \
           sizeof-up-pack.qa0 \
-          sizeof-neighbor.qa0
+          sizeof-neighbor.qa0 \
+          f-f-eq-d-minus-d.qa0 \
+          f-d-plus-eq-f.qa0 \
+          g-f-eq-d.qa0
 
 x.sources = get-fermion.qa0 \
             put-fermion.qa0 \
