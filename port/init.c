@@ -23,8 +23,8 @@ q(v2l)(const int x[Q(DIM)], const struct local *local)
 
 static void
 build_packs(struct eo_lattice   *eo,
-	    struct eo_lattice   *oe,
-	    struct Q(State)     *state)
+            struct eo_lattice   *oe,
+            struct Q(State)     *state)
 {
   int            d;
   int            z_up[Q(DIM)];
@@ -43,13 +43,13 @@ build_packs(struct eo_lattice   *eo,
     q(l2v)(x, oe->local, la);
     for (d = 0; d < Q(DIM); d++) {
       if (state->network[d] == 1)
-	continue;
+        continue;
       if (x[d] == local->lo[d]) {
-	q(put_down_pack)(eo->down_pack[d], z_down[d]++, p);
+        q(put_down_pack)(eo->down_pack[d], z_down[d]++, p);
       }
       if (x[d] + 1 == local->hi[d]) {
-	q(put_up_pack)(eo->up_pack[d], z_up[d]++,
-		       p, state->v2lx[la] * Q(DIM) + d);
+        q(put_up_pack)(eo->up_pack[d], z_up[d]++,
+                       p, state->v2lx[la] * Q(DIM) + d);
       }
     }
   }
@@ -57,8 +57,8 @@ build_packs(struct eo_lattice   *eo,
 
 static void
 build_local_neighbors(struct eo_lattice        *eo,
-		      const struct eo_lattice  *oe,
-		      const struct Q(State)    *state)
+                      const struct eo_lattice  *oe,
+                      const struct Q(State)    *state)
 {
   int                 p;
   int                 d;
@@ -80,25 +80,25 @@ build_local_neighbors(struct eo_lattice        *eo,
     for (d = 0; d < Q(DIM); d++) {
       x[d] += 1;
       if ((state->network[d] > 1) && (x[d] == local->hi[d])) {
-	mask |= 1 << d;
-	f_up[d] = -1;
+        mask |= 1 << d;
+        f_up[d] = -1;
       } else {
-	if (x[d] == local->hi[d]) x[d] = 0;
-	la = q(v2l)(x, local);
-	f_up[d] = oe->v2lx[la];
-	if (x[d] == 0) x[d] = local->hi[d];
+        if (x[d] == local->hi[d]) x[d] = 0;
+        la = q(v2l)(x, local);
+        f_up[d] = oe->v2lx[la];
+        if (x[d] == 0) x[d] = local->hi[d];
       }
       x[d] -= 2;
       if ((state->network[d] > 1) && x[d] < local->lo[d]) {
-	mask |= 1 << (d + Q(DIM));
-	f_down[d] = -1;
-	u_down[d] = -1;
+        mask |= 1 << (d + Q(DIM));
+        f_down[d] = -1;
+        u_down[d] = -1;
       } else {
-	if (x[d] < 0) x[d] = local->hi[d] - 1;
-	la = q(v2l)(x, local);
-	f_down[d] = oe->v2lx[la];
-	u_down[d] = state->v2lx[la] * Q(DIM) + d;
-	if (x[d] == local->hi[d] - 1) x[d] = -1;
+        if (x[d] < 0) x[d] = local->hi[d] - 1;
+        la = q(v2l)(x, local);
+        f_down[d] = oe->v2lx[la];
+        u_down[d] = state->v2lx[la] * Q(DIM) + d;
+        if (x[d] == local->hi[d] - 1) x[d] = -1;
       }
       x[d] += 1;
     }
@@ -141,9 +141,9 @@ walker(struct Q(State)  *state,
     for (d = 0; d < Q(DIM); d++) {
       parity += left[d];
       if (state->network[d] > 1) {
-	if ((left[d] == state->local.lo[d]) ||
-	    (left[d] + 1 == state->local.hi[d]))
-	  face = 1;
+        if ((left[d] == state->local.lo[d]) ||
+            (left[d] + 1 == state->local.hi[d]))
+          face = 1;
       }
     }
     if (face != face_p)
@@ -186,8 +186,8 @@ build_layout(struct Q(State) *state)
 
 static char *
 eo_init(struct eo_lattice        *eo,
-	const struct eo_lattice  *oe,
-	struct Q(State)          *state)
+        const struct eo_lattice  *oe,
+        struct Q(State)          *state)
 {
   int ns = q(sizeof_neighbor)(eo->full_size);
   int d;
@@ -223,15 +223,8 @@ eo_init(struct eo_lattice        *eo,
 
 static char *
 state_init(struct Q(State)  *state,
-	   const int         lattice[Q(DIM) + 1],
-	   const int         network[Q(DIM)],
-	   const int         node[Q(DIM)],
-	   int               master_p,
-	   void            (*local)(int lo[],
-				    int hi[],
-				    const int node[],
-				    void *env),
-	   void             *env)
+           struct Q(Config) *config,
+           int               node)
 {
   char *msg;
   int v, d, la, parity, face;
@@ -241,14 +234,16 @@ state_init(struct Q(State)  *state,
 
   memset(state, 0, sizeof (struct Q(State)));
   state->version = QOP_MDWF_version();
-  state->Ls = lattice[Q(DIM)];
-  state->master_p = master_p;
-  local(state->local.lo, state->local.hi, node, env);
+  state->Ls = config->ls;
+  state->master_p = config->master_p;
+  config->sublattice(state->local.lo, state->local.hi, node, config->env);
+  state->node = node;
   for (v = 1, d = 0; d < Q(DIM); d++) {
-    state->network[d] = network[d];
-    state->node[d] = node[d];
-    state->lattice[d] = lattice[d];
+    state->network[d] = config->net[d];
+    state->lattice[d] = config->lat[d];
     state->local.dx[d] = state->local.hi[d] - state->local.lo[d];
+    state->neighbor_up[d] = config->neighbor_up[d];
+    state->neighbor_down[d] = config->neighbor_down[d];
     v *= state->local.dx[d];
   }
   state->volume = v;
@@ -260,15 +255,15 @@ state_init(struct Q(State)  *state,
     }
     eo = (parity & 1) ? &state->odd : &state->even;
     for (face = 0, d = 0; d < Q(DIM); d++) {
-      if (network[d] > 1) {
-	if (x[d] == state->local.lo[d]) {
-	  face = 1;
-	  eo->receive_down_size[d]++;
-	}
-	if (x[d] == state->local.hi[d] - 1) {
-	  face = 1;
-	  eo->receive_up_size[d]++;
-	}
+      if (config->net[d] > 1) {
+        if (x[d] == state->local.lo[d]) {
+          face = 1;
+          eo->receive_down_size[d]++;
+        }
+        if (x[d] == state->local.hi[d] - 1) {
+          face = 1;
+          eo->receive_up_size[d]++;
+        }
       }
     }
     if (face)
@@ -308,12 +303,12 @@ err:
 
 static void
 eo_patch_up(struct eo_lattice *eo,
-	    const struct Q(State) *state,
-	    const struct eo_lattice *x_eo,
-	    const struct eo_lattice *x_oe,
-	    const struct Q(State) *x_state,
-	    const int lattice[Q(DIM)+1],
-	    int dim)
+            const struct Q(State) *state,
+            const struct eo_lattice *x_eo,
+            const struct eo_lattice *x_oe,
+            const struct Q(State) *x_state,
+            const int lattice[Q(DIM)+1],
+            int dim)
 {
   int p, b, la, dp;
   int down_size = x_eo->send_down_size[dim];
@@ -334,12 +329,12 @@ eo_patch_up(struct eo_lattice *eo,
 
 static void
 eo_patch_down(struct eo_lattice *eo,
-	      const struct Q(State) *state,
-	      const struct eo_lattice *x_eo,
-	      const struct eo_lattice *x_oe,
-	      const struct Q(State) *x_state,
-	      const int lattice[Q(DIM)+1],
-	      int dim)
+              const struct Q(State) *state,
+              const struct eo_lattice *x_eo,
+              const struct eo_lattice *x_oe,
+              const struct Q(State) *x_state,
+              const int lattice[Q(DIM)+1],
+              int dim)
 {
   int p, b, la, up;
   int up_size = x_eo->send_up_size[dim];
@@ -359,71 +354,56 @@ eo_patch_down(struct eo_lattice *eo,
 }
 
 static char *
-patch_boundary(struct Q(State) *state,
-	       const int        lattice[Q(DIM) + 1],
-	       const int        network[Q(DIM)],
-	       const int        node[Q(DIM)],
-	       int              master_p,
-	       void           (*local) (int lo[], int hi[], const int node[],
-					void *env),
-	       void             *env)
+patch_boundary(struct Q(State)   *state,
+               struct Q(Config)  *config)
 {
-  int d;
-  int n[Q(DIM)];
-  struct Q(State) x_state;
-  char *status;
+    int d, n;
+    struct Q(State) x_state;
+    char *status;
   
 #define CHECK(cond,msg) do { if (cond) return msg;} while (0)
-  for (d = 0; d < Q(DIM); d++)
-    n[d] = node[d];
 
-  for (d = 0; d < Q(DIM); d++) {
-    if (network[d] == 1)
-      continue;
-    
-    n[d]--;
-    if (n[d] < 0) n[d] = network[d] - 1;
+    for (d = 0; d < Q(DIM); d++) {
+        if (config->net[d] == 1)
+            continue;
+        
+        n = config->neighbor_down[d];
 
-    status = state_init(&x_state, lattice, network, n, master_p, local, env);
-    CHECK(status, "neighbor state init failed");
-    eo_patch_down(&state->even, state,
-		  &x_state.even, &x_state.odd, &x_state, lattice, d);
-    eo_patch_down(&state->odd, state,
-		  &x_state.odd, &x_state.even, &x_state, lattice, d);
-    q(cleanup_state)(&x_state);
+        status = state_init(&x_state, config, n);
+        CHECK(status, "neighbor state init failed");
+        eo_patch_down(&state->even, state,
+                      &x_state.even, &x_state.odd, &x_state, config->lat, d);
+        eo_patch_down(&state->odd, state,
+                      &x_state.odd, &x_state.even, &x_state, config->lat, d);
+        q(cleanup_state)(&x_state);
 
-    n[d]++;
-    if (n[d] == network[d]) n[d] = 0;
-
-    n[d]++;
-    if (n[d] == network[d]) n[d] = 0;
-
-    status = state_init(&x_state, lattice, network, n, master_p, local, env);
-    CHECK(status, "neighbor state init failed");
-    eo_patch_up(&state->even, state,
-		&x_state.even, &x_state.odd, &x_state, lattice, d);
-    eo_patch_up(&state->odd, state,
-		&x_state.odd, &x_state.even, &x_state, lattice, d);
-    q(cleanup_state)(&x_state);
-
-    n[d]--;
-    if (n[d] < 0) n[d] = network[d] - 1;
-  }
+        n = config->neighbor_up[d];
+        status = state_init(&x_state, config, n);
+        CHECK(status, "neighbor state init failed");
+        eo_patch_up(&state->even, state,
+                    &x_state.even, &x_state.odd, &x_state, config->lat, d);
+        eo_patch_up(&state->odd, state,
+                    &x_state.odd, &x_state.even, &x_state, config->lat, d);
+        q(cleanup_state)(&x_state);
+    }
 #undef CHECK
-  return NULL;
+    return NULL;
 }
 
 int
 Q(init)(struct Q(State) **state_ptr,
-	const int lattice[Q(DIM)+1],
-	const int network[Q(DIM)],
-	const int node[Q(DIM)],
-	int master_p,
-	void (*local)(int lo[],
-		      int hi[],
-		      const int node[],
-		      void *env),
-	void *env)
+        struct Q(Config) *config)
+#if 0 /* XXX */
+        const int lattice[Q(DIM)+1],
+        const int network[Q(DIM)],
+        const int node[Q(DIM)],
+        int master_p,
+        void (*local)(int lo[],
+                      int hi[],
+                      const int node[],
+                      void *env),
+        void *env
+#endif /* XXX */
 {
   char *status;
   struct Q(State) *state;
@@ -439,31 +419,24 @@ Q(init)(struct Q(State) **state_ptr,
 
   memset(*state_ptr, 0, sizeof (struct Q(State)));
 
-  CHECK(lattice[0] % 1 != 0, "Lattice dimension X is not even");
-  CHECK(lattice[1] % 1 != 0, "Lattice dimension Y is not even");
-  CHECK(lattice[2] % 1 != 0, "Lattice dimension Z is not even");
-  CHECK(lattice[3] % 1 != 0, "Lattice dimension T is not even");
-  CHECK(lattice[0] < 2 * network[0], "Network is too large in X");
-  CHECK(lattice[1] < 2 * network[1], "Network is too large in Y");
-  CHECK(lattice[2] < 2 * network[2], "Network is too large in Z");
-  CHECK(lattice[3] < 2 * network[3], "Network is too large in T");
-  CHECK(network[0] < 1, "Network is too small in X");
-  CHECK(network[1] < 1, "Network is too small in Y");
-  CHECK(network[2] < 1, "Network is too small in Z");
-  CHECK(network[3] < 1, "Network is too small in T");
-  CHECK(node[0] >= network[0], "Node address too large in X");
-  CHECK(node[1] >= network[1], "Node address too large in Y");
-  CHECK(node[2] >= network[2], "Node address too large in Z");
-  CHECK(node[3] >= network[3], "Node address too large in T");
-  CHECK(node[0] < 0, "Node address too small in X");
-  CHECK(node[1] < 0, "Node address too small in Y");
-  CHECK(node[2] < 0, "Node address too small in Z");
-  CHECK(node[3] < 0, "Node address too small in T");
+  CHECK(config->rank != Q(DIM), "Lattice rank must be 4");
+  CHECK(config->lat[0] % 1 != 0, "Lattice dimension X is not even");
+  CHECK(config->lat[1] % 1 != 0, "Lattice dimension Y is not even");
+  CHECK(config->lat[2] % 1 != 0, "Lattice dimension Z is not even");
+  CHECK(config->lat[3] % 1 != 0, "Lattice dimension T is not even");
+  CHECK(config->lat[0] < 2 * config->net[0], "Network is too large in X");
+  CHECK(config->lat[1] < 2 * config->net[1], "Network is too large in Y");
+  CHECK(config->lat[2] < 2 * config->net[2], "Network is too large in Z");
+  CHECK(config->lat[3] < 2 * config->net[3], "Network is too large in T");
+  CHECK(config->net[0] < 1, "Network is too small in X");
+  CHECK(config->net[1] < 1, "Network is too small in Y");
+  CHECK(config->net[2] < 1, "Network is too small in Z");
+  CHECK(config->net[3] < 1, "Network is too small in T");
   
-  status = state_init(state, lattice, network, node, master_p, local, env);
+  status = state_init(state, config, config->self);
   CHECK(status != 0, status);
   
-  status = patch_boundary(state, lattice, network, node, master_p, local, env);
+  status = patch_boundary(state, config);
   CHECK(status != 0, status);
 
   state->used = state->saved;

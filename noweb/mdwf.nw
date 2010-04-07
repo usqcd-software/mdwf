@@ -772,41 +772,46 @@ We also need an opaque type for parameters of the domain wall action.
 struct `QOP_MDWF_Parameters;
 @
 
+Initialization needs to know lattice configuration and its layout on the machine.
+It expects to find the information in the following structure
+<<Interface types>>=
+struct `QOP_MDWF_Config {
+  int    self;                      /* this node QMP id */
+  int    master_p;                  /* if != 0, do I/O from this node */
+  int    rank;                      /* lattice rank, must be 4 */
+  int   *lat;                       /* [rank] */
+  int    ls;                        /* lattice extend in the flavor dimension */
+  int   *net;                       /* [rank] */
+  int   *neighbor_up;               /* [rank], QMP ids of neighbors in up dirs */
+  int   *neighbor_down;             /* [rank], QMP ids of neighbors in down dirs */
+  void (*sublattice)(int lo[],      /*   [rank] */
+                     int hi[],      /*   [rank] */
+                     int node,      /*   any node QMP id */
+                     void *env);    /*   lexical variables */
+  void  *env;                       /* lexical variables for sublattice */
+};
+@
+This structure is used by [[QOP_MDWF_init()]] only. Once the initialization is done,
+the elements of the structure (and data they point to) will never be referenced again.
+
+
 The library initialization routine creates the state structure and fills it
 with necessary information. It returns [[0]] if successful and a non-zero value
 otherwise. In any case [[state_ptr]] is set to some value suitable for other
 library functions.
 <<Interface functions>>=
 int `QOP_MDWF_init(struct QOP_MDWF_State **state_ptr,
-                  const int lattice[QOP_MDWF_DIM + 1],
-                  const int network[QOP_MDWF_DIM],
-                  const int node[QOP_MDWF_DIM],
-                  int master_p,
-                  void (*sublattice)(int lo[],
-                                     int hi[],
-                                     const int node[],
-                                     void *env),
-                  void *env);
+                  struct QOP_MDWF_Config *config);
 @
 Arguments of [[init()]] are
 \begin{itemize}
 \item[\texttt{state\_ptr}] points to the [[State]] to be set.
-\item[\texttt{lattice}] 5--d lattice geometry. $L_s$ is [[lattice[4]]].
-\item[\texttt{network}] 4--d network geometry. Each element should be positive.
-\item[\texttt{node}] 4--d address of this node.
-\item[\texttt{master\_p}] is non-zero on the master node, zero otherwise.
-\item[\texttt{sublattice}] Function giving sublattice dimensions on an arbitrary node.
-\item[\texttt{env}] Common environment for [[sublattice()]].
+\item[\texttt{config}] lattice layout information.
 \end{itemize}
 
 When [[QOP_MDWF_init()]] returns, [[*state_ptr]] will point to a valid
 state of the library (if any error occurs during initialization, the
-error will be stored in [[*ptr]]. The [[lattice[]]] provides the total
-lattice size, and [[sublattice]] is a pointer to a function that given
-a 4-d node address [[node]] returns in
-[[lo]] and [[hi]] the sublattice coordinates local to the [[node]], in
-effect saying that the local sublattice starts at [[x[i]=lo[i]]] and
-ends at [[x[i]=hi[i]-1]].
+error will be stored in [[*state_ptr]].
 
 It is possible to call [[QOP_MDWF_init()]] multiple times with different
 arguments. The library does not require that the lattice size and layout agree

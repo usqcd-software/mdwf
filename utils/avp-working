@@ -1,0 +1,4 @@
+./configure \
+   --prefix=/Users/avp/Sandbox/USQCD/mdwf/install-new-1 \
+   --target=cee-32 \
+   --with-qmp=/Users/avp/Local/packages/qmp-2.3.1

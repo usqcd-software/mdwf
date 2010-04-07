@@ -128,7 +128,9 @@ struct Q(State) {
   int                volume;          /* 4-d volume */
   int                lattice[Q(DIM)]; /* 4-d lattice size */
   struct local       local;           /* 4-d local sublattice */
-  int                node[Q(DIM)];    /* local node address */
+  int                node;            /* local node id */
+  int                neighbor_up[Q(DIM)];     /* the up neighbors */
+  int                neighbor_down[Q(DIM)];   /* the down neighbors */
   int                network[Q(DIM)]; /* the network geometry */
   int                master_p;        /* are we the master? */
   int               *lx2v;            /* Sublattice 1-d -> 4-d translation */
