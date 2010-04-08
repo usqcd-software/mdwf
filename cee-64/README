@@ -1,2 +1,2 @@
 This directory contains files generated from ../qa0/*.qa0
-The files implement low-level operations of MDWF.
+The files implement low-level operations of MDWF in 64bit traditional C.

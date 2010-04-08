@@ -1263,6 +1263,49 @@ Also the default precision macros
 #define `QOP_MDWF_M_operator QOP_D3_MDWF_M_operator
 #define `QOP_MDWF_M_operator_conjugated QOP_D3_MDWF_M_operator_conjugated
 @
+\section{Deflation}
+For delfation solvers, the following interface is provided. Deflators are used
+by the deflation solvers to collect and store the low eigenmode state.
+
+The state of the deflator is packaged into an opaque structure:
+<<Interface types>>=
+struct `QOP_MDWF_Deflator;
+@
+
+The deflators are created with given capacity, size and precision:
+<<Interface functions>>=
+int `QOP_MDWF_create_deflator(struct QOP_MDWF_Deflator **defl_ptr,
+                             struct QOP_MDWF_State *state,
+                             int nev, int vsize, double eps, int umax);
+@
+
+Once done, the deflators must be freed with the following functions:
+<<Interface functions>>=
+void `QOP_MDWF_free_deflator(struct QOP_MDWF_Deflator **defl_ptr);
+@
+
+Functions to control the state of the deflator. If one needs to keep the handle
+but purge the accumulated data, there is a [[reset]] operation:
+<<Interface functions>>=
+void `QOP_MDWF_deflator_reset(struct QOP_MDWF_Deflator *defl_ptr);
+@
+
+To control collection of the Krylov space, use [[stop]] and [[resume]]. While
+the deflator is stopped, it can still be used in the deflated solver and
+queried about accumulated eigenvalues.
+<<Interface functions>>=
+void `QOP_MDWF_deflator_stop(struct QOP_MDWF_Deflator *defl_ptr);
+void `QOP_MDWF_deflator_resume(struct QOP_MDWF_Deflator *defl_ptr);
+@
+
+The deflator can return its current estimate of the eigenvalues if it has it.
+There are either [[nev]] eigenmode estimates, or none. If the deflator does
+not have the estimates, [[eigen]] returns [[1]], otherwise it
+returns [[0]].
+<<Interface functions>>=
+int `QOP_MDWF_deflator_eigen(double *eigen_values,
+                            struct QOP_MDWF_Deflator *defl_ptr);
+@
 
 \section{Solvers}
 We provide three solvers for the Dirac operator. All solvers can optionally
@@ -1273,13 +1316,14 @@ should not assume particular values of the constants except that
 [[QOP_MDWF_LOG_NONE]] is zero.
 <<Interface types>>=
 enum {
-   `QOP_MDWF_LOG_NONE = 0,
-   `QOP_MDWF_LOG_CG_RESIDUAL = 1,
-   `QOP_MDWF_LOG_TRUE_RESIDUAL = 2,
-   `QOP_MDWF_LOG_DIRAC_RESIDUAL = 4,
-   `QOP_MDWF_FINAL_CG_RESIDUAL = 8,
-   `QOP_MDWF_FINAL_DIRAC_RESIDUAL = 16,
-   `QOP_MDWF_LOG_EVERYTHING = 31
+   `QOP_MDWF_LOG_NONE              = 0x00,
+   `QOP_MDWF_LOG_CG_RESIDUAL       = 0x01,
+   `QOP_MDWF_LOG_TRUE_RESIDUAL     = 0x02,
+   `QOP_MDWF_FINAL_CG_RESIDUAL     = 0x04,
+   `QOP_MDWF_FINAL_DIRAC_RESIDUAL  = 0x08,
+   `QOP_MDWF_LOG_EIG_UPDATE1       = 0x10,
+   `QOP_MDWF_LOG_EIG_POSTAMBLE     = 0x20,
+   `QOP_MDWF_LOG_EVERYTHING        = 0x3f
 };
 @
 
@@ -1405,6 +1449,26 @@ int `QOP_D3_MDWF_MxM_SCG(struct QOP_D3_MDWF_VectorFermion *vector_result,
                         int max_iterations,
                         double min_epsilon,
                         unsigned int options);
+@
+
+A mixed precision deflated solver is provided. The interface is basically
+the same as the plain mixed solver above with addition of an extra parameter
+for the deflator state.
+
+<<Interface functions>>=
+int `QOP_MDWF_deflated_mixed_D_CG(struct QOP_D3_MDWF_Fermion *result,
+                                 int *out_iterations,
+                                 double *out_epsilon,
+                                 const struct QOP_MDWF_Parameters *params,
+                                 const struct QOP_D3_MDWF_Fermion *chi_0,
+                                 const struct QOP_D3_MDWF_Gauge *gauge,
+                                 const struct QOP_D3_MDWF_Fermion *rhs,
+                                 struct QOP_MDWF_Deflator *deflator,
+                                 int f_iterations,
+                                 double f_epsilon,
+                                 int max_iteration,
+                                 double epsilon,
+                                 unsigned int options);
 @
 
 Again, macros

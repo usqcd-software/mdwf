@@ -37,7 +37,21 @@ x.sources = error.c \
             fini.c \
             comm-setup.c \
             comm-free.c \
-            solver-dirac-mixed.c
+            deflator-la.c \
+            deflator-alloc.c \
+            deflator-free.c \
+            deflator-reset.c \
+            deflator-is-stopped.c \
+            deflator-resume.c \
+            deflator-stop.c \
+            deflator-eigen.c \
+            deflator-preamble.c \
+            deflator-postamble.c \
+            deflator-update0.c \
+            deflator-update1.c \
+            cg-mixed.c \
+            solver-dirac-mixed.c \
+            solver-dirac-deflated-mixed.c
 
 p.sources = alloc-eo.c \
             step-even.c \
@@ -120,6 +134,7 @@ p.objects = $(p.sources:%.c=$(LIMPDIR)/%f.o) \
 objects = $(x.objects) $(p.objects)
 
 headers = mdwf.h \
+          deflator-la.h \
           $(HDR)
 
 

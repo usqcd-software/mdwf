@@ -26,7 +26,7 @@ clean:
 	$(MAKE) V=$V -C $(LIMPDIR) CONFIG=../target clean
 
 install: all mdwf-config
-	$E INSTALLING
+	$E INSTALLING to $(DESTDIR)`dirname $(LIBDIR)` 
 	$C [ -d $(DESTDIR)$(BINDIR) ] || mkdir -p $(DESTDIR)$(BINDIR)
 	$C cp  mdwf-config $(DESTDIR)$(BINDIR)/
 	$C [ -d $(DESTDIR)$(LIBDIR) ] || mkdir -p $(DESTDIR)$(LIBDIR)

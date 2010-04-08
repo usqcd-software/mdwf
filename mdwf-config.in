@@ -8,6 +8,7 @@ ld="@ld@"
 ldflags="-L@libdir@ @qmp_ldflags@ @ldflags@"
 libs="-lqop-mdwf3 @qmp_libs@ @libs@"
 qmp="@qmp@"
+gsl="@gsl" 
 target="@target@"
 
 # usage status
@@ -22,6 +23,7 @@ usage() {
        --ldflags
        --libs
        --qmp
+       --gsl
        --target
 EOF
 }
@@ -35,6 +37,7 @@ case "$1" in
    --ldflags)  echo "$ldflags" ;;
    --libs)     echo "$libs" ;;
    --qmp)      echo "$qmp" ;;
+   --gsl)      echo "$gsl" ;; 
    --target)   echo "$target" ;;
    *) usage 1 1>&2 ;;
 esac

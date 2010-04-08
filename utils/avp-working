@@ -1,4 +1,5 @@
 ./configure \
    --prefix=/Users/avp/Sandbox/USQCD/mdwf/install-new-1 \
    --target=cee-32 \
-   --with-qmp=/Users/avp/Local/packages/qmp-2.3.1
+   --with-qmp=/Users/avp/Local/packages/qmp-2.3.1 \
+   --with-gsl=/Users/avp/Local/packages/gsl-1.13-qr-complex

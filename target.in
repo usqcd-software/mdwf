@@ -1,8 +1,21 @@
 # make configuration for build template
 #
+
 QMP_TOP    = @qmp@
+GSL_TOP    = @gsl@
+QMP_CFLAGS = @qmp_cflags@
+GSL_CFLAGS = @gsl_cflags@
+
+QMP_LDFLAGS = @qmp_ldflags@
+
+QMP_LIBS    = @qmp_libs@
+GSL_LIBS    = @gsl_libs@
+CBLAS_LIBS  = @cblas_libs@
+
 CC         = @cc@
-CFLAGS     = @cflags@ $(QMP_CFLAGS)
+CFLAGS     = @cflags@ $(QMP_CFLAGS) $(GSL_CFLAGS)
+LDFLAGS    = @cflags@ $(QMP_LDFLAGS)
+LIBS       = $(QMP_LIBS) $(GSL_LIBS) $(CBLAS_LIBS)
 AR         = @ar@
 RANLIB     = @ranlib@
 LIMPDIR    = @limpdir@

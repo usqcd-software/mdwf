@@ -14,6 +14,8 @@ show_help() {
      --incdir=DIR             use DIR instead of PREFIX/include for headers
      --docdir=DIR             use DIR instead of PREFIX/share/doc/mdwf for docs
      --with-qmp=DIR           use DIR/bin/qmp-config to query QMP configuration
+     --with-gsl=DIR         use DIR/bin/gsl-config to query GSL configuration
+     --with-atlas=DIR       use ATLAS implementation of BLAS in DIR/lib
      --target=TARGET          build target architecture, see below
 
    Target architectures:
@@ -74,6 +76,9 @@ process_args() {
       --incdir=*)       incdir=`echo "$1" | sed -e 's/--incdir=//'`   ;;
       --docdir=*)       docdir=`echo "$1" | sed -e 's/--docdir=//'`   ;;
       --with-qmp=*)     qmp=`echo "$1" | sed -e 's/--with-qmp=//'`    ;;
+      --with-gsl=*)     gsl=`echo "$1" | sed -e 's/--with-gsl=//'`     ;;
+      --with-atlas=*)   atlas=`echo "$1" | sed -e 's/--with-atlas=//'` ;;
+      # handle other CBLAS implementations here
       --target=*)       target=`echo "$1" | sed -e 's/--target=//'`   ;;
       *) show_error "Unknown argument $1" ;;
     esac
@@ -164,7 +169,17 @@ normalize() {
   qmp_cflags=`$qmp/bin/qmp-config --cflags`
   qmp_ldflags=`$qmp/bin/qmp-config --ldflags`
   qmp_libs=`$qmp/bin/qmp-config --libs`
-
+  # optimized CBLAS library
+  if [ ! -z "$atlas" ] ; then
+      cblas_libs="-L$atlas/lib -lcblas"
+  fi
+  [ -x $gsl/bin/gsl-config ] || show_error "No gsl-config found in $gsl"
+  gsl_cflags="-DHAVE_GSL `$gsl/bin/gsl-config --cflags`"
+  if [ -z "$cblas_libs" ] ; then
+      gsl_libs=`$gsl/bin/gsl-config --libs`
+  else
+      gsl_libs=`$gsl/bin/gsl-config --libs-without-cblas`
+  fi
 }
 
 # show_config
@@ -184,6 +199,9 @@ show_config() {
    echo "Archiver                $ar"
    echo "Ranlib                  $ranlib"
    echo "QMP location            $qmp"
+   echo "GSL location            $gsl"
+   # optimized CBLAS
+   [ -z "$atlas" ] || echo "ATLAS location          $atlas"
    echo "Build target            $target"
    echo "====================================="
 }
@@ -208,6 +226,10 @@ build() {
       -e "s|@qmp_libs@|$qmp_libs|g" \
       -e "s|@target@|$target|g" \
       -e "s|@limpdir@|$limpdir|g" \
+ | sed -e "s|@gsl@|$gsl|g" \
+       -e "s|@gsl_cflags@|$gsl_cflags|g" \
+       -e "s|@gsl_libs@|$gsl_libs|g" \
+       -e "s|@cblas_libs@|$cblas_libs|g" \
       > $2 \
 || show_error "Could not generate $2"
 }

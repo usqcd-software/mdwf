@@ -393,17 +393,6 @@ patch_boundary(struct Q(State)   *state,
 int
 Q(init)(struct Q(State) **state_ptr,
         struct Q(Config) *config)
-#if 0 /* XXX */
-        const int lattice[Q(DIM)+1],
-        const int network[Q(DIM)],
-        const int node[Q(DIM)],
-        int master_p,
-        void (*local)(int lo[],
-                      int hi[],
-                      const int node[],
-                      void *env),
-        void *env
-#endif /* XXX */
 {
   char *status;
   struct Q(State) *state;

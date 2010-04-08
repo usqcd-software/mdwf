@@ -86,11 +86,11 @@ QX(MxM_CG)(struct QX(HalfFermion)          *psi,             /* in/out */
     /* solve */
     status = qx(cg_solver)(psi->even, "MxM CG", out_iterations, out_epsilon,
                            state, params, U,
-                           eta->even, NULL, NULL,
+                           eta->even, NULL,
                            max_iterations, min_epsilon * rhs_norm, options,
                            &flops, &sent, &received,
                            rho_e, pi_e, zeta_e,
-                           t0_e, t1_e, t2_e, t0_o, NULL);
+                           t0_e, t1_e, t2_e, t0_o);
 
     END_TIMING(state, flops, sent, received);
 

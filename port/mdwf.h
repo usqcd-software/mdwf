@@ -32,6 +32,8 @@ struct VectorFermionF;
 struct VectorFermionD;
 struct ProjectedFermionF;
 struct ProjectedFermionD;
+struct MxM_workspaceD;
+struct MxM_workspaceF;
 
 /* Internal types */
 struct local {
@@ -137,6 +139,105 @@ struct Q(State) {
   int               *v2lx;            /* Only for init */
 };
 
+typedef enum {
+    CG_SUCCESS,
+    CG_MAXITER,
+    CG_EIGCONV,
+    CG_ZEROMODE,
+    CG_NOEMEM
+} CG_STATUS;
+
+/* debug printing */
+extern int QDP_this_node;
+extern int QDP_is_initialized(void);
+
+/* Deflator state */
+#include "deflator-la.h"
+
+#if defined(HAVE_LAPACK)
+#elif defined(HAVE_GSL)
+#  include <gsl/gsl_vector.h>
+#  include <gsl/gsl_matrix.h>
+#  include <gsl/gsl_eigen.h>
+#else
+#  error "no linear algebra library"
+#endif
+
+#define DEFLATOR_VEC_SIZE(pstate) ((pstate)->even.full_size)
+struct Q(Deflator) {
+    struct Q(State) *state;
+
+    int                 dim;     /* size of problem vectors, == State.size */
+    int                 Ls;      /* flavor dimension extend */
+
+    int                 vmax;
+    int                 vsize;
+    int                 nev;
+    int                 umax;
+    int                 usize;
+    int                 frozen;
+
+    /* eig current state */
+    double              eps;
+    double              resid_norm_sq_min;
+    
+    latmat_c            V;
+    doublecomplex       *T;
+
+    /* incr_eig current state */
+    latmat_c            U;
+    doublecomplex       *H;
+    doublecomplex       *C;
+
+
+    long int            lwork;
+    doublecomplex       *zwork;
+    doublecomplex       *hevecs2;
+    double              *hevals;
+#if defined(HAVE_LAPACK)
+    doublecomplex       *hevecs1;
+    doublecomplex       *tau;
+    double              *rwork;
+    
+    double              *debug_hevals;
+    long int            debug_lwork;
+    doublecomplex       *debug_zwork;
+    double              *debug_rwork;
+
+#elif defined(HAVE_GSL)
+    doublecomplex       *zwork2;
+    gsl_matrix_complex  *gsl_T_full;
+    gsl_matrix_complex  *gsl_hevecs1;
+    gsl_vector          *gsl_hevals1;
+    gsl_eigen_hermv_workspace *gsl_wkspace1;
+    gsl_matrix_complex  *gsl_T_m1;
+    gsl_matrix_complex  *gsl_hevecs2;
+    gsl_vector          *gsl_hevals2;
+    gsl_eigen_hermv_workspace *gsl_wkspace2;
+    gsl_matrix_complex  *gsl_T_proj;
+    gsl_matrix_complex  *gsl_hevecs3;
+    gsl_eigen_hermv_workspace *gsl_wkspace3;
+    gsl_matrix_complex  *gsl_QR;
+    gsl_matrix_complex  *gsl_Q_unpack;
+    gsl_matrix_complex  *gsl_tmp_MxS;
+    gsl_vector_complex  *gsl_tau;
+    size_t              *hevals_select1;
+    size_t              *hevals_select2;
+
+    gsl_vector          *debug_gsl_hevals;
+    gsl_eigen_herm_workspace *debug_gsl_wkspace;
+
+#else
+#  error "no linear algebra library"
+#endif
+
+    latmat_c            tmp_V;
+    latvec_c            work_c_1;
+    latvec_c            work_c_2;
+    latvec_c            work_c_3;
+
+};
+
 /* Timing */
 #define BEGIN_TIMING(s) do { gettimeofday(&((s)->t0), NULL); } while (0)
 #define END_TIMING(s, f, snd, rcv) do { \
@@ -165,6 +266,7 @@ struct Q(State) {
 # undef Fermion
 # undef VectorFermion
 # undef ProjectedFermion
+# undef MxM_workspace
 # if QOP_MDWF_DEFAULT_PRECISION=='D'
 #  define qx(x) qop_d3_mdwf_##x
 #  define QX(x) QOP_D3_MDWF_##x
@@ -173,6 +275,7 @@ struct Q(State) {
 #  define Fermion FermionD
 #  define VectorFermion VectorFermionD
 #  define ProjectedFermion ProjectedFermionD
+#  define MxM_workspace MxM_workspaceD
 # endif
 # if QOP_MDWF_DEFAULT_PRECISION=='F'
 #  define qx(x) qop_f3_mdwf_##x
@@ -182,6 +285,7 @@ struct Q(State) {
 #  define Fermion FermionF
 #  define VectorFermion VectorFermionF
 #  define ProjectedFermion ProjectedFermionF
+#  define MxM_workspace MxM_workspaceF
 # endif
 
 /* MDWF types */
@@ -222,10 +326,76 @@ unsigned int q(f_f_eq_dmd)(struct FermionF *dst,
                            const struct FermionD *src_a,
                            const struct FermionD *src_b);
 
+unsigned int q(f_f_eq_dmd_norm2)(struct FermionF *dst,
+                                 double *local_norm2,
+                                 int size, int Ls,
+                                 const struct FermionD *src_a,
+                                 const struct FermionD *src_b);
+
 /* converting gauge from double down to float */
 void q(g_f_eq_d)(struct SUnF *dst,
                  int size,
                  const struct SUnD *src);
+
+/* the mixed solver */
+int q(mixed_cg)(struct Q(State)             *state,
+                const char                  *name,
+                const struct Q(Parameters)  *params,
+                struct QD(Fermion)          *psi,
+                int                         *out_iterations,
+                double                      *out_epsilon,
+                const struct QD(Fermion)    *psi_0,
+                const struct QD(Gauge)      *gauge,
+                const struct QD(Fermion)    *eta,
+                struct Q(Deflator)          *deflator,
+                int                          f_iter,
+                double                       f_epsilon,
+                int                          max_iterations,
+                double                       min_epsilon,
+                unsigned int                 options);
+
+/* handling eig deflator */
+int Q(create_deflator)(
+        struct Q(Deflator) **deflator_ptr,
+        struct Q(State) *s,
+        int vmax, int nev,
+        double eps, int umax);
+void Q(free_deflator)(struct Q(Deflator) **deflator_ptr);
+void Q(deflator_reset)(struct Q(Deflator) *deflator);
+void Q(deflator_stop)(struct Q(Deflator) *deflator);
+void Q(deflator_resume)(struct Q(Deflator) *deflator);
+int Q(deflator_is_stopped)(struct Q(Deflator) *deflator);
+int q(df_preamble)(struct Q(State)           *state,
+                   struct Q(Deflator)        *deflator,
+                   struct FermionF           *psi_e,
+                   struct FermionF           *rho_e,
+                   double                    *rho_norm2,
+                   struct FermionF           *chi_e, /* const ! */
+                   struct MxM_workspaceF     *ws,
+                   unsigned int              options);
+int q(df_update0)(struct Q(State)          *state,
+                  struct Q(Deflator)       *deflator,
+                  double                    a1,
+                  double                    b1,
+                  double                    a0,
+                  double                    b0,
+                  double                    r,
+                  struct FermionF          *rho,
+                  unsigned int              options);
+int q(df_update1)(struct Q(State)          *state,
+                  struct Q(Deflator)       *deflator,
+                  double                    a1,
+                  double                    b1,
+                  double                    a0,
+                  double                    b0,
+                  double                    r,
+                  struct FermionF          *rho,
+                  struct FermionF          *A_rho,
+                  unsigned int              options);
+int q(df_postamble)(struct Q(State)           *state,
+                    struct Q(Deflator)        *deflator,
+                    struct MxM_workspaceF     *ws,
+                    unsigned int               options);
 
 /* layout translation */
 void q(l2v)(int x[Q(DIM)], const struct local *local, int p);
@@ -377,6 +547,7 @@ int q(sizeof_ABiTable)(int Ls);
 int qx(sizeof_fermion)(int volume, int Ls);
 int qx(sizeof_projected_fermion)(int volume, int Ls);
 int qx(sizeof_gauge)(int volume);
+int qx(sizeof_vfermion)(int volume, int Ls, int count);
 
 /* qa0 level data access routines */
 void qx(put_gauge)(struct SUn *ptr, int pos, const double r[]);
@@ -421,11 +592,18 @@ unsigned int qx(f_add2)(struct Fermion *r,
                         int size, int Ls,
                         double s,
                         const struct Fermion *b);
+unsigned int qx(f_cadd2)(struct Fermion *r,
+                         int size, int Ls,
+                         double sr, double si,
+                         const struct Fermion *b);
 unsigned int qx(f_add2_norm)(struct Fermion *r,
                              double *local_norm,
                              int size, int Ls,
                              double s,
                              const struct Fermion *b);
+unsigned int qx(f_rmul1)(struct Fermion *r,
+                         int size, int Ls,
+                         double s);
 unsigned int qx(f_add2x)(struct Fermion *r,
                          int size, int Ls,
                          double s,
@@ -448,6 +626,91 @@ void qx(fv_get)(struct Fermion *f,
 void qx(fv_put)(struct VectorFermion *vf, int k,
                 int size, int Ls, int count,
                 const struct Fermion *f);
+
+/* algebra for arrays of fermions */
+
+unsigned int qx(vf_zero)(struct vFermion *dst, 
+                         int size, int Ls, int len);
+
+/* fv[fv_begin + (0 .. len-1)] = gv[gv_begin + (0 .. len-1)]
+*/
+unsigned int qx(vf_copy)(int size, int Ls, int len,
+                         struct vFermion *fv, int fv_size, int fv_begin,
+                         const struct vFermion *gv, int gv_size, int gv_begin);
+/*
+ * set fv[idx] = x
+*/
+unsigned int qx(vf_put)(int size, int Ls,
+                        struct vFermion *fv, int fv_size, int fv_idx,
+                        const struct Fermion *x);
+
+/*
+ * read x = fv[idx]
+*/
+unsigned int qx(vf_get)(int size, int Ls,
+                        struct Fermion *x,
+                        const struct vFermion *fv, int fv_size, int fv_idx);
+
+/*
+*   g = fv[fv_begin + (0 .. f_vlen-1)] . v
+*   v is a complex vector [fv_len] indexed as [re:0/im:1 + 2 * i]
+*/
+unsigned int qx(vf_dot_vz)(int size, int Ls,
+                           struct Fermion *g,
+                           const struct vFermion *fv,
+                           int fv_size, int fv_begin, int fv_len,
+                           const double *v);
+
+/*
+*   gv[gv_begin + (0 .. gv_len-1)] = fv[fv_begin + (0 .. f_len - 1)] . m
+*   m is a complex matrix [fv_len*gv_len] indexed as [re:0/im:1 + 2 * (row + ldm * col) ]
+*/
+unsigned int qx(vf_dot_mz)(int size, int Ls,
+                           struct vFermion *gv,
+                           int gv_row_size, int gv_begin, int gv_len,
+                           const struct vFermion *fv,
+                           int fv_row_size, int fv_begin, int fv_len,
+                           const double *m, int ldm);
+
+/*  This includes global reduction
+ *  c[i] = herm(fv[fv_begin+i]) * g 
+ *      for all i = (0 .. fv_len-1)
+ *  c is complex vector as [re:0/im:1 + 2 * i]
+ */
+unsigned int qx(vfH_dot_f)(int size, int Ls,
+                           double *c,
+                           const struct vFermion *fv,
+                           int fv_size, int fv_begin, int fv_len,
+                           const struct Fermion *g);
+
+/* Local part of the above */
+unsigned int qx(do_vfH_dot_f)(int size, int Ls,
+                              double *c,
+                              const struct vFermion *fv,
+                              int fv_size, int fv_begin, int fv_len,
+                              const struct Fermion *g);
+
+/* This includes global reduction
+ * c[i,j] = herm(fv[fv_begin + i]) . g[gv_begin+j] 
+ *      for all i = (0 .. fv_len-1), 
+ *              j = (0 .. gv_len-1),
+ * c is a complex matrix as [re:0/im:1 + 2 * (i + ldc * j)]
+ */
+unsigned int qx(vfH_dot_vf)(int size, int Ls,
+                            double *c, int ldc,
+                            const struct vFermion *fv,
+                            int fv_size, int fv_begin, int fv_len,
+                            const struct vFermion *gv,
+                            int gv_size, int gv_begin, int gv_len);
+
+/* local part of the above */
+unsigned int qx(do_vfH_dot_vf)(int size, int Ls,
+                               double *c, int ldc,
+                               const struct vFermion *fv,
+                               int fv_size, int fv_begin, int fv_len,
+                               const struct vFermion *gv,
+                               int gv_size, int gv_begin, int gv_len);
+
 /* basic matrices */
 unsigned int qx(op_norm2)(double *global_norm,
                           const struct QX(Fermion) *psi,
@@ -864,8 +1127,6 @@ void qx(cg_log)(double cg_res, const char *source, int iter,
                 const struct Q(Parameters) *params,
                 const struct SUn *U,
                 const struct Fermion *chi_e,
-                const struct Fermion *eta_e,
-                const struct Fermion *eta_o,
                 long long *flops,
                 long long *sent,
                 long long *received,
@@ -873,62 +1134,76 @@ void qx(cg_log)(double cg_res, const char *source, int iter,
                 struct Fermion *t0_e,
                 struct Fermion *t1_e,
                 struct Fermion *t2_e,
-                struct Fermion *t0_o,
-                struct Fermion *t1_o);
-int qx(cg_solver)(struct Fermion *xi_e,
-                  const char *source,
-                  int *out_iter,
-                  double *out_epsilon,
-                  struct Q(State) *state,
-                  const struct Q(Parameters) *params,
-                  const struct SUn *U,
-                  const struct Fermion *chi_e,
-                  const struct Fermion *eta_e,
-                  const struct Fermion *eta_o,
-                  int max_iter,
-                  double epsilon,
-                  unsigned options,
-                  long long *flops,
-                  long long *sent,
-                  long long *received,
-                  struct Fermion *rho_e,
-                  struct Fermion *pi_e,
-                  struct Fermion *zeta_e,
-                  struct Fermion *t0_e,
-                  struct Fermion *t1_e,
-                  struct Fermion *t2_e,
-                  struct Fermion *t0_o,
-                  struct Fermion *t1_o);
-int qx(scg_solver)(struct VectorFermion *v_xi_e,
-                   struct Fermion *xi_e,
-                   int count,
-                   const char *source,
-                   int *out_iterations,
-                   double *out_epsilon,
-                   struct Q(State) *state,
-                   const struct Q(Parameters) *params,
-                   const double shift[],
-                   const struct SUn *U,
-                   const struct Fermion *chi_e,
-                   int max_iterations,
-                   double min_epsilon,
-                   unsigned options,
-                   long long *flops,
-                   long long *sent,
-                   long long *received,
-                   double dp[],
-                   double d[],
-                   double dn[],
-                   double ad[],
-                   double bdd[],
-                   struct Fermion *rho_e,
-                   struct VectorFermion *vpi_e,
-                   struct Fermion *pi_e,
-                   struct Fermion *zeta_e,
-                   struct Fermion *t0_e,
-                   struct Fermion *t1_e,
-                   struct Fermion *t2_e,
-                   struct Fermion *t0_o);
+                struct Fermion *t0_o);
+
+struct MxM_workspace {
+    struct Q(State)             *state;
+    const struct Q(Parameters)  *params;
+    const struct SUn            *gauge;
+    struct Fermion              *tmp_e;
+    struct Fermion              *tmp2_e;
+    struct Fermion              *tmp_o;
+    long long                   *flops;
+    long long                   *sent;
+    long long                   *received;
+};
+
+void qx(cg_operator)(struct Fermion            *res_e,
+                     const struct Fermion      *psi_e,
+                     struct MxM_workspace      *ws);
+
+CG_STATUS qx(cg_solver)(struct Fermion              *psi_e,
+                        const char                  *source,
+                        int                         *out_iter,
+                        double                      *out_epsilon,
+                        struct Q(State)             *state,
+                        const struct Q(Parameters)  *params,
+                        const struct SUn            *U,
+                        const struct Fermion        *chi_e,
+                        struct Q(Deflator)          *deflator,
+                        int                          max_iter,
+                        double                       epsilon,
+                        unsigned                     options,
+                        long long                   *flops,
+                        long long                   *sent,
+                        long long                   *received,
+                        struct Fermion              *rho_e,
+                        struct Fermion              *pi_e,
+                        struct Fermion              *zeta_e,
+                        struct Fermion              *t0_e,
+                        struct Fermion              *t1_e,
+                        struct Fermion              *t2_e,
+                        struct Fermion              *t0_o);
+int qx(scg_solver)(struct VectorFermion         *v_xi_e,
+                   struct Fermion               *xi_e,
+                   int                           count,
+                   const char                   *source,
+                   int                          *out_iterations,
+                   double                       *out_epsilon,
+                   struct Q(State)              *state,
+                   const struct Q(Parameters)   *params,
+                   const double                  shift[],
+                   const struct SUn             *U,
+                   const struct Fermion         *chi_e,
+                   int                           max_iterations,
+                   double                        min_epsilon,
+                   unsigned                      options,
+                   long long                    *flops,
+                   long long                    *sent,
+                   long long                    *received,
+                   double                        dp[],
+                   double                        d[],
+                   double                        dn[],
+                   double                        ad[],
+                   double                        bdd[],
+                   struct Fermion               *rho_e,
+                   struct VectorFermion         *vpi_e,
+                   struct Fermion               *pi_e,
+                   struct Fermion               *zeta_e,
+                   struct Fermion               *t0_e,
+                   struct Fermion               *t1_e,
+                   struct Fermion               *t2_e,
+                   struct Fermion               *t0_o);
 /*
  *  compute x <- x + alpha p
  *          p <- r + beta p

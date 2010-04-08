@@ -9,7 +9,6 @@
 
 #define MAX_OPTIONS (Q(LOG_CG_RESIDUAL)     | \
                      Q(LOG_TRUE_RESIDUAL)   | \
-                     Q(LOG_DIRAC_RESIDUAL)  | \
                      Q(FINAL_CG_RESIDUAL)   | \
                      Q(FINAL_DIRAC_RESIDUAL))
 
@@ -43,7 +42,6 @@ QX(DDW_CG)(struct QX(Fermion)          *psi,
     struct Fermion *t1_e = 0;
     struct Fermion *t2_e = 0;
     struct Fermion *t0_o = 0;
-    struct Fermion *t1_o = 0;
     double dirac_residual = 0;
     double rhs_norm = 0;
 
@@ -63,7 +61,7 @@ QX(DDW_CG)(struct QX(Fermion)          *psi,
     ptr = qx(allocate_eo)(state, &ptr_size, &temps,
                           0, /* header */
                           8, /* evens */
-                          2); /* odds */
+                          1); /* odds */
     if (ptr == 0) {
         return q(set_error)(state, 0, "DDW_CG(): not enough memory");
     }
@@ -77,7 +75,6 @@ QX(DDW_CG)(struct QX(Fermion)          *psi,
     pi_e = temps = qx(step_even)(state, temps);
     zeta_e = temps = qx(step_even)(state, temps);
     t0_o  = temps = qx(step_even)(state, temps);
-    t1_o  = temps = qx(step_odd)(state, temps);
 
     /* clear bits we do not understand */
     options = options & MAX_OPTIONS;
@@ -99,11 +96,11 @@ QX(DDW_CG)(struct QX(Fermion)          *psi,
     /* solve */
     status = qx(cg_solver)(xi_e, "DDW CG", out_iterations, out_epsilon,
                            state, params, U,
-                           chi_e, eta->even, eta->odd,
+                           chi_e, NULL,
                            max_iterations, min_epsilon * rhs_norm, options,
                            &flops, &sent, &received,
                            rho_e, pi_e, zeta_e,
-                           t0_e, t1_e, t2_e, t0_o, t1_o);
+                           t0_e, t1_e, t2_e, t0_o);
     /* handle zero mode properly */
     if (status > 1) {
         END_TIMING(state, flops, sent, received);
@@ -116,7 +113,7 @@ QX(DDW_CG)(struct QX(Fermion)          *psi,
                    &flops, &sent, &received,
                    t0_o);
     
-    if (options & (Q(FINAL_DIRAC_RESIDUAL) | Q(LOG_DIRAC_RESIDUAL))) {
+    if (options & Q(FINAL_DIRAC_RESIDUAL)) {
         dirac_residual = qx(cg_dirac_error)(psi->even, psi->odd,
                                             state, params, U,
                                             eta->even, eta->odd,
@@ -137,7 +134,7 @@ QX(DDW_CG)(struct QX(Fermion)          *psi,
         qx(zprint)(state, "DDW CG", "solver residual %e normalized %e",
                    *out_epsilon, *out_epsilon / norm);
     }
-    if (options & (Q(FINAL_DIRAC_RESIDUAL) | Q(LOG_DIRAC_RESIDUAL))) {
+    if (options & Q(FINAL_DIRAC_RESIDUAL)) {
         double norm = rhs_norm == 0? 1: rhs_norm;
 
         qx(zprint)(state, "DDW CG", "Dirac residual %e normalized %e",
