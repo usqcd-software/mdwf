@@ -90,7 +90,7 @@ process_args() {
 speciate_target() {
   case "$target" in
     cee-32)
-       limpdir=cee
+       limpdir=cee-32
        default_cc="gcc -m32"
        default_cflags="-Wall -O3"
        default_ld="gcc"
@@ -100,7 +100,7 @@ speciate_target() {
        default_ranlib="ranlib"
        ;;
     c99-32)
-       limpdir=c99
+       limpdir=c99-32
        default_cc="gcc -m32"
        default_cflags="-Wall -O3"
        default_ld="gcc"
