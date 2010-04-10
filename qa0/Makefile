@@ -1,7 +1,7 @@
 TOP     = ..
 V       = 0
 CONFIG  = macosx
-TARGETS = c99 c99-64 cee cee-64 bgl/xlc dry
+TARGETS = c99-32 c99-64 cee-32 cee-64 bgl/xlc dry
 TARGET  =
 DEST    =
 QA0     = qa0
@@ -53,6 +53,7 @@ x.sources = get-fermion.qa0 \
             sizeof-fermion.qa0 \
             sizeof-gauge.qa0 \
             sizeof-pfermion.qa0 \
+            sizeof-vfermion.qa0 \
             fv-zero.qa0 \
             fv-copy.qa0 \
             fv-get.qa0 \
@@ -61,11 +62,19 @@ x.sources = get-fermion.qa0 \
             f-copy.qa0 \
             f-norm.qa0 \
             f-add3.qa0 \
+            f-rmul1.qa0 \
             f-add2.qa0 \
             f-add2-norm.qa0 \
             f-add2x.qa0 \
             f-dot.qa0 \
             f-diff-norm.qa0 \
+            vf-put.qa0 \
+            vf-get.qa0 \
+            vf-copy.qa0 \
+            do-vfH-dot-f.qa0 \
+            do-vfH-dot-vf.qa0 \
+            vf-dot-vz.qa0 \
+            vf-dot-mz.qa0 \
             cg-xp.qa0 \
             scg-madd.qa0 \
             scg-xp.qa0 \

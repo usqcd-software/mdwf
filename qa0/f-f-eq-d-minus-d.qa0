@@ -2,13 +2,15 @@
 
 (include "types.qa0")
 
-(procedure fermion-f=d-d ([stem "f_f_eq_dmd"]
+(procedure fermion-f=d-d ([stem "f_f_eq_dmd_norm2"]
                           count-flops)
            ([R         pointer "r"         "struct FermionF *"       ]
+            [n         pointer "norm2"     "double *"                ]
             [size      int     "size"      "int"                     ]
             [l-s       int     "Ls"        "int"                     ]
             [A         pointer "a"         "const struct FermionD *" ]
             [B         pointer "b"         "const struct FermionD *" ])
+   (op qcd-fnorm-init () (n-val) ())
    (loop () (i [const 0] [reg size])
      (loop () (s [const 0] [reg l-s])
        (load qcd-fermion-double () vA ([reg A]))
@@ -16,7 +18,8 @@
        (load qcd-fermion-double () vB ([reg B]))
        (op pointer-add () (B) ([reg B] [const (size-of Fermion-double)]))
        (op qcd-subf () (A-B) ([reg vA] [reg vB]))
+       (op qcd-fnorm-add () (n-val) ([reg n-val] [reg A-B]))
        (store qcd-fermion-float () ([reg R]) [reg A-B])
-       (op pointer-add () (R) ([reg R] [const (size-of Fermion-float)])))))
-
-
+       (op pointer-add () (R) ([reg R] [const (size-of Fermion-float)]))))
+   (op qcd-fnorm-fini () (v) ([reg n-val]))
+   (store double () ([reg n]) [reg v]))

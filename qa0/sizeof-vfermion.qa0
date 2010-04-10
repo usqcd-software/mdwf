@@ -1,0 +1,14 @@
+(verbose [(c99 bgl/xlc) "/* $Id$ */"])
+
+(include "types.qa0")
+
+(procedure size-of-vector-fermion ([stem "sizeof_vfermion"]
+                                   [return total int "int"]
+                                   prec&color)
+           ([volume int "volume" "int"]
+            [l-s    int "Ls"     "int"]
+            [count  int "count"  "int"])
+   (op int-mul () (v-ls) ([reg volume] [reg l-s]))
+   (op int-mul () (x) ([reg v-ls] [reg count]))
+   (op int-mul () (total) ([reg x] [const (size-of Fermion)])))
+

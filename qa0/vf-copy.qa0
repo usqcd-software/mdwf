@@ -1,0 +1,48 @@
+(verbose [(c99 bgl/xlc) "/* $Id$ */"])
+
+(include "types.qa0")
+
+;; F memory order:
+;;   0th index: flavor index
+;;   1st index: vector of fermions
+;;   2nd index: lattice index
+;;  vf[0][0][0]
+;;  vf[1][0][0]
+;;  ....
+;;  vf[ls-1][0][0]
+;;  vf[0][1][0]
+;;  ....
+;;  vf[ls-1][fv-size-1][0]
+;;  vf[0][0][1]
+;;  ...
+;;
+(procedure copy-vfermion ([stem "vf_copy"]
+                          prec&color
+                          count-flops)
+           ([size      int     "size"      "int"                     ]
+            [ls        int     "ls"        "int"                     ]
+            [len       int     "len"       "int"                     ]
+            [F         pointer "F"         "struct vFermion *"       ]
+            [fv-size   int     "fv_size"   "int"                     ]
+            [fv-begin  int     "fv_begin"  "int"                     ]
+            [G         pointer "G"         "const struct vFermion *" ]
+            [gv-size   int     "gv_size"   "int"                     ]
+            [gv-begin  int     "gv_begin"  "int"                     ])
+   (op int-mul () (f-ls) ([reg ls] [const (size-of Fermion)]))
+   (op int-mul () (fv-step) ([reg fv-size] [reg f-ls]))
+   (op int-mul () (fv-start) ([reg fv-begin] [reg f-ls]))
+   (op pointer-add () (F-x) ([reg F] [reg fv-start]))
+   (op int-mul () (gv-step) ([reg gv-size] [reg f-ls]))
+   (op int-mul () (gv-start) ([reg gv-begin] [reg f-ls]))
+   (op pointer-add () (G-x) ([reg G] [reg gv-start]))
+   (loop () (i [const 0] [reg size])
+     (op pointer-move () (F-s) ([reg F-x]))
+     (op pointer-move () (G-s) ([reg G-x]))
+     (loop () (j [const 0] [reg len])
+       (loop () (s [const 0] [reg ls])
+         (load qcd-fermion () x-v ([reg G-s]))
+         (op pointer-add () (G-s) ([reg G-s] [const (size-of Fermion)]))
+         (store qcd-fermion () ([reg F-s]) [reg x-v])
+         (op pointer-add () (F-s) ([reg F-s] [const (size-of Fermion)]))))
+     (op pointer-add () (F-x) ([reg F-x] [reg fv-step]))
+     (op pointer-add () (G-x) ([reg G-x] [reg gv-step]))))
