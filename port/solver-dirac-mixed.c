@@ -12,18 +12,18 @@
  */ 
 
 int
-Q(mixed_D_CG)(struct QD(Fermion)          *psi,
-              int                         *out_iterations,
-              double                      *out_epsilon,
-              const struct Q(Parameters)  *params,
-              const struct QD(Fermion)    *psi_0,
-              const struct QD(Gauge)      *gauge,
-              const struct QD(Fermion)    *eta,
-              int                          f_iter,
-              double                       f_epsilon,
-              int                          max_iterations,
-              double                       min_epsilon,
-              unsigned int                 options)
+Q(mixed_DDW_CG)(struct QD(Fermion)          *psi,
+                int                         *out_iterations,
+                double                      *out_epsilon,
+                const struct Q(Parameters)  *params,
+                const struct QD(Fermion)    *psi_0,
+                const struct QD(Gauge)      *gauge,
+                const struct QD(Fermion)    *eta,
+                int                          f_iter,
+                double                       f_epsilon,
+                int                          max_iterations,
+                double                       min_epsilon,
+                unsigned int                 options)
 {
     DECLARE_STATE;
 
