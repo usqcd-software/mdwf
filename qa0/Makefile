@@ -64,6 +64,7 @@ x.sources = get-fermion.qa0 \
             f-add3.qa0 \
             f-rmul1.qa0 \
             f-add2.qa0 \
+            f-cadd2.qa0 \
             f-add2-norm.qa0 \
             f-add2x.qa0 \
             f-dot.qa0 \

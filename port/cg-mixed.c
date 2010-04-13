@@ -168,7 +168,7 @@ q(mixed_cg)(struct Q(State)             *state,
         int here_iter;
         double delta_norm2;
         double ff_eps;
-        
+
         qd(op_even_M)(t0_e, state, params, gauge->data, xi_e,
                       &flops, &sent, &received, t0_o);
         qd(op_even_Mx)(t1_e, state, params, gauge->data, t0_e,
@@ -185,11 +185,14 @@ q(mixed_cg)(struct Q(State)             *state,
             CG_ERROR_T("mixed_DDW_CG(): communication setup failed");
         }
 
+        if (options)
+            qx(zprint)(state, name, "mixed_DDW_CG(): restart %d",
+                max_iterations - iter_left);
         cg_status = qf(cg_solver)(xi_Fe, name, &here_iter, out_epsilon,
                                   state, params, gauge_F.data,
                                   delta_Fe, deflator,
                                   iter_left > f_iter? f_iter: iter_left,
-                                  scaled_eps, options,
+                                  ff_eps, options,
                                   &flops, &sent, &received,
                                   rho_Fe, pi_Fe, zeta_Fe,
                                   t0_Fe, t1_Fe, t2_Fe, t0_Fo);

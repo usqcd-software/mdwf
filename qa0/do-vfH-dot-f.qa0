@@ -52,7 +52,7 @@
        (op complex-real () (s-r) ([reg zz]))
        (op complex-imag () (s-i) ([reg zz]))
        (store double () ([reg c-j]) [reg s-r])
-       (store double () ([reg c-j] [const (size-of double)]) [reg s-r])
+       (store double () ([reg c-j] [const (size-of double)]) [reg s-i])
        (op pointer-add () (c-j) ([reg c-j] [const (* 2 (size-of double))])))
      (op pointer-add () (G) ([reg G] [reg f-ls]))
      (op pointer-add () (F) ([reg F] [reg fv-stride]))))

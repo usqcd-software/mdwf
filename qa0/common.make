@@ -57,6 +57,7 @@ x.sources = get-fermion \
             f-rmul1 \
             f-add3 \
             f-add2 \
+            f-cadd2 \
             f-add2-norm \
             f-add2x \
 	    f-dot \
