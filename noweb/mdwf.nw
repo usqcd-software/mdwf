@@ -904,21 +904,23 @@ for double precision, another for single precision.
 <<Interface functions>>=
 int `QOP_F3_MDWF_import_gauge(struct QOP_F3_MDWF_Gauge **gauge_ptr,
                              struct QOP_MDWF_State *state,
-                             double (*reader)(int dir,
-                                              const int pos[4],
-                                              int a,
-                                              int b,
-                                              int re_im,
-                                              void *env),
+                             void (*reader)(double *val_re,
+                                            double *val_im,
+                                            int dir,
+                                            const int pos[4],
+                                            int a,
+                                            int b,
+                                            void *env),
                              void *env);
 int `QOP_D3_MDWF_import_gauge(struct QOP_D3_MDWF_Gauge **gauge_ptr,
                              struct QOP_MDWF_State *state,
-                             double (*reader)(int dir,
-                                              const int pos[4],
-                                              int a,
-                                              int b,
-                                              int re_im,
-                                              void *env),
+                             void (*reader)(double *val_re,
+                                            double *val_im,
+                                            int dir,
+                                            const int pos[4],
+                                            int a,
+                                            int b,
+                                            void *env),
                              void *env);
 @
 The [[reader()]] points to a function that provides a value of the gauge field
@@ -964,19 +966,21 @@ In addition to import and destruction, they could be created empty and exported.
 <<Interface functions>>=
 int `QOP_F3_MDWF_import_fermion(struct QOP_F3_MDWF_Fermion **fermion_ptr,
                                struct QOP_MDWF_State *state,
-                               double (*reader)(const int pos[5],
-                                                int color,
-                                                int dirac,
-                                                int re_im,
-                                                void *env),
+                               void (*reader)(double *val_re,
+                                              double *val_im,
+                                              const int pos[5],
+                                              int color,
+                                              int dirac,
+                                              void *env),
                                void *env);
 int `QOP_D3_MDWF_import_fermion(struct QOP_D3_MDWF_Fermion **fermion_ptr,
                                struct QOP_MDWF_State *state,
-                               double (*reader)(const int pos[5],
-                                                int color,
-                                                int dirac,
-                                                int re_im,
-                                                void *env),
+                               void (*reader)(double *val_re,
+                                              double *val_im,
+                                              const int pos[5],
+                                              int color,
+                                              int dirac,
+                                              void *env),
                                void *env);
 @
 The [[reader()]] points to a function that provides a value of the fermion field
@@ -1014,19 +1018,93 @@ We also use a functional interface to provide indexing.
 int `QOP_F3_MDWF_export_fermion(void (*writer)(const int pos[5],
                                               int color,
                                               int dirac,
-                                              int re_im,
-                                              double value,
+                                              double val_re,
+                                              double val_im,
                                               void *env),
                                void *env,
                                const struct QOP_F3_MDWF_Fermion *fermion);
 int `QOP_D3_MDWF_export_fermion(void (*writer)(const int pos[5],
                                               int color,
                                               int dirac,
-                                              int re_im,
-                                              double value,
+                                              double val_re,
+                                              double val_im,
                                               void *env),
                                void *env,
                                const struct QOP_D3_MDWF_Fermion *fermion);
+@
+We also provide convenience routines to import four-dimensional
+fermions
+<<Interface functions>>=
+int `QOP_F3_MDWF_import_4d_fermion(struct QOP_F3_MDWF_Fermion **fermion_ptr,
+                                  struct QOP_MDWF_State *state,
+                                  void (*reader)(double *val_re,
+                                                 double *val_im,
+                                                 const int pos[4],
+                                                 int color,
+                                                 int dirac,
+                                                 void *env),
+                                  void *env);
+int `QOP_D3_MDWF_import_4d_fermion(struct QOP_D3_MDWF_Fermion **fermion_ptr,
+                                  struct QOP_MDWF_State *state,
+                                  void (*reader)(double *val_re,
+                                                 double *val_im,
+                                                 const int pos[4],
+                                                 int color,
+                                                 int dirac,
+                                                 void *env),
+                                  void *env);
+@
+Export routines are provided as well:
+<<Interface functions>>=
+int `QOP_F3_MDWF_export_4d_fermion(void (*writer)(const int pos[4],
+                                                 int color,
+                                                 int dirac,
+                                                 double val_re,
+                                                 double val_im,
+                                                 void *env),
+                                  void *env,
+                                  const struct QOP_F3_MDWF_Fermion *fermion);
+int `QOP_D3_MDWF_export_4d_fermion(void (*writer)(const int pos[4],
+                                                 int color,
+                                                 int dirac,
+                                                 double val_re,
+                                                 double val_im,
+                                                 void *env),
+                                  void *env,
+                                  const struct QOP_D3_MDWF_Fermion *fermion);
+@
+For residual mass calculations, one needs the
+following routines:
+<<Interface functions>>=
+int `QOP_F3_MDWF_midpoint_pseudo(void (*writer)(const int pos[4],
+                                               double value,
+                                               void *env),
+                                void *env,
+                                const struct QOP_F3_MDWF_Fermion *fermion);
+int `QOP_D3_MDWF_midpoint_pseudo(void (*writer)(const int pos[4],
+                                               double value,
+                                               void *env),
+                                void *env,
+                                const struct QOP_D3_MDWF_Fermion *fermion);
+@
+It is also convenient to have the conserved axial current export:
+<<Interface functions>>=
+int `QOP_F3_MDWF_axial_current(void (*writer)(const int pos[4],
+                                             int dir,
+                                             double val_re,
+                                             double val_im,
+                                             void *env),
+                              void *env,
+                              const struct QOP_F3_MDWF_Fermion *fermion,
+                              const struct QOP_F3_MDWF_Gauge *gauge);
+int `QOP_D3_MDWF_axial_current(void (*writer)(const int pos[4],
+                                             int dir,
+                                             double val_re,
+                                             double val_im,
+                                             void *env),
+                              void *env,
+                              const struct QOP_D3_MDWF_Fermion *fermion,
+                              const struct QOP_D3_MDWF_Gauge *gauge);
 @
 
 We also need a couple of destructors for fermion fields. For convenience, they
@@ -1039,15 +1117,23 @@ void `QOP_D3_MDWF_free_fermion(struct QOP_D3_MDWF_Fermion **fermion_ptr);
 Finally, macros for prefered precision
 <<Single precision defaults>>=
 #define `QOP_MDWF_import_fermion QOP_F3_MDWF_import_fermion
+#define `QOP_MDWF_import_4d_fermion QOP_F3_MDWF_import_4d_fermion
 #define `QOP_MDWF_export_fermion QOP_F3_MDWF_export_fermion
+#define `QOP_MDWF_export_4d_fermion QOP_F3_MDWF_export_4d_fermion
 #define `QOP_MDWF_allocate_fermion QOP_F3_MDWF_allocate_fermion
+#define `QOP_MDWF_midpoint_pseudo QOP_F3_MDWF_midpoint_pseudo
+#define `QOP_MDWF_axial_current QOP_F3_MDWF_axial_current
 #define `QOP_MDWF_free_fermion QOP_F3_MDWF_free_fermion
 #define `QOP_MDWF_Fermion QOP_F3_MDWF_Fermion
 @
 <<Double precision defaults>>=
 #define `QOP_MDWF_import_fermion QOP_D3_MDWF_import_fermion
+#define `QOP_MDWF_import_4d_fermion QOP_D3_MDWF_import_4d_fermion
 #define `QOP_MDWF_export_fermion QOP_D3_MDWF_export_fermion
+#define `QOP_MDWF_export_4d_fermion QOP_D3_MDWF_export_4d_fermion
 #define `QOP_MDWF_allocate_fermion QOP_D3_MDWF_allocate_fermion
+#define `QOP_MDWF_midpoint_pseudo QOP_D3_MDWF_midpoint_pseudo
+#define `QOP_MDWF_axial_current QOP_D3_MDWF_axial_current
 #define `QOP_MDWF_free_fermion QOP_D3_MDWF_free_fermion
 #define `QOP_MDWF_Fermion QOP_D3_MDWF_Fermion
 @
@@ -1060,19 +1146,21 @@ In addition to import and destruction, they could be created empty and exported.
 <<Interface functions>>=
 int `QOP_F3_MDWF_import_half_fermion(struct QOP_F3_MDWF_HalfFermion **hfermion_ptr,
                                     struct QOP_MDWF_State *state,
-                                    double (*reader)(const int pos[5],
-                                                     int color,
-                                                     int dirac,
-                                                     int re_im,
-                                                     void *env),
+                                    void (*reader)(double *val_re,
+                                                   double *val_im,
+                                                   const int pos[5],
+                                                   int color,
+                                                   int dirac,
+                                                   void *env),
                                     void *env);
 int `QOP_D3_MDWF_import_half_fermion(struct QOP_D3_MDWF_HalfFermion **hfermion_ptr,
                                     struct QOP_MDWF_State *state,
-                                    double (*reader)(const int pos[5],
-                                                     int color,
-                                                     int dirac,
-                                                     int re_im,
-                                                     void *env),
+                                    void (*reader)(double *val_re,
+                                                   double *val_im,
+                                                   const int pos[5],
+                                                   int color,
+                                                   int dirac,
+                                                   void *env),
                                     void *env);
 @
 The [[reader()]] points to a function that provides a value of the
@@ -1110,16 +1198,16 @@ We also use a functional interface to provide indexing.
 int `QOP_F3_MDWF_export_half_fermion(void (*writer)(const int pos[5],
                                                    int color,
                                                    int dirac,
-                                                   int re_im,
-                                                   double value,
+                                                   double val_re,
+                                                   double val_im,
                                                    void *env),
                                    void *env,
                                    const struct QOP_F3_MDWF_HalfFermion *hfermion);
 int `QOP_D3_MDWF_export_half_fermion(void (*writer)(const int pos[5],
                                                    int color,
                                                    int dirac,
-                                                   int re_im,
-                                                   double value,
+                                                   double val_re,
+                                                   double val_im,
                                                    void *env),
                                    void *env,
                                    const struct QOP_D3_MDWF_HalfFermion *hfermion);

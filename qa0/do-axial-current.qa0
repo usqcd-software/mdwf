@@ -1,0 +1,131 @@
+(verbose [(c99 bgl/xlc) "/* $Id$ */"])
+
+(include "types.qa0")
+(include "defs-spin.qa0")
+(include "defs-F.qa0")
+
+;; (macro get-up-mask&f&V [reg remote?] [reg f-index] [reg V]
+;;                        [const mu] [reg mask] [reg nb] [reg U])
+;;   in: U         -- U address
+;;   in: nb        -- this neighbor pointer
+;;   in: mask      -- mask value
+;;   in: mu        -- mu direction
+;;   out: f-index  -- index of the F up neighbor (either body or face)
+;;   out: remote?  -- are we on the face?
+
+(define (face-line-5 res-x mu l-s src-x V g-index s-line buf*)
+  (op nop (face-line-5 mu) () ())
+  (op int-mul () (g-off) ([reg g-index] [reg s-line]))
+  (macro up-boundary [reg src-y] [const mu] [reg buf*])
+  (op pointer-add () (g) ([reg src-y] [reg g-off]))
+  (op int-div () (Ls/2) ([reg l-s] [const 2]))
+  (op pointer-add () (f) ([reg src-x] [reg s-line]))
+  (op complex-zero () (result) ())
+  (loop () (s [const 0] [reg Ls/2])
+    (load qcd-projected-fermion () phi ([reg g]))
+    (op pointer-add () (g) ([reg g] [const (size-of Projected-Fermion)]))
+    (op pointer-add () (f) ([reg f] [const (- (size-of Fermion))]))
+    (load qcd-fermion () psi ([reg f]))
+    (op qcd-mulh () (U-phi) ([reg V] [reg phi]))
+    (op qcd-dot-unproject-5 ([unproject-5 mu minus]) (psi-U-phi)
+                            ([reg psi] [reg U-phi]))
+    (op complex-sub () (result) ([reg result] [reg psi-U-phi])))
+  (loop () (s [reg Ls/2] [reg l-s])
+    (load qcd-projected-fermion () phi ([reg g]))
+    (op pointer-add () (g) ([reg g] [const (size-of Projected-Fermion)]))
+    (op pointer-add () (f) ([reg f] [const (- (size-of Fermion))]))
+    (load qcd-fermion () psi ([reg f]))
+    (op qcd-mulh () (U-phi) ([reg V] [reg phi]))
+    (op qcd-dot-unproject-5 ([unproject-5 mu minus]) (psi-U-phi)
+                            ([reg psi] [reg U-phi]))
+    (op complex-add () (result) ([reg result] [reg psi-U-phi])))
+  (op complex-add () (result) ([reg result] [reg result]))
+  (op complex-real () (r-re) ([reg result]))
+  (op complex-imag () (r-im) ([reg result]))
+  (store double () ([reg res-x] [const (* (size-of double) (* mu 2))])
+                   [reg r-re])
+  (store double () ([reg res-x] [const (* (size-of double) (+ 1 (* mu 2)))])
+                   [reg r-im])
+  (op nop (face-line-5 mu) () ()))
+  ;; XXX init sum
+  ;; XXX for s 0 .. ls - 1:
+  ;; XXX   load Y from buf*[mu][f-index * s-line + s]
+  ;; XXX   T = V Y
+  ;; XXX   -- ??? S = src-x[???], sign of the sum, order of the dot
+  ;; XXX   sum += S . (unproject-5 mu minus) T  ???
+  ;; XXX res-x[2*mu] = re(sum)
+  ;; XXX res-x[2*mu+1] = im(sum)
+;;(op nop (face-line-5 mu) () ()))
+
+(define (body-line-5 res-x mu l-s src-x V g-index s-line src-y)
+  (op nop (body-line-5 mu) () ())
+  (op int-mul () (g-off) ([reg g-index] [reg s-line]))
+  (op pointer-add () (g) ([reg src-y] [reg g-off]))
+  (op int-div () (Ls/2) ([reg l-s] [const 2]))
+  (op pointer-add () (f) ([reg src-x] [reg s-line]))
+  (op complex-zero () (result) ())
+  (loop () (s [const 0] [reg Ls/2])
+    (load qcd-fermion () phi ([reg g]))
+    (op pointer-add () (g) ([reg g] [const (size-of Fermion)]))
+    (op pointer-add () (f) ([reg f] [const (- (size-of Fermion))]))
+    (load qcd-fermion () psi ([reg f]))
+    (macro project-U [const 'minus] [const mu] [reg U-phi]
+                     [reg V] [reg phi])
+    (op qcd-dot-unproject-5 ([unproject-5 mu minus]) (psi-U-phi)
+                            ([reg psi] [reg U-phi]))
+    (op complex-sub () (result) ([reg result] [reg psi-U-phi])))
+  (loop () (s [reg Ls/2] [reg l-s])
+    (load qcd-fermion () phi ([reg g]))
+    (op pointer-add () (g) ([reg g] [const (size-of Fermion)]))
+    (op pointer-add () (f) ([reg f] [const (- (size-of Fermion))]))
+    (load qcd-fermion () psi ([reg f]))
+    (macro project-U [const 'minus] [const mu] [reg U-phi]
+                     [reg V] [reg phi])
+    (op qcd-dot-unproject-5 ([unproject-5 mu minus]) (psi-U-phi)
+                            ([reg psi] [reg U-phi]))
+    (op complex-add () (result) ([reg result] [reg psi-U-phi])))
+  (op complex-add () (result) ([reg result] [reg result]))
+  (op complex-real () (r-re) ([reg result]))
+  (op complex-imag () (r-im) ([reg result]))
+  (store double () ([reg res-x] [const (* (size-of double) (* mu 2))])
+                   [reg r-re])
+  (store double () ([reg res-x] [const (* (size-of double) (+ 1 (* mu 2)))])
+                   [reg r-im])
+  (op nop (body-line-5 mu) () ()))
+
+(procedure do-axial-current ([stem "do_axial_current"]
+                             prec&color
+                             count-flops)
+       ([res-x     pointer   "val"      "double *"                 ]
+        [point     int       "p"        "int"                      ]
+        [l-s       int       "Ls"       "int"                      ]
+        [nb        pointer   "neighbor" "const struct neighbor *"  ]
+        [U         pointer   "U"        "const struct SUn *"       ]
+        [src-x     pointer   "src_x"    "const struct Fermion *"   ]
+        [src-y     pointer   "src_y"    "const struct Fermion *"   ]
+        [buf*      pointer   "rb"       "void **"                  ])
+  (op int-mul () (s-h-line) ([reg l-s] [const (size-of Projected-Fermion)]))
+  (op int-mul () (s-f-line) ([reg l-s] [const (size-of Fermion)]))
+  (op int-mul () (x-loc) ([reg point] [reg s-f-line]))
+  (op pointer-add () (src-x) ([reg src-x] [reg x-loc]))
+  (op int-mul () (nb-loc) ([reg point] [const (size-of neighbor)]))
+  (op pointer-add () (nb) ([reg nb] [reg nb-loc]))
+  (load int () mask ([reg nb] [const (offset-of neighbor mask)]))
+  (repeat ((mu [const 0] [const *dim*]))
+    (op nop (Start with mu) () ())
+    (macro get-up-mask&f&V [reg remote?] [reg f-index] [reg V]
+                           [const mu] [reg mask] [reg nb] [reg U])
+    ;;   in: U         -- U address
+    ;;   in: nb        -- this neighbor pointer
+    ;;   in: mask      -- mask value
+    ;;   in: mu        -- mu direction
+    ;;   out: f-index  -- index of the F up neighbor (either body or face)
+    ;;   out: remote?  -- are we on the face?
+    (if-else [reg remote?]
+      (macro face-line-5 [reg res-x] [const mu]
+                         [reg l-s] [reg src-x] [reg V]
+                         [reg f-index] [reg s-h-line] [reg buf*])
+      (macro body-line-5 [reg res-x] [const mu]
+                         [reg l-s] [reg src-x] [reg V]
+                         [reg f-index] [reg s-f-line] [reg src-y]))
+    (op nop (End of mu) () ())))

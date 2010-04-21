@@ -58,7 +58,10 @@ p.sources = alloc-eo.c \
             step-odd.c \
             fermion-alloc.c \
             fermion-import.c \
+            fermion-import4d.c \
+            fermion-midpoint.c \
             fermion-export.c \
+            fermion-export4d.c \
             fermion-free.c \
             fermion-madd.c \
             fermion-dot.c \
@@ -77,10 +80,14 @@ p.sources = alloc-eo.c \
             vfermion-get.c \
             vfermion-put.c \
             x-import.c \
+            x4-import.c \
+            x-midpoint.c \
             x-export.c \
+            x4-export.c \
             boundary-n.c \
             boundary-x.c \
             op-boundary.c \
+            op-down-boundary.c \
             op-a.c \
             op-ax.c \
 	    op-a1.c \
@@ -109,6 +116,8 @@ p.sources = alloc-eo.c \
             op-mn.c \
             op-mx.c \
             op-mxn.c \
+            axial-current.c \
+            op-axial-current.c \
             op-dirac.c \
             op-dirac-conj.c \
             op-precond.c \

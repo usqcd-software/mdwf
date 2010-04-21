@@ -2,13 +2,14 @@
 
 int
 QX(import_half_fermion)(struct QX(HalfFermion) **half_fermion_ptr,
-			struct Q(State) *state,
-			double (*reader)(const int pos[5],
-					 int color,
-					 int dirac,
-					 int re_im,
-					 void *env),
-			void *env)
+                        struct Q(State) *state,
+                        void (*reader)(double *val_re,
+                                       double *val_im,
+                                       const int pos[5],
+                                       int color,
+                                       int dirac,
+                                       void *env),
+                        void *env)
 {
   double *m;
   int size;

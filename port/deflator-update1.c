@@ -160,7 +160,7 @@ q(df_update1)(
         
         for (i = 0; i < d->nev; i++) {
             j = d->hevals_select1[i];
-            qf(zprint)(s, "update1", "T0 %4d %17.9e", j,
+            qf(zprint)(s, "update1", "T0 %4d %17.9e", i,
                        gsl_vector_get(d->gsl_hevals1, j));
         }
     }

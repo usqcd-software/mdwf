@@ -2,14 +2,15 @@
 
 int
 QX(import_gauge)(struct QX(Gauge) **gauge_ptr,
-		 struct Q(State) *state,
-		 double (*reader)(int dir,
-				  const int pos[Q(DIM)],
-				  int a,
-				  int b,
-				  int re_im,
-				  void *env),
-		 void *env)
+                 struct Q(State) *state,
+                 void (*reader)(double *val_re,
+                                double *val_im,
+                                int dir,
+                                const int pos[Q(DIM)],
+                                int a,
+                                int b,
+                                void *env),
+                 void *env)
 {
   struct QX(Gauge) *gauge;
   void *ptr;
@@ -29,7 +30,7 @@ QX(import_gauge)(struct QX(Gauge) **gauge_ptr,
   *gauge_ptr = NULL;
   us = qx(sizeof_gauge)(state->volume);
   gauge = q(allocate_aligned)(state, &size, &ptr,
-			      sizeof (struct QX(Gauge)), us);
+                              sizeof (struct QX(Gauge)), us);
   if (gauge == 0)
     return q(set_error)(state, 0, "import_gauge(): not enough memory");
 
@@ -43,10 +44,12 @@ QX(import_gauge)(struct QX(Gauge) **gauge_ptr,
     q(l2v)(x, &state->local, state->lx2v[p]);
     for (v = r, d = 0; d < Q(DIM); d++) {
       for (a = 0; a < Q(COLORS); a++) {
-	for (b = 0; b < Q(COLORS); b++) {
-	  *v++ = -0.5 * reader(d, x, a, b, 0, env);
-	  *v++ = - 0.5 * reader(d, x, a, b, 1, env);
-	}
+        for (b = 0; b < Q(COLORS); b++) {
+            double v_re, v_im;
+            reader(&v_re, &v_im, d, x, a, b, env);
+            *v++ = -0.5 * v_re;
+            *v++ = -0.5 * v_im;
+        }
       }
     }
     qx(put_gauge)(gauge->data, p, r);

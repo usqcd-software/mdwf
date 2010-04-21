@@ -1,6 +1,6 @@
 #include <mdwf.h>
 
-/* NOTE: not the beset overlap of comm/comm */
+/* NOTE: not the best overlap of comm/comm */
 
 int
 QX(DDW_operator)(struct QX(Fermion) *result,

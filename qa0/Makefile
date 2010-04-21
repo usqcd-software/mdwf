@@ -83,6 +83,7 @@ x.sources = get-fermion.qa0 \
             proj-plus.qa0 \
             proj-u-minus.qa0 \
             proj-u-plus.qa0 \
+            do-axial-current.qa0 \
             do-A.qa0 \
             do-A-conj.qa0 \
             do-A-inv.qa0 \

@@ -91,7 +91,7 @@ speciate_target() {
   case "$target" in
     cee-32)
        limpdir=cee-32
-       default_cc="gcc -m32"
+       default_cc="gcc -std=c99 -m32"
        default_cflags="-Wall -O3"
        default_ld="gcc"
        default_ldfalgs=""
@@ -101,7 +101,7 @@ speciate_target() {
        ;;
     c99-32)
        limpdir=c99-32
-       default_cc="gcc -m32"
+       default_cc="gcc -std=c99 -m32"
        default_cflags="-Wall -O3"
        default_ld="gcc"
        default_ldfalgs=""
@@ -111,7 +111,7 @@ speciate_target() {
        ;;
     cee-64)
        limpdir=cee-64
-       default_cc="gcc -m64"
+       default_cc="gcc -std=c99 -m64"
        default_cflags="-Wall -O3"
        default_ld="gcc"
        default_ldfalgs=""
@@ -121,7 +121,7 @@ speciate_target() {
        ;;
     c99-64)
        limpdir=c99-64
-       default_cc="gcc -m64"
+       default_cc="gcc -std=c99 -m64"
        default_cflags="-Wall -O3"
        default_ld="gcc"
        default_ldfalgs=""
@@ -131,9 +131,9 @@ speciate_target() {
        ;;
     bgl/xlc)
        limpdir=bgl-xlc
-       default_cc="blrts_xlc"
+       default_cc="blrts_c99"
        default_cflags="-O3"
-       default_ld="blrts_xlc"
+       default_ld="blrts_c99"
        default_ldfalgs=""
        default_libs=""
        default_ar="powerpc-bgl-blrts-gnu-ar"

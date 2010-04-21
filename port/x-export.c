@@ -2,15 +2,15 @@
 
 void
 qx(x_export)(struct eo_lattice *eo,
-	     double r[],
-	     const struct Fermion *data,
-	     void (*writer)(const int pos[Q(DIM)+1],
-			    int color,
-			    int dirac,
-			    int re_im,
-			    double v,
-			    void *env),
-	     void *env)
+             double r[],
+             const struct Fermion *data,
+             void (*writer)(const int pos[Q(DIM)+1],
+                            int color,
+                            int dirac,
+                            double val_re,
+                            double val_im,
+                            void *env),
+             void *env)
 {
   int size = eo->full_size;
   int Ls = eo->Ls;
@@ -23,10 +23,9 @@ qx(x_export)(struct eo_lattice *eo,
     qx(get_fermion)(r, data, p, Ls);
     for (v = r, x[Q(DIM)] = 0; x[Q(DIM)] < Ls; x[Q(DIM)]++) {
       for (c = 0; c < Q(COLORS); c++) {
-	for (d = 0; d < Q(FERMION_DIM); d++) {
-	  writer(x, c, d, 0, *v++, env);
-	  writer(x, c, d, 1, *v++, env);
-	}
+          for (d = 0; d < Q(FERMION_DIM); d++, v += 2) {
+              writer(x, c, d, v[0], v[1], env);
+        }
       }
     }
   }

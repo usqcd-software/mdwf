@@ -76,6 +76,7 @@ x.sources = get-fermion \
             proj-plus \
             proj-u-minus \
             proj-u-plus \
+            do-axial-current \
             do-A \
             do-A-conj \
             do-A-inv \

@@ -2,13 +2,13 @@
 
 int
 QX(export_fermion)(void (*writer)(const int pos[5],
-				  int color,
-				  int dirac,
-				  int re_im,
-				  double value,
-				  void *env),
-		   void *env,
-		   const struct QX(Fermion) *fermion)
+                                  int color,
+                                  int dirac,
+                                  double val_re,
+                                  double val_im,
+                                  void *env),
+                   void *env,
+                   const struct QX(Fermion) *fermion)
 {
   struct Q(State) *state;
   double *m;

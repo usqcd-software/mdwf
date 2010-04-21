@@ -422,11 +422,22 @@ void *qx(step_odd)(struct Q(State) *state, void *aligned_ptr);
 void qx(x_import)(struct eo_lattice *eo,
                   double r[],
                   struct Fermion *data, 
-                  double (*reader)(const int pos[Q(DIM)+1],
-                                   int color,
-                                   int dirac, 
-                                   int re_im,
-                                   void *env),
+                  void (*reader)(double *val_re,
+                                 double *val_im,
+                                 const int pos[Q(DIM)+1],
+                                 int color,
+                                 int dirac, 
+                                 void *env),
+                  void *env);
+void qx(x4_import)(struct eo_lattice *eo,
+                   double r[],
+                   struct Fermion *data, 
+                   void (*reader)(double *val_re,
+                                  double *val_im,
+                                  const int pos[Q(DIM)+1],
+                                  int color,
+                                  int dirac, 
+                                  void *env),
                   void *env);
 void qx(x_export)(struct eo_lattice *eo,
                   double r[],
@@ -434,10 +445,27 @@ void qx(x_export)(struct eo_lattice *eo,
                   void (*writer)(const int pos[Q(DIM)+1],
                                  int color,
                                  int dirac, 
-                                 int re_im,
-                                 double value,
+                                 double val_re,
+                                 double val_im,
                                  void *env),
                   void *env);
+void qx(x4_export)(struct eo_lattice *eo,
+                   double r[],
+                   const struct Fermion *data, 
+                   void (*writer)(const int pos[Q(DIM)],
+                                  int color,
+                                  int dirac, 
+                                  double val_re,
+                                  double val_im,
+                                  void *env),
+                   void *env);
+void qx(x_midpoint)(struct eo_lattice *eo,
+                    double r[],
+                    const struct Fermion *data,
+                    void (*writer)(const int pos[Q(DIM)],
+                                   double value,
+                                   void *env),
+                    void *env);
 
 /* Projections */
 typedef unsigned int (*qx(Up_project))(struct ProjectedFermion *r,
@@ -537,6 +565,12 @@ void qx(boundary)(struct eo_lattice *xy,
                   const struct SUn *U,
                   const struct Fermion *src_y,
                   long long *flops);
+/* same as above by do the down boundary only */
+void qx(down_boundary)(struct eo_lattice *xy,
+                       int Ls,
+                       const qx(Down_project) down_proj[],
+                       const struct Fermion *src_y,
+                       long long *flops);
 
 /* Backend controled structure sizes */
 int q(sizeof_neighbor)(int volume);
@@ -748,6 +782,15 @@ unsigned int qx(do_F_conj)(struct Fermion *res_x,
                            const struct Fermion *src_y,
                            void *rb[]);
 
+/* basic axial current */
+unsigned int qx(do_axial_current)(double *val, /* [ 2 * Q(DIM) ] */
+                                  int p,
+                                  int Ls,
+                                  const struct neighbor *neighbor,
+                                  const struct SUn *U,
+                                  const struct Fermion *s_x,
+                                  const struct Fermion *s_y,
+                                  void *rv[]);
 /* basic A+F, A and B */
 unsigned int qx(do_ApF)(struct Fermion *r_x,
                         int start, int size, int Ls,
@@ -1013,6 +1056,20 @@ void qx(op_BA1F)(struct Fermion *r_x,
                  long long *flops,
                  long long *sent,
                  long long *received);
+void qx(op_axial_current)(void (*writer)(const int pos[Q(DIM)],
+                                         int dir,
+                                         double val_re,
+                                         double val_im,
+                                         void *env),
+                          void *env,
+                          struct eo_lattice *xy,
+                          struct eo_lattice *yx,
+                          const struct SUn *U,
+                          const struct Fermion *a_x,
+                          const struct Fermion *a_y,
+                          long long *flops,
+                          long long *sent,
+                          long long *received);
 void qx(op_D)(struct Fermion *r_x,
               struct eo_lattice *xy,
               struct eo_lattice *yx,
