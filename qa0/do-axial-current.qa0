@@ -13,13 +13,13 @@
 ;;   out: f-index  -- index of the F up neighbor (either body or face)
 ;;   out: remote?  -- are we on the face?
 
-(define (face-line-5 res-x mu l-s src-x V g-index s-line buf*)
+(define (face-line-5 res-x mu l-s src-x V g-index h-line f-line buf*)
   (op nop (face-line-5 mu) () ())
-  (op int-mul () (g-off) ([reg g-index] [reg s-line]))
+  (op int-mul () (g-off) ([reg g-index] [reg h-line]))
   (macro up-boundary [reg src-y] [const mu] [reg buf*])
   (op pointer-add () (g) ([reg src-y] [reg g-off]))
   (op int-div () (Ls/2) ([reg l-s] [const 2]))
-  (op pointer-add () (f) ([reg src-x] [reg s-line]))
+  (op pointer-add () (f) ([reg src-x] [reg f-line]))
   (op complex-zero () (result) ())
   (loop () (s [const 0] [reg Ls/2])
     (load qcd-projected-fermion () phi ([reg g]))
@@ -41,28 +41,20 @@
     (op complex-add () (result) ([reg result] [reg psi-U-phi])))
   (op complex-add () (result) ([reg result] [reg result]))
   (op complex-real () (r-re) ([reg result]))
-  (op complex-imag () (r-im) ([reg result]))
+  ;;  (op double-zero () (r-re) ()) ;; XXX
+  (op double-zero () (r-im) ())
   (store double () ([reg res-x] [const (* (size-of double) (* mu 2))])
                    [reg r-re])
   (store double () ([reg res-x] [const (* (size-of double) (+ 1 (* mu 2)))])
                    [reg r-im])
   (op nop (face-line-5 mu) () ()))
-  ;; XXX init sum
-  ;; XXX for s 0 .. ls - 1:
-  ;; XXX   load Y from buf*[mu][f-index * s-line + s]
-  ;; XXX   T = V Y
-  ;; XXX   -- ??? S = src-x[???], sign of the sum, order of the dot
-  ;; XXX   sum += S . (unproject-5 mu minus) T  ???
-  ;; XXX res-x[2*mu] = re(sum)
-  ;; XXX res-x[2*mu+1] = im(sum)
-;;(op nop (face-line-5 mu) () ()))
 
-(define (body-line-5 res-x mu l-s src-x V g-index s-line src-y)
+(define (body-line-5 res-x mu l-s src-x V g-index f-line src-y)
   (op nop (body-line-5 mu) () ())
-  (op int-mul () (g-off) ([reg g-index] [reg s-line]))
+  (op int-mul () (g-off) ([reg g-index] [reg f-line]))
   (op pointer-add () (g) ([reg src-y] [reg g-off]))
   (op int-div () (Ls/2) ([reg l-s] [const 2]))
-  (op pointer-add () (f) ([reg src-x] [reg s-line]))
+  (op pointer-add () (f) ([reg src-x] [reg f-line]))
   (op complex-zero () (result) ())
   (loop () (s [const 0] [reg Ls/2])
     (load qcd-fermion () phi ([reg g]))
@@ -86,7 +78,8 @@
     (op complex-add () (result) ([reg result] [reg psi-U-phi])))
   (op complex-add () (result) ([reg result] [reg result]))
   (op complex-real () (r-re) ([reg result]))
-  (op complex-imag () (r-im) ([reg result]))
+  ;;  (op complex-imag () (r-im) ([reg result]))
+  (op double-zero () (r-im) ())
   (store double () ([reg res-x] [const (* (size-of double) (* mu 2))])
                    [reg r-re])
   (store double () ([reg res-x] [const (* (size-of double) (+ 1 (* mu 2)))])
@@ -124,7 +117,7 @@
     (if-else [reg remote?]
       (macro face-line-5 [reg res-x] [const mu]
                          [reg l-s] [reg src-x] [reg V]
-                         [reg f-index] [reg s-h-line] [reg buf*])
+                         [reg f-index] [reg s-h-line] [reg s-f-line] [reg buf*])
       (macro body-line-5 [reg res-x] [const mu]
                          [reg l-s] [reg src-x] [reg V]
                          [reg f-index] [reg s-f-line] [reg src-y]))

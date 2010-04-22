@@ -28,11 +28,11 @@ QX(axial_current)(void                      (*writer)(const int pos[Q(DIM)],
     qx(op_axial_current)(writer, env,
                          &state->even, &state->odd, gauge->data,
                          fermion->even, fermion->odd,
-                         &flops, &sent, &received);
+                         &flops, &sent, &received, state->node);
     qx(op_axial_current)(writer, env,
                          &state->odd, &state->even, gauge->data,
                          fermion->odd, fermion->even,
-                         &flops, &sent, &received);
+                         &flops, &sent, &received, state->node);
     END_TIMING(state, flops, sent, received);
 
     return 0;

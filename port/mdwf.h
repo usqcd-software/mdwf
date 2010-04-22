@@ -1069,7 +1069,8 @@ void qx(op_axial_current)(void (*writer)(const int pos[Q(DIM)],
                           const struct Fermion *a_y,
                           long long *flops,
                           long long *sent,
-                          long long *received);
+                          long long *received,
+    int node);
 void qx(op_D)(struct Fermion *r_x,
               struct eo_lattice *xy,
               struct eo_lattice *yx,

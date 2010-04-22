@@ -24,11 +24,11 @@ qx(x_midpoint)(struct eo_lattice *eo,
     s = 0;
     for (c = 0; c < Q(COLORS); c++) {
         for (d = 0; d < Q(FERMION_DIM) / 2; d++) {
-            v = Xidx(Ls2, c, d);
+            v = Xidx(Ls2-1, c, d);
             s += v[0] * v[0] + v[1] * v[1];
         }
         for (d = Q(FERMION_DIM) / 2; d < Q(FERMION_DIM); d++) {
-            v = Xidx(Ls2+1, c, d);
+            v = Xidx(Ls2, c, d);
             s += v[0] * v[0] + v[1] * v[1];
         }
     }
