@@ -39,14 +39,9 @@
     (op qcd-dot-unproject-5 ([unproject-5 mu minus]) (psi-U-phi)
                             ([reg psi] [reg U-phi]))
     (op complex-add () (result) ([reg result] [reg psi-U-phi])))
-  (op complex-add () (result) ([reg result] [reg result]))
   (op complex-real () (r-re) ([reg result]))
-  ;;  (op double-zero () (r-re) ()) ;; XXX
-  (op double-zero () (r-im) ())
-  (store double () ([reg res-x] [const (* (size-of double) (* mu 2))])
-                   [reg r-re])
-  (store double () ([reg res-x] [const (* (size-of double) (+ 1 (* mu 2)))])
-                   [reg r-im])
+  (op double-add () (r-re) ([reg r-re] [reg r-re]))
+  (store double () ([reg res-x] [const (* (size-of double) mu)]) [reg r-re])
   (op nop (face-line-5 mu) () ()))
 
 (define (body-line-5 res-x mu l-s src-x V g-index f-line src-y)
@@ -76,14 +71,9 @@
     (op qcd-dot-unproject-5 ([unproject-5 mu minus]) (psi-U-phi)
                             ([reg psi] [reg U-phi]))
     (op complex-add () (result) ([reg result] [reg psi-U-phi])))
-  (op complex-add () (result) ([reg result] [reg result]))
   (op complex-real () (r-re) ([reg result]))
-  ;;  (op complex-imag () (r-im) ([reg result]))
-  (op double-zero () (r-im) ())
-  (store double () ([reg res-x] [const (* (size-of double) (* mu 2))])
-                   [reg r-re])
-  (store double () ([reg res-x] [const (* (size-of double) (+ 1 (* mu 2)))])
-                   [reg r-im])
+  (op double-add () (r-re) ([reg r-re] [reg r-re]))
+  (store double () ([reg res-x] [const (* (size-of double) mu)]) [reg r-re])
   (op nop (body-line-5 mu) () ()))
 
 (procedure do-axial-current ([stem "do_axial_current"]

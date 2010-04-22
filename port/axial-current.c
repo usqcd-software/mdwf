@@ -5,8 +5,7 @@
 int
 QX(axial_current)(void                      (*writer)(const int pos[Q(DIM)],
                                                       int dir,
-                                                      double val_re,
-                                                      double val_im,
+                                                      double value,
                                                       void *env),
                   void                       *env,
                   const struct QX(Fermion)   *fermion,

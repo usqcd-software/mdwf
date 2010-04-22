@@ -3,8 +3,7 @@
 static unsigned int
 do_ac(void                   (*writer)(const int pos[Q(DIM)],
                                        int dir,
-                                       double val_re,
-                                       double val_im,
+                                       double value,
                                        void *env),
       void                    *env,
       int                      start,
@@ -17,17 +16,17 @@ do_ac(void                   (*writer)(const int pos[Q(DIM)],
       void                    *rb[],
       int                      node)
 {
-    int p, mu;
-    double val[2 * Q(DIM)];
+    int i, p, mu;
+    double val[Q(DIM)];
     int flops = 0;
 
-    for (p = 0; p < size; p++) {
-        flops += qx(do_axial_current)(val, p + start, Ls,
+    for (p = start, i = 0; i < size; p++, i++) {
+        flops += qx(do_axial_current)(val, p, Ls,
                                       xy->neighbor, U, s_x, s_y, rb);
         int x[Q(DIM)];
-        q(l2v)(x, xy->local, xy->lx2v[p + start]);
+        q(l2v)(x, xy->local, xy->lx2v[p]);
         for (mu = 0; mu < Q(DIM); mu++) {
-            writer(x, mu, val[2 * mu], val[2 * mu + 1], env);
+            writer(x, mu, val[mu], env);
         }
     }
     return flops;
@@ -37,8 +36,7 @@ do_ac(void                   (*writer)(const int pos[Q(DIM)],
 void
 qx(op_axial_current)(void                   (*writer)(const int pos[Q(DIM)],
                                                       int dir,
-                                                      double val_re,
-                                                      double val_im,
+                                                      double value,
                                                       void *env),
                      void                    *env,
                      struct eo_lattice       *xy,

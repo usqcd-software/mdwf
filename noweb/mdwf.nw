@@ -21,7 +21,7 @@
 \author{Andrew Pochinsky}
 \catcode`\$=11
 \date{$Id$\\
-XXX WORKING COPY}
+1.3.0 rc1 XXX WORKING COPY}
 \catcode`\$=3
 
 \begin{document}
@@ -1087,20 +1087,19 @@ int `QOP_D3_MDWF_midpoint_pseudo(void (*writer)(const int pos[4],
                                 void *env,
                                 const struct QOP_D3_MDWF_Fermion *fermion);
 @
-It is also convenient to have the conserved axial current export:
+It is also convenient to have the conserved axial current export (it is real by
+construction):
 <<Interface functions>>=
 int `QOP_F3_MDWF_axial_current(void (*writer)(const int pos[4],
                                              int dir,
-                                             double val_re,
-                                             double val_im,
+                                             double value,
                                              void *env),
                               void *env,
                               const struct QOP_F3_MDWF_Fermion *fermion,
                               const struct QOP_F3_MDWF_Gauge *gauge);
 int `QOP_D3_MDWF_axial_current(void (*writer)(const int pos[4],
                                              int dir,
-                                             double val_re,
-                                             double val_im,
+                                             double value,
                                              void *env),
                               void *env,
                               const struct QOP_D3_MDWF_Fermion *fermion,
