@@ -1,3 +1,4 @@
+#!/bin/sh
 ./configure \
    --prefix=/Users/avp/Sandbox/USQCD/mdwf/install-new-1 \
    --target=cee-32 \

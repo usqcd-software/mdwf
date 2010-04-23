@@ -1,9 +1,10 @@
 #!/bin/sh -f
 
-version='version 1.0.0 $Id$'
+version='version 1.0.0 XXX $Id$'
 
 cc="@cc@"
 cflags="-I@incdir@ @qmp_cflags@ @cflags@"
+copts="@copts@"
 ld="@ld@"
 ldflags="-L@libdir@ @qmp_ldflags@ @ldflags@"
 libs="-lqop-mdwf3 @qmp_libs@ @libs@"
@@ -19,6 +20,7 @@ usage() {
        --version
        --cc
        --cflags
+       --copts
        --ld
        --ldflags
        --libs
@@ -33,6 +35,7 @@ case "$1" in
    --version)  echo "$version" ;;
    --cc)       echo "$cc" ;;
    --cflags)   echo "$cflags" ;;
+   --copts)    echo "$copts" ;;
    --ld)       echo "$ld" ;;
    --ldflags)  echo "$ldflags" ;;
    --libs)     echo "$libs" ;;

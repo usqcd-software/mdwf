@@ -124,5 +124,5 @@ realclean: clean
 
 $(sources:%.c=%.o): %.o: %.c
 	$E CC $<
-	$C$(CC) $(CFLAGS) -I../port -c -o $@ $<
+	$C$(CC) $(COPTS) $(CFLAGS) -I../port -c -o $@ $<
 

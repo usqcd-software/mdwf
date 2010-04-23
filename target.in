@@ -14,6 +14,7 @@ CBLAS_LIBS  = @cblas_libs@
 
 CC         = @cc@
 CFLAGS     = @cflags@ $(QMP_CFLAGS) $(GSL_CFLAGS)
+COPTS      = @copts@
 LDFLAGS    = @cflags@ $(QMP_LDFLAGS)
 LIBS       = $(QMP_LIBS) $(GSL_LIBS) $(CBLAS_LIBS)
 AR         = @ar@

@@ -29,6 +29,7 @@ show_help() {
    Environment variables:
      CC                      C compiler to use
      CFLAGS                  Flags to pass to the compiler
+     COPTS                   Options for the compiler
      LD                      Link editor to use
      LDFLAGS                 Flags to pass to the linker
      LIBS                    Extra libraries to use
@@ -59,7 +60,8 @@ libdir_loc=lib
 incdir_loc=include
 docdir_loc=share/doc/mdwf
 default_cc=gcc
-default_cflags="-Wall"
+default_cflags=""
+default_copts="-Wall"
 default_ld=gcc
 default_ldflags=""
 default_ar=ar
@@ -92,8 +94,9 @@ speciate_target() {
     cee-32)
        limpdir=cee-32
        default_cc="gcc -std=c99 -m32"
-       default_cflags="-Wall -O3"
-       default_ld="gcc"
+       default_cflags=""
+       default_copts="-Wall -O3"
+       default_ld="gcc -std=c99 -m32"
        default_ldfalgs=""
        default_libs=""
        default_ar="ar"
@@ -102,8 +105,9 @@ speciate_target() {
     c99-32)
        limpdir=c99-32
        default_cc="gcc -std=c99 -m32"
-       default_cflags="-Wall -O3"
-       default_ld="gcc"
+       default_cflags=""
+       default_copts="-Wall -O3"
+       default_ld="gcc -std=c99 -m32"
        default_ldfalgs=""
        default_libs=""
        default_ar="ar"
@@ -112,8 +116,9 @@ speciate_target() {
     cee-64)
        limpdir=cee-64
        default_cc="gcc -std=c99 -m64"
-       default_cflags="-Wall -O3"
-       default_ld="gcc"
+       default_cflags=""
+       default_copts="-Wall -O3"
+       default_ld="gcc -std=c99 -m64"
        default_ldfalgs=""
        default_libs=""
        default_ar="ar"
@@ -122,8 +127,9 @@ speciate_target() {
     c99-64)
        limpdir=c99-64
        default_cc="gcc -std=c99 -m64"
-       default_cflags="-Wall -O3"
-       default_ld="gcc"
+       default_cflags=""
+       default_copts="-Wall -O3"
+       default_ld="gcc -std=c99 -m64"
        default_ldfalgs=""
        default_libs=""
        default_ar="ar"
@@ -132,7 +138,8 @@ speciate_target() {
     bgl/xlc)
        limpdir=bgl-xlc
        default_cc="blrts_c99"
-       default_cflags="-O3"
+       default_cflags=""
+       default_copts="-O3 -qarch=440d -qstrict"
        default_ld="blrts_c99"
        default_ldfalgs=""
        default_libs=""
@@ -157,6 +164,7 @@ normalize() {
   # flags and defaults
   cc="${CC:-$default_cc}"
   cflags="${CFLAGS:-$default_cflags}"
+  copts="${COPTS:-$default_copts}"
   default_ld="${cc:-$default_ld}"
   ld="${LD:-$default_ld}"
   ldflags="${LDFLAGS:-$default_ldflags}"
@@ -193,6 +201,7 @@ show_config() {
    echo "doc directory           $docdir"
    echo "C compiler              $cc"
    echo "Compiler flags          $cflags"
+   echo "Compiler options        $copts"
    echo "Link editor             $ld"
    echo "Linking flags           $ldflags"
    echo "Extra libraries         $libs"
@@ -215,6 +224,7 @@ build() {
       -e "s|@docdir@|$docdir|g" \
       -e "s|@cc@|$cc|g" \
       -e "s|@cflags@|$cflags|g" \
+      -e "s|@copts@|$copts|g" \
       -e "s|@ld@|$ld|g" \
       -e "s|@ldflags@|$ldflags|g" \
       -e "s|@libs@|$libs|g" \
