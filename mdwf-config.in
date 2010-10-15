@@ -9,7 +9,7 @@ ld="@ld@"
 ldflags="-L@libdir@ @qmp_ldflags@ @ldflags@"
 libs="-lqop-mdwf3 @qmp_libs@ @libs@"
 qmp="@qmp@"
-gsl="@gsl" 
+gsl="@gsl@" 
 target="@target@"
 
 # usage status
