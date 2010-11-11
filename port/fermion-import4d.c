@@ -14,16 +14,20 @@ QX(import_4d_fermion)(struct QX(Fermion) **fermion_ptr,
   if (QX(allocate_fermion)(fermion_ptr, state) != 0)
     return 1;
 
-  int size = state->Ls * Q(FERMION_DIM) * Q(COLORS) * 2;
-  double m[size];
+  int size = state->Ls * Q(FERMION_DIM) * Q(COLORS) * 2 * sizeof (double);
+  double *m = q(malloc)(state, size);
 
-  for (int i = 0; i < size; i++)
-      m[i] = 0;
+  if (m == 0)
+	  return 1;
+
+  memset(m, 0, size);
 
   BEGIN_TIMING(state);
   qx(x4_import)(&state->even, m, (*fermion_ptr)->even, reader, env);
   qx(x4_import)(&state->odd, m, (*fermion_ptr)->odd, reader, env);
   END_TIMING(state, 0, 0, 0);
+
+  q(free)(state, m, size);
 
   return 0;
 }
