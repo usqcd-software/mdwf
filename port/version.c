@@ -7,5 +7,5 @@
 const char *
 Q(version)(void)
 {
-  return "Version 1.3.0 XXX $Id$";
+  return "Version 1.3.1 $Id$";
 }
