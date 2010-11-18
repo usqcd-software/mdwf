@@ -3,10 +3,6 @@ LIBDIR  = @libdir@
 CONFIG  = @docdir@/samples/target
 V       = 0
 
-QMP_CFLAGS  = $(shell @qmp@/bin/qmp-config --cflags)
-QMP_LDFLAGS = $(shell @qmp@/bin/qmp-config --ldflags)
-QMP_LIBS    = $(shell @qmp@/bin/qmp-config --libs)
-
 include $(CONFIG)
 
 ifeq ("$V", "0")
@@ -50,26 +46,26 @@ realclean: clean
 
 $(programs): %: %.o
 	$E LD $@
-	$C$(CC) $(CFLAGS) $(QMP_LDFLAGS) -L$(LIBDIR) -o $@ $^ \
-	  -lqop-mdwf3 $(QMP_LIBS)
+	$C$(CC) $(CFLAGS) $(COPTS) $(QMP_LDFLAGS) $(GSL_LDFLAGS) -L$(LIBDIR) -o $@ $^ \
+	  -lqop-mdwf3 $(GSL_LIBS) $(CBLAS_LIBS) $(QMP_LIBS)
 
 $(programs): $(common:%.c=%.o)
 
 $(f.objects): %-f.o: %.c
 	$E CC $@
-	$C$(CC) $(CFLAGS) -I$(INCDIR) \
+	$C$(CC) $(CFLAGS) $(COPTS) -I$(INCDIR) \
             -DQOP_MDWF_DEFAULT_PRECISION=\'F\' \
             -c -o $@ $<
 
 $(d.objects): %-d.o: %.c
 	$E CC $@
-	$C$(CC) $(CFLAGS) -I$(INCDIR) $(QMP_CFLAGS) \
+	$C$(CC) $(CFLAGS) $(COPTS) -I$(INCDIR) $(QMP_CFLAGS) \
             -DQOP_MDWF_DEFAULT_PRECISION=\'D\' \
             -c -o $@ $<
 
 $(x.objects): %.o: %.c
 	$E CC $@
-	$C$(CC) $(CFLAGS) -I$(INCDIR) \
+	$C$(CC) $(CFLAGS) $(COPTS) -I$(INCDIR) \
             -c -o $@ $<
 
 $(x.objects) $(d.objects) $(f.objects): $(headers)

@@ -11,7 +11,14 @@ static int qmp_inited = 0;
 double U_scale;
 int lattice[5] = { -1, -2, -3, -4, -5}; /* fly tape begins */
 int network[4] = { -6, -7, -8, -9};
-int this_node[4] = { -10, -11, -12, -13}; /* fly tape ends */
+int this_node[4] = { -10, -11, -12, -13};
+int neighbor_up[4];
+int neighbor_down[4];
+/*
+int neighbor_up[4] = { -1, -2, -3, -4 };
+int neighbor_down[4] = { -1, -2, -3, -4 };
+*/
+ /* fly tape ends */
 int primary_p;
 
 double M;
@@ -24,6 +31,26 @@ unsigned U_seed;
 unsigned rhs_seed;
 unsigned sol_seed;
 unsigned options;
+
+static int
+node_4to1(const int n4[])
+{
+	int i, n;
+	for (n = 0, i = 4; i--;) {
+		n = n * network[i] + n4[i];
+	}
+	return n;
+}
+
+static void
+node_1to4(int n4[], int node)
+{
+	int i;
+	for (i = 0; i < 4; i++) {
+		n4[i] = node % network[i];
+		node = node / network[i];
+	}
+}
 
 /* Not very good random numbers */
 #define NELEM(x) (sizeof (x) / sizeof (x[0]))
@@ -152,13 +179,15 @@ sum_fini(unsigned int state)
 
 /* get local sublattice low and high bounds */
 void
-get_sublattice(int lo[4], int hi[4], const int node[4], void *env)
+get_sublattice(int lo[4], int hi[4], int node, void *env)
 {
     int i;
+	int n4[4];
 
+	node_1to4(n4, node);
     for (i = 0; i < 4; i++) {
-	lo[i] = (lattice[i] * node[i]) / network[i];
-	hi[i] = (lattice[i] * (node[i] + 1)) / network[i];
+	lo[i] = (lattice[i] * n4[i]) / network[i];
+	hi[i] = (lattice[i] * (n4[i] + 1)) / network[i];
     }
 }
 
@@ -166,45 +195,47 @@ get_sublattice(int lo[4], int hi[4], const int node[4], void *env)
 void
 write_fermion(const int pos[5],
 	      int c, int d,
-	      int re_im,
-	      double value,
+	      double v_re,
+	      double v_im,
 	      void *env)
 {
 }
 
 /* read fermion. Produce a random number from -1 to +1 for each component */
-double
-read_fermion(const int pos[5],
-	     int c, int d,
-	     int re_im,
-	     void *env)
+void
+read_fermion(double *v_re,
+			 double *v_im,
+			 const int pos[5],
+			 int c, int d,
+			 void *env)
 {
     int i;
     unsigned int v = sum_init(*(int *)env);
 
     v = sum_add(v, c);
     v = sum_add(v, d);
-    v = sum_add(v, re_im);
     for (i = 0; i < 5; i++) {
-	v = sum_add(v, pos[i]);
-	v = sum_add(v, *(int *)env);
+		v = sum_add(v, pos[i]);
+		v = sum_add(v, *(int *)env);
     }
-    return sum_fini(v);
+	*v_re = sum_fini(v);
+    v = sum_add(v, 1);
+	*v_im = sum_fini(v);
 }
 
 /* read gauge. Produce a random matrix plus a unit */
-double
-read_gauge(int dir,
-	   const int pos[4],
-	   int a, int b,
-	   int re_im,
-	   void *env)
+void
+read_gauge(double *v_re,
+		   double *v_im,
+		   int dir,
+		   const int pos[4],
+		   int a, int b,
+		   void *env)
 {
     int i;
     unsigned int v = sum_init(*(int *)env);
     double x;
 
-    v = sum_add(v, re_im);
     v = sum_add(v, a);
     v = sum_add(v, b);
     for (i = 0; i < 4; i++) {
@@ -213,9 +244,11 @@ read_gauge(int dir,
     }
     v = sum_add(v, *(int *)env);
     x = U_scale * sum_fini(v);
-    if ((a == b) && (re_im == 0))
-	x = x + 1;
-    return x;
+    if (a == b)
+		x = x + 1;
+	*v_re = x;
+    v = sum_add(v, 1);
+	*v_im = sum_fini(v);
 }
 
 /* print stuff on primary node only */
@@ -332,10 +365,27 @@ init_qmp(int argc, char *argv[], const char *who, char prec,
 
     qmp_dim = QMP_get_logical_number_of_dimensions();
     qmp_addr = QMP_get_logical_coordinates();
-    for (i = 0; i < 4 && i < qmp_dim; i++)
-	this_node[i] = qmp_addr[i];
-    for (; i < 4; i++)
-	this_node[i] = 0;
+	{
+		/* setup neighbors */
+		int d, i, n4[4], v[4];
+		node_1to4(n4, QMP_get_node_number());
+		for (d = 0; d < 4; d++) {
+			for (i = 0; i < 4; i++)
+				v[i] = n4[i];
+			if (v[d] + 1 == network[d])
+				v[d] = 0;
+			else
+				v[d] = v[d] + 1;
+			neighbor_up[d] = node_4to1(v);
+			for (i = 0; i < 4; i++)
+				v[i] = n4[i];
+			if (v[d] == 0)
+				v[d] = network[d] - 1;
+			else
+				v[d] = v[d] - 1;
+			neighbor_down[d] = node_4to1(v);
+		}
+	}
 
     qmp_inited = 1;
     return 0;

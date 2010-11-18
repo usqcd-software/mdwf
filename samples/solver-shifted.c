@@ -16,6 +16,7 @@
  */
 #include <qop-mdwf3.h>
 #include <stdlib.h>  /* for NULL */
+#include <qmp.h>
 #include "common.h"
 #define SELF "MxM"
 
@@ -56,6 +57,7 @@ main(int argc, char *argv[])
     struct QOP_MDWF_HalfFermion *ssol = NULL;
     struct QOP_MDWF_VectorFermion *vsol = NULL;
     struct QOP_MDWF_Gauge *gauge = NULL;
+	struct QOP_MDWF_Config config;
     int status;
     int out_iterations;
     double out_epsilon;
@@ -69,10 +71,20 @@ main(int argc, char *argv[])
 	goto end;
 
     /* start MDWF */
-    if (QOP_MDWF_init(&state, lattice, network, this_node, primary_p,
-		      get_sublattice, NULL)) {
-	zprint("MDWF failed to init: %s", QOP_MDWF_error(state));
-	goto end;
+	config.self = QMP_get_node_number();
+	config.master_p = QMP_is_primary_node();
+    config.rank = 4;
+    config.lat = lattice;
+    config.ls = lattice[4];
+    config.net = network;
+    config.neighbor_up = neighbor_up;
+    config.neighbor_down = neighbor_down;
+    config.sublattice = get_sublattice;
+    config.env = NULL;
+	
+    if (QOP_MDWF_init(&state, &config)) {
+		zprint("MDWF failed to init: %s", QOP_MDWF_error(state));
+		goto end;
     }
 
     /* create parameters */
