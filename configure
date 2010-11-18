@@ -97,7 +97,7 @@ speciate_target() {
        default_cflags=""
        default_copts="-Wall -O3"
        default_ld="gcc -std=c99 -m32"
-       default_ldfalgs=""
+       default_ldflags=""
        default_libs=""
        default_ar="ar"
        default_ranlib="ranlib"
@@ -108,7 +108,7 @@ speciate_target() {
        default_cflags=""
        default_copts="-Wall -O3"
        default_ld="gcc -std=c99 -m32"
-       default_ldfalgs=""
+       default_ldflags=""
        default_libs=""
        default_ar="ar"
        default_ranlib="ranlib"
@@ -119,7 +119,7 @@ speciate_target() {
        default_cflags=""
        default_copts="-Wall -O3"
        default_ld="gcc -std=c99 -m64"
-       default_ldfalgs=""
+       default_ldflags=""
        default_libs=""
        default_ar="ar"
        default_ranlib="ranlib"
@@ -130,7 +130,7 @@ speciate_target() {
        default_cflags=""
        default_copts="-Wall -O3"
        default_ld="gcc -std=c99 -m64"
-       default_ldfalgs=""
+       default_ldflags=""
        default_libs=""
        default_ar="ar"
        default_ranlib="ranlib"
@@ -141,10 +141,21 @@ speciate_target() {
        default_cflags=""
        default_copts="-O3 -qarch=440d -qstrict"
        default_ld="blrts_c99"
-       default_ldfalgs=""
+       default_ldflags=""
        default_libs=""
        default_ar="powerpc-bgl-blrts-gnu-ar"
        default_ranlib="powerpc-bgl-blrts-gnu-ranlib"
+       ;;
+    bgp/xlc)
+       limpdir=bgl-xlc
+       default_cc="bgc99"
+       default_cflags=""
+       default_copts="-O3 -qarch=450d -qstrict"
+       default_ld="bgc99"
+       default_ldflags=""
+       default_libs=""
+       default_ar="ar"
+       default_ranlib="ranlib"
        ;;
     *) show_error "Unsupported target $target" ;;
   esac
