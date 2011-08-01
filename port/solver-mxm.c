@@ -78,6 +78,7 @@ QX(MxM_CG)(struct QX(HalfFermion)          *psi,             /* in/out */
     BEGIN_TIMING(state);
     /* compute the norm of the RHS */
     flops += qx(f_norm)(&rhs_norm, state->even.full_size, state->Ls, eta->even);
+    QMP_sum_double(&rhs_norm);
     if (options) {
         qx(zprint)(state, "MxM CG", "rhs norm %e normalized epsilon %e",
                    rhs_norm, min_epsilon * rhs_norm);

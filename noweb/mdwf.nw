@@ -667,28 +667,26 @@ Notice that SCG always starts with $\xi_0=0$.
   $a_{-1}\leftarrow b_{-1}\leftarrow 1$\;
   \lForEach{$i$}{$\xi[i]\leftarrow 0$\;}
   \lForEach{$i$}{$\pi[i]\leftarrow \rho$\;}
-  \lForEach{$i$}{$d_{-1}[i]\leftarrow d_{0}[i]\leftarrow 1$\;}
+  \lForEach{$i$}{$w[i]\leftarrow v[i]\leftarrow 1$\;}
   \While{$k < n$}{
     $\omega\leftarrow M \pi$\;
     $z \leftarrow \langle \omega, \omega\rangle$\;
     $\zeta \leftarrow M^\dagger \omega$\;
     $a\leftarrow r / z$\;
-    \lForEach{$i$}{$d_{1}[i]\leftarrow d_{0}[i]*(1+a*s[i])+
-               a*b_{-1}*(d_{0}[i]-d_{-1}[i])/a_{-1}$\;}
+    \lForEach{$i$}{$w[i]\leftarrow 1/(1+a*(s[i]+b_{-1}*(1-w[i])/a_{-1}))$\;}
     $\rho\leftarrow \rho - a * \zeta$\;
     $g \leftarrow \langle \rho,\rho \rangle$\;
     $b\leftarrow g / r$\;
     $r\leftarrow g$\;
     \If{$ r<\epsilon$}{
         $\xi\leftarrow \xi + a * \pi$\;
-        \lForEach{$i$}{$\xi[i]\leftarrow \xi[i] + (a / d_1[i]) * \pi[i]$\;}
+        \lForEach{$i$}{$\xi[i]\leftarrow \xi[i] + (a * w[i] * v[i]) * \pi[i]$\;}
         \Break}
     $\xi\leftarrow \xi + a * \pi$\;
-    \lForEach{$i$}{$\xi[i]\leftarrow \xi[i] + (a / d_1[i]) * \pi[i]$\;}
+    \lForEach{$i$}{$\xi[i]\leftarrow \xi[i] + (a * w[i] * v[i]) * \pi[i]$\;}
     $\pi\leftarrow \rho + b * \pi$\;
-    \lForEach{$i$}{$\pi[i]\leftarrow \rho+ (b*d_0[i]/d_{1}[i])*\pi[i]$\;}
-    \lForEach{$i$}{$d_{-1}[i]\leftarrow d_{0}[i]$\;}
-    \lForEach{$i$}{$d_{0}[i]\leftarrow d_{1}[i]$\;}
+    \lForEach{$i$}{$\pi[i]\leftarrow \rho+ (b*w[i])*\pi[i]$\;}
+    \lForEach{$i$}{$v[i]\leftarrow v[i]*w[i]$\;}
     $b_{-1}\leftarrow b$\;
     $a_{-1}\leftarrow a$\;
     $k\leftarrow k+1$\;

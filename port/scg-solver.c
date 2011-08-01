@@ -18,9 +18,10 @@ qx(scg_solver)(struct VectorFermion *v_xi_e,
                long long *flops,
                long long *sent,
                long long *received,
-               double dp[],
                double d[],
                double dn[],
+               double w[],
+               double wn[],
                double ad[],
                double bdd[],
                struct Fermion *rho_e,
@@ -45,9 +46,10 @@ qx(scg_solver)(struct VectorFermion *v_xi_e,
     qx(fv_zero)(v_xi_e, e_size, Ls, count);
     qx(fv_copy)(v_pi_e, e_size, Ls, count, rho_e);
     for (j = 0; j < count; j++) {
-        dp[j] = d[j] = 1;
+       w[j] = d[j] = 1;
     }
     *flops += qx(f_norm)(&r, e_size, Ls, rho_e);
+    QMP_sum_double(&r);
     ap = bp = 1;
     if (r < min_epsilon) {
         k = 0;
@@ -73,9 +75,10 @@ qx(scg_solver)(struct VectorFermion *v_xi_e,
         b = g / r;
         r = g;
         for (j = 0; j < count; j++) {
-            dn[j] = d[j] * (1.0 + a * shift[j]) + a * bp * (d[j] - dp[j]) / ap;
-            ad[j] = a / dn[j];
-            bdd[j] = b * d[j] / dn[j];
+            wn[j] = 1/((1+a*shift[j]) + a * bp * (1 - w[j])/ap);
+            ad[j] = a * wn[j] * d[j];
+            bdd[j] = b * wn[j];
+            dn[j] = d[j] * wn[j];
         }
         if (g < min_epsilon) {
             qx(scg_madd)(xi_e, v_xi_e, e_size, Ls, count, a, ad, pi_e);
@@ -88,8 +91,8 @@ qx(scg_solver)(struct VectorFermion *v_xi_e,
                    ad, bdd,
                    rho_e);
         for (j = 0; j < count; j++) {
-            dp[j] = d[j];
             d[j] = dn[j];
+            w[j] = wn[j];
         }
         bp = b;
         ap = a;
