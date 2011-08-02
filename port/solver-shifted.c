@@ -33,12 +33,10 @@ QX(MxM_SCG)(struct QX(VectorFermion)       *v_psi,
     long long received = 0;
     void *sptr = 0;
     size_t sptr_size = 0;
-    double *d = 0;
-    double *dn = 0;
+    double *v = 0;
+    double *w = 0;
     double *adn = 0;
     double *bdd = 0;
-    double *wn = 0;
-    double *w = 0;
     void *pptr = 0;
     size_t pptr_size = 0;
     void *temps = 0;
@@ -69,17 +67,15 @@ QX(MxM_SCG)(struct QX(VectorFermion)       *v_psi,
         return q(set_error)(state, 0, "MxM_SCG(): communication setup failed");
     }
 
-    sptr_size = count * 6 * sizeof (double);
+    sptr_size = count * 4 * sizeof (double);
     sptr = q(malloc)(state, sptr_size);
     if (sptr == 0) {
         return q(set_error)(state, 0, "MxM_SCG(): not enough memory");
     }
-    d = sptr;
-    dn = d + count;
-    adn = dn + count;
+    adn = sptr;
     bdd = adn + count;
-    w = bdd + count;
-    wn = w + count;
+    v = bdd + count;
+    w = v + count;
 
     /* allocate locals */
     pptr = qx(allocate_eo)(state, &pptr_size, &temps,
@@ -119,7 +115,7 @@ QX(MxM_SCG)(struct QX(VectorFermion)       *v_psi,
                             state, params, shift, U, eta->even, 
                             max_iterations, min_epsilon * rhs_norm, options,
                             &flops, &sent, &received,
-                            d, dn, w, wn, adn, bdd,
+                            v, w, adn, bdd,
                             rho_e, vpi_e, pi_e, zeta_e,
                             t0_e, t1_e, t2_e, t0_o);
 
