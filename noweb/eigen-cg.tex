@@ -1,0 +1,492 @@
+\documentclass[oneside,openright]{report}
+\usepackage[ruled,vlined]{algorithm2e}
+\usepackage{color}
+\definecolor{darkblue}{cmyk}{1,1,0,0.7}
+\usepackage[dvipdfm,colorlinks=true,linkcolor=darkblue]{hyperref}
+\newcommand{\note}[1]{$[\![$NB: #1$]\!]$}
+\setlength{\parindent}{0pt}
+%\setlength{\topmargin}{-40pt}
+%\setlength{\oddsidemargin}{-16pt}
+%\setlength{\evensidemargin}{-16pt}
+%\setlength{\textwidth}{522pt}
+%\setlength{\textheight}{700pt}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+
+\title{Speeding up the Conjugate Gradient: EigenCG}
+\author{Andrew Pochinsky, Sergey Syritsyn}
+\catcode`\$=11
+\date{$Id: eigen-cg.tex 1307 2010-01-17 21:48:14Z avp $\\
+Release working}
+\catcode`\$=3
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}\hbox{}
+\vfill
+\copyright 2010 Massachusetts Institute of Technology
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+\pagebreak
+
+\tableofcontents
+%\vfill
+%\pagebreak
+
+\listofalgorithms
+%\vfill
+%\pagebreak
+
+\chapter{ALGORITHMS}
+\section{Conjugate gradient}
+The equation
+\[
+   M^\dagger M \psi = \chi
+\]
+can be solved by the conjugate gradient method if the condition number of
+ $M^\dagger M$ is small enough. Function \texttt{plainCG()} implements the standard CG solver.
+\begin{function}
+\KwIn{$M$, the matrix}
+\KwIn{$\chi$, the right hand side of the linear equation}
+\KwIn{$n$, the maximum number of iterations}
+\KwIn{$\epsilon$, required precision}
+\KwOut{$\psi$, approximate solution}
+\KwOut{$r$, final residue}
+\KwOut{$k$, number of iterations used}
+\KwOut{$z$, was the last $\pi$ a zero vector of $M$?}
+\SetKw{Break}{break}
+\SetKw{Or}{or}
+\SetKw{False}{false}
+\SetKw{True}{true}
+\DontPrintSemicolon
+\Begin{
+  $\psi\leftarrow 0$\;
+  $\rho\leftarrow \chi$\;
+  $\pi\leftarrow \rho$\;
+  $r\leftarrow\langle \rho,\rho\rangle$\;
+  $\epsilon\leftarrow r \times\epsilon$\;
+  $k\leftarrow 0$\;
+  \While{$r > \epsilon$ \and $k < n$}{
+    $\omega\leftarrow M\pi$\;
+    $\zeta\leftarrow M^{\dagger}\omega$\;
+    $c\leftarrow \langle \omega,\omega\rangle$\;
+    \lIf{$c = 0$}{
+      \Return{$\psi$, $r$, $k$, \True}
+    }\;
+    $a\leftarrow r/c$\;
+    $\rho\leftarrow \rho - a \zeta$\;
+    $g\leftarrow \langle \rho,\rho\rangle$\;
+    $\psi\leftarrow \psi + a \pi$\;
+    $k\leftarrow k + 1$\;
+    \lIf{$ g<\epsilon$}{ \Return{$\psi$, $g$, $k$, \False}}\;
+    $b\leftarrow g/r$\;
+    $r\leftarrow g$\;
+    $\pi\leftarrow \rho + b \pi$\;
+  }
+  \Return {$\psi$, $r$, $k$, \False}\;
+}
+
+\caption{plainCG($M$, $\chi$, $n$, $\epsilon$)}
+\end{function}
+
+\section{Mixed Conjugate Gradient}
+On many platforms reducing precision of the operator results in considerable speedup. If one needs the double precision inverter, one can use \texttt{mixedCG()} if implementations of $M$ are available in both precisions. It is convenient to have two separate tolerance levels: one for the full inverter, and another for the inner fast one.
+
+\begin{function}
+\KwIn{$M$, the matrix in double precision}
+\KwIn{$M_1$, the matrix in single precision}
+\KwIn{$\chi$, the right hand side of the linear equation}
+\KwIn{$n$, the maximum number of iterations}
+\KwIn{$\epsilon$, required total precision}
+\KwIn{$\epsilon_1$, required inner precision}
+\KwOut{$\psi$, approximate solution}
+\KwOut{$r$, final residue}
+\KwOut{$k$, number of iterations used}
+\KwOut{$z$, was the last $\pi$ a zero vector of $M$?}
+\SetKw{Break}{break}
+\SetKw{And}{and}
+\SetKw{False}{false}
+\SetKw{True}{true}
+\SetKwFunction{plainCG}{plainCG}
+\DontPrintSemicolon
+\Begin{
+  $\psi\leftarrow 0$\;
+  $r\leftarrow \langle\chi,\chi\rangle$\;
+  $\epsilon\leftarrow r\times\epsilon$\;
+  $k\leftarrow 0$\;
+  \While{$k < n$}{
+    $\eta\leftarrow\chi - M^\dagger \times M \times \psi$\;
+    $r\leftarrow\langle\eta,\eta\rangle$\;
+    \lIf{$r<\epsilon$}{\Return{$\psi$, $r$, $k$, \False}}\;
+    $\eta\leftarrow\eta/$sqrt$(r)$\;
+    $\delta, q, m, z\leftarrow$\plainCG{$M_1$, $\eta$, $n-k$, $\max(\epsilon/r, \epsilon_1)$}\;
+    \lIf{$z$ \And $m=0$}{\Return{$\psi$, $r\times q$, $k$, \True}}\;
+    $\psi\leftarrow\psi+$sqrt$(r)\times\delta$\;
+    $k\leftarrow k + m$\;
+  }
+  $\eta\leftarrow\chi - M^\dagger \times M \times \psi$\;
+  $r\leftarrow\langle\eta,\eta\rangle$\;
+  \Return{$\psi$, $r$, $k$, \False}\;
+}
+\caption{mixedCG($M$, $M_1$, $\chi$, $n$, $\epsilon$, $\epsilon_1$)}
+\end{function}
+%\end{document}
+%%%%%%%%%%%%%%%%%%%%%%%% TODO
+\section{EigenCG}
+If the condition number of $M^\dagger M$ is large, convergence of the conjugate gradient is slow. In this case one could try to improve the situation by finding small eigenvectors of $M^\dagger M$ and projecting them out of the solver. One variant of this method is given by \texttt{eigenCG}. The low eigen space is managed by $S$ which is manipulated by the set of routines described in the following sections.
+
+Since single precision is 50\% faster than double precision for clover action on the BlueGene,
+we use two representations of $M$ and construct the eigen space in single precision. 
+It is not strictly necessary, though.
+
+\begin{function}
+\SetKwInOut{KwInOut}{In/out}
+\KwInOut{$S$, the eigen space state}
+\KwIn{$M$, the matrix in double precision}
+\KwIn{$M_1$, the matrix in single precision}
+\KwIn{$\chi$, the right hand side of the linear equation}
+\KwIn{$n$, the maximum number of iterations}
+\KwIn{$\epsilon$, required total precision}
+\KwIn{$\epsilon_1$, required inner precision}
+\KwOut{$\psi$, approximate solution}
+\KwOut{$r$, final residue}
+\KwOut{$k$, number of iterations used}
+\KwOut{$z$, was the last $\pi$ a zero vector of $M$?}
+\SetKw{Break}{break}
+\SetKw{And}{and}
+\SetKw{False}{false}
+\SetKw{True}{true}
+\SetKwFunction{innerCG}{innerCG}
+\DontPrintSemicolon
+\Begin{
+  $\psi\leftarrow 0$\;
+  $r\leftarrow \langle\chi,\chi\rangle$\;
+  $\epsilon\leftarrow r\times\epsilon$\;
+  $k\leftarrow 0$\;
+  \While{$k < n$}{
+    $\eta\leftarrow\chi - M^\dagger \times M \times \psi$\;
+    $r\leftarrow\langle\eta,\eta\rangle$\;
+    \lIf{$r<\epsilon$}{\Return{$\psi$, $r$, $k$, \False}}\;
+    $\eta\leftarrow\eta/$sqrt$(r)$\;
+    $\delta, q, m, z\leftarrow$\innerCG{$S$, $M_1$, $\eta$, $n-k$, $\max(\epsilon/r, \epsilon_1)$}\;
+    \lIf{$z$ \And $m = 0$}{\Return{$\psi$, $r\times q$, $k$, \True}}\;
+    $\psi\leftarrow \psi + $sqrt$(r)\times\delta$\;
+    $k\leftarrow k + m$\;
+  }
+  $\eta\leftarrow\chi - M^\dagger \times M \times \psi$\;
+  $r\leftarrow\langle\eta,\eta\rangle$\;
+  \Return{$\psi$, $r$, $k$, \False}\;
+}
+\caption{eigenCG($S$, $M$, $M_1$, $\chi$, $n$, $\epsilon$, $\epsilon_1$)}
+\end{function}
+
+The \texttt{innerCG} is very similar to \texttt{plainCG}. There are two differences: (a) the initial values of $\rho$ and $\psi$ are obtained from $S$, and (b) $S$ is updated after every application of $M^\dagger M$.
+
+\begin{function}
+\SetKwInOut{KwInOut}{In/out}
+\KwInOut{$S$, the eigen space state}
+\KwIn{$M$, the matrix}
+\KwIn{$\chi$, the right hand side of the linear equation}
+\KwIn{$n$, the maximum number of iterations}
+\KwIn{$\epsilon$, required precision}
+\KwOut{$\psi$, approximate solution}
+\KwOut{$r$, final residue}
+\KwOut{$k$, number of iterations used}
+\KwOut{$z$, was the last $\pi$ a zero vector of $M$?}
+\SetKw{Break}{break}
+\SetKw{And}{and}
+\SetKw{False}{false}
+\SetKw{True}{true}
+\SetKwFunction{eigSpStart}{eigSpStart}
+\SetKwFunction{eigSpUpdate}{eigSpUpdate}
+\DontPrintSemicolon
+\Begin{
+  $\psi\leftarrow$\eigSpStart($S$, $\chi$)\;
+  $\rho\leftarrow\chi-M^\dagger\times M \times \psi$\;
+  $\pi\leftarrow \rho$\;
+  $r\leftarrow\langle \rho,\rho\rangle$\;
+  \lIf{$r = 0$}{
+     \Return{$\psi$, 0, 0, \False}
+  }\;
+  $k\leftarrow 0$\;
+  \While{$r > \epsilon$ \And $k < n$}{
+    $\omega\leftarrow M\pi$\;
+    $\zeta\leftarrow M^{\dagger}\omega$\;
+    $c\leftarrow \langle \omega,\omega\rangle$\;
+    \lIf{$c = 0$}{
+      \Return{$\psi$, $r$, $k$, \True}
+    }\;
+    \eigSpUpdate{$S$, $\pi$, $\zeta$}\;
+    $a\leftarrow r/c$\;
+    $\rho\leftarrow \rho - a \zeta$\;
+    $ g \leftarrow \langle \rho,\rho\rangle$\;
+    $\psi\leftarrow \psi + a \pi$\;
+    $k\leftarrow k + 1$\;
+    \lIf{$ g<\epsilon$}{\Return {$\psi$, $g$, $k$, \False }} \;
+    $b\leftarrow g/r$\;
+    $r\leftarrow g$\;
+    $\pi\leftarrow \rho + b \pi$\;
+  }
+  \Return {$\psi$, $r$, $k$, \False}
+}
+\caption{innerCG($S$, $M$, $\chi$, $n$, $\epsilon$)}
+\end{function}
+
+\section{Eigen space state}
+Here are routines operating on the eigen space state $S$.
+In the production implementation $S$ is likely to be a part of the solver state
+\subsection{Constructor, \texttt{eigSpInit()}}
+Initialize state variables and allocate space. The tolerance $\epsilon$ controls how small
+a vector has to be to be considered a round-off error.
+\begin{function}
+\KwIn{$n$, the number of eigenvectors to keep}
+\KwIn{$m$, the maximum dimension of the eigen space, $m > n$}
+\KwIn{$\epsilon$, required precision}
+\KwOut{$S$, the eigen space state}
+\SetKw{False}{false}
+\SetKw{True}{true}
+\DontPrintSemicolon
+\Begin{
+ $S\leftarrow$ alloc structure\;
+ $S.k\leftarrow 0$\;
+ $S.n\leftarrow n$\;
+ $S.m\leftarrow m$\;
+ $S.\epsilon\leftarrow \epsilon$\;
+ $S.blocked \leftarrow$\False\;
+ $S.ready \leftarrow$\False\;
+ $S.w\leftarrow$ alloc $n$ vectors\tcp*{space for eigenvectors $w$}\;
+ $S.Aw\leftarrow$ alloc $n$ vectors\tcp*{space for $Aw$}\;
+ $S.v\leftarrow$ alloc $m$ vectors\tcp*{space for basis vectors $v$}\;
+ $S.Av\leftarrow$ alloc $m$ vectors\tcp*{space for $Av$}\;
+ $S.H\leftarrow$ alloc $m\times m$ complex matrix\tcp*{space for $\langle v,Av\rangle$}\;
+ $S.U\leftarrow$ alloc $m\times m$ complex matrix\tcp*{space for $H^{-1}$}\;
+ $S.\lambda\leftarrow$ alloc $m$ reals\tcp*{space for eigenvalues}\;
+ $S.\beta\leftarrow$ alloc $(m-1)$ reals\tcp*{space for off-diagonal}\;
+  \Return {$S$}.
+}
+\caption{eigSpInit($n$, $m$, $\epsilon$)}
+\end{function}
+
+\subsection{Destructor, \texttt{eigSpFini()}}
+Free all allocated space and free the structure
+\begin{function}
+\SetKwInOut{KwInOut}{In/out}
+\KwInOut{$S$, the eigen space state}
+\SetKw{False}{false}
+\SetKw{True}{true}
+\DontPrintSemicolon
+\Begin{
+ free $S.w$\;
+ free $S.Aw$\;
+ free $S.v$\;
+ free $S.Av$\;
+ free $S.H$\;
+ free $S.U$\;
+ free $S.\lambda$\;
+ free $S.\beta$\;
+ free $S$\;
+}
+\caption{eigSpFini($S$)}
+\end{function}
+
+\subsection{Update Activation, \texttt{eigSpEnable()}}
+It is useful to be able to shut down and enable the updater.
+\begin{function}
+\SetKwInOut{KwInOut}{In/out}
+\KwInOut{$S$, the eigen space state}
+\SetKw{False}{false}
+\SetKw{True}{true}
+\DontPrintSemicolon
+\Begin{
+ $S.$blocked$\leftarrow$\False\;
+}
+\caption{eigSpEnable($S$)}
+\end{function}
+
+\subsection{Update Deactivation, \texttt{eigSpDisable()}}
+It is useful to be able to shut down and enable the updater.
+\begin{function}
+\SetKwInOut{KwInOut}{In/out}
+\KwInOut{$S$, the eigen space state}
+\SetKw{False}{false}
+\SetKw{True}{true}
+\DontPrintSemicolon
+\Begin{
+ $S.$blocked$\leftarrow$\True\;
+}
+\caption{eigSpDisable($S$)}
+\end{function}
+
+\subsection{Starting the solver, \texttt{eigSpStart()}}
+When $S$ is ready, the solver starter subtracts found eigenvectors and adjusts
+the solution accordingly. For this routine to work, $S.Aw$ must be orthonormal, e.g.,
+$\langle S.Aw[i], S.Aw[j]\rangle=\delta_{ij}$ and
+$S.Aw[k]=M^\dagger M S.w[k]$ for each $k$.
+\begin{function}
+\KwIn{$S$, the eigen space state}
+\KwIn{$\chi$, the right hand side}
+\KwOut{$\psi$, the partial solution}
+\SetKw{False}{false}
+\SetKw{True}{true}
+\DontPrintSemicolon
+\Begin{
+  $\psi\leftarrow 0$\;
+  \If{$S.$ready}{
+    \For(// remove eigen space parts from $\rho$ and $\psi$){$0\le k < S.n$}{
+      $a\leftarrow\langle S.Aw[k], \chi\rangle$\;
+      $\psi\leftarrow\psi-a\times S.w[k]$\;
+    }
+  }
+  \Return{$\rho$, $\psi$}\;
+}
+\caption{eigSpStart($S$, $\chi$)}
+\end{function}
+
+\subsection{Updating the state, \texttt{eigSpUpdate()}}
+Add a pair $\psi$, $\chi=M^\dagger M \psi$ to $S$. The external procedure \texttt{EigenV()} computes
+the transformation to the eigenbasis with the eigenvalues in the increasing order.
+\begin{function}
+\SetKwInOut{KwInOut}{In/out}
+\KwInOut{$S$, the eigen space state}
+\KwIn{$\psi$, a new eigen space vector}
+\KwIn{$\chi$, computed $M^\dagger M \psi$}
+\SetKw{False}{false}
+\SetKw{True}{true}
+\SetKwFunction{eigSpBuildLow}{eigSpBuildLow}
+\DontPrintSemicolon
+\Begin{
+  \lIf{S.blocked}{
+    \Return{}\;
+  }
+  $k\leftarrow S.k$\;
+  \tcp{add and normalize $\psi$ and $\chi$ to $S$}
+  $S.v[k]\leftarrow\psi$\;
+  $S.Av[k]\leftarrow\chi$\;
+  $a\leftarrow\langle\psi, \psi\rangle$\;
+  \For{$0 \le i < k$}{
+    $b\leftarrow\langle S.v[i], S.v[k]\rangle$\;
+    $c\leftarrow a-|b|^2$\;
+    \tcp{check that there is something left still}
+    \lIf{$c < a\times S.\epsilon$}{\Return{}\;}
+    $S.v[k]\leftarrow  S.v[k] - b \times S.v[i]$\;
+    $S.Av[k]\leftarrow S.Av[k] - b \times S.Av[i]$\;
+    $a\leftarrow c$\;
+  }
+  $a\leftarrow\langle S.v[k], S.v[k]\rangle$\;
+  $d\leftarrow 1/$sqrt$(a)$\;
+  $S.v[k]\leftarrow d \times S.v[k] $\;
+  $S.Av[k]\leftarrow d \times S.Av[k]$\;
+  $S.k\leftarrow S.k + 1$\;
+  \tcp{space is full. Find eigenvalues}
+  \If{$S.k = S.m$}{
+    \eigSpBuildLow{$S$}\;
+    $S.k\leftarrow S.n$\;
+    $S.ready\leftarrow\True$\;
+  }
+}
+\caption{eigSpUpdate($S$, $\psi$, $\chi$)}
+\end{function}
+
+\begin{function}
+\SetKwInOut{KwInOut}{In/out}
+\KwInOut{$S$, the eigen space state}
+\SetKw{False}{false}
+\SetKw{True}{true}
+\SetKwFunction{EigenT}{EigenT}
+\SetKwFunction{eigSpOrtho}{eigSpOrtho}
+\DontPrintSemicolon
+\Begin{
+    \tcp{compute $S.H$}
+    \For{$0\le i < S.m$}{
+       $S.H[i,i]\leftarrow $Re$\langle S.v[i],S.Av[i]\rangle$\;
+       \For{$0\le j < i$}{
+          $a\leftarrow\langle S.v[j],S.Av[i]\rangle$\;
+          $S.H[j,i]\leftarrow a$\;
+          $S.H[i,j]\leftarrow $conj$(a)$\;
+       }
+    }
+    $S.U\leftarrow$\EigenT{$S.H$, $S$}\;
+    \tcp{Compute $S.Aw$ and $S.w$}
+    \For{$0\le i < S.n$}{
+       $S.w[i]\leftarrow 0$\;
+       $S.Aw[i]\leftarrow 0$\;
+       \For{$0\le j < S.m$}{
+         $S.w[i]\leftarrow S.w[i] + S.U[i.j] \times S.v[j]$\;
+         $S.Aw[i]\leftarrow S.Aw[i] + S.U[i,j] \times S.Av[j]$\;
+       }
+    }
+    \tcp{Copy $S.w$ and $S.Aw$ back to $S.v$ and $S.Av$}
+    \For{$0\le i < S.n$}{
+       $S.v[i]\leftarrow S.w[i]$\;
+       $S.Av[i]\leftarrow S.Aw[i]$\;
+    }
+    \eigSpOrtho{$S$}\;
+}
+\caption{eigSpBuildLow($S$)}
+\end{function}
+
+\subsection{Recomputing the operator, \texttt{eigSpRecompute()}}
+If too many linear algebra operations were performed, one might want to
+recompute the operator.
+\begin{function}
+\SetKwInOut{KwInOut}{In/out}
+\KwInOut{$S$, the eigen space state}
+\KwIn{$M_1$, the right hand side}
+\SetKw{False}{false}
+\SetKw{True}{true}
+\SetKwFunction{eigSpOrtho}{eigSpOrtho}
+\DontPrintSemicolon
+\Begin{
+  \For(// compute $S.Av$){$0\le i < S.k$}{
+    $S.Av[i] = M^\dagger \times M \times S.v[i]$\;
+  }
+  \If{$S.$ready}{
+    \For(// compute $S.Aw$){$0\le i < S.n$}{
+       $S.Aw[i] = M^\dagger \times M \times S.w[i]$\;
+    }
+    \eigSpOrtho{$S$}\;
+    }
+}
+\caption{eigSpRecompute($S$, $M_1$)}
+\end{function}
+
+\begin{function}
+\SetKwInOut{KwInOut}{In/out}
+\KwInOut{$S$, the eigen space state}
+\SetKw{False}{false}
+\SetKw{True}{true}
+\DontPrintSemicolon
+\Begin{
+    \For(// reorthogonalize $S.Aw$){$0\le i < S.n$}{
+       \For{$0\le j < i$}{
+          $a\leftarrow \langle S.Aw[j], S.Aw[i]\rangle$\;
+          $S.Aw[i]\leftarrow S.Aw[i] - a \times S.Aw[j]$\;
+          $S.w[i]\leftarrow S.w[i] - a \times S.w[j]$\;
+       }
+       $a \leftarrow \langle S.Aw[i], S.Aw[i]\rangle$\;
+       $b\leftarrow 1/$sqrt $a$\;
+       $S.Aw[i]\leftarrow b \times S.Aw[i]$\;
+       $S.w[i]\leftarrow b \times S.w[i]$\;
+   }
+}
+\caption{eigSpOrtho($S$)}
+\end{function}
+
+\end{document}

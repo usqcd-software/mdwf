@@ -12,7 +12,7 @@
 \setlength{\oddsidemargin}{-16pt}
 \setlength{\evensidemargin}{-16pt}
 \setlength{\textwidth}{522pt}
-\setlength{\textheight}{700pt}
+\setlength{\textheight}{680pt}
 \setcounter{secnumdepth}{3}
 \setcounter{tocdepth}{3}
 \newcommand{\Cee}{\texttt{C}}
@@ -21,7 +21,7 @@
 \author{Andrew Pochinsky}
 \catcode`\$=11
 \date{$Id$\\
-1.3.0 XXX WORKING COPY}
+1.3.0 XXX WORKING COPY Nov 10, 2013}
 \catcode`\$=3
 
 \begin{document}
@@ -745,6 +745,22 @@ returned.
 const char *`QOP_MDWF_version(void);
 @
 
+\section{Library signature}
+
+The following function returns a constant string which specifies the
+format of the deflator state. If the format of exported state deflator
+changes, a different string will be returned.
+<<Interface functions>>=
+const char *`QOP_MDWF_signature(void);
+@
+
+\section{Parity of even-odd preconditioning}
+The parity of even-odd preconditioning used internally. The the returned value is zero,
+[[QDP_even_L()]] is used internally, otherwise the internals work on [[QDP_odd_L()]].
+<<Interface functions>>=
+int `QOP_MDW_parity(void);
+@
+
 \section{Performance monitoring}
 Each interface function records its exectution time and number of floating point
 operations in the [[State]] structure. These numbers are accessed via the
@@ -1210,6 +1226,30 @@ int `QOP_D3_MDWF_export_half_fermion(void (*writer)(const int pos[5],
                                    const struct QOP_D3_MDWF_HalfFermion *hfermion);
 @
 
+A fast path interface to BLAS allows one to convert between a half-fermion
+and an array of float (actually complex) numbers that BLAS and friends prefer.
+The [[size]] parameters must be at least as large as the value returned by [[QDP_MDWF_half_fermion_size()]] below.
+Export function write exactly [[QDP_MDWF_half_fermion_size()]] numbers to [[data]];
+import functions read exactly [[QDP_MDWF_half_fermion_size()]] numbers from [[data]].
+<<Interface functions>>=
+int `QOP_F3_MDWF_blas_from_half_fermion(float *data,
+                                       int size,
+                                       const struct QOP_F3_MDWF_HalfFermion *hfermion);
+int `QOP_D3_MDWF_blas_from_half_fermion(double *data,
+                                       int size,
+                                       const struct QOP_D3_MDWF_HalfFermion *hfermion);
+int `QOP_F3_MDWF_half_fermion_from_blas(struct QOP_F3_MDWF_HalfFermion *hfermion,
+                                       const float *data,
+                                       int size);
+int `QOP_D3_MDWF_half_fermion_from_blas(struct QOP_D3_MDWF_HalfFermion *hfermion,
+                                       const double *data,
+                                       int size);
+@
+We also provide a way to determine the number of floating point numbers needed to represent a half-fermion.
+<<Interface functions>>=
+int `QOP_MDWF_half_fermion_size(struct QOP_MDWF_State *state_ptr);
+@
+
 We also need a couple of destructors for fermion fields. For convenience, they
 will accept [[NULL]] intead of a valid fermion field.
 <<Interface functions>>=
@@ -1222,6 +1262,8 @@ Finally, macros for prefered precision
 #define `QOP_MDWF_import_half_fermion QOP_F3_MDWF_import_half_fermion
 #define `QOP_MDWF_export_half_fermion QOP_F3_MDWF_export_half_fermion
 #define `QOP_MDWF_allocate_half_fermion QOP_F3_MDWF_allocate_half_fermion
+#define `QOP_MDWF_blas_from_half_fermion QOP_F3_MDWF_blas_from_half_fermion
+#define `QOP_MDWF_half_fermion_from_blas QOP_F3_MDWF_half_fermion_from_blas
 #define `QOP_MDWF_free_half_fermion QOP_F3_MDWF_free_half_fermion
 #define `QOP_MDWF_HalfFermion QOP_F3_MDWF_HalfFermion
 @
@@ -1229,6 +1271,8 @@ Finally, macros for prefered precision
 #define `QOP_MDWF_import_half_fermion QOP_D3_MDWF_import_half_fermion
 #define `QOP_MDWF_export_half_fermion QOP_D3_MDWF_export_half_fermion
 #define `QOP_MDWF_allocate_half_fermion QOP_D3_MDWF_allocate_half_fermion
+#define `QOP_MDWF_blas_from_half_fermion QOP_D3_MDWF_blas_from_half_fermion
+#define `QOP_MDWF_half_fermion_from_blas QOP_D3_MDWF_half_fermion_from_blas
 #define `QOP_MDWF_free_half_fermion QOP_D3_MDWF_free_half_fermion
 #define `QOP_MDWF_HalfFermion QOP_D3_MDWF_HalfFermion
 @
@@ -1381,6 +1425,30 @@ queried about accumulated eigenvalues.
 <<Interface functions>>=
 void `QOP_MDWF_deflator_stop(struct QOP_MDWF_Deflator *defl_ptr);
 void `QOP_MDWF_deflator_resume(struct QOP_MDWF_Deflator *defl_ptr);
+@
+
+The current dimension of low space may be requested from the deflator:
+<<Interface functions>>=
+int `QOP_MDW_deflator_current_dim(struct QOP_MDWF_Deflator *delf_ptr);
+@
+
+Extract a vector from the deflator. If the vector index is out of range, nothing is
+written into memory and a non-zero value is returned.
+<<Interface functions>>=
+int `QOP_F3_MDWF_deflator_extract_vector(struct QOP_F3_MDWF_HalfFermion *hfermion_ptr,
+                                        const struct QOP_MDWF_Deflator *delf_ptr,
+                                        int idx);
+int `QOP_D3_MDWF_deflator_extract_vector(struct QOP_D3_MDWF_HalfFermion *hfermion_ptr,
+                                        const struct QOP_MDWF_Deflator *delf_ptr,
+                                        int idx);
+@
+
+Manually add a vector to the deflator. Zero value is returned if the insersion was a success.
+<<Interface functions>>=
+int `QOP_F3_MDWF_deflator_add_vector(struct QOP_MDWF_Deflator *delf_ptr,
+                                    const struct QOP_F3_MDWF_HalfFermion *hfermion_ptr);
+int `QOP_D3_MDWF_deflator_add_vector(struct QOP_MDWF_Deflator *delf_ptr,
+                                    const struct QOP_D3_MDWF_HalfFermion *hfermion_ptr);
 @
 
 The deflator can return its current estimate of the eigenvalues if it has it.

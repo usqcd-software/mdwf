@@ -1,6 +1,7 @@
 #!/bin/sh
+USQCDDIST=/Users/avp/Local/packages/macosx-20130110
 ./configure \
-   --prefix=/Users/avp/Sandbox/USQCD/mdwf/install-new-1 \
+   --prefix=/Users/avp/Sandbox/USQCD/mdwf/install-working \
    --target=cee-64 \
-   --with-qmp=/Users/avp/Local/packages/current/qmp \
-   --with-gsl=/Users/avp/Local/packages/current/gsl
+   --with-qmp=$USQCDDIST/qmp \
+   --with-gsl=$USQCDDIST/gsl

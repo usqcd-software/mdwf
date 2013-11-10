@@ -1,0 +1,291 @@
+\documentclass[10pt,letterpaper]{report}
+
+%\documentclass[12pt,letterpaper]{article}
+\textwidth=480pt
+\hoffset=-65pt
+\textheight=650pt
+\voffset=-40pt
+
+\usepackage{amsmath}
+\usepackage[ruled,vlined]{algorithm2e}
+\usepackage{color}
+\definecolor{darkblue}{cmyk}{1,1,0,0.7}
+\usepackage[dvipdfm,colorlinks=true,linkcolor=darkblue]{hyperref}
+\newcommand{\note}[1]{$[\![$NB: #1$]\!]$}
+\setlength{\parindent}{0pt}
+%\setlength{\topmargin}{-40pt}
+%\setlength{\oddsidemargin}{-16pt}
+%\setlength{\evensidemargin}{-16pt}
+%\setlength{\textwidth}{522pt}
+%\setlength{\textheight}{700pt}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+
+\title{Speeding up the Conjugate Gradient: EigenCG}
+\author{Andrew Pochinsky, Sergey Syritsyn}
+\catcode`\$=11
+\date{$Id: eigen-cg.tex 1307 2010-01-17 21:48:14Z avp $\\
+Release working}
+\catcode`\$=3
+
+\input{defs}
+\begin{document}
+\maketitle
+%\thispagestyle{empty}\hbox{}
+%\pagebreak
+
+\tableofcontents
+%\vfill
+%\pagebreak
+
+\listofalgorithms
+%\vfill
+%\pagebreak
+
+\chapter{ALGORITHMS}
+\section{Iterative accumulation of eigenspace information}
+\textbf{A reference to Kostas's paper should be added}
+
+\begin{function}
+  \caption{eigcgStateInit($vmax$, $nev$, $\epsilon_{eigen}$,
+            $ldh$, $umax$)}
+  \KwIn{$vmax$, eigenvector search space size}
+  \KwIn{$nev$, number of eigenvectors to look for}
+  \KwIn{$\epsilon_\text{eigen}$, eigenvalue search precision}
+  \KwIn{$ldh$, leading dimension for operator projection on approximate eigenspace}
+  \KwIn{$umax$, maximal size of accumulated approximate eigenspace; $umax \le ldh $}
+
+  \KwOut{$S$, eigCG state data structure}
+
+  \Begin{
+    $S \leftarrow$ allocate\;
+    $S.vmax \leftarrow vmax$\;
+    $S.nev \leftarrow nev$\;
+    $S.vsize \leftarrow 0$  \tcp*{initial value}
+    $S.V\leftarrow latvec[vmax]$  \tcp*{eigenvalue search space}
+    $S.T\leftarrow complex\_matrix[vmax, vmax]$ \tcp*{Lanczos matrix}
+    $S.\epsilon_{eigen} \leftarrow \epsilon_{eigen}$ \;
+
+    $S.umax \leftarrow umax $ \;
+    $S.ldh \leftarrow ldh$    \;
+    $S.usize \leftarrow 0$  \tcp*{initial value}
+    $S.U \leftarrow latvec[umax] $ \tcp*{accumulated approximate eigenspace}
+    $S.H \leftarrow complex\_matrix[umax, umax]$ \tcp*{projection of operator on $S.U$, 
+      $H = U^\dag A U$}
+    $S.C \leftarrow complex\_matrix[umax, umax]$ \tcp*{Cholesky decomposition of $S.H$, 
+      $H = C^\dag C$}
+    \Return{$S$}
+  }
+\end{function}
+
+
+This function resets the eigCG state for the next eigenpair search; accumulated eigenspace is
+not affected.
+\begin{function}
+  \caption{eigcgStateReset($S$)}
+  \SetKwInOut{KwInOut}{In/out}
+  \KwInOut{$S$, eigCG state to reset for the next eigenpair search}
+  \Begin{
+    $S.vsize \leftarrow 0$ \;
+    $S.T \leftarrow 0$ \;
+    $S.V \leftarrow 0$ \;
+  }
+\end{function}
+
+
+
+\begin{function}
+  \caption{IncrEigenMixedCg($A$, $b$, $x_0$, $\epsilon_1$, $\epsilon_2$, $N_\text{max}$, $S$)}
+  \SetKwFunction{IncrEigCg}{IncrEigCg}
+  \KwIn{$A$, operator}
+
+  \KwIn{$b$, right-hand side in double precision}
+  \KwIn{$x_0$, initial approximation to the solution}
+  \KwIn{$\epsilon_1$, restart single precision}
+  \KwIn{$\epsilon_2$, desired double precision}
+  \KwIn{$N_\text{max}$, maximum iterations to do}
+  
+  \KwOut{$x$, solution}
+  \KwOut{$r$, residual vector}
+  \KwOut{$N$, number of iterations}
+  \KwOut{$\text{status}$, }
+  
+  \SetKwInOut{KwInOut}{In/out}
+  \KwInOut{$S$, eigCG state}
+
+  \Begin{
+    $i\leftarrow 0$ \;
+    $N \leftarrow 0$ \;
+    $r_0 \leftarrow Ax_0 - b$
+      \tcp*{doubleP}
+    \lIf{$|r_0| < \epsilon_2 |b|$}
+    {\Return $x_0$, $r_0$, $0$, \text{0(cg-converged)}} \;
+    unfreeze and reset $S$ to search eigenvalues in the first iteration only\;
+    \While{$N < N_\text{max}$}{
+      deflate: $\Delta x_i = S.U \cdot (S.H)^{-1} \cdot(S.U)^\dag\cdot r_i$ 
+        \tcp*{singleP}
+      calc new residual: $r_i^\prime = r_i - A\Delta x_i$
+        \tcp*{singleP}
+      rescale (optional): 
+        $s\leftarrow |r_i^\prime|, \; r^\prime_i \leftarrow r^\prime_i / s$ \;
+      solve $A\Delta x^\prime_i = r^\prime_i$ until 
+        $|A\Delta x^\prime_i - r^\prime_i| < \text{max}(\epsilon_1,\epsilon_2 |b|/s)|r^\prime_i|$
+        while updating $S$: \\
+      $\quad\Delta x^\prime_i,\, r_i^\prime,\, \Delta N,\, \text{status} \leftarrow$
+        eigCG($A$, $r_i^\prime$, $0$, $\text{max}(\epsilon_1,\epsilon_2|b|/s)$,
+            $N_\text{max} - N$, $S$)
+        \tcp*{singleP}
+      update total iter count: $N\leftarrow N+\Delta N$ \;
+      \uIf{first iteration}{
+        eigcgAugmentEigenspace(S) \;
+        freeze $S$: no more searches for this right-hand side 
+          (although the strategy may be different) \;
+      }
+      new solution vector: $x_{i+1} \leftarrow x_i + \Delta x_i + s\Delta x^\prime_i$
+        \tcp*{doubleP}
+      $r_{i+1} \leftarrow Ax_{i+1} - b$
+        \tcp*{doubleP}
+      \lIf{$|r_{i+1}| < \epsilon_2 |b|$}
+      {\Return $x_{i+1}$, $r_{i+1}$, $N$, \text{0(cg-converged)}} \;
+      \lIf{\text{status} = \text{1(cg-not-converged)}}
+      {\Return{$x_{i+1}$, $r_{i+1}$, $N$, \text{1(singleP-cg-not-converged)}}} \;
+      $i\leftarrow i+1$
+    }
+    \Return{$x_i$, $r_i$, $N$, \text{2(doubleP-cg-not-converged)}} \;
+  }
+\end{function}
+
+
+
+The next function adds the eigenvalue from the last search to the eigenspace information.
+\begin{function}
+  \caption{eigcgAugmentEigenspace($S$)}
+  \SetKwInOut{KwInOut}{In/out}
+  \KwInOut{$S$, eigCG state to update}
+  \Begin{
+    \uIf{$S.vsize \ge S.nev$}{
+      orthogonalize $S.V$ against $S.U$: new $unew$ vectors in $V^\prime$ \;
+      add vectors to eigenspace $S.U[:, S.usize:S.usize+unew] \leftarrow V^\prime$ \;
+      $S.usize \leftarrow S.usize+unew$\;
+      complete $H_{ij} \leftarrow \langle U_{\bullet, i}, A U_{\bullet j}\rangle$ 
+        for all $0 \le i,j < S.usize$ \;
+      decompose and save for deflation $C \leftarrow \text{Cholesky}(H)$
+        \tcp*{$H = C^\dag C$}
+    }
+  }
+\end{function}
+
+
+The next function must be called from inner CG loop to build Krylov space and Lanczos sequence.
+\begin{function}
+  \caption{eigcgUpdateState($S$, $\alpha$, $\alpha_{prev}$, $\beta$, $\beta_{prev}$,
+          $r$, $Ar$, $\rho$)}
+  \SetKwInOut{KwInOut}{In/out}
+  \KwInOut{$S$, eigCG state}
+
+  \KwIn{$\alpha$, $\alpha_{prev}$, CG internal variables $\alpha_{i-1},\,\alpha_{i-2}$}
+  \KwIn{$\beta$, $\beta_{prev}$, CG internal variables $\beta_{i-1},\,\alpha_{i-2}$}
+  \KwIn{$r$, current CG residual vector $r_i$}
+  \KwIn{$\rho$, norm of $r$ squared, $\rho = \la r_i,r_i\ra$}
+  \KwIn{$Ar$, product of linop $A$ on residual vector $r_i$; this vector is required only when
+        eigenvector search is restarted; it is usually available in CG, and is  not required to
+        be computed separately}
+  \KwOut{$\text{eigen-status}$, }
+  \Begin{
+    \eIf(initialize:){$S.vsize == 0$}{ 
+      $S.\rho_0 = \rho$ \tcp*{remember for restart criterion}
+      $S.V \leftarrow 0$ \;
+      $S.T \leftarrow 0$ \;
+    }{
+      \lIf{$\sqrt{\rho} < S.\epsilon_{eigen}\times\sqrt{S.\rho_0}$}
+          {\Return{\text{3(eigen-converged)}}} \;
+      update diagonal: $S.T[S.vsize-1,S.vsize-1] 
+      \leftarrow  \begin{cases}
+        1/\alpha, & S.vsize == 1,\\
+        1/\alpha + \beta_{prev}/\alpha_{prev}, & \text{otherwise}
+      \end{cases}$\;
+      \eIf( update off-diagonal:){$S.vsize < S.vmax$}{
+        $S.T[S.vsize-1, S.vsize],\,S.T[S.vsize, S.vsize-1] \leftarrow -\sqrt{\beta}/\alpha$\;
+      }({ restart eigenvectors search (linear algebra calculations are in double precision):}){
+        $M,Y \leftarrow \text{eigenpairs}(S.T[0:S.vmax, 0:S.vmax])$
+          \tcp*{$T = Y M Y^\dag$}
+        $M_1, Y_1\leftarrow \text{eigenpairs}(S.T[0:S.vmax-1, 0:S.vmax-1])$ 
+          \tcp*{$T_1 = Y_1 M_1 Y_1^\dag$}
+        select $nev$ lowest eigenvectors from both $Y$ and $Y_1$ and find 
+                their spanning space:
+        $\quad Q\leftarrow \text{QR}(Y[:,0:S.nev],Y_1[:,0:S.nev])$  
+          \tcp*{complete $Y_1$ with zeros}
+        $M, Z \leftarrow \text{eigenpairs}(Q^\dag \cdot S.T\cdot Q)$ \;
+        reset current eigenspace:
+          $\quad S.V \leftarrow S.V \cdot (Q\cdot Z)$ \;
+        update Lanczos matrix:
+        $\quad\left\{\begin{array}{ll}
+          S.T[i, i] &\leftarrow M_i,\\
+          S.T[i, 2S.nev] & \leftarrow \langle S.V_{\bullet,i}, Ar\rangle / \sqrt{\rho},\\
+          S.T[2S.nev, i] & \leftarrow \langle Ar, S.V_{\bullet,i}\rangle / \sqrt{\rho}
+        \end{array}\right. \text{ for } 0\le i < 2S.nev$ \;
+        $S.vsize \leftarrow 2S.nev$
+      }
+    }
+    add the new Krylov vector:
+      $\quad S.V[:,S.vsize] \leftarrow r/\sqrt{\rho}$ \;
+    $S.vsize \leftarrow S.vsize+1$ \;
+    \Return{\text{0(normal)}}
+  }
+\end{function}
+
+
+
+The next function accumulates information from each CG iteration into Lanczos matrix to refine
+eigenvalues and restarts when the search space is full.
+
+\begin{function}
+  \caption{eigCG($A$, $b$, $x_0$, $\epsilon$, $N_\text{max}$, $S$)}
+  \SetKwFunction{EigCgCallback}{EigCgCallback}
+  \KwIn{$A$, operator}
+  \KwIn{$b$, right-hand side}
+  \KwIn{$x_0$, approximation to the solution}
+  \KwIn{$\epsilon$, precision to achieve}
+
+  \KwOut{$x$, solution}
+  \KwOut{$r$, residual vector}
+  \KwOut{$N$, number of iterations}
+  \KwOut{$status$, }
+
+  \Begin{
+    $\{\alpha_{-2}, \alpha_{-1}\} \leftarrow \{1,1\}$
+      \tcp*{default, safe for denominators}
+    $\{\beta_{-2}, \beta_{-1}\} \leftarrow \{0, 0\}$
+      \tcp*{default, zero in the start of a Lanczos sequence}
+    $r_0 \leftarrow b - A x_0$ \;
+    \lIf{$|r_0| < \epsilon |b|$}
+    { \Return{$x_0$, $r_0$, $0$, \text{0(cg-converged)}}} \;
+    $\rho_0 \leftarrow  \langle r_0, r_0\rangle$ \;
+    $p_0 \leftarrow r_0$ \;
+    $i\leftarrow0$ \;
+    \While{$i < N_\text{max}$}{
+      $t_i \leftarrow A p_i$ \;
+      \text{eigen-status} $\leftarrow$ 
+        eigcgUpdateState($S$, $\alpha_{i-1}$, $\alpha_{i-2}$, $\beta_{i-1}$, $\beta_{i-2}$, $r_i$, 
+            $Ar_i = t_i - \beta_{i-1} t_{i-1}$, $\rho_i$) \;
+      \uIf{\text{eigen-status} = 3(eigen-converged)}
+      {\Return{$x_{i+1}$, $r_{i+1}$, $i+1$, \text{3(eigen-converged)}}}
+      $\alpha_i \leftarrow \rho_i / \langle p_i, t_i \rangle$ 
+        \tcp*{sum in doubleP}
+      $x_{i+1} \leftarrow x_i + \alpha_i p_i$ \;
+      $r_{i+1} \leftarrow r_i - \alpha_i t_i$ \;
+      $\rho_{i+1} \leftarrow \langle r_{i+1}, r_{i+1}\rangle$ 
+        \tcp*{sum in doubleP}
+      \lIf{$|r_{i+1}| < \epsilon |b|$}
+      { \Return{$x_{i+1}$, $r_{i+1}$, $i+1$, \text{0(cg-converged)}}} \;
+      $\beta_{i} \leftarrow \rho_{i+1}/\rho_i$ \;
+      $p_{i+1}\leftarrow r_{i+1} + \beta_i p_i$ \;
+      $i\leftarrow i+1$ \;
+    }
+    not converged: \Return{$x_i$, $r_i$, $i$, \text{1(cg-not-converged)}}
+  }
+\end{function}
+
+
+
+\end{document}
