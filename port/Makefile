@@ -73,7 +73,9 @@ p.sources = alloc-eo.c \
             gauge-import.c \
             hfermion-alloc.c \
             hfermion-import.c \
+            hfermion-import-blas.c \
             hfermion-export.c \
+            hfermion-export-blas.c \
             hfermion-free.c \
             hfermion-madd.c \
             hfermion-dot.c \
