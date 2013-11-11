@@ -1,5 +1,6 @@
 #!/bin/sh
 USQCDDIST=/Users/avp/Local/packages/macosx-20130110
+COPTS='-Wunused-but-set-variable -Wall -O3' \
 ./configure \
    --prefix=/Users/avp/Sandbox/USQCD/mdwf/install-working \
    --target=cee-64 \

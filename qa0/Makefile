@@ -49,6 +49,8 @@ sources = fix-down.qa0 \
 
 x.sources = get-fermion.qa0 \
             put-fermion.qa0 \
+            blas2fermion.qa0 \
+            fermion2blas.qa0 \
             put-gauge.qa0 \
             sizeof-fermion.qa0 \
             sizeof-gauge.qa0 \

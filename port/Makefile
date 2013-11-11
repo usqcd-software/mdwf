@@ -41,6 +41,7 @@ x.sources = error.c \
             deflator-alloc.c \
             deflator-free.c \
             deflator-reset.c \
+            deflator-signature.c \
             deflator-is-stopped.c \
             deflator-resume.c \
             deflator-stop.c \
@@ -49,6 +50,8 @@ x.sources = error.c \
             deflator-postamble.c \
             deflator-update0.c \
             deflator-update1.c \
+            deflator-dim.c \
+            hfermion-size.c \
             cg-mixed.c \
             solver-dirac-mixed.c \
             solver-dirac-deflated-mixed.c
@@ -176,14 +179,14 @@ library: $(objects)
 
 $(x.objects): $(LIMPDIR)/%.o: %.c
 	$E CC $<
-	$C$(CC) $(CFLAGS) -I. -c -o $@ $<
+	$C$(CC) $(CFLAGS) $(COPTS) -I. -c -o $@ $<
 
 $(p.sources:%.c=$(LIMPDIR)/%f.o): $(LIMPDIR)/%f.o: %.c
 	$E CC-f $<
-	$C$(CC) $(CFLAGS) -I. -DQOP_MDWF_DEFAULT_PRECISION=\'F\' -c -o $@ $<
+	$C$(CC) $(CFLAGS) $(COPTS) -I. -DQOP_MDWF_DEFAULT_PRECISION=\'F\' -c -o $@ $<
 
 $(p.sources:%.c=$(LIMPDIR)/%d.o): $(LIMPDIR)/%d.o: %.c
 	$E CC-d $<
-	$C$(CC) $(CFLAGS) -I. -DQOP_MDWF_DEFAULT_PRECISION=\'D\' -c -o $@ $<
+	$C$(CC) $(CFLAGS) $(COPTS) -I. -DQOP_MDWF_DEFAULT_PRECISION=\'D\' -c -o $@ $<
 
 $(objects): $(headers)

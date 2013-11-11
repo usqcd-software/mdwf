@@ -587,6 +587,8 @@ int qx(sizeof_vfermion)(int volume, int Ls, int count);
 void qx(put_gauge)(struct SUn *ptr, int pos, const double r[]);
 void qx(put_fermion)(struct Fermion *data, int pos, int Ls, const double r[]);
 void qx(get_fermion)(double r[], const struct Fermion *data, int pos, int Ls);
+void qx(fermion2blas)(void *data, const struct Fermion *f, int size, int Ls);
+void qx(blas2fermion)(struct Fermion *f, int size, int Ls, const void *data);
 int q(get_down_pack_f)(const struct down_pack *up, int p);
 int q(get_up_pack_f)(const struct up_pack *up, int p);
 void q(put_down_pack)(struct down_pack *down, int p, int f);

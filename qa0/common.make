@@ -42,6 +42,8 @@ i.sources = put-ab.c \
 
 x.sources = get-fermion \
             put-fermion \
+            blas2fermion \
+            fermion2blas \
             put-gauge \
             sizeof-fermion \
             sizeof-gauge \
@@ -60,7 +62,7 @@ x.sources = get-fermion \
             f-cadd2 \
             f-add2-norm \
             f-add2x \
-	    f-dot \
+            f-dot \
             f-diff-norm \
             vf-put \
             vf-get \
@@ -107,19 +109,19 @@ all: $(objects)
 	$C$(AR) cr $(LIBRARY) $^
 	$C$(RANLIB) $(LIBRARY)
 	$C$(MAKE) CONFIG='$(CONFIG)' V='$V' LIBRARY='$(LIBRARY)' \
-                LIMPDIR=../$(LIMP) -C ../port $@
+		LIMPDIR=../$(LIMP) -C ../port $@
 
 dist clean:
 	$E RM $(LIMP)/objects
 	$C$(RM) $(objects)
 	$C$(MAKE) CONFIG='$(CONFIG)' V='$V' LIBRARY='$(LIBRARY)' \
-                LIMPDIR=../$(LIMP) -C ../port $@
+		LIMPDIR=../$(LIMP) -C ../port $@
 
 realclean: clean
 	$E RM $(LIMP)/sources
 	$C$(RM) $(sources)
 	$C$(MAKE) CONFIG='$(CONFIG)' V='$V' LIBRARY='$(LIBRARY)' \
-                LIMPDIR=../$(LIMP) -C ../port $@
+		LIMPDIR=../$(LIMP) -C ../port $@
 	$C$(RM) $(LIBRARY)
 
 $(sources:%.c=%.o): %.o: %.c

@@ -751,14 +751,14 @@ The following function returns a constant string which specifies the
 format of the deflator state. If the format of exported state deflator
 changes, a different string will be returned.
 <<Interface functions>>=
-const char *`QOP_MDWF_signature(void);
+const char *`QOP_MDWF_signature(struct QOP_MDWF_State *state);
 @
 
 \section{Parity of even-odd preconditioning}
 The parity of even-odd preconditioning used internally. The the returned value is zero,
 [[QDP_even_L()]] is used internally, otherwise the internals work on [[QDP_odd_L()]].
 <<Interface functions>>=
-int `QOP_MDW_parity(void);
+int `QOP_MDWF_parity(struct QOP_MDWF_State *state);
 @
 
 \section{Performance monitoring}
