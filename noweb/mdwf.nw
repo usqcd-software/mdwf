@@ -458,7 +458,7 @@ c^{(+)}_\alpha(k) &=& \frac{1}{w_\alpha(k)}.
 
 Then algorithm~\ref{inv-upper} could be used to compute
 $\phi\leftarrow A_+^{-1}\psi$.
-\incmargin{20pt}
+\IncMargin{20pt}
 \begin{algorithm}
 \SetKwData{Input}{input}
 \KwIn{$z$, precomputed part of $A_{Y+}$}
@@ -468,7 +468,7 @@ $\phi\leftarrow A_+^{-1}\psi$.
 \KwIn{$\psi$, the right hand side}
 \KwIn{$L_s$, flavor dimension}
 \KwOut{$\phi$, the result}
-\dontprintsemicolon
+\DontPrintSemicolon
 \Begin{
   $\eta\leftarrow\psi_0$\;
   $k\leftarrow1$\;
@@ -486,7 +486,7 @@ $\phi\leftarrow A_+^{-1}\psi$.
 }
 \caption{\label{inv-upper}Computing the inverse of $A_+$.}
 \end{algorithm}
-\decmargin{20pt}
+\DecMargin{20pt}
 
 For $A_{-}$ we have the following (once again, $B_{-}$ is similar.)
 \begin{equation}
@@ -535,7 +535,7 @@ c^{(-)}_\alpha(k) &=& \frac{1}{w_\alpha(k)}.
 
 Then algorithm~\ref{inv-lower} could be used to compute
 $\phi\leftarrow A_-^{-1}\psi$.
-\incmargin{20pt}
+\IncMargin{20pt}
 \begin{algorithm}
 \SetKwData{Input}{input}
 \KwIn{$z$, precomputed part of $A_{Y-}$}
@@ -545,7 +545,7 @@ $\phi\leftarrow A_-^{-1}\psi$.
 \KwIn{$\psi$, the right hand side}
 \KwIn{$L_s$, flavor dimension}
 \KwOut{$\phi$, the result}
-\dontprintsemicolon
+\DontPrintSemicolon
 \Begin{
   $\eta\leftarrow\psi_{L_s-1}$\;
   $k\leftarrow0$\;
@@ -563,7 +563,7 @@ $\phi\leftarrow A_-^{-1}\psi$.
 }
 \caption{\label{inv-lower}Computing the inverse of $A_-$.}
 \end{algorithm}
-\decmargin{20pt}
+\DecMargin{20pt}
 
 \section{Combinations of $A$ and $B$}
 With the notations above one can write other $s$-pieces we need:
@@ -592,7 +592,7 @@ The equation
 \]
 can be solve by the conjugate gradient method if the condition number of
  $M^\dagger M$ is small enough.
-\incmargin{20pt}
+\IncMargin{20pt}
 \begin{algorithm}
 \SetKwData{Input}{input}
 \KwIn{$M$, the matrix}
@@ -604,7 +604,7 @@ can be solve by the conjugate gradient method if the condition number of
 \KwOut{$r$, final residue}
 \KwOut{$k$, number of iterations used}
 \SetKw{Break}{break}
-\dontprintsemicolon
+\DontPrintSemicolon
 \Begin{
   $\xi\leftarrow \xi_0$\;
   $\rho\leftarrow \chi - M^{\dagger}M\xi$\;
@@ -631,7 +631,7 @@ can be solve by the conjugate gradient method if the condition number of
 }
 \caption{\label{real}Conjugate Gradient Solver.}
 \end{algorithm}
-\decmargin{20pt}
+\DecMargin{20pt}
 
 \section{Shifted Conjugate Gradient}
 We also need the ability to solve equations $(A+s_n I)\xi_n = \chi$,
@@ -645,7 +645,7 @@ could be used.
 For the details of the algorithm see van~der~Eshof and Sleijpen,~2003.
 Notice that SCG always starts with $\xi_0=0$.
 
-\incmargin{20pt}
+\IncMargin{20pt}
 \begin{algorithm}
 \SetKwData{Input}{input}
 \KwIn{$M$, the matrix}
@@ -658,7 +658,7 @@ Notice that SCG always starts with $\xi_0=0$.
 \KwOut{$r$, final residue for $s=0$}
 \KwOut{$k$, number of iterations used}
 \SetKw{Break}{break}
-\dontprintsemicolon
+\DontPrintSemicolon
 \Begin{
   $k\leftarrow 0$\;
   $\xi\leftarrow 0$\;
@@ -695,7 +695,7 @@ Notice that SCG always starts with $\xi_0=0$.
 }
 \caption{\label{shifted}Shifted Conjugate Gradient Solver.}
 \end{algorithm}
-\decmargin{20pt}
+\DecMargin{20pt}
 
 \chapter{INTERFACE}
 The MDWF interface is fully functional to isolate users of the code from
