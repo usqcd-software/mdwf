@@ -396,6 +396,10 @@ int q(df_postamble)(struct Q(State)           *state,
                     struct Q(Deflator)        *deflator,
                     struct MxM_workspaceF     *ws,
                     unsigned int               options);
+int q(df_inject)(struct Q(Deflator) *deflator,
+                 struct MxM_workspaceF *ws,
+                 latvec_c vec);
+void q(df_rebuild)(struct Q(Deflator) *deflator);
 
 /* layout translation */
 void q(l2v)(int x[Q(DIM)], const struct local *local, int p);
