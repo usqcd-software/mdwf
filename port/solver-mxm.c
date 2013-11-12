@@ -31,8 +31,6 @@ QX(MxM_CG)(struct QX(HalfFermion)          *psi,             /* in/out */
     void *temps = 0;
     struct SUn *U = 0;
     int status = 1;
-    struct Fermion *xi_e = 0;
-    struct Fermion *chi_e = 0;
     struct Fermion *rho_e = 0;
     struct Fermion *pi_e = 0;
     struct Fermion *zeta_e = 0;
@@ -55,8 +53,8 @@ QX(MxM_CG)(struct QX(HalfFermion)          *psi,             /* in/out */
 
     /* allocate locals */
     ptr = qx(allocate_eo)(state, &ptr_size, &temps,
-                          0, /* header */
-                          8, /* evens */
+                          0,  /* header */
+                          6,  /* evens */
                           1); /* odds */
     if (ptr == 0) {
         return q(set_error)(state, 0, "MxM_CG(): not enough memory");
@@ -65,8 +63,6 @@ QX(MxM_CG)(struct QX(HalfFermion)          *psi,             /* in/out */
     t0_e   = temps;
     t1_e   = temps = qx(step_even)(state, temps);
     t2_e   = temps = qx(step_even)(state, temps);
-    xi_e   = temps = qx(step_even)(state, temps);
-    chi_e  = temps = qx(step_even)(state, temps);
     rho_e  = temps = qx(step_even)(state, temps);
     pi_e   = temps = qx(step_even)(state, temps);
     zeta_e = temps = qx(step_even)(state, temps);

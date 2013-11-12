@@ -62,7 +62,9 @@ qx(cg_solver)(struct Fermion              *xi_e,
               struct Fermion              *t2_e,
               struct Fermion              *t0_o)
 {
+#if QOP_MDWF_DEFAULT_PRECISION == 'F'
     double a0 = 1, b0 = 0;
+#endif /*  QOP_MDWF_DEFAULT_PRECISION == 'F' */
     int df_status;
     int e_size = state->even.full_size;
     int Ls = state->Ls;
@@ -122,8 +124,10 @@ qx(cg_solver)(struct Fermion              *xi_e,
             DF_POSTAMBLE();
             return CG_EIGCONV;
         }
+#if QOP_MDWF_DEFAULT_PRECISION == 'F'
         a0 = a;
         b0 = b;
+#endif /*  QOP_MDWF_DEFAULT_PRECISION == 'F' */
         if (options)
             qx(cg_log)(r, source,
                        i, xi_e, state, params, U, chi_e,

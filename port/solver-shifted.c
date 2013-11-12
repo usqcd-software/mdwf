@@ -43,7 +43,6 @@ QX(MxM_SCG)(struct QX(VectorFermion)       *v_psi,
     struct SUn *U = 0;
     int status = 1;
     struct VectorFermion *vpi_e = 0;
-    struct Fermion *chi_e = 0;
     struct Fermion *rho_e = 0;
     struct Fermion *pi_e = 0;
     struct Fermion *zeta_e = 0;
@@ -80,7 +79,7 @@ QX(MxM_SCG)(struct QX(VectorFermion)       *v_psi,
     /* allocate locals */
     pptr = qx(allocate_eo)(state, &pptr_size, &temps,
                            0, /* header */
-                           7 + count, /* evens */
+                           6 + count, /* evens */
                            1); /* odds */
     if (pptr == 0) {
         q(free)(state, sptr, sptr_size);
@@ -90,7 +89,6 @@ QX(MxM_SCG)(struct QX(VectorFermion)       *v_psi,
     t0_e   = temps;
     t1_e   = temps = qx(step_even)(state, temps);
     t2_e   = temps = qx(step_even)(state, temps);
-    chi_e  = temps = qx(step_even)(state, temps);
     rho_e  = temps = qx(step_even)(state, temps);
     pi_e   = temps = qx(step_even)(state, temps);
     zeta_e = temps = qx(step_even)(state, temps);

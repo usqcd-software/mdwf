@@ -190,7 +190,6 @@ QX(DxD_CG)(struct QX(Fermion)            *psi,
     void *ptr = 0;
     size_t ptr_size = 0;
     void *temps = 0;
-    struct SUn *U = 0;
     int status = 1;
     struct QX(Fermion) *rho = 0;
     struct QX(Fermion) *pi = 0;
@@ -234,7 +233,6 @@ QX(DxD_CG)(struct QX(Fermion)            *psi,
         QX(allocate_fermion)(&zeta, state))
         CG_ERROR(no_mem);
 
-    U = gauge->data;
     /* clear bits we do not understand */
     options = options & MAX_OPTIONS;
 

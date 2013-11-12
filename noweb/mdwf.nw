@@ -1438,17 +1438,12 @@ written into memory and a non-zero value is returned.
 int `QOP_F3_MDWF_deflator_extract_vector(struct QOP_F3_MDWF_HalfFermion *hfermion_ptr,
                                         const struct QOP_MDWF_Deflator *delf_ptr,
                                         int idx);
-int `QOP_D3_MDWF_deflator_extract_vector(struct QOP_D3_MDWF_HalfFermion *hfermion_ptr,
-                                        const struct QOP_MDWF_Deflator *delf_ptr,
-                                        int idx);
 @
 
 Manually add a vector to the deflator. Zero value is returned if the insersion was a success.
 <<Interface functions>>=
 int `QOP_F3_MDWF_deflator_add_vector(struct QOP_MDWF_Deflator *delf_ptr,
                                     const struct QOP_F3_MDWF_HalfFermion *hfermion_ptr);
-int `QOP_D3_MDWF_deflator_add_vector(struct QOP_MDWF_Deflator *delf_ptr,
-                                    const struct QOP_D3_MDWF_HalfFermion *hfermion_ptr);
 @
 
 The deflator can return its current estimate of the eigenvalues if it has it.
