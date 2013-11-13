@@ -6,6 +6,8 @@ Q(deflator_reset)(struct Q(Deflator) *d)
 {
     if (NULL == d)
         return;
+    if (d->loading != 0)
+      return;
     d->vsize = 0;
     memset(d->T, 0, d->vmax * d->vmax * sizeof(d->T[0]));
 }

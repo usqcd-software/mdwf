@@ -4,6 +4,8 @@ void
 Q(deflator_stop)(struct Q(Deflator) *d)
 {
     if (NULL == d)
-        return;
+      return;
+    if (d->loading != 0)
+      return;
     d->frozen = 1;
 }

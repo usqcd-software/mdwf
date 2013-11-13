@@ -1429,21 +1429,33 @@ void `QOP_MDWF_deflator_resume(struct QOP_MDWF_Deflator *defl_ptr);
 
 The current dimension of low space may be requested from the deflator:
 <<Interface functions>>=
-int `QOP_MDW_deflator_current_dim(struct QOP_MDWF_Deflator *delf_ptr);
+int `QOP_MDWF_deflator_current_dim(struct QOP_MDWF_Deflator *defl_ptr);
 @
 
 Extract a vector from the deflator. If the vector index is out of range, nothing is
 written into memory and a non-zero value is returned.
 <<Interface functions>>=
 int `QOP_F3_MDWF_deflator_extract_vector(struct QOP_F3_MDWF_HalfFermion *hfermion_ptr,
-                                        const struct QOP_MDWF_Deflator *delf_ptr,
+                                        const struct QOP_MDWF_Deflator *defl_ptr,
                                         int idx);
+@
+
+Before adding vectors to the deflator, it must be marked to prevent accidental changes to the deflator state
+<<Interface functions>>=
+int `QOP_MDWF_deflator_start_load(struct QOP_MDWF_Deflator *defl_ptr);
 @
 
 Manually add a vector to the deflator. Zero value is returned if the insersion was a success.
 <<Interface functions>>=
-int `QOP_F3_MDWF_deflator_add_vector(struct QOP_MDWF_Deflator *delf_ptr,
-                                    const struct QOP_F3_MDWF_HalfFermion *hfermion_ptr);
+int `QOP_F3_MDWF_deflator_add_vector(const struct QOP_MDWF_Parameters *params,
+                                    const struct QOP_F3_MDWF_Gauge *gauge,
+                                    struct QOP_MDWF_Deflator *deflator,
+                                    const struct QOP_F3_MDWF_HalfFermion *hfermion);
+@
+
+After a set of vector is loaded, the deflator should be released before using it in an inverter
+<<Interface functions>>=
+int `QOP_MDWF_deflator_stop_load(struct QOP_MDWF_Deflator *defl_ptr);
 @
 
 The deflator can return its current estimate of the eigenvalues if it has it.

@@ -36,6 +36,9 @@ Q(deflated_mixed_D_CG)(struct QD(Fermion)          *psi,
     CHECK_ARGn(eta, "eigDDW_CG");
     CHECK_ARGn(deflator, "eigDDW_CG");
 
+    if (deflator->loading)
+      return q(set_error)(state, 0, "eigDDW_CG is loading vectors");
+
     return q(mixed_cg)(state, "eigDDW_CG", params,
                        psi, out_iterations, out_epsilon,
                        psi_0, gauge, eta, deflator,

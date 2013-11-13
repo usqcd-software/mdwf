@@ -51,8 +51,10 @@ x.sources = error.c \
             deflator-update0.c \
             deflator-update1.c \
             deflator-dim.c \
-            deflator-get-vector.c \
-            deflator-put-vector.c \
+            deflator-extract-vector.c \
+            deflator-add-vector.c \
+            deflator-start-load.c \
+            deflator-end-load.c \
             hfermion-size.c \
             cg-mixed.c \
             solver-dirac-mixed.c \

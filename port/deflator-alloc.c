@@ -212,7 +212,7 @@ Q(create_deflator)(struct Q(Deflator) **deflator_ptr,
     d->umax  = umax;
     d->usize  = 0;
     d->frozen = 0;
-    
+    d->loading = 0;
 
     *deflator_ptr = d;
     END_TIMING(s, 0, 0, 0);

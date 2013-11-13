@@ -176,6 +176,7 @@ struct Q(Deflator) {
     int                 umax;
     int                 usize;
     int                 frozen;
+    int                 loading;
 
     /* eig current state */
     double              eps;
