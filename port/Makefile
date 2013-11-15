@@ -26,6 +26,7 @@ x.sources = error.c \
             alloc.c \
             dealloc.c \
             perf.c \
+            gauge-d2f.c \
             set-borichi.c \
             set-chiu.c \
             set-moebius.c \

@@ -955,6 +955,13 @@ struct `QOP_F3_MDWF_Gauge;
 struct `QOP_D3_MDWF_Gauge;
 @
 
+It is convenient to have a converter from double to single precision. It allocates space
+for single precision result.
+<<Interface functions>>=
+int `QOP_MDWF_gauge_float_from_double(struct QOP_F3_MDWF_Gauge **result,
+                                     struct QOP_D3_MDWF_Gauge *gauge_ptr);
+@
+
 We also need a couple of destructors for gauge fields. For convenience, they
 will accept [[NULL]] intead of a valid gauge field.
 <<Interface functions>>=
