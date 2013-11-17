@@ -31,7 +31,7 @@ q(df_inject)(struct Q(Deflator) *d,
   if (d->usize == d->umax)
     return 0;
 
-  if (d->usize > 0) {
+  if (0 < d->usize) {
     int i_reortho;
     /* reorthogonalize n_reortho times */
     for (i_reortho = n_reortho; i_reortho--; ) {
@@ -51,12 +51,16 @@ q(df_inject)(struct Q(Deflator) *d,
   if (v_norm2 < v_norm2_min)
     return 0;
 
+  /* normalize the vector */
   q(lat_c_scal_d)(1. / sqrt(v_norm2), vec);
   q(latmat_c_insert_col)(d->U, d->usize, vec);
 
+  /* compute (U^dag . A . vec) */
   latvec_c_linop(cur_Av, vec, ws);
   latmat_c cur_U = q(latmat_c_submat_col)(d->U, 0, d->usize + 1);
   q(lat_lmH_dot_lv)(d->usize + 1, cur_U, cur_Av, d->H + d->usize * d->umax);
+
+  /* copy conjugated column into respective row */
   for (i = 0; i < d->usize; i++) {
     doublecomplex *p1 = d->H + i + d->usize * d->umax,
       *p2 = d->H + d->usize + i * d->umax;
@@ -64,6 +68,9 @@ q(df_inject)(struct Q(Deflator) *d,
     p2->i = -p1->i;
   }
   d->H[d->usize * (d->umax + 1)].i = 0.;
+
+  /* finished adding one new vector */
+  d->usize ++;
   return 1;
 }
 
@@ -85,6 +92,7 @@ q(df_rebuild)(struct Q(Deflator) *d)
 #elif HAVE_GSL
   gsl_matrix_complex_view gsl_C = gsl_matrix_complex_view_array_with_tda(
             (double *)d->C, d->usize, d->usize, d->umax);
+  /* transpose to convert matrix Fortran[row][col] -> C[col][row] */
   CHECK_GSL_STATUS(gsl_matrix_complex_transpose(&gsl_C.matrix));
   CHECK_GSL_STATUS(gsl_linalg_complex_cholesky_decomp(&gsl_C.matrix));
 #else
@@ -124,7 +132,6 @@ q(df_postamble)(
 /* macros to reuse workspace */
         q(latmat_c_get_col)(d->V, i_v, cur_v);
         if (q(df_inject)(d, ws, cur_v)) {
-          d->usize ++;
           unew ++;
         }
         i_v++;
@@ -157,6 +164,7 @@ q(df_postamble)(
             gsl_matrix_complex_view gsl_C =
                 gsl_matrix_complex_view_array_with_tda(
                     (double *)d->C, d->usize, d->usize, d->umax);
+            /* transpose to convert matrix Fortran[row][col] -> C[col][row] */
             CHECK_GSL_STATUS(gsl_matrix_complex_transpose(&gsl_C.matrix));
             CHECK_GSL_STATUS(gsl_eigen_herm(&gsl_C.matrix, &gsl_hevals.vector,
                                             d->debug_gsl_wkspace));

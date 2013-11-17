@@ -55,6 +55,7 @@ x.sources = error.c \
             deflator-extract-vector.c \
             deflator-add-vector.c \
             deflator-start-load.c \
+            deflator-stop-load.c \
             deflator-end-load.c \
             hfermion-size.c \
             cg-mixed.c \
