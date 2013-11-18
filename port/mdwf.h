@@ -188,6 +188,7 @@ struct Q(Deflator) {
     /* incr_eig current state */
     latmat_c            U;
     doublecomplex       *H;
+    doublecomplex       *H_ev;
     doublecomplex       *C;
 
 

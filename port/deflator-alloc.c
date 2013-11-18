@@ -52,6 +52,7 @@ Q(create_deflator)(struct Q(Deflator) **deflator_ptr,
 
     latmat_c_null(&(d->U));
     d->H                = NULL;
+    d->H_ev             = NULL;
     d->C                = NULL;
     
     d->zwork            = NULL;
@@ -101,6 +102,7 @@ Q(create_deflator)(struct Q(Deflator) **deflator_ptr,
 
     d->U                = q(latmat_c_alloc)(s, dim, Ls, umax);
     d->H                = q(malloc)(s, umax * umax * zs);
+    d->H_ev             = q(malloc)(s, umax * umax * zs);
     d->C                = q(malloc)(s, umax * umax * zs);
 
     d->hevecs2          = q(malloc)(s, vmax * vmax * zs);
@@ -159,6 +161,7 @@ Q(create_deflator)(struct Q(Deflator) **deflator_ptr,
 
             latmat_c_is_null(&(d->U))           ||
             NULL == d->H                        ||
+            NULL == d->H_ev                     ||
             NULL == d->C                        ||
                     
             NULL == d->zwork                    ||

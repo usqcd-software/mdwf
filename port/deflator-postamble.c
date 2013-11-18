@@ -20,17 +20,65 @@
 #define cur_v       (d->work_c_1)
 #define cur_Av      (d->work_c_2)
 
+
+/**/ /* marked this way is debug printing to be removed in final version */
+/**/static void
+/**/q(df_print_vec_moments_float)(
+/**/        struct Q(State) *s,            
+/**/        int len, 
+/**/        const float *v, 
+/**/        int n_mom, 
+/**/        const char *title)
+/**/{
+/**/#define MOM_MAX 100
+/**/    int mom, i;
+/**/    double sum[MOM_MAX];
+/**/    if (MOM_MAX < n_mom)
+/**/        n_mom = MOM_MAX;
+/**/    for (mom = 0; mom < n_mom ; mom++)
+/**/        sum[mom] = 0.;
+/**/    for (i = 0 ; i < len ; i++) {
+/**/        double xn = v[i];
+/**/        for (mom = 0; mom < n_mom ; mom++) {
+/**/            sum[mom]    += xn;
+/**/            xn          *= v[i];
+/**/        }
+/**/    }
+/**/    
+/**/    if (NULL != title)
+/**/        fprintf(stderr, "%s: ", title);
+/**/    else
+/**/        fprintf(stderr, "%p[%d]: ", (void *)v, len);
+/**/
+/**/    for (mom = 0; mom < n_mom ; mom++)
+/**/        fprintf(stderr, "Sx^%d=%e  ", 1+mom, sum[mom]);
+/**/    fprintf(stderr, "\n");
+/**/}
+
+
+/* XXX note that q(df_inject orthogonalizes vec wrt the vectors already in d->U
+   perhaps you want to copy vec before invoking q(df_inject) */
 int
 q(df_inject)(struct Q(Deflator) *d,
              struct MxM_workspaceF *ws,
              latvec_c vec)
 {
+  /**/DECLARE_STATE;
   double v_norm2_min = eps_reortho * eps_reortho;
   int i;
+  /**/int vec_len, gauge_len;
+
+  /**/CHECK_ARG0(d);
+  /**/CHECK_ARGn(ws, "df_inject");
+  /**/vec_len = vec.dim * vec.Ls * 3 * 4 * 2;
+  /**/gauge_len = state->volume * 4 * 3*3 * 2;
+
+  /**/q(df_print_vec_moments_float)(state, gauge_len, (float *)(ws->gauge), 4, "gauge     ");
 
   if (d->usize == d->umax)
     return 0;
-
+  
+  /**/q(df_print_vec_moments_float)(state, vec_len, (float *)(vec.f), 4, "vec       ");
   if (0 < d->usize) {
     int i_reortho;
     /* reorthogonalize n_reortho times */
@@ -47,6 +95,8 @@ q(df_inject)(struct Q(Deflator) *d,
       q(lat_c_axpy_d)(-1., cur_Av, vec);
     }
   }
+  /**/q(df_print_vec_moments_float)(state, vec_len, (float *)(vec.f), 4, "vec_ortho ");
+
   double v_norm2 = q(lat_c_nrm2)(vec);
   if (v_norm2 < v_norm2_min)
     return 0;
@@ -55,8 +105,17 @@ q(df_inject)(struct Q(Deflator) *d,
   q(lat_c_scal_d)(1. / sqrt(v_norm2), vec);
   q(latmat_c_insert_col)(d->U, d->usize, vec);
 
+  /**//* check if working on real latvec_c makes any difference */
+  /**/latvec_c vec_cp;
+  /**/vec_cp = q(latvec_c_alloc)(state, vec.dim);
+  /**/q(latvec_c_copy)(vec, vec_cp);
+  /**/latvec_c_linop(cur_Av, vec_cp, ws);
+  /**/q(df_print_vec_moments_float)(state, vec_len, (float *)(cur_Av.f), 4, "cur_Av_cp ");
+  /**/q(latvec_c_free)(state, &vec_cp);
+
   /* compute (U^dag . A . vec) */
   latvec_c_linop(cur_Av, vec, ws);
+  /**/q(df_print_vec_moments_float)(state, vec_len, (float *)(cur_Av.f), 4, "cur_Av    ");
   latmat_c cur_U = q(latmat_c_submat_col)(d->U, 0, d->usize + 1);
   q(lat_lmH_dot_lv)(d->usize + 1, cur_U, cur_Av, d->H + d->usize * d->umax);
 
@@ -102,7 +161,7 @@ q(df_rebuild)(struct Q(Deflator) *d)
   /* XXX broadcast Cholesky matrix from the master node
      to keep deflation consistent
      FIXME check how much these matrices are different on other nodes */
-  /* FIXME the matrix is broadcasted in a single bucket umax*uzise of 
+  /* FIXME the matrix is broadcast in a single bucket umax*uzise of 
      doublecomplex; (umax-usize)*usize is garbage; is it more efficient to have 
      usize broadcasts? */
   for (i = 0 ; i < d->usize; i++)

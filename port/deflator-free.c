@@ -23,6 +23,7 @@ Q(free_deflator)(struct Q(Deflator) **deflator_ptr)
 
     if (!latmat_c_is_null(&(d->U))) q(latmat_c_free)(s, &(d->U));
     if (NULL != d->H)               q(free)(s, d->H, umax * umax * zs);
+    if (NULL != d->H_ev)            q(free)(s, d->H_ev, umax * umax * zs);
     if (NULL != d->C)               q(free)(s, d->C, umax * umax * zs);
 
     if (NULL != d->hevecs2)         q(free)(s, d->hevecs2, vmax * vmax * zs);
