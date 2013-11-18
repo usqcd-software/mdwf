@@ -1,6 +1,8 @@
 #define QOP_MDWF_DEFAULT_PRECISION 'F'
 #include <mdwf.h>
 
+#define cur_v       (deflator->work_c_1)
+
 int
 QX(deflator_add_vector)(const struct Q(Parameters)  *params,
                         const struct QX(Gauge)      *gauge,
@@ -40,14 +42,15 @@ QX(deflator_add_vector)(const struct Q(Parameters)  *params,
   ws.params    = params;
   ws.gauge     = gauge->data;
   ws.tmp_e     = temps;
-  ws.tmp2_e    = qx(step_even)(state, temps);
-  ws.tmp_o     = qx(step_even)(state, temps);
+  ws.tmp2_e    = temps = qx(step_even)(state, temps);
+  ws.tmp_o     = temps = qx(step_even)(state, temps);
   ws.flops     = &flops;
   ws.sent      = &sent;
   ws.received  = &received;
 
   lv = q(latvec_c_view)(deflator->dim, deflator->Ls, hfermion->even);
-  q(df_inject)(deflator, &ws, lv);
+  q(latvec_c_copy)(lv, cur_v);
+  q(df_inject)(deflator, &ws, cur_v);
 
   END_TIMING(state, flops, sent, received);
   if (ptr)
