@@ -12,7 +12,7 @@
 \setlength{\oddsidemargin}{-16pt}
 \setlength{\evensidemargin}{-16pt}
 \setlength{\textwidth}{522pt}
-\setlength{\textheight}{680pt}
+\setlength{\textheight}{670pt}
 \setcounter{secnumdepth}{3}
 \setcounter{tocdepth}{3}
 \newcommand{\Cee}{\texttt{C}}
@@ -1651,6 +1651,51 @@ Again, macros
 #define `QDP_MDWF_DxD_CG QOP_D3_MDWF_DxD_CG
 #define `QOP_MDWF_MxM_CG QOP_D3_MDWF_MxM_CG
 #define `QOP_MDWF_MxM_SCG QOP_D3_MDWF_MxM_SCG
+@
+
+\section{Preconditioned operator functions}
+%%%%%%%% XXXX
+Apply a polynomial of $M^\dagger M$ to vector $\psi$. The polynomial is defined
+using the general three-term recurrence relation
+
+\begin{eqnarray*}
+P_0(\psi) & = & c_0 \psi \\
+P_1(\psi) & = & a_1 \psi + b_1 M^\dagger M \psi \\
+P_n(\psi) & = & (a_n + b_n M^\dagger M) P_{n-1}(\psi) + c_n P_{n-2}(\psi),\quad n > 1
+\end{eqnarray*}
+
+The value of $P_n(\psi)$ is returned in [[result]], and if
+[[result_prev]] is not [[NULL]], it shall contain the value of
+$P_{n-1}(\psi)$ on return.  Functions below compute operator
+polynomials for positive [[n]]. Arrays [[a]], [[b]], and [[c]] contain
+recursion coefficients and must be at least of length [[n + 1]].
+
+<<Interface functions>>=
+int `QOP_F3_MDWF_MxM_poly(struct QOP_F3_MDWF_HalfFermion *result,
+                         struct QOP_F3_MDWF_HalfFermion *result_prev,
+                         const struct QOP_MDWF_Parameters *params,
+                         const struct QOP_F3_MDWF_Gauge *gauge,
+                         const struct QOP_F3_MDWF_HalfFermion *psi,
+                         int n,
+                         const double a[/* n + 1 */],
+                         const double b[/* n + 1 */],
+                         const double c[/* n + 1 */]);
+int `QOP_D3_MDWF_MxM_poly(struct QOP_D3_MDWF_HalfFermion *result,
+                         struct QOP_D3_MDWF_HalfFermion *result_prev,
+                         const struct QOP_MDWF_Parameters *params,
+                         const struct QOP_D3_MDWF_Gauge *gauge,
+                         const struct QOP_D3_MDWF_HalfFermion *psi,
+                         int n,
+                         const double a[/* n + 1 */],
+                         const double b[/* n + 1 */],
+                         const double c[/* n + 1 */]);
+@
+The macros for default precision:
+<<Single precision defaults>>=
+#define `QOP_MDWF_MxM_poly QOP_F3_MDWF_MxM_poly
+@
+<<Double precision defaults>>=
+#define `QOP_MDWF_MxM_poly QOP_D3_MDWF_MxM_poly
 @
 
 \section{Helper routines}
