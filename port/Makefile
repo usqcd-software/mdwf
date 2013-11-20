@@ -57,6 +57,7 @@ x.sources = error.c \
             deflator-start-load.c \
             deflator-stop-load.c \
             deflator-end-load.c \
+	    poly-normalize.c \
             hfermion-size.c \
             cg-mixed.c \
             solver-dirac-mixed.c \
@@ -133,6 +134,7 @@ p.sources = alloc-eo.c \
             op-dirac-conj.c \
             op-precond.c \
             op-precond-conj.c \
+            op-mxm-poly.c \
             op-print.c \
 	    cg-precondition.c \
             cg-solver.c \

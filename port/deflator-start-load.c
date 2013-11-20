@@ -1,5 +1,4 @@
 #include <mdwf.h>
-#include <string.h>
 
 int
 Q(deflator_start_load)(struct Q(Deflator) *d)

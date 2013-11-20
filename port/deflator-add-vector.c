@@ -28,6 +28,10 @@ QX(deflator_add_vector)(const struct Q(Parameters)  *params,
   if (deflator->loading == 0)
     return q(set_error)(state, 0, "deflator_add_vector(): not in loading state");
 
+  /* setup communication */
+  if (q(setup_comm)(state, sizeof (REAL)))
+    return q(set_error)(state, 0, "deflator_add_vector(): communication setup failed");
+
   /* allocate temps */
   ptr = qx(allocate_eo)(state, &ptr_size, &temps,
                         0,  /* header */

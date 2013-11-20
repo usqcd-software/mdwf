@@ -15,9 +15,9 @@
     do { q(df_postamble)(state, deflator, &ws, options); } while (0)
 #else
 #define DF_PREAMBLE(psi_e, rho_e, r, chi_e) do {        \
-        qx(f_zero)(psi_e, Ls, e_size);                  \
-        qx(f_copy)(rho_e, Ls, e_size, chi_e);           \
-        qx(f_norm)(r, Ls, e_size, rho_e);               \
+        qx(f_zero)(psi_e, e_size, Ls);                  \
+        qx(f_copy)(rho_e, e_size, Ls, chi_e);           \
+        qx(f_norm)(r, e_size, Ls, rho_e);               \
         QMP_sum_double(r);                              \
     } while (0)
 #define DF_UPDATE0(a1,b1,a0,b0,r,rho)  0

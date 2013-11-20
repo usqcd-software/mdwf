@@ -1655,20 +1655,21 @@ Again, macros
 
 \section{Preconditioned operator functions}
 %%%%%%%% XXXX
-Apply a polynomial of $M^\dagger M$ to vector $\psi$. The polynomial is defined
+Apply an $n\geq1$ degree polynomial of $M^\dagger M$ to vector $\psi$. The polynomial is defined
 using the general three-term recurrence relation
 
 \begin{eqnarray*}
-P_0(\psi) & = & c_0 \psi \\
-P_1(\psi) & = & a_1 \psi + b_1 M^\dagger M \psi \\
-P_n(\psi) & = & (a_n + b_n M^\dagger M) P_{n-1}(\psi) + c_n P_{n-2}(\psi),\quad n > 1
+P_0(M^\dagger M)\psi & = & c_0 \psi \\
+P_1(M^\dagger M)\psi & = & a_0 \psi + b_0 M^\dagger M \psi \\
+P_n(M^\dagger M)\psi & = & (a_{n-1} + b_{n-1} M^\dagger M) P_{n-1}(M^\dagger M)\psi 
+	+ c_{n-1} P_{n-2}(M^\dagger M)\psi,\quad n > 1
 \end{eqnarray*}
 
-The value of $P_n(\psi)$ is returned in [[result]], and if
+The value of $P_n(M^\dagger M)\psi$ is returned in [[result]], and if
 [[result_prev]] is not [[NULL]], it shall contain the value of
-$P_{n-1}(\psi)$ on return.  Functions below compute operator
+$P_{n-1}(M^\dagger M)\psi$ on return.  Functions below compute operator
 polynomials for positive [[n]]. Arrays [[a]], [[b]], and [[c]] contain
-recursion coefficients and must be at least of length [[n + 1]].
+recursion coefficients and must be at least of length [[n]].
 
 <<Interface functions>>=
 int `QOP_F3_MDWF_MxM_poly(struct QOP_F3_MDWF_HalfFermion *result,
@@ -1677,18 +1678,18 @@ int `QOP_F3_MDWF_MxM_poly(struct QOP_F3_MDWF_HalfFermion *result,
                          const struct QOP_F3_MDWF_Gauge *gauge,
                          const struct QOP_F3_MDWF_HalfFermion *psi,
                          int n,
-                         const double a[/* n + 1 */],
-                         const double b[/* n + 1 */],
-                         const double c[/* n + 1 */]);
+                         const double a[/* n */],
+                         const double b[/* n */],
+                         const double c[/* n */]);
 int `QOP_D3_MDWF_MxM_poly(struct QOP_D3_MDWF_HalfFermion *result,
                          struct QOP_D3_MDWF_HalfFermion *result_prev,
                          const struct QOP_MDWF_Parameters *params,
                          const struct QOP_D3_MDWF_Gauge *gauge,
                          const struct QOP_D3_MDWF_HalfFermion *psi,
                          int n,
-                         const double a[/* n + 1 */],
-                         const double b[/* n + 1 */],
-                         const double c[/* n + 1 */]);
+                         const double a[/* n */],
+                         const double b[/* n */],
+                         const double c[/* n */]);
 @
 The macros for default precision:
 <<Single precision defaults>>=
@@ -1696,6 +1697,21 @@ The macros for default precision:
 @
 <<Double precision defaults>>=
 #define `QOP_MDWF_MxM_poly QOP_D3_MDWF_MxM_poly
+@
+
+Since polynomials may have values that can cause overflow of 
+floating point operations, it may be necessary to rescale these 
+polynomials to some finite value.
+The following function rescales the coefficients [[a]], [[b]], [[c]]
+so that all the polynomials are equal to 1 at some point $x_0$, 
+unless they have absolute values smaller than [[tol]]:
+<<Interface functions>>=
+int `QOP_MDWF_poly_normalize(int n,
+                            double a[/* n */],
+                            double b[/* n */],
+                            double c[/* n */],
+                            double x0,
+                            double tol);
 @
 
 \section{Helper routines}
