@@ -1,7 +1,6 @@
 #define QOP_MDWF_DEFAULT_PRECISION 'F'
 #include <mdwf.h>
 
-
 int
 QX(deflator_add_vector)(const struct Q(Parameters)  *params,
                         const struct QX(Gauge)      *gauge,
