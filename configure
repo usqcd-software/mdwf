@@ -25,6 +25,7 @@ show_help() {
      c99-32                  ISO/IEC 9899 (aka C99) on a 32-bit target
      c99-64                  ISO/IEC 9899 (aka C99) on a 64-bit target
      bgl/xlc                 BG/L or BG/P with IBM XLC compiler
+     bgq/xlc                 BG/Q with IBM XLC compiler
 
    Environment variables:
      CC                      C compiler to use
@@ -156,6 +157,17 @@ speciate_target() {
        default_libs=""
        default_ar="ar"
        default_ranlib="ranlib"
+       ;;
+    bgq/xlc)
+       limpdir=bgq-xlc
+       default_cc="bgc99"
+       default_cflags=""
+       default_copts="-O3 -qstrict -qmaxmem=-1"
+       default_ld="bgc99"
+       default_ldflags=""
+       default_libs=""
+       default_ar="powerpc64-bgq-linux-ar"
+       default_ranlib="powerpc64-bgq-linux-ranlib"
        ;;
     *) show_error "Unsupported target $target" ;;
   esac
