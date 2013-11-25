@@ -1,7 +1,7 @@
 TOP     = ..
 V       = 0
 CONFIG  = macosx
-TARGETS = c99-32 c99-64 cee-32 cee-64 bgl/xlc dry
+TARGETS = c99-32 c99-64 cee-32 cee-64 bgl/xlc bgq/xlc dry
 TARGET  =
 DEST    =
 QA0     = qa0
