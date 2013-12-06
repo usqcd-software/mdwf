@@ -264,6 +264,7 @@ q(latmat_c_alloc)(struct Q(State) *state, int dim, int Ls, int ncol)
     res.begin   = 0;
     res.len     = ncol;
     res.fv      = NULL;
+    res.stride  = qx(strideof_vfermion)(dim, Ls);
     res.mem_ptr = q(allocate_aligned)(state, &res.mem_size, (void *)&res.fv, 0,
                                       qx(sizeof_vfermion(dim, Ls, ncol)));
     if (res.mem_ptr == NULL)
@@ -281,6 +282,7 @@ q(latmat_c_view)(int dim, int Ls, int size, struct vFermion *fv)
     res.begin   = 0;
     res.len     = size;
     res.fv       = fv;
+    res.stride  = qx(strideof_vfermion)(dim, Ls);
     res.mem_ptr = NULL;
     res.mem_size = 0;
     return res;
@@ -303,10 +305,11 @@ q(latmat_c_copy)(latmat_c m1, latmat_c m2)
     assert(m1.len == m2.len);
     assert(m1.dim == m2.dim);
     assert(m1.Ls == m2.Ls);
+    assert(m1.stride == m2.stride);
     assert(!latmat_c_is_null(&m1));
     assert(!latmat_c_is_null(&m2));
     
-    qx(vf_copy)(m1.dim, m1.Ls, m1.len, 
+    qx(vf_copy)(m1.dim, m1.Ls, m1.stride, m1.len, 
                 m2.fv, m2.size, m2.begin,
                 m1.fv, m1.size, m1.begin);
 }
@@ -325,6 +328,7 @@ q(latmat_c_submat_col)(latmat_c m, int col, int ncol)
     res.begin   = m.begin + col;
     res.len     = ncol;
     res.fv      = m.fv;
+    res.stride  = m.stride;
     res.mem_ptr = NULL;
     res.mem_size = 0;
 
@@ -339,7 +343,7 @@ q(latmat_c_insert_col)(latmat_c m, int col, latvec_c v)
     assert(!latmat_c_is_null(&m));
     assert(!latvec_c_is_null(&v));
 
-    qx(vf_put)(m.dim, m.Ls, 
+    qx(vf_put)(m.dim, m.Ls, m.stride,
                m.fv, m.size, col,
                v.f);
 }
@@ -352,7 +356,7 @@ q(latmat_c_get_col)(latmat_c m, int col, latvec_c v)
     assert(!latmat_c_is_null(&m));
     assert(!latvec_c_is_null(&v));
 
-    qx(vf_get)(m.dim, m.Ls,
+    qx(vf_get)(m.dim, m.Ls, m.stride,
                v.f,
                m.fv, m.size, col);
 }
@@ -369,6 +373,7 @@ q(lat_lmH_dot_lm)(int m, int n,
     assert(a.Ls == b.Ls);
     assert(a.len == m);
     assert(b.len == n);
+    assert(a.stride == b.stride);
     assert(m <= ldc);
     assert(!latmat_c_is_null(&a));
     assert(!latmat_c_is_null(&b));
@@ -381,7 +386,7 @@ q(lat_lmH_dot_lm)(int m, int n,
             memset(c + ldc * j, 0, m * sizeof(c[0]));
     }
     
-    qx(do_vfH_dot_vf)(a.dim, a.Ls,
+    qx(do_vfH_dot_vf)(a.dim, a.Ls, a.stride,
                    (double *)c, ldc,
                    a.fv, a.size, a.begin, a.len,
                    b.fv, b.size, b.begin, b.len);
@@ -407,7 +412,7 @@ q(lat_lmH_dot_lv)(int m,
     assert(!latvec_c_is_null(&x));
 
     memset(y, 0, m * sizeof (y[0]));
-    qx(do_vfH_dot_f)(a.dim, a.Ls,
+    qx(do_vfH_dot_f)(a.dim, a.Ls, a.stride,
                   (double *)y, 
                   a.fv, a.size, a.begin, a.len,
                   x.f);
@@ -424,11 +429,12 @@ q(lat_lm_dot_zm)(int n, int k,
     assert(a.Ls == c.Ls);
     assert(a.len == k);
     assert(c.len == n);
+    assert(a.stride == c.stride);
     assert(k <= ldb);
     assert(!latmat_c_is_null(&a));
     assert(!latmat_c_is_null(&c));
 
-    qx(vf_dot_mz)(a.dim, a.Ls,
+    qx(vf_dot_mz)(a.dim, a.Ls, a.stride,
                   c.fv, c.size, c.begin, c.len,
                   a.fv, a.size, a.begin, a.len,
                   (double *)b, ldb);
@@ -446,7 +452,7 @@ q(lat_lm_dot_zv)(int n,
     assert(!latmat_c_is_null(&a));
     assert(!latvec_c_is_null(&y));
 
-    qx(vf_dot_vz)(a.dim, a.Ls,
+    qx(vf_dot_vz)(a.dim, a.Ls, a.stride,
                   y.f,
                   a.fv, a.size, a.begin, a.len,
                   (double *)x);

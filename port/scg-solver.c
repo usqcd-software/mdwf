@@ -36,7 +36,6 @@ qx(scg_solver)(struct VectorFermion *v_xi_e,
     int k, j;
     double r, z, ap, bp, a, g, b;
 
-
     /* setup */
     qx(f_zero)(xi_e, e_size, Ls);
     qx(f_copy)(rho_e, e_size, Ls, chi_e);

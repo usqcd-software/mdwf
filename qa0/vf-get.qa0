@@ -2,6 +2,8 @@
 
 (include "types.qa0")
 
+;; XXX change index order
+
 ;; F memory order:
 ;;   0th index: flavor index
 ;;   1st index: vector of fermions

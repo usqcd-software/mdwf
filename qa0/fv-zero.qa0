@@ -14,6 +14,3 @@
        (loop () (c [const 0] [reg count])
          (store qcd-fermion () ([reg R]) [reg vA])
          (op pointer-add () (R) ([reg R] [const (size-of Fermion)]))))))
-
-
-

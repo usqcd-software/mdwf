@@ -68,6 +68,7 @@ struct vFermion;
 typedef struct {
     int dim; /* aka size */
     int Ls;
+    ptrdiff_t stride;
     int size;
     int begin;
     int len;
@@ -101,17 +102,17 @@ void q(lat_lmH_dot_lm)(int m, int n,
                        latmat_c b, 
                        doublecomplex *c, int ldc);
 /* y <- A^\dag x, A:lat*m, x:lat, y:m */
-void q(lat_lmH_dot_lv)(int m,  
+void q(lat_lmH_dot_lv)(int m,
                        latmat_c a, 
                        latvec_c x, 
                        doublecomplex *y);
 /* C <- A * B, A:lat*k, B:k*n, C:lat*n */
-void q(lat_lm_dot_zm)(int n, int k, 
+void q(lat_lm_dot_zm)(int n, int k,
                       latmat_c a,
                       doublecomplex *b, int ldb, 
                       latmat_c c);
 /* y <- A * x, A:lat*n, x:n, y:lat */
-void q(lat_lm_dot_zv)(int n, 
+void q(lat_lm_dot_zv)(int n,
                       latmat_c a, 
                       doublecomplex *x,
                       latvec_c y);

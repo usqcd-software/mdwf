@@ -12,8 +12,7 @@ Q(poly_normalize)(
 {
     double p0, s0,
            p1, s1,
-           p2, s2,
-           aux;
+           p2, s2;
     int i;
     if (poly_n <= 0 
             || 0 == poly_a

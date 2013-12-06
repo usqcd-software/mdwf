@@ -5,7 +5,7 @@
 (procedure vector-fermion-put ([stem "fv_put"]
                                 prec&color)
            ([R         pointer "r"         "struct VectorFermion *" ]
-	    [k         int     "k"         "int"                    ]
+            [k         int     "k"         "int"                    ]
             [size      int     "size"      "int"                    ]
             [l-s       int     "Ls"        "int"                    ]
             [count     int     "count"     "int"                    ]

@@ -9,7 +9,7 @@
             [l-s       int     "Ls"        "int"                          ]
             [count     int     "count"     "int"                          ]
             [R         pointer "r"         "const struct VectorFermion *" ]
-	    [k         int     "k"         "int"                          ])
+            [k         int     "k"         "int"                          ])
    (op int-mul () (k-offset) ([reg k] [const (size-of Fermion)]))
    (op int-mul () (v-step) ([reg count] [const (size-of Fermion)]))
    (op pointer-add () (R) ([reg R] [reg k-offset]))

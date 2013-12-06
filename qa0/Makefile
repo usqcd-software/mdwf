@@ -56,6 +56,7 @@ x.sources = get-fermion.qa0 \
             sizeof-gauge.qa0 \
             sizeof-pfermion.qa0 \
             sizeof-vfermion.qa0 \
+            strideof-vfermion.qa0 \
             fv-zero.qa0 \
             fv-copy.qa0 \
             fv-get.qa0 \

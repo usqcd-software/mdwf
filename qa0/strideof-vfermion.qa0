@@ -1,0 +1,12 @@
+(verbose [(c99 bgl/xlc) "/* $Id$ */"])
+
+(include "types.qa0")
+
+(procedure strideof-of-vector-fermion ([stem "strideof_vfermion"]
+                                       [return stride int "int"]
+                                       prec&color)
+           ([volume int "volume" "int"]
+            [l-s    int "Ls"     "int"])
+   (op int-mul () (v-ls) ([reg volume] [reg l-s]))
+   (op int-mul () (stride) ([reg v-ls] [const (size-of Fermion)])))
+
