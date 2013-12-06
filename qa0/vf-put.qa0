@@ -2,40 +2,35 @@
 
 (include "types.qa0")
 
-;; XXX change index order
-
 ;; F memory order:
 ;;   0th index: flavor index
-;;   1st index: vector of fermions
-;;   2nd index: lattice index
+;;   1st index: lattice index
+;;   2nd index: vector of fermions
 ;;  vf[0][0][0]
 ;;  vf[1][0][0]
 ;;  ....
 ;;  vf[ls-1][0][0]
 ;;  vf[0][1][0]
 ;;  ....
-;;  vf[ls-1][fv-size-1][0]
+;;  vf[ls-1][size-1][0]
 ;;  vf[0][0][1]
 ;;  ...
 ;;
+
 (procedure put-vfermion ([stem "vf_put"]
                          prec&color
                          count-flops)
            ([size      int     "size"      "int"                    ]
             [ls        int     "ls"        "int"                    ]
             [F         pointer "F"         "struct vFermion *"      ]
-            [fv-size   int     "fv_size"   "int"                    ]
+            [fv-stride int     "fv_stride" "int"                    ]
             [fv-idx    int     "fv_idx"    "int"                    ]
             [X         pointer "X"         "const struct Fermion *" ])
-   (op int-mul () (fv-step-ls) ([reg ls] [const (size-of Fermion)]))
-   (op int-mul () (fv-step) ([reg fv-step-ls] [reg fv-size]))
-   (op int-mul () (fv-start) ([reg fv-step-ls] [reg fv-idx]))
-   (op pointer-add () (F-i) ([reg F] [reg fv-start]))
+   (op int-mul () (f-offset) ([reg fv-idx] [reg fv-stride]))
+   (op pointer-add () (F) ([reg F] [reg f-offset]))
    (loop () (i [const 0] [reg size])
-     (op pointer-move () (F-s) ([reg F-i]))
      (loop () (s [const 0] [reg ls])
        (load qcd-fermion () x-v ([reg X]))
        (op pointer-add () (X) ([reg X] [const (size-of Fermion)]))
-       (store qcd-fermion () ([reg F-s]) [reg x-v])
-       (op pointer-add () (F-s) ([reg F-s] [const (size-of Fermion)])))
-     (op pointer-add () (F-i) ([reg F-i] [reg fv-step]))))
+       (store qcd-fermion () ([reg F]) [reg x-v])
+       (op pointer-add () (F) ([reg F] [const (size-of Fermion)])))))

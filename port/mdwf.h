@@ -674,42 +674,42 @@ void qx(fv_put)(struct VectorFermion *vf, int k,
 
 /* fv[fv_begin + (0 .. len-1)] = gv[gv_begin + (0 .. len-1)]
 */
-unsigned int qx(vf_copy)(int size, int Ls, int len, int stride,
-                         struct vFermion *fv, int fv_size, int fv_begin,
-                         const struct vFermion *gv, int gv_size, int gv_begin);
+unsigned int qx(vf_copy)(int size, int Ls, int len,
+                         struct vFermion *fv, int fv_stride, int fv_begin,
+                         const struct vFermion *gv, int gv_stride, int gv_begin);
 /*
  * set fv[idx] = x
 */
-unsigned int qx(vf_put)(int size, int Ls, int stride,
-                        struct vFermion *fv, int fv_size, int fv_idx,
+unsigned int qx(vf_put)(int size, int Ls,
+                        struct vFermion *fv, int fv_stride, int fv_idx,
                         const struct Fermion *x);
 
 /*
  * read x = fv[idx]
 */
-unsigned int qx(vf_get)(int size, int Ls, int stride,
+unsigned int qx(vf_get)(int size, int Ls,
                         struct Fermion *x,
-                        const struct vFermion *fv, int fv_size, int fv_idx);
+                        const struct vFermion *fv, int fv_stride, int fv_idx);
 
 /*
 *   g = fv[fv_begin + (0 .. f_vlen-1)] . v
 *   v is a complex vector [fv_len] indexed as [re:0/im:1 + 2 * i]
 */
-unsigned int qx(vf_dot_vz)(int size, int Ls, int stride,
+unsigned int qx(vf_dot_vz)(int size, int Ls,
                            struct Fermion *g,
                            const struct vFermion *fv,
-                           int fv_size, int fv_begin, int fv_len,
+                           int fv_stride, int fv_begin, int fv_len,
                            const double *v);
 
 /*
 *   gv[gv_begin + (0 .. gv_len-1)] = fv[fv_begin + (0 .. f_len - 1)] . m
 *   m is a complex matrix [fv_len*gv_len] indexed as [re:0/im:1 + 2 * (row + ldm * col) ]
 */
-unsigned int qx(vf_dot_mz)(int size, int Ls, int stride,
+unsigned int qx(vf_dot_mz)(int size, int Ls,
                            struct vFermion *gv,
-                           int gv_row_size, int gv_begin, int gv_len,
+                           int gv_stride, int gv_begin, int gv_len,
                            const struct vFermion *fv,
-                           int fv_row_size, int fv_begin, int fv_len,
+                           int fv_stride, int fv_begin, int fv_len,
                            const double *m, int ldm);
 
 /*  This does not include global reduction
@@ -717,10 +717,10 @@ unsigned int qx(vf_dot_mz)(int size, int Ls, int stride,
  *      for all i = (0 .. fv_len-1)
  *  c is complex vector as [re:0/im:1 + 2 * i]
  */
-unsigned int qx(do_vfH_dot_f)(int size, int Ls, int stride,
+unsigned int qx(do_vfH_dot_f)(int size, int Ls,
                               double *c,
                               const struct vFermion *fv,
-                              int fv_size, int fv_begin, int fv_len,
+                              int fv_stride, int fv_begin, int fv_len,
                               const struct Fermion *g);
 
 /* This does not include global reduction
@@ -729,12 +729,12 @@ unsigned int qx(do_vfH_dot_f)(int size, int Ls, int stride,
  *              j = (0 .. gv_len-1),
  * c is a complex matrix as [re:0/im:1 + 2 * (i + ldc * j)]
  */
-unsigned int qx(do_vfH_dot_vf)(int size, int Ls, int stride,
+unsigned int qx(do_vfH_dot_vf)(int size, int Ls,
                                double *c, int ldc,
                                const struct vFermion *fv,
-                               int fv_size, int fv_begin, int fv_len,
+                               int fv_stride, int fv_begin, int fv_len,
                                const struct vFermion *gv,
-                               int gv_size, int gv_begin, int gv_len);
+                               int gv_stride, int gv_begin, int gv_len);
 
 /* basic matrices */
 unsigned int qx(op_norm2)(double *global_norm,

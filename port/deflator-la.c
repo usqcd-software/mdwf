@@ -305,13 +305,12 @@ q(latmat_c_copy)(latmat_c m1, latmat_c m2)
     assert(m1.len == m2.len);
     assert(m1.dim == m2.dim);
     assert(m1.Ls == m2.Ls);
-    assert(m1.stride == m2.stride);
     assert(!latmat_c_is_null(&m1));
     assert(!latmat_c_is_null(&m2));
     
-    qx(vf_copy)(m1.dim, m1.Ls, m1.stride, m1.len, 
-                m2.fv, m2.size, m2.begin,
-                m1.fv, m1.size, m1.begin);
+    qx(vf_copy)(m1.dim, m1.Ls, m1.len, 
+                m2.fv, m2.stride, m2.begin,
+                m1.fv, m1.stride, m1.begin);
 }
 latmat_c
 q(latmat_c_submat_col)(latmat_c m, int col, int ncol)
@@ -343,8 +342,8 @@ q(latmat_c_insert_col)(latmat_c m, int col, latvec_c v)
     assert(!latmat_c_is_null(&m));
     assert(!latvec_c_is_null(&v));
 
-    qx(vf_put)(m.dim, m.Ls, m.stride,
-               m.fv, m.size, col,
+    qx(vf_put)(m.dim, m.Ls,
+               m.fv, m.stride, col,
                v.f);
 }
 void
@@ -356,9 +355,9 @@ q(latmat_c_get_col)(latmat_c m, int col, latvec_c v)
     assert(!latmat_c_is_null(&m));
     assert(!latvec_c_is_null(&v));
 
-    qx(vf_get)(m.dim, m.Ls, m.stride,
+    qx(vf_get)(m.dim, m.Ls,
                v.f,
-               m.fv, m.size, col);
+               m.fv, m.stride, col);
 }
 
 
@@ -373,7 +372,6 @@ q(lat_lmH_dot_lm)(int m, int n,
     assert(a.Ls == b.Ls);
     assert(a.len == m);
     assert(b.len == n);
-    assert(a.stride == b.stride);
     assert(m <= ldc);
     assert(!latmat_c_is_null(&a));
     assert(!latmat_c_is_null(&b));
@@ -386,10 +384,10 @@ q(lat_lmH_dot_lm)(int m, int n,
             memset(c + ldc * j, 0, m * sizeof(c[0]));
     }
     
-    qx(do_vfH_dot_vf)(a.dim, a.Ls, a.stride,
+    qx(do_vfH_dot_vf)(a.dim, a.Ls,
                    (double *)c, ldc,
-                   a.fv, a.size, a.begin, a.len,
-                   b.fv, b.size, b.begin, b.len);
+                   a.fv, a.stride, a.begin, a.len,
+                   b.fv, b.stride, b.begin, b.len);
 
     if (m == ldc) {
         QMP_sum_double_array((double *)c, 2 * m * n);
@@ -412,9 +410,9 @@ q(lat_lmH_dot_lv)(int m,
     assert(!latvec_c_is_null(&x));
 
     memset(y, 0, m * sizeof (y[0]));
-    qx(do_vfH_dot_f)(a.dim, a.Ls, a.stride,
+    qx(do_vfH_dot_f)(a.dim, a.Ls,
                   (double *)y, 
-                  a.fv, a.size, a.begin, a.len,
+                  a.fv, a.stride, a.begin, a.len,
                   x.f);
     QMP_sum_double_array((double *)y, 2 * m);
 }
@@ -429,14 +427,13 @@ q(lat_lm_dot_zm)(int n, int k,
     assert(a.Ls == c.Ls);
     assert(a.len == k);
     assert(c.len == n);
-    assert(a.stride == c.stride);
     assert(k <= ldb);
     assert(!latmat_c_is_null(&a));
     assert(!latmat_c_is_null(&c));
 
-    qx(vf_dot_mz)(a.dim, a.Ls, a.stride,
-                  c.fv, c.size, c.begin, c.len,
-                  a.fv, a.size, a.begin, a.len,
+    qx(vf_dot_mz)(a.dim, a.Ls,
+                  c.fv, c.stride, c.begin, c.len,
+                  a.fv, a.stride, a.begin, a.len,
                   (double *)b, ldb);
 }
 /* y <- A * x, A:lat*n, x:n, y:lat */
@@ -452,8 +449,8 @@ q(lat_lm_dot_zv)(int n,
     assert(!latmat_c_is_null(&a));
     assert(!latvec_c_is_null(&y));
 
-    qx(vf_dot_vz)(a.dim, a.Ls, a.stride,
+    qx(vf_dot_vz)(a.dim, a.Ls,
                   y.f,
-                  a.fv, a.size, a.begin, a.len,
+                  a.fv, a.stride, a.begin, a.len,
                   (double *)x);
 }
