@@ -81,6 +81,10 @@ typedef struct {
 #define latmat_c_is_null(p) (NULL == (p)->fv)
 
 latmat_c q(latmat_c_alloc)(struct Q(State) *state, int dim, int Ls, int ncol);
+latmat_c *q(latmat_c_alloc_with_header)(struct Q(State) *state, 
+                                        int dim, int Ls, int ncol);
+int q(latmat_convert_to_blas)(latmat_c *m);
+int q(latmat_convert_from_blas)(latmat_c *m);
 void q(latmat_c_free)(struct Q(State) *state, latmat_c *m);
 latmat_c q(latmat_c_view)(int dim, int Ls, int size, struct vFermion *fv);
 void q(latmat_c_copy)(latmat_c m1, latmat_c m2); /* m2 <- m1 */

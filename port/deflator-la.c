@@ -3,6 +3,10 @@
 #include <mdwf.h>
 #include <qmp.h>
 
+/* TODO replace float & double versions with dry code
+    q(latvec_c_XXX), q(latvec_z_XXX) -> qx(latmat_XXX)
+    q(latmat_c_XXX), q(latmat_z_XXX) -> qx(latmat_XXX)
+ */
 
 /* allocate & free */
 latvec_c
@@ -266,11 +270,50 @@ q(latmat_c_alloc)(struct Q(State) *state, int dim, int Ls, int ncol)
     res.fv      = NULL;
     res.stride  = qx(strideof_vfermion)(dim, Ls);
     res.mem_ptr = q(allocate_aligned)(state, &res.mem_size, (void *)&res.fv, 0,
-                                      qx(sizeof_vfermion(dim, Ls, ncol)));
+                                      qx(sizeof_vfermion)(dim, Ls, ncol));
     if (res.mem_ptr == NULL)
         res.fv = NULL;
 
     return res;
+}
+/* need a special case when a latmat_c instance is used outside MDWF,
+   such as Lanczos ; for this case, latmat_c is allocated as a header of 
+   `allocate_aligned' and latmat_c.mem_ptr is set to itself; it can be 
+   deallocated with latmat_c_free */
+latmat_c *
+q(latmat_c_alloc_with_header)(struct Q(State) *state, int dim, int Ls, int ncol)
+{
+    struct vFermion *fv = NULL;
+    size_t mem_size = 0;
+    latmat_c *res = NULL;
+    
+    res = q(allocate_aligned)(state, &mem_size, (void *)&fv, sizeof(latmat_c),
+                              qx(sizeof_vfermion)(dim, Ls, ncol));
+    if (0 == res)
+            return NULL;
+
+    res->dim    = dim;
+    res->Ls     = Ls;
+    res->size   = ncol;
+    res->begin  = 0;
+    res->len    = ncol;
+    res->fv     = fv;
+    res->stride = qx(strideof_vfermion)(dim, Ls);
+
+    res->mem_ptr= res;
+    res->mem_size = mem_size;
+    return res;
+}
+
+int
+q(latmat_convert_to_blas)(latmat_c *m) 
+{ 
+    return 0; /* stub; modify if perform any transformations */
+}
+int
+q(latmat_convert_from_blas)(latmat_c *m) 
+{ 
+    return 0; /* stub; modify if perform any transformations */
 }
 latmat_c 
 q(latmat_c_view)(int dim, int Ls, int size, struct vFermion *fv)
@@ -294,9 +337,14 @@ q(latmat_c_free)(struct Q(State) *state, latmat_c *m)
         assert(0 == m->begin);
         assert(m->size == m->len);
         /* at least some chance that this is not a sub-matrix */
-        q(free)(state, m->mem_ptr, m->mem_size);
-        m->mem_ptr = 0;
-        m->fv = NULL;
+        void *mem_ptr = m->mem_ptr;
+        size_t mem_size = m->mem_size;
+        q(free)(state, mem_ptr, mem_size);
+        if (m != mem_ptr) { 
+            /* do not set default values if `m' is at mem_ptr */
+            m->mem_ptr = 0;
+            m->fv = NULL;
+        }
     }
 }
 void 
