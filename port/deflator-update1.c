@@ -32,7 +32,7 @@ q(df_update1)(
 {
     int i, j;
     long int vmax, vsize, nev;
-    struct q(DeflatorEigcg) *d_e;
+    struct q(DeflatorEigcg) *d_e = NULL;
 #if defined(HAVE_LAPACK)
     char cV = 'V',
          cU = 'U',

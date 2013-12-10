@@ -65,6 +65,8 @@ x.sources = error.c \
 	    hfermion-mat-alloc.c \
 	    hfermion-mat-free.c \
 	    deflator-create-from-mat.c \
+	    deflator-calc-evals.c \
+	    #
 
 p.sources = alloc-eo.c \
             step-even.c \
@@ -148,8 +150,8 @@ p.sources = alloc-eo.c \
             solver-dirac.c \
             solver-mxm.c \
             solver-dxd.c \
-            solver-shifted.c
-
+            solver-shifted.c \
+	    #
 
 x.objects = $(x.sources:%.c=$(LIMPDIR)/%.o)
 

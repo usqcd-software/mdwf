@@ -15,7 +15,7 @@ q(df_update0)(
         unsigned int             options)
 {
     double resid_norm;
-    struct q(DeflatorEigcg) *d_e;
+    struct q(DeflatorEigcg) *d_e = NULL;
     if (NULL == df || 
             NULL == df->state ||
             ! df->do_eigcg ||

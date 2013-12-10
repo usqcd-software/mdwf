@@ -1,5 +1,17 @@
-int
-q(deflator_calc_evals)(struct Q(Deflator) *d) 
+#define QOP_MDWF_DEFAULT_PRECISION 'F'
+#include <mdwf.h>
+
+#if defined(HAVE_LAPACK)
+#  include <lapack.h>
+#elif defined(HAVE_GSL)
+#  include <gsl/gsl_linalg.h>
+#  include <gsl/gsl_sort_double.h>
+#  include <gsl/gsl_sort_vector_double.h>
+#else
+#  error "no linear algebra library"
+#endif
+
+int q(deflator_calc_evals)(struct Q(Deflator) *d) 
 {
     long int usize  = d->usize,
              umax   = d->umax;

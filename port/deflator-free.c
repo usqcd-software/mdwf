@@ -122,10 +122,10 @@ Q(free_deflator)(struct Q(Deflator) **deflator_ptr)
     if (deflator_ptr == 0 || *deflator_ptr == 0)
         return;
 
-    BEGIN_TIMING(s);
-
     s = (*deflator_ptr)->state;
     struct Q(Deflator) *d = *deflator_ptr;
+
+    BEGIN_TIMING(s);
 
     q(fini_deflator)(d, s);
     q(free)(s, d, sizeof(struct Q(Deflator)));

@@ -134,7 +134,8 @@ q(df_postamble)(
             df->umax <= df->usize ||
             df->df_eigcg.vsize < df->df_eigcg.nev)
         return 0;
-    struct q(DeflatorEigcg) *d_e;
+    struct q(DeflatorEigcg) *d_e = &(df->df_eigcg);
+
     int unew = 0,
         i_v = 0;
     long int usize_old = df->usize;

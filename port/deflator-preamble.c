@@ -67,11 +67,12 @@ q(df_preamble)(
         struct MxM_workspaceF     *ws,
         unsigned int               options)
 {
-    struct q(DeflatorEigcg) *d_e;
-    assert(NULL != df &&
-            NULL != df->state &&
-            NULL != x &&
-            NULL != b);
+    struct q(DeflatorEigcg) *d_e = NULL;
+    if (NULL == df
+            || NULL == df->state
+            || NULL == x
+            || NULL == b)
+        return q(set_error)(df->state, 0, "df_preamble(): null pointer");
 
     latvec_c lv_x = q(latvec_c_view)(s, x);
     latvec_c lv_b = q(latvec_c_view)(s, b);
