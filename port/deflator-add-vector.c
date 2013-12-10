@@ -51,7 +51,7 @@ QX(deflator_add_vector)(const struct Q(Parameters)  *params,
   ws.sent      = &sent;
   ws.received  = &received;
 
-  lv = q(latvec_c_view)(deflator->dim, deflator->Ls, hfermion->even);
+  lv = q(latvec_c_view)(state, hfermion->even);
   /* q(df_inject) modifies the injected vector, so copy it */
   q(latvec_c_copy)(lv, cur_v);
   q(df_inject)(deflator, &ws, cur_v);

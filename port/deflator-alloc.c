@@ -1,27 +1,169 @@
+#define QOP_MDWF_DEFAULT_PRECISION 'F'
 #include <mdwf.h>
 
-int
-Q(create_deflator)(struct Q(Deflator) **deflator_ptr,
-                   struct Q(State) *s,
-                   int vmax, int nev, 
-                   double eps, int umax)
-{
-    struct Q(Deflator) *d;
-    int dim, Ls;
+#define ds      sizeof(double)
+#define zs      sizeof(doublecomplex)
 
+
+int 
+q(init_df_eigcg) (
+        struct q(DeflatorEigcg) *d_e, 
+        struct Q(State) *s,
+        int vmax, int nev, double eps)
+{
     if (s == NULL || s->error_latched)
         return 1;
 
-    if (deflator_ptr == NULL)
-        return q(set_error)(s, 0, "create_deflator(): NULL pointer");
+    if (d_e == NULL)
+        return q(set_error)(s, 0, "init_df_eigcg(): NULL pointer");
   
-    dim = DEFLATOR_VEC_SIZE(s);
-    Ls = s->Ls;
-    *deflator_ptr = NULL;
-    d = q(malloc)(s, sizeof (struct Q(Deflator)));
-    if (d == 0)
-        return q(set_error)(s, 0, "allocate_deflator(): not enough memory");
 
+    /* first, set all to null */
+    latmat_c_null(&(d_e->V));
+    latmat_c_null(&(d_e->tmp_V));
+    latvec_c_null(&(d_e->work_c_1));
+    latvec_c_null(&(d_e->work_c_2));
+    d_e->T                = NULL;
+    d_e->lwork            = 0;
+    d_e->zwork            = NULL;
+    d_e->hevals           = NULL;
+    d_e->hevecs2          = NULL;
+#if defined(HAVE_LAPACK)
+    d_e->hevecs1          = NULL;
+    d_e->tau              = NULL;
+    d_e->rwork            = NULL;
+#elif defined(HAVE_GSL)
+    d_e->gsl_T_full       = NULL;
+    d_e->gsl_hevecs1      = NULL;
+    d_e->gsl_hevals1      = NULL;
+    d_e->gsl_wkspace1     = NULL;
+    d_e->gsl_T_m1         = NULL;
+    d_e->gsl_hevecs2      = NULL;
+    d_e->gsl_hevals2      = NULL;
+    d_e->gsl_wkspace2     = NULL;
+    d_e->gsl_T_proj       = NULL;
+    d_e->gsl_hevecs3      = NULL;
+    d_e->gsl_wkspace3     = NULL;
+    d_e->gsl_QR           = NULL;
+    d_e->gsl_Q_unpack     = NULL;
+    d_e->gsl_tmp_MxS      = NULL;
+    d_e->gsl_tau          = NULL;
+    d_e->hevals_select1   = NULL;
+    d_e->hevals_select2   = NULL;
+#else
+#  error "no linear algebra library"
+#endif
+
+    /* allocate */
+#define ds      sizeof(double)
+#define zs      sizeof(doublecomplex)
+    d_e->V                = q(latmat_c_alloc)(s, vmax);
+    d_e->tmp_V            = q(latmat_c_alloc)(s, 2*nev);
+    d_e->work_c_1         = q(latvec_c_alloc)(s);
+    d_e->work_c_2         = q(latvec_c_alloc)(s);
+    d_e->T                = q(malloc)(s, vmax * vmax * zs);
+    d_e->hevals           = q(malloc)(s, vmax * ds);
+    d_e->hevecs2          = q(malloc)(s, vmax * vmax * zs);
+    d_e->lwork            = 2*vmax;
+    d_e->zwork            = q(malloc)(s, d_e->lwork * zs);
+#if defined(HAVE_LAPACK)
+    d_e->hevecs1          = q(malloc)(s, vmax * vmax * zs);
+    d_e->tau              = q(malloc)(s, vmax * zs);
+    d_e->rwork            = q(malloc)(s, 3 * vmax * ds);
+#elif defined(HAVE_GSL)
+    d_e->gsl_T_full       = gsl_matrix_complex_alloc(vmax, vmax);
+    d_e->gsl_hevecs1      = gsl_matrix_complex_alloc(vmax, vmax);
+    d_e->gsl_hevals1      = gsl_vector_alloc(vmax);
+    d_e->gsl_wkspace1     = gsl_eigen_hermv_alloc(vmax);
+    d_e->gsl_T_m1         = gsl_matrix_complex_alloc(vmax-1, vmax-1);
+    d_e->gsl_hevecs2      = gsl_matrix_complex_alloc(vmax-1, vmax-1);
+    d_e->gsl_hevals2      = gsl_vector_alloc(vmax-1);
+    d_e->gsl_wkspace2     = gsl_eigen_hermv_alloc(vmax-1);
+    d_e->gsl_T_proj       = gsl_matrix_complex_alloc(2*nev, 2*nev);
+    d_e->gsl_hevecs3      = gsl_matrix_complex_alloc(2*nev, 2*nev);
+    d_e->gsl_wkspace3     = gsl_eigen_hermv_alloc(2*nev);
+    d_e->gsl_QR           = gsl_matrix_complex_alloc(vmax, 2*nev);
+    d_e->gsl_Q_unpack     = gsl_matrix_complex_alloc(vmax, vmax);
+    d_e->gsl_tmp_MxS      = gsl_matrix_complex_alloc(vmax, 2*nev);
+    d_e->gsl_tau          = gsl_vector_complex_alloc(2*nev);
+    d_e->hevals_select1   = q(malloc)(s, vmax * sizeof(d_e->hevals_select1[0]));
+    d_e->hevals_select2   = q(malloc)(s, vmax * sizeof(d_e->hevals_select2[0]));
+#else
+#  error "no linear algebra library"
+#endif
+
+    /* check allocation */
+    if (       latmat_c_is_null(&(d_e->V))
+            || latmat_c_is_null(&(d_e->tmp_V))
+            || latvec_c_is_null(&(d_e->work_c_1))
+            || latvec_c_is_null(&(d_e->work_c_2))
+            || NULL == d_e->T
+            || NULL == d_e->hevals
+            || NULL == d_e->hevecs2
+            || NULL == d_e->zwork
+#if defined(HAVE_LAPACK)
+            || NULL == d_e->hevecs1
+            || NULL == d_e->tau
+            || NULL == d_e->rwork
+#elif defined(HAVE_GSL)
+            || NULL == d_e->gsl_T_full
+            || NULL == d_e->gsl_hevecs1
+            || NULL == d_e->gsl_hevals1
+            || NULL == d_e->gsl_wkspace1
+            || NULL == d_e->gsl_T_m1
+            || NULL == d_e->gsl_hevecs2
+            || NULL == d_e->gsl_hevals2
+            || NULL == d_e->gsl_wkspace2
+            || NULL == d_e->gsl_T_proj
+            || NULL == d_e->gsl_hevecs3
+            || NULL == d_e->gsl_wkspace3
+            || NULL == d_e->gsl_QR
+            || NULL == d_e->gsl_Q_unpack
+            || NULL == d_e->gsl_tmp_MxS
+            || NULL == d_e->gsl_tau
+            || NULL == d_e->hevals_select1
+            || NULL == d_e->hevals_select2
+#else
+#  error "no linear algebra library"
+#endif
+            ) {
+        q(fini_df_eigcg)(d_e, s);
+        return q(set_error)(s, 0, "init_df_eigcg(): not enough memory");
+    }
+
+    BEGIN_TIMING(s);
+
+    d_e->vmax   = vmax;
+    d_e->vsize  = 0;
+    d_e->nev    = nev;
+    d_e->eps    = eps;
+    d_e->frozen = 0;
+
+    END_TIMING(s, 0, 0, 0);
+    /* TODO check that everything is allocated; otherwise, call 'free' */
+
+  return 0;
+}
+
+
+int
+q(init_deflator)(
+        struct Q(Deflator) *df, struct Q(State) *s,
+        int umax,
+        int do_eigcg, int vmax, int nev, double eps)
+{
+    int status = 0;
+    if (s == NULL || s->error_latched)
+        return 1;
+
+    if (df == NULL)
+        return q(set_error)(s, 0, "init_deflator(): NULL pointer");
+    
+    df->do_eigcg = do_eigcg;
+    if (do_eigcg) {
+        if (0 != (status = q(init_df_eigcg)(&(df->df_eigcg), s, vmax, nev, eps)))
+            return status;
+    }
     /* check data types */
 #if defined(HAVE_LAPACK)
     {
@@ -45,181 +187,99 @@ Q(create_deflator)(struct Q(Deflator) **deflator_ptr,
 #  error "no linear algebra library"
 #endif
 
-
-    /* first, set all to null */
-    latmat_c_null(&(d->V));
-    d->T                = NULL;
-
-    latmat_c_null(&(d->U));
-    d->H                = NULL;
-    d->H_ev             = NULL;
-    d->C                = NULL;
-    
-    d->zwork            = NULL;
-    d->hevals           = NULL;
-    d->hevecs2          = NULL;
-
+    /* set all to NULL */
+    latmat_c_null(&(df->U));
+    latvec_c_null(&(df->work_c_1));
+    latvec_c_null(&(df->work_c_2));
+    df->zwork       = NULL;
+    df->H           = NULL;
+    df->H_ev        = NULL;
+    df->hevals      = NULL;
+    df->C           = NULL;
 #if defined(HAVE_LAPACK)
-    d->hevecs1          = NULL;
-    d->tau              = NULL;
-    d->rwork            = NULL;
+    df->eig_lwork   = 0;
+    df->eig_zwork   = NULL;
+    df->eig_rwork   = NULL;
 #elif defined(HAVE_GSL)
-    d->zwork2           = NULL;
-    d->gsl_T_full       = NULL;
-    d->gsl_hevecs1      = NULL;
-    d->gsl_hevals1      = NULL;
-    d->gsl_wkspace1     = NULL;
-    d->gsl_T_m1         = NULL;
-    d->gsl_hevecs2      = NULL;
-    d->gsl_hevals2      = NULL;
-    d->gsl_wkspace2     = NULL;
-    d->gsl_T_proj       = NULL;
-    d->gsl_hevecs3      = NULL;
-    d->gsl_wkspace3     = NULL;
-    d->gsl_QR           = NULL;
-    d->gsl_Q_unpack     = NULL;
-    d->gsl_tmp_MxS      = NULL;
-    d->gsl_tau          = NULL;
-    d->hevals_select1   = NULL;
-    d->hevals_select2   = NULL;
+    df->gsl_eig_wkspace = NULL;
 #else
 #  error "no linear algebra library"
 #endif
-
-
-    latmat_c_null(&(d->tmp_V));
-    latvec_c_null(&(d->work_c_1));
-    latvec_c_null(&(d->work_c_2));
-    latvec_c_null(&(d->work_c_3));
-
-
-
+    
     /* allocate */
-#define ds      sizeof(double)
-#define zs      sizeof(doublecomplex)
-    d->V                = q(latmat_c_alloc)(s, dim, Ls, vmax);
-    d->T                = q(malloc)(s, vmax * vmax * zs);
-
-    d->U                = q(latmat_c_alloc)(s, dim, Ls, umax);
-    d->H                = q(malloc)(s, umax * umax * zs);
-    d->H_ev             = q(malloc)(s, umax * umax * zs);
-    d->C                = q(malloc)(s, umax * umax * zs);
-
-    d->hevecs2          = q(malloc)(s, vmax * vmax * zs);
-    d->hevals           = q(malloc)(s, vmax * ds);
-    /* reuse zwork in the  outer eigcg update */
-    d->lwork            = (2*vmax > umax ? 2*vmax : umax);
-    d->zwork            = q(malloc)(s, d->lwork * zs);
-
+    df->U           = q(latmat_c_alloc)(s, umax);
+    df->work_c_1    = q(latvec_c_alloc)(s);
+    df->work_c_2    = q(latvec_c_alloc)(s);
+    df->zwork       = q(malloc)(s, umax * zs);
+    df->H           = q(malloc)(s, umax * umax * zs);
+    df->H_ev        = q(malloc)(s, umax * umax * zs);
+    df->hevals      = q(malloc)(s, umax * ds);
+    df->C           = q(malloc)(s, umax * umax * zs);
 #if defined(HAVE_LAPACK)
-    d->hevecs1          = q(malloc)(s, vmax * vmax * zs);
-    d->tau              = q(malloc)(s, vmax * zs);
-    d->rwork            = q(malloc)(s, 3 * vmax * ds);
-    
-    /**/d->debug_hevals     = q(malloc)(s, umax * ds);
-    /**/d->debug_lwork      = 2*umax;
-    /**/d->debug_zwork      = q(malloc)(s, d->debug_lwork * zs);
-    /**/d->debug_rwork      = q(malloc)(s, 3 * umax * ds);
-
+    df->eig_lwork   = 2 * umax;
+    df->eig_zwork   = q(malloc)(s, df->lwork * zs);
+    df->eig_rwork   = q(malloc)(s, 3 * umax * ds);
 #elif defined(HAVE_GSL)
-    d->zwork2           = q(malloc)(s, umax * zs);
-    d->gsl_T_full       = gsl_matrix_complex_alloc(vmax, vmax);
-    d->gsl_hevecs1      = gsl_matrix_complex_alloc(vmax, vmax);
-    d->gsl_hevals1      = gsl_vector_alloc(vmax);
-    d->gsl_wkspace1     = gsl_eigen_hermv_alloc(vmax);
-    d->gsl_T_m1         = gsl_matrix_complex_alloc(vmax-1, vmax-1);
-    d->gsl_hevecs2      = gsl_matrix_complex_alloc(vmax-1, vmax-1);
-    d->gsl_hevals2      = gsl_vector_alloc(vmax-1);
-    d->gsl_wkspace2     = gsl_eigen_hermv_alloc(vmax-1);
-    d->gsl_T_proj       = gsl_matrix_complex_alloc(2*nev, 2*nev);
-    d->gsl_hevecs3      = gsl_matrix_complex_alloc(2*nev, 2*nev);
-    d->gsl_wkspace3     = gsl_eigen_hermv_alloc(2*nev);
-    d->gsl_QR           = gsl_matrix_complex_alloc(vmax, 2*nev);
-    d->gsl_Q_unpack     = gsl_matrix_complex_alloc(vmax, vmax);
-    d->gsl_tmp_MxS      = gsl_matrix_complex_alloc(vmax, 2*nev);
-    d->gsl_tau          = gsl_vector_complex_alloc(2*nev);
-    d->hevals_select1   = q(malloc)(s, vmax * sizeof(d->hevals_select1[0]));
-    d->hevals_select2   = q(malloc)(s, vmax * sizeof(d->hevals_select2[0]));
-    
-    /**/d->debug_gsl_wkspace = gsl_eigen_herm_alloc(umax);
-    /**/d->debug_gsl_hevals = gsl_vector_alloc(umax);
-
+    df->gsl_eig_wkspace = gsl_eigen_herm_alloc(umax);
 #else
 #  error "no linear algebra library"
 #endif
-
-    d->tmp_V            = q(latmat_c_alloc)(s, dim, Ls, 2*nev);
-    d->work_c_1         = q(latvec_c_alloc)(s, dim);
-    d->work_c_2         = q(latvec_c_alloc)(s, dim);
-    d->work_c_3         = q(latvec_c_alloc)(s, dim);
-
 
     /* check allocation */
-    if (
-            latmat_c_is_null(&(d->V))           ||
-            NULL == d->T                        ||
-
-            latmat_c_is_null(&(d->U))           ||
-            NULL == d->H                        ||
-            NULL == d->H_ev                     ||
-            NULL == d->C                        ||
-                    
-            NULL == d->zwork                    ||
-            NULL == d->hevals                   ||
-            NULL == d->hevecs2                  ||
-                                               
-#if defined(HAVE_LAPACK)                       
-            NULL == d->hevecs1                  ||
-            NULL == d->tau                      ||
-            NULL == d->rwork                    ||
-#elif defined(HAVE_GSL)                        
-            NULL == d->zwork2                   ||
-            NULL == d->gsl_T_full               ||
-            NULL == d->gsl_hevecs1              ||
-            NULL == d->gsl_hevals1              ||
-            NULL == d->gsl_wkspace1             ||
-            NULL == d->gsl_T_m1                 ||
-            NULL == d->gsl_hevecs2              ||
-            NULL == d->gsl_hevals2              ||
-            NULL == d->gsl_wkspace2             ||  
-            NULL == d->gsl_T_proj               ||
-            NULL == d->gsl_hevecs3              ||
-            NULL == d->gsl_wkspace3             ||
-            NULL == d->gsl_QR                   ||
-            NULL == d->gsl_Q_unpack             ||
-            NULL == d->gsl_tmp_MxS              ||
-            NULL == d->gsl_tau                  ||
-            NULL == d->hevals_select1           ||
-            NULL == d->hevals_select2           ||
+    if (       latmat_c_is_null(&(df->U))
+            || latvec_c_is_null(&(df->work_c_1))
+            || latvec_c_is_null(&(df->work_c_2))
+            || NULL == df->zwork
+            || NULL == df->H
+            || NULL == df->H_ev
+            || NULL == df->hevals
+            || NULL == df->C
+#if defined(HAVE_LAPACK)
+            || NULL == df->eig_zwork
+            || NULL == df->eig_rwork
+#elif defined(HAVE_GSL)
+            || NULL == df->gsl_eig_wkspace
 #else
 #  error "no linear algebra library"
 #endif
-            latmat_c_is_null(&(d->tmp_V))       ||
-            latvec_c_is_null(&(d->work_c_1))    ||
-            latvec_c_is_null(&(d->work_c_2))    ||
-            latvec_c_is_null(&(d->work_c_3))
-    ) {
-        Q(free_deflator)(&d);
-        return q(set_error)(s, 0, "allocate_deflator(): not enough memory");
+            ) {
+        q(fini_deflator)(df, s);
+        return q(set_error)(s, 0, "init_deflator(): not enough memory");
     }
 
-    BEGIN_TIMING(s);
-    d->state = s;
+    df->state   = s;
+    df->umax    = umax;
+    df->usize   = 0;
+    df->loading = 0;
+    return 0;
+}
 
-    d->dim   = dim;
-    d->Ls    = Ls;
-    d->vmax  = vmax;
-    d->vsize  = 0;
-    d->nev   = nev;
-    d->eps   = eps;
-    d->umax  = umax;
-    d->usize  = 0;
-    d->frozen = 0;
-    d->loading = 0;
+
+int
+Q(create_deflator)(struct Q(Deflator) **deflator_ptr,
+                   struct Q(State) *s,
+                   int vmax, int nev, 
+                   double eps, int umax)
+{
+    struct Q(Deflator) *d;
+    int status;
+    if (s == NULL || s->error_latched)
+        return 1;
+
+    if (deflator_ptr == NULL)
+        return q(set_error)(s, 0, "create_deflator(): NULL pointer");
+  
+    *deflator_ptr = NULL;
+    d = q(malloc)(s, sizeof (struct Q(Deflator)));
+    if (d == 0)
+        return q(set_error)(s, 0, "allocate_deflator(): not enough memory");
+
+    BEGIN_TIMING(s);
+    if (0 != (status = q(init_deflator)(d, s, umax, 1, vmax, nev, eps)))
+        return status;
+    END_TIMING(s, 0, 0, 0);
 
     *deflator_ptr = d;
-    END_TIMING(s, 0, 0, 0);
-    /* TODO check that everything is allocated; otherwise, call 'free' */
 
-  return 0;
+    return 0;
 }

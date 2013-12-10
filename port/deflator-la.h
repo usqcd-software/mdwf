@@ -36,8 +36,8 @@ typedef struct {
 #define latvec_c_null(p) { (p)->f = NULL; }
 #define latvec_c_is_null(p) (NULL == (p)->f)
 
-latvec_c q(latvec_c_alloc)(struct Q(State) *state, int dim);
-latvec_c q(latvec_c_view)(int dim, int Ls, struct FermionF *f);
+latvec_c q(latvec_c_alloc)(struct Q(State) *state);
+latvec_c q(latvec_c_view)(struct Q(State) *state, struct FermionF *f);
 void q(latvec_c_copy)(latvec_c x, latvec_c y); /* y <- x */
 void q(latvec_c_zero)(latvec_c x); /* x <- 0 */
 void q(latvec_c_free)(struct Q(State) *state, latvec_c *v);
@@ -57,9 +57,9 @@ typedef struct {
 #define latvec_z_null(p) { (p)->f = NULL; }
 #define latvec_z_is_null(p) (NULL == (p)->f)
 
-latvec_z q(latvec_z_alloc)(struct Q(State) *state, int dim);
+latvec_z q(latvec_z_alloc)(struct Q(State) *state);
 void q(latvec_z_free)(struct Q(State) *state, latvec_z *v);
-latvec_z q(latvec_z_view)(int dim, struct FermionD *f);
+latvec_z q(latvec_z_view)(struct Q(State) *state, struct FermionD *f);
 
 /*******************************/
 /*  latmatrix definitions      */
@@ -77,16 +77,26 @@ typedef struct {
     size_t mem_size;
 } latmat_c;
 
+typedef struct {
+    int dim; /* aka size */
+    int Ls;
+    ptrdiff_t stride;
+    int size;
+    int begin;
+    int len;
+    struct vFermion *fv;    /* is it double prec? */
+    void *mem_ptr;
+    size_t mem_size;
+} latmat_z;
+
 #define latmat_c_null(p) do { (p)->fv = NULL; } while (0)
 #define latmat_c_is_null(p) (NULL == (p)->fv)
 
-latmat_c q(latmat_c_alloc)(struct Q(State) *state, int dim, int Ls, int ncol);
-latmat_c *q(latmat_c_alloc_with_header)(struct Q(State) *state, 
-                                        int dim, int Ls, int ncol);
+latmat_c q(latmat_c_alloc)(struct Q(State) *state, int ncol);
 int q(latmat_convert_to_blas)(latmat_c *m);
 int q(latmat_convert_from_blas)(latmat_c *m);
 void q(latmat_c_free)(struct Q(State) *state, latmat_c *m);
-latmat_c q(latmat_c_view)(int dim, int Ls, int size, struct vFermion *fv);
+latmat_c q(latmat_c_view)(struct Q(State) *state, int size, struct vFermion *fv);
 void q(latmat_c_copy)(latmat_c m1, latmat_c m2); /* m2 <- m1 */
 /* create a submatrix of subset of columns
    only a 'view' is created, no allocation is performed

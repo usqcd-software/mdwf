@@ -5,8 +5,9 @@ Q(deflator_resume)(struct Q(Deflator) *d)
 {
     if (NULL == d)
       return;
-    if (d->loading != 0)
+    if (d->loading != 0 || ! d->do_eigcg)
       return;
+
     if (d->usize < d->umax)
-        d->frozen = 0;
+        d->df_eigcg.frozen = 0;
 }

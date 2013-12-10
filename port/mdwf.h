@@ -154,91 +154,7 @@ extern int QDP_is_initialized(void);
 /* Deflator state */
 #include "deflator-la.h"
 
-#if defined(HAVE_LAPACK)
-#elif defined(HAVE_GSL)
-#  include <gsl/gsl_vector.h>
-#  include <gsl/gsl_matrix.h>
-#  include <gsl/gsl_eigen.h>
-#else
-#  error "no linear algebra library"
-#endif
-
-#define DEFLATOR_VEC_SIZE(pstate) ((pstate)->even.full_size)
-struct Q(Deflator) {
-    struct Q(State) *state;
-
-    int                 dim;     /* size of problem vectors, == State.size */
-    int                 Ls;      /* flavor dimension extend */
-
-    int                 vmax;
-    int                 vsize;
-    int                 nev;
-    int                 umax;
-    int                 usize;
-    int                 frozen;
-    int                 loading;
-
-    /* eig current state */
-    double              eps;
-    double              resid_norm_sq_min;
-    
-    latmat_c            V;
-    doublecomplex       *T;
-
-    /* incr_eig current state */
-    latmat_c            U;
-    doublecomplex       *H;
-    doublecomplex       *H_ev;
-    doublecomplex       *C;
-
-
-    long int            lwork;
-    doublecomplex       *zwork;
-    doublecomplex       *hevecs2;
-    double              *hevals;
-#if defined(HAVE_LAPACK)
-    doublecomplex       *hevecs1;
-    doublecomplex       *tau;
-    double              *rwork;
-    
-    double              *debug_hevals;
-    long int            debug_lwork;
-    doublecomplex       *debug_zwork;
-    double              *debug_rwork;
-
-#elif defined(HAVE_GSL)
-    doublecomplex       *zwork2;
-    gsl_matrix_complex  *gsl_T_full;
-    gsl_matrix_complex  *gsl_hevecs1;
-    gsl_vector          *gsl_hevals1;
-    gsl_eigen_hermv_workspace *gsl_wkspace1;
-    gsl_matrix_complex  *gsl_T_m1;
-    gsl_matrix_complex  *gsl_hevecs2;
-    gsl_vector          *gsl_hevals2;
-    gsl_eigen_hermv_workspace *gsl_wkspace2;
-    gsl_matrix_complex  *gsl_T_proj;
-    gsl_matrix_complex  *gsl_hevecs3;
-    gsl_eigen_hermv_workspace *gsl_wkspace3;
-    gsl_matrix_complex  *gsl_QR;
-    gsl_matrix_complex  *gsl_Q_unpack;
-    gsl_matrix_complex  *gsl_tmp_MxS;
-    gsl_vector_complex  *gsl_tau;
-    size_t              *hevals_select1;
-    size_t              *hevals_select2;
-
-    gsl_vector          *debug_gsl_hevals;
-    gsl_eigen_herm_workspace *debug_gsl_wkspace;
-
-#else
-#  error "no linear algebra library"
-#endif
-
-    latmat_c            tmp_V;
-    latvec_c            work_c_1;
-    latvec_c            work_c_2;
-    latvec_c            work_c_3;
-
-};
+#include "deflator.h"
 
 /* Timing */
 #define BEGIN_TIMING(s) do { gettimeofday(&((s)->t0), NULL); } while (0)
@@ -266,6 +182,8 @@ struct Q(Deflator) {
 # undef REAL
 # undef SUn
 # undef Fermion
+# undef latvec
+# undef latmat
 # undef VectorFermion
 # undef ProjectedFermion
 # undef MxM_workspace
@@ -275,6 +193,8 @@ struct Q(Deflator) {
 #  define REAL double
 #  define SUn  SUnD
 #  define Fermion FermionD
+#  define latvec latvec_z
+#  define latmat latmat_z
 #  define VectorFermion VectorFermionD
 #  define ProjectedFermion ProjectedFermionD
 #  define MxM_workspace MxM_workspaceD
@@ -285,6 +205,8 @@ struct Q(Deflator) {
 #  define REAL float
 #  define SUn  SUnF
 #  define Fermion FermionF
+#  define latvec latvec_c
+#  define latmat latmat_c
 #  define VectorFermion VectorFermionF
 #  define ProjectedFermion ProjectedFermionF
 #  define MxM_workspace MxM_workspaceF
@@ -302,6 +224,11 @@ struct QX(HalfFermion) {
   struct Q(State) *state;
   size_t size;
   struct Fermion *even;  
+};
+struct QX(HalfFermionMat) {
+  struct Q(State) *state;
+  size_t mem_size;
+  latmat m;
 };
 
 struct QX(VectorFermion) {
@@ -401,7 +328,7 @@ int q(df_postamble)(struct Q(State)           *state,
 int q(df_inject)(struct Q(Deflator) *deflator,
                  struct MxM_workspaceF *ws,
                  latvec_c vec);
-void q(df_rebuild)(struct Q(Deflator) *deflator);
+int q(df_rebuild)(struct Q(Deflator) *deflator);
 
 /* layout translation */
 void q(l2v)(int x[Q(DIM)], const struct local *local, int p);

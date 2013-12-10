@@ -5,5 +5,5 @@ Q(deflator_is_stopped)(struct Q(Deflator) *d)
 {
     if (d == NULL)
         return 1;
-    return d->frozen;
+    return (!d->do_eigcg || d->df_eigcg.frozen);
 }

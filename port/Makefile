@@ -61,7 +61,10 @@ x.sources = error.c \
             hfermion-size.c \
             cg-mixed.c \
             solver-dirac-mixed.c \
-            solver-dirac-deflated-mixed.c
+            solver-dirac-deflated-mixed.c \
+	    hfermion-mat-alloc.c \
+	    hfermion-mat-free.c \
+	    deflator-create-from-mat.c \
 
 p.sources = alloc-eo.c \
             step-even.c \

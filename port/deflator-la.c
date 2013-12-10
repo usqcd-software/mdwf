@@ -3,6 +3,10 @@
 #include <mdwf.h>
 #include <qmp.h>
 
+/* replace all references to `dim' and `Ls' with these macros */
+#define DEFLATOR_DIM(pstate) ((pstate)->even.full_size)
+#define DEFLATOR_LS(pstate) ((pstate)->Ls)
+
 /* TODO replace float & double versions with dry code
     q(latvec_c_XXX), q(latvec_z_XXX) -> qx(latmat_XXX)
     q(latmat_c_XXX), q(latmat_z_XXX) -> qx(latmat_XXX)
@@ -10,11 +14,11 @@
 
 /* allocate & free */
 latvec_c
-q(latvec_c_alloc)(struct Q(State) *state, int dim)
+q(latvec_c_alloc)(struct Q(State) *state)
 {
     latvec_c res;
-    res.dim     = dim;
-    res.Ls      = state->Ls;
+    res.dim     = DEFLATOR_DIM(state);
+    res.Ls      = DEFLATOR_LS(state);
     res.mem_ptr = qx(allocate_eo)(state, &res.mem_size,
                                   (void *)&res.f, 0, 1, 0);
     if (res.mem_ptr == NULL)
@@ -22,11 +26,11 @@ q(latvec_c_alloc)(struct Q(State) *state, int dim)
     return res;
 }
 latvec_c 
-q(latvec_c_view)(int dim, int Ls, struct FermionF *f)
+q(latvec_c_view)(struct Q(State) *state, struct FermionF *f)
 {
     latvec_c res;
-    res.dim     = dim;
-    res.Ls      = Ls;
+    res.dim     = DEFLATOR_DIM(state);
+    res.Ls      = DEFLATOR_LS(state);
     res.f       = f;
     res.mem_ptr = NULL;
     res.mem_size = 0;
@@ -259,49 +263,21 @@ q(lat_z_axpy_d)(double alpha, latvec_z x, latvec_z y)
     
     
 latmat_c 
-q(latmat_c_alloc)(struct Q(State) *state, int dim, int Ls, int ncol)
+q(latmat_c_alloc)(struct Q(State) *state, int ncol)
 {
     latmat_c res;
-    res.dim     = dim;
-    res.Ls      = Ls;
+    res.dim     = DEFLATOR_DIM(state);
+    res.Ls      = DEFLATOR_LS(state);
     res.size    = ncol;
     res.begin   = 0;
     res.len     = ncol;
     res.fv      = NULL;
-    res.stride  = qx(strideof_vfermion)(dim, Ls);
+    res.stride  = qx(strideof_vfermion)(res.dim, res.Ls);
     res.mem_ptr = q(allocate_aligned)(state, &res.mem_size, (void *)&res.fv, 0,
-                                      qx(sizeof_vfermion)(dim, Ls, ncol));
+                                      qx(sizeof_vfermion)(res.dim, res.Ls, ncol));
     if (res.mem_ptr == NULL)
         res.fv = NULL;
 
-    return res;
-}
-/* need a special case when a latmat_c instance is used outside MDWF,
-   such as Lanczos ; for this case, latmat_c is allocated as a header of 
-   `allocate_aligned' and latmat_c.mem_ptr is set to itself; it can be 
-   deallocated with latmat_c_free */
-latmat_c *
-q(latmat_c_alloc_with_header)(struct Q(State) *state, int dim, int Ls, int ncol)
-{
-    struct vFermion *fv = NULL;
-    size_t mem_size = 0;
-    latmat_c *res = NULL;
-    
-    res = q(allocate_aligned)(state, &mem_size, (void *)&fv, sizeof(latmat_c),
-                              qx(sizeof_vfermion)(dim, Ls, ncol));
-    if (0 == res)
-            return NULL;
-
-    res->dim    = dim;
-    res->Ls     = Ls;
-    res->size   = ncol;
-    res->begin  = 0;
-    res->len    = ncol;
-    res->fv     = fv;
-    res->stride = qx(strideof_vfermion)(dim, Ls);
-
-    res->mem_ptr= res;
-    res->mem_size = mem_size;
     return res;
 }
 
@@ -315,17 +291,18 @@ q(latmat_convert_from_blas)(latmat_c *m)
 { 
     return 0; /* stub; modify if perform any transformations */
 }
+
 latmat_c 
-q(latmat_c_view)(int dim, int Ls, int size, struct vFermion *fv)
+q(latmat_c_view)(struct Q(State) *state, int size, struct vFermion *fv)
 {
     latmat_c res;
-    res.dim     = dim;
-    res.Ls      = Ls;
+    res.dim     = DEFLATOR_DIM(state);
+    res.Ls      = DEFLATOR_LS(state);
     res.size    = size;
     res.begin   = 0;
     res.len     = size;
     res.fv       = fv;
-    res.stride  = qx(strideof_vfermion)(dim, Ls);
+    res.stride  = qx(strideof_vfermion)(res.dim, res.Ls);
     res.mem_ptr = NULL;
     res.mem_size = 0;
     return res;

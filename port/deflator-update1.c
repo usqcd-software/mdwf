@@ -19,8 +19,8 @@
 
 int
 q(df_update1)(
-        struct Q(State)         *s,
-        struct Q(Deflator)      *d,
+        struct Q(State)         *s,     /* FIXME refactor ; take state from df */
+        struct Q(Deflator)      *df,
         double                   alpha, 
         double                   beta, 
         double                   alpha_prev, 
@@ -31,27 +31,41 @@ q(df_update1)(
         unsigned int             options)
 {
     int i, j;
+    long int vmax, vsize, nev;
+    struct q(DeflatorEigcg) *d_e;
+#if defined(HAVE_LAPACK)
+    char cV = 'V',
+         cU = 'U',
+         cL = 'L',
+         cR = 'R',
+         cC = 'C',
+         cN = 'N';
+    long int info = 0;
+    long int tmp_i;
+#endif
 
-    if (NULL == d || 
-            NULL == s ||
-            d_e->frozen)
+    if (NULL == df || 
+            NULL == df->state ||
+            df->df_eigcg.frozen)
         return 0;       /* skip call */
+    d_e = &(df->df_eigcg);
 
+    /* FIXME allow updates with vsize < vmax; 
+       what about the final CG iteration? are (vsize-2*nev) vectors discarded? */
     if (d_e->vsize < d_e->vmax) 
         return -1;      /* should call update0 instead */
+    assert(d_e->vmax == d_e->vsize && 1 < d_e->vsize);
 
-    assert(d_e->vmax == d_e->vsize && 
-            1 < d_e->vsize);
-
-    /* [vsize-1, vsize-1] elem */
+    /* set [vsize-1, vsize-1] elem */
     doublecomplex *pT = d_e->T + (d_e->vsize - 1 ) * (1 + d_e->vmax);
     pT->r = 1. / alpha + beta_prev / alpha_prev;
     pT->i = 0.0;
 
     /* do restart */
-    d_e->vsize = 2 * d_e->nev;
-    long int vmax = d_e->vmax;
-    long int vsize = d_e->vsize;
+    nev         = d_e->nev;
+    d_e->vsize  = 2 * nev;
+    vmax        = d_e->vmax;
+    vsize       = d_e->vsize;
 
 #if defined(HAVE_LAPACK)
     char cV = 'V',
@@ -75,7 +89,7 @@ q(df_update1)(
     if (options & QOP_MDWF_LOG_EIG_UPDATE1) {
         int i;
         for (i = 0; i < vmax; i++)
-            qf(zprint)(s, "update1", "T0 %4d %17.9e", i, d_e->hevals[i]);
+            qf(zprint)(df->state, "update1", "T0 %4d %17.9e", i, d_e->hevals[i]);
                        
     }
 
@@ -101,7 +115,7 @@ q(df_update1)(
     }
 
     /* QR factorization/orthogonalization of 2*nev columns
-       requires zwork size = lwork >= 2*vmax, tau size >= 2*nev */
+       requires zwork size = lwork >= vsize=2*nev(?), tau size >= 2*nev */
     /* Q,R <- qr_decomp(Q') # Q:=L{hevecs1},tau, R:=U{hevecs1} */
     zgeqrf_(&vmax, &vsize, d_e->hevecs1, &vmax, 
             d_e->tau, d_e->zwork, &(d_e->lwork),
@@ -167,7 +181,7 @@ q(df_update1)(
         
         for (i = 0; i < d_e->nev; i++) {
             j = d_e->hevals_select1[i];
-            qf(zprint)(s, "update1", "T0 %4d %17.9e", i,
+            qf(zprint)(df->state, "update1", "T0 %4d %17.9e", i,
                        gsl_vector_get(d_e->gsl_hevals1, j));
         }
     }
@@ -281,7 +295,7 @@ q(df_update1)(
     memset(d_e->T, 0, vmax * vmax * sizeof(d_e->T[0]));
     q(lat_lmH_dot_lv)(vsize, 
                       tmp_V, 
-                      q(latvec_c_view)(d_e->dim, d_e->Ls, A_resid), 
+                      q(latvec_c_view)(df->state, A_resid),
                       d_e->T + vsize * vmax);
     for (i = 0 ; i < vsize ; i++) {
         /* T[i,i] <- hevals[i] + 0*I */
@@ -300,7 +314,7 @@ q(df_update1)(
     /* remember the vector ||resid|| */
 #define cur_r   (d_e->work_c_1)
     /* V[:,vsize] <- ||resid|| */
-    q(latvec_c_copy)(q(latvec_c_view)(d_e->dim, d_e->Ls, resid), 
+    q(latvec_c_copy)(q(latvec_c_view)(df->state, resid), 
                      cur_r);
     q(lat_c_scal_d)(1. / resid_norm, cur_r);
     q(latmat_c_insert_col)(d_e->V, d_e->vsize, cur_r);

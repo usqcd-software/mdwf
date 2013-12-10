@@ -16,7 +16,7 @@ QX(deflator_extract_vector)(struct QX(HalfFermion) *hf,
   if (idx < 0 || idx >= d->usize)
     return q(set_error)(state, 0, "deflator_extract_vector(): index out of range");
 
-  vf = q(latvec_c_view)(d->dim, d->Ls, hf->even);
+  vf = q(latvec_c_view)(state, hf->even);
   q(latmat_c_get_col)(d->U, idx, vf);
 
   return 0;
