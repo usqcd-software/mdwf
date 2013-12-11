@@ -7,8 +7,8 @@
 
 /* fill & allocate values in `d_e' (`d_e' must be allocated) */
 int 
-q(init_df_eigcg) (
-        struct q(DeflatorEigcg) *d_e, 
+qx(init_defl_eigcg) (
+        struct qx(DeflatorEigcg) *d_e, 
         struct Q(State) *s,
         int vmax, int nev, double eps)
 {
@@ -20,10 +20,10 @@ q(init_df_eigcg) (
   
 
     /* first, set all to null */
-    latmat_c_null(&(d_e->V));
-    latmat_c_null(&(d_e->tmp_V));
-    latvec_c_null(&(d_e->work_c_1));
-    latvec_c_null(&(d_e->work_c_2));
+    defl_mat_set_null(&(d_e->V));
+    defl_mat_set_null(&(d_e->tmp_V));
+    defl_vec_set_null(&(d_e->work_c_1));
+    defl_vec_set_null(&(d_e->work_c_2));
     d_e->T                = NULL;
     d_e->lwork            = 0;
     d_e->zwork            = NULL;
@@ -58,10 +58,10 @@ q(init_df_eigcg) (
     /* allocate */
 #define ds      sizeof(double)
 #define zs      sizeof(doublecomplex)
-    d_e->V                = q(latmat_c_alloc)(s, vmax);
-    d_e->tmp_V            = q(latmat_c_alloc)(s, 2*nev);
-    d_e->work_c_1         = q(latvec_c_alloc)(s);
-    d_e->work_c_2         = q(latvec_c_alloc)(s);
+    d_e->V                = qx(defl_mat_alloc)(s, vmax);
+    d_e->tmp_V            = qx(defl_mat_alloc)(s, 2*nev);
+    d_e->work_c_1         = qx(defl_vec_alloc)(s);
+    d_e->work_c_2         = qx(defl_vec_alloc)(s);
     d_e->T                = q(malloc)(s, vmax * vmax * zs);
     d_e->hevals           = q(malloc)(s, vmax * ds);
     d_e->hevecs2          = q(malloc)(s, vmax * vmax * zs);
@@ -94,10 +94,10 @@ q(init_df_eigcg) (
 #endif
 
     /* check allocation */
-    if (       latmat_c_is_null(&(d_e->V))
-            || latmat_c_is_null(&(d_e->tmp_V))
-            || latvec_c_is_null(&(d_e->work_c_1))
-            || latvec_c_is_null(&(d_e->work_c_2))
+    if (       defl_mat_is_null(&(d_e->V))
+            || defl_mat_is_null(&(d_e->tmp_V))
+            || defl_vec_is_null(&(d_e->work_c_1))
+            || defl_vec_is_null(&(d_e->work_c_2))
             || NULL == d_e->T
             || NULL == d_e->hevals
             || NULL == d_e->hevecs2
@@ -128,7 +128,7 @@ q(init_df_eigcg) (
 #  error "no linear algebra library"
 #endif
             ) {
-        q(fini_df_eigcg)(d_e, s);
+        qx(fini_defl_eigcg)(d_e, s);
         return q(set_error)(s, 0, "init_df_eigcg(): not enough memory");
     }
 
@@ -150,8 +150,9 @@ q(init_df_eigcg) (
 /* fill & allocate values in `df' (`df' must be allocated) ;
    latmat `u' is set to null on return to prevent deallocation or gc */
 int
-q(init_deflator)(
-        struct Q(Deflator) *df, struct Q(State) *s,
+qx(init_deflator)(
+        struct QX(Deflator) *df, 
+        struct Q(State) *s,
         int umax, latmat_c *u, int usize,
         int do_eigcg, int vmax, int nev, double eps)
 {
@@ -164,7 +165,7 @@ q(init_deflator)(
     
     df->do_eigcg = do_eigcg;
     if (do_eigcg) {
-        if (0 != (status = q(init_df_eigcg)(&(df->df_eigcg), s, vmax, nev, eps)))
+        if (0 != (status = qx(init_defl_eigcg)(&(df->df_eigcg), s, vmax, nev, eps)))
             return status;
     }
     /* check data types */
@@ -192,9 +193,9 @@ q(init_deflator)(
 
 
     /* set all to NULL */
-    latmat_c_null(&(df->U));
-    latvec_c_null(&(df->work_c_1));
-    latvec_c_null(&(df->work_c_2));
+    defl_mat_set_null(&(df->U));
+    defl_vec_set_null(&(df->work_c_1));
+    defl_vec_set_null(&(df->work_c_2));
     df->zwork       = NULL;
     df->H           = NULL;
     df->H_ev        = NULL;
@@ -212,17 +213,17 @@ q(init_deflator)(
     
     /* allocate (or load external) */
     if (NULL == u) {
-        df->U       = q(latmat_c_alloc)(s, umax);
+        df->U       = qx(defl_mat_alloc)(s, umax);
         df->umax    = umax;
         df->usize   = 0;
     } else {
         int u_len = u->len;
         if (u_len < usize) {
-            q(fini_deflator)(df, s);
+            qx(fini_deflator)(df, s);
             return q(set_error)(s, 0, "init_deflator(): matrix is smaller than USIZE");
         }
         if (u_len < umax) {
-            q(fini_deflator)(df, s);
+            qx(fini_deflator)(df, s);
             return q(set_error)(s, 0, "init_deflator(): UMAX is larger than provided matrix");
         }
         if (umax < usize)
@@ -230,11 +231,11 @@ q(init_deflator)(
 
         df->umax    = umax;
         df->usize   = usize;
-        q(latmat_c_swap)(u, &(df->U));
+        qx(defl_mat_swap)(u, &(df->U));
     }
 
-    df->work_c_1    = q(latvec_c_alloc)(s);
-    df->work_c_2    = q(latvec_c_alloc)(s);
+    df->work_c_1    = qx(defl_vec_alloc)(s);
+    df->work_c_2    = qx(defl_vec_alloc)(s);
     df->zwork       = q(malloc)(s, umax * zs);
     df->H           = q(malloc)(s, umax * umax * zs);
     df->H_ev        = q(malloc)(s, umax * umax * zs);
@@ -251,9 +252,9 @@ q(init_deflator)(
 #endif
 
     /* check allocation */
-    if (       latmat_c_is_null(&(df->U))
-            || latvec_c_is_null(&(df->work_c_1))
-            || latvec_c_is_null(&(df->work_c_2))
+    if (       defl_mat_is_null(&(df->U))
+            || defl_vec_is_null(&(df->work_c_1))
+            || defl_vec_is_null(&(df->work_c_2))
             || NULL == df->zwork
             || NULL == df->H
             || NULL == df->H_ev
@@ -268,7 +269,7 @@ q(init_deflator)(
 #  error "no linear algebra library"
 #endif
             ) {
-        q(fini_deflator)(df, s);
+        qx(fini_deflator)(df, s);
         return q(set_error)(s, 0, "init_deflator(): not enough memory");
     }
 
@@ -279,12 +280,12 @@ q(init_deflator)(
 
 
 int
-Q(create_deflator)(struct Q(Deflator) **deflator_ptr,
+QX(create_deflator)(struct QX(Deflator) **deflator_ptr,
                    struct Q(State) *s,
                    int vmax, int nev, 
                    double eps, int umax)
 {
-    struct Q(Deflator) *d;
+    struct QX(Deflator) *d;
     int status;
     if (s == NULL || s->error_latched)
         return 1;
@@ -298,9 +299,9 @@ Q(create_deflator)(struct Q(Deflator) **deflator_ptr,
         return q(set_error)(s, 0, "allocate_deflator(): not enough memory");
 
     BEGIN_TIMING(s);
-    if (0 != (status = q(init_deflator)(d, s, 
-                                        umax, NULL, 0,
-                                        1/*do_eigcg*/, vmax, nev, eps)))
+    if (0 != (status = qx(init_deflator)(d, s, 
+                                         umax, NULL, 0,
+                                         1/*do_eigcg*/, vmax, nev, eps)))
         return status;
     END_TIMING(s, 0, 0, 0);
 

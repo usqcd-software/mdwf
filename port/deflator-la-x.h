@@ -1,23 +1,22 @@
 #ifndef DEFLATOR_LA_X_H_Qplwonz8vdfqchXt7fyi
 #define DEFLATOR_LA_X_H_Qplwonz8vdfqchXt7fyi
 
-#include <assert.h>
-
-
 #if defined(HAVE_LAPACK)
 #  include <f2c_types.h>
 #  include <lapack.h>
 #elif defined(HAVE_GSL)
+#  undef  CHECK_GSL_STATUS
 #  define CHECK_GSL_STATUS(func) do { int status__ = func; \
     if (status__) fprintf(stderr,"%s:%d: %s\n", __FILE__, __LINE__, gsl_strerror(status__)); \
     assert(0 == status__); } while(0)
 #  include <gsl/gsl_vector.h>
 #  include <gsl/gsl_matrix.h>
-#if 0
+#  include <gsl/gsl_eigen.h>
+
     typedef struct {
         double r, i;
     } doublecomplex;
-#endif
+
 #else
 #  error "no linear algebra library"
 #endif 
@@ -36,7 +35,9 @@ typedef struct {
     size_t mem_size;
 } qx(defl_vec);
 
+#undef  defl_vec_is_null
 #define defl_vec_is_null(p) (NULL == (p)->f)
+#undef  defl_vec_set_null
 #define defl_vec_set_null(p) do { (p)->f = NULL; } while(0)
 
 qx(defl_vec) qx(defl_vec_alloc)(struct Q(State) *state);
@@ -55,7 +56,7 @@ int qx(defl_vec_nrm2)(double *res, qx(defl_vec) x);
 void qx(defl_vec_linop)(
         qx(defl_vec) y, 
         qx(defl_vec) x, 
-        struct MxM_workspace *ws); 
+        struct qx(MxM_workspace) *ws); 
 
 /*******************************/
 /*  deflator matrix defs       */
@@ -73,7 +74,9 @@ typedef struct {
     size_t mem_size;
 } qx(defl_mat);
 
+#undef  defl_mat_is_null
 #define defl_mat_is_null(p) (NULL == (p)->fv)
+#undef  defl_mat_set_null
 #define defl_mat_set_null(p) do { (p)->fv = NULL; } while(0)
 
 qx(defl_mat) qx(defl_mat_alloc)(struct Q(State) *state, int ncol);

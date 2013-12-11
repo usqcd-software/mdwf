@@ -11,7 +11,7 @@ QX(free_half_fermion_matrix)(
         return;
     state = (*hfm_ptr)->state;
 
-    q(latmat_c_free)(state, &((*hfm_ptr)->m));
+    qx(defl_mat_free)(state, &((*hfm_ptr)->m));
     q(free)(state, *hfm_ptr, (*hfm_ptr)->mem_size);
     *hfm_ptr = 0;
 }

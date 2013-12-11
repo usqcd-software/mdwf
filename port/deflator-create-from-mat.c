@@ -2,29 +2,31 @@
 #define QOP_MDWF_DEFAULT_PRECISION 'F'
 #include <mdwf.h>
 
-/* FIXME total space occupied by umax will be NCV>NEV from Lanczos;
-    1) realloc space 
-        - what about alignment?
+/* total space occupied by Uspace will be NCV>NEV from Lanczos
     2) reuse space for vmax vectors for EigCG 
         - will we realistically use EigCG after Lanczos?
 */
-/* move vectors in latmat from hfm_ptr to deflator; 
-   hfm_ptr can be safely free'd after that */
+/* move firt `hfm_nev' vectors from `hfm_ptr' to deflator
+   `hfm_ptr' can be safely free'd after that; 
+
+   size allocated for the matrix in hfm_ptr->m is not changed;
+   if eigcg_nev,eigcg_vmax > 0, EigCG workspace is allocated 
+   and */
 
 int
 QX(create_deflator_inplace)(
-        struct Q(Deflator) **deflator_ptr,
-        const struct Q(Parameters)  *params,
-        const struct QX(Gauge)      *gauge,
-        struct QX(HalfFermionMat) *hfm_ptr, 
-        int hfm_nev,    /* take `hfm_nev' first vectors from the matrix */
-        int eigcg_vmax, 
-        int eigcg_nev,
-        double eigcg_eps,
-        int eigcg_umax)
+        struct QX(Deflator)       **deflator_ptr,
+        const struct Q(Parameters) *params,
+        const struct QX(Gauge)     *gauge,
+        struct QX(HalfFermionMat)  *hfm_ptr, 
+        int                         hfm_nev,    
+        int                         eigcg_vmax, 
+        int                         eigcg_nev,
+        double                      eigcg_eps,
+        int                         eigcg_umax)
 {
     DECLARE_STATE;
-    struct Q(Deflator) *df;
+    struct QX(Deflator) *df;
     int status;
 
     CHECK_ARG0(hfm_ptr);
@@ -39,7 +41,7 @@ QX(create_deflator_inplace)(
         return q(set_error)(state, 0, 
                 "create_deflator_inplace(): NULL pointer");
 
-    df = q(malloc)(state, sizeof (struct Q(Deflator)));
+    df = q(malloc)(state, sizeof (struct QX(Deflator)));
     if (NULL == df)
         return q(set_error)(state, 0, 
                 "create_deflator_inplace(): not enough memory");
@@ -47,7 +49,7 @@ QX(create_deflator_inplace)(
     BEGIN_TIMING(state);
 
     /* init operator workspace */
-    struct MxM_workspace  ws;
+    struct qx(MxM_workspace) ws;
     void *temps = NULL, 
          *temps_ptr = NULL;
     size_t temps_size = 0;
@@ -71,7 +73,7 @@ QX(create_deflator_inplace)(
 
 
     /* create deflator with existing vectors, leave door open to EigCG */
-    latmat_c *m = &(hfm_ptr->m);
+    qx(defl_mat) *m = &(hfm_ptr->m);
     int umax    = m->len; /* `m' already allocated ; cannot extend */
     int do_eigcg = (0 < eigcg_vmax) && (0 < eigcg_nev);
     if (do_eigcg && eigcg_umax < umax)
@@ -79,15 +81,15 @@ QX(create_deflator_inplace)(
     if (hfm_nev < umax)
         hfm_nev = umax;
 
-    if (0 != (status = q(init_deflator)(df, state, umax, m, hfm_nev, do_eigcg,
-                                        eigcg_vmax, eigcg_nev, eigcg_eps)))
+    if (0 != (status = qx(init_deflator)(df, state, umax, m, hfm_nev, do_eigcg,
+                                         eigcg_vmax, eigcg_nev, eigcg_eps)))
         goto clearerr_2;
 
     /* initialize deflator internal matrices */
-    if (0 != (status = q(df_recalc_mat)(df, &ws)))
+    if (0 != (status = qx(defl_recalc_mat)(df, &ws)))
         goto clearerr_2;
 
-    if (0 != (status = q(df_rebuild)(df)))
+    if (0 != (status = qx(defl_rebuild)(df)))
         goto clearerr_2;
     
     df->df_eigcg.frozen = 1;    /* set EigCG to "frozen" condition */

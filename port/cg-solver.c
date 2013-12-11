@@ -2,17 +2,17 @@
 
 #if QOP_MDWF_DEFAULT_PRECISION == 'F'
 #define DF_PREAMBLE(psi_e, rho_e, r, chi_e) do {                        \
-        if (q(df_preamble)(deflator, psi_e, rho_e, r, chi_e,     \
+        if (qx(defl_preamble)(deflator, psi_e, rho_e, r, chi_e,     \
                            &ws, options)) {                             \
             q(set_error)(state, 0, "cg_solver() not enough memory");    \
             return CG_NOEMEM;                                           \
         } } while (0)
 #define DF_UPDATE0(a1,b1,a0,b0,r,rho)                           \
-    q(df_update0)(deflator, a1, b1, a0, b0, r, rho, options)
+    qx(defl_update0)(deflator, a1, b1, a0, b0, r, rho, options)
 #define DF_UPDATE1(a1,b1,a0,b0,r,rho,A_rho)                             \
-    q(df_update1)(deflator, a1, b1, a0, b0, r, rho, A_rho, options)
+    qx(defl_update1)(deflator, a1, b1, a0, b0, r, rho, A_rho, options)
 #define DF_POSTAMBLE() \
-    do { q(df_postamble)(deflator, &ws, options); } while (0)
+    do { qx(defl_postamble)(deflator, &ws, options); } while (0)
 #else
 #define DF_PREAMBLE(psi_e, rho_e, r, chi_e) do {        \
         qx(f_zero)(psi_e, e_size, Ls);                  \
@@ -28,7 +28,7 @@
 void
 qx(cg_operator)(struct Fermion           *res_e,
                 const struct Fermion     *psi_e,
-                struct MxM_workspace     *ws)
+                struct qx(MxM_workspace)     *ws)
 {
     qx(op_even_M)(ws->tmp_e, ws->state, ws->params, ws->gauge, psi_e,
                   ws->flops, ws->sent, ws->received,
@@ -70,7 +70,7 @@ qx(cg_solver)(struct Fermion              *xi_e,
     int Ls = state->Ls;
     double a, b, g, r, norm_omega;
     int i;
-    struct MxM_workspace  ws;
+    struct qx(MxM_workspace)  ws;
 
     ws.state     = state;
     ws.params    = params;

@@ -32,8 +32,6 @@ struct VectorFermionF;
 struct VectorFermionD;
 struct ProjectedFermionF;
 struct ProjectedFermionD;
-struct MxM_workspaceD;
-struct MxM_workspaceF;
 
 /* Internal types */
 struct local {
@@ -151,10 +149,6 @@ typedef enum {
 extern int QDP_this_node;
 extern int QDP_is_initialized(void);
 
-/* Deflator state */
-#include "deflator-la.h"
-
-#include "deflator.h"
 
 /* Timing */
 #define BEGIN_TIMING(s) do { gettimeofday(&((s)->t0), NULL); } while (0)
@@ -182,22 +176,16 @@ extern int QDP_is_initialized(void);
 # undef REAL
 # undef SUn
 # undef Fermion
-# undef latvec
-# undef latmat
 # undef VectorFermion
 # undef ProjectedFermion
-# undef MxM_workspace
 # if QOP_MDWF_DEFAULT_PRECISION=='D'
 #  define qx(x) qop_d3_mdwf_##x
 #  define QX(x) QOP_D3_MDWF_##x
 #  define REAL double
 #  define SUn  SUnD
 #  define Fermion FermionD
-#  define latvec latvec_z
-#  define latmat latmat_z
 #  define VectorFermion VectorFermionD
 #  define ProjectedFermion ProjectedFermionD
-#  define MxM_workspace MxM_workspaceD
 # endif
 # if QOP_MDWF_DEFAULT_PRECISION=='F'
 #  define qx(x) qop_f3_mdwf_##x
@@ -205,15 +193,18 @@ extern int QDP_is_initialized(void);
 #  define REAL float
 #  define SUn  SUnF
 #  define Fermion FermionF
-#  define latvec latvec_c
-#  define latmat latmat_c
 #  define VectorFermion VectorFermionF
 #  define ProjectedFermion ProjectedFermionF
-#  define MxM_workspace MxM_workspaceF
 # endif
 
+struct QX(Fermion);
+struct QX(HalfFermion);
+struct QX(HalfFermionMat);
+struct QX(VectorFermion);
+struct QX(Gauge);
+struct qx(MxM_workspace);
 
-#include "deflator-la-x.h"
+#include "deflator.h"
 
 /* MDWF types */
 struct QX(Fermion) {
@@ -231,7 +222,7 @@ struct QX(HalfFermion) {
 struct QX(HalfFermionMat) {
   struct Q(State) *state;
   size_t mem_size;
-  latmat m;
+  qx(defl_mat) m;
 };
 
 struct QX(VectorFermion) {
@@ -246,6 +237,20 @@ struct QX(Gauge) {
   size_t size;
   struct SUn *data;
 };
+
+struct qx(MxM_workspace) {
+    struct Q(State)             *state;
+    const struct Q(Parameters)  *params;
+    const struct SUn            *gauge;
+    struct Fermion              *tmp_e;
+    struct Fermion              *tmp2_e;
+    struct Fermion              *tmp_o;
+    long long                   *flops;
+    long long                   *sent;
+    long long                   *received;
+};
+
+
 
 /* mixed precision operations */
 /* Fd = Fd + Ff */
@@ -279,61 +284,13 @@ int q(mixed_cg)(struct Q(State)             *state,
                 const struct QD(Fermion)    *psi_0,
                 const struct QD(Gauge)      *gauge,
                 const struct QD(Fermion)    *eta,
-                struct Q(Deflator)          *deflator,
+                struct QF(Deflator)         *deflator,
                 int                          f_iter,
                 double                       f_epsilon,
                 int                          max_iterations,
                 double                       min_epsilon,
                 unsigned int                 options);
 
-/* handling eig deflator */
-int Q(create_deflator)(
-        struct Q(Deflator) **deflator_ptr,
-        struct Q(State) *s,
-        int vmax, int nev,
-        double eps, int umax);
-void Q(free_deflator)(struct Q(Deflator) **deflator_ptr);
-void Q(deflator_reset)(struct Q(Deflator) *deflator);
-void Q(deflator_stop)(struct Q(Deflator) *deflator);
-void Q(deflator_resume)(struct Q(Deflator) *deflator);
-int Q(deflator_is_stopped)(struct Q(Deflator) *deflator);
-int q(df_preamble)(struct Q(Deflator)        *deflator,
-                   struct FermionF           *psi_e,
-                   struct FermionF           *rho_e,
-                   double                    *rho_norm2,
-                   struct FermionF           *chi_e, /* const ! */
-                   struct MxM_workspaceF     *ws,
-                   unsigned int              options);
-int q(df_update0)(struct Q(Deflator)       *deflator,
-                  double                    a1,
-                  double                    b1,
-                  double                    a0,
-                  double                    b0,
-                  double                    r,
-                  struct FermionF          *rho,
-                  unsigned int              options);
-int q(df_update1)(struct Q(Deflator)       *deflator,
-                  double                    a1,
-                  double                    b1,
-                  double                    a0,
-                  double                    b0,
-                  double                    r,
-                  struct FermionF          *rho,
-                  struct FermionF          *A_rho,
-                  unsigned int              options);
-int q(df_postamble)(struct Q(Deflator)        *deflator,
-                    struct MxM_workspaceF     *ws,
-                    unsigned int               options);
-int q(df_inject)(struct Q(Deflator) *deflator,
-                 struct MxM_workspaceF *ws,
-                 int u_lo, int u_hi, int u_pos,
-                 latvec_c vec);
-int q(df_inject_back)(struct Q(Deflator) *deflator,
-                      struct MxM_workspaceF *ws,
-                      latvec_c vec);
-int q(df_recalc_mat)(struct Q(Deflator) *df,
-                     struct MxM_workspaceF *ws);
-int q(df_rebuild)(struct Q(Deflator) *deflator);
 
 /* layout translation */
 void q(l2v)(int x[Q(DIM)], const struct local *local, int p);
@@ -1116,21 +1073,9 @@ void qx(cg_log)(double cg_res, const char *source, int iter,
                 struct Fermion *t2_e,
                 struct Fermion *t0_o);
 
-struct MxM_workspace {
-    struct Q(State)             *state;
-    const struct Q(Parameters)  *params;
-    const struct SUn            *gauge;
-    struct Fermion              *tmp_e;
-    struct Fermion              *tmp2_e;
-    struct Fermion              *tmp_o;
-    long long                   *flops;
-    long long                   *sent;
-    long long                   *received;
-};
-
 void qx(cg_operator)(struct Fermion            *res_e,
                      const struct Fermion      *psi_e,
-                     struct MxM_workspace      *ws);
+                     struct qx(MxM_workspace)  *ws);
 
 CG_STATUS qx(cg_solver)(struct Fermion              *psi_e,
                         const char                  *source,
@@ -1140,7 +1085,7 @@ CG_STATUS qx(cg_solver)(struct Fermion              *psi_e,
                         const struct Q(Parameters)  *params,
                         const struct SUn            *U,
                         const struct Fermion        *chi_e,
-                        struct Q(Deflator)          *deflator,
+                        struct QX(Deflator)         *deflator,
                         int                          max_iter,
                         double                       epsilon,
                         unsigned                     options,

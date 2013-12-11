@@ -110,7 +110,7 @@ void /* counding is done through ws */
 qx(defl_vec_linop)(
         qx(defl_vec) y, 
         qx(defl_vec) x, 
-        struct MxM_workspace *ws)
+        struct qx(MxM_workspace) *ws)
 {
     qx(cg_operator)(y.f, x.f, ws);
 }

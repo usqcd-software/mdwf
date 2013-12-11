@@ -4,11 +4,11 @@
 #if QOP_MDWF_DEFAULT_PRECISION == 'F'
 int
 QX(deflator_extract_vector)(struct QX(HalfFermion) *hf,
-                            const struct Q(Deflator) *d,
+                            const struct QX(Deflator) *d,
                             int idx)
 {
   DECLARE_STATE;
-  latvec_c vf;
+  qx(defl_vec) vf;
 
   CHECK_ARG0(hf);
   CHECK_ARGn(d, "deflator_extract_vector");
@@ -16,8 +16,8 @@ QX(deflator_extract_vector)(struct QX(HalfFermion) *hf,
   if (idx < 0 || idx >= d->usize)
     return q(set_error)(state, 0, "deflator_extract_vector(): index out of range");
 
-  vf = q(latvec_c_view)(state, hf->even);
-  q(latmat_c_get_col)(d->U, idx, vf);
+  vf = qx(defl_vec_view)(state, hf->even);
+  qx(defl_mat_get_col)(d->U, idx, vf);
 
   return 0;
 }

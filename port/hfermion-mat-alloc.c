@@ -22,8 +22,8 @@ QX(alloc_half_fermion_matrix)(
     if (NULL == hfm)
         return q(set_error)(state, 0, "allocate_half_fermion_matrix(): not enough memory");
 
-    hfm->m = q(latmat_c_alloc)(state, ncol);
-    if (latmat_c_is_null(&(hfm->m))) {
+    hfm->m = qx(defl_mat_alloc)(state, ncol);
+    if (defl_mat_is_null(&(hfm->m))) {
         q(free)(state, hfm, hfm->mem_size);
         return q(set_error)(state, 0, "allocate_half_fermion_matrix(): not enough memory");
     }

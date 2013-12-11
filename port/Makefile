@@ -38,25 +38,17 @@ x.sources = error.c \
             fini.c \
             comm-setup.c \
             comm-free.c \
-            deflator-la.c \
             deflator-alloc.c \
             deflator-free.c \
-            deflator-reset.c \
-            deflator-signature.c \
-            deflator-is-stopped.c \
-            deflator-resume.c \
-            deflator-stop.c \
-            deflator-eigen.c \
             deflator-preamble.c \
             deflator-postamble.c \
             deflator-update0.c \
             deflator-update1.c \
-            deflator-dim.c \
             deflator-extract-vector.c \
             deflator-add-vector.c \
-            deflator-start-load.c \
-            deflator-stop-load.c \
-            deflator-end-load.c \
+	    deflator-create-from-mat.c \
+	    deflator-ctrl.c \
+	    deflator-uspace.c \
 	    poly-normalize.c \
             hfermion-size.c \
             cg-mixed.c \
@@ -162,7 +154,7 @@ p.objects = $(p.sources:%.c=$(LIMPDIR)/%f.o) \
 objects = $(x.objects) $(p.objects)
 
 headers = mdwf.h \
-          deflator-la.h \
+	  deflator.h deflator-la-x.h \
           $(HDR)
 
 

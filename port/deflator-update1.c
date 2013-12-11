@@ -20,20 +20,20 @@
 /* XXX uses WK: df->d_e.work_c_1 and many other vars in df->d_e 
         reserved for update1 */
 int
-q(df_update1)(
-        struct Q(Deflator)      *df,
+qx(defl_update1)(
+        struct QX(Deflator)     *df,
         double                   alpha, 
         double                   beta, 
         double                   alpha_prev, 
         double                   beta_prev, 
         double                   resid_norm_sq, 
-        struct FermionF         *resid,
-        struct FermionF         *A_resid,
+        struct Fermion          *resid,
+        struct Fermion          *A_resid,
         unsigned int             options)
 {
     int i, j;
     long int vmax, vsize, nev;
-    struct q(DeflatorEigcg) *d_e = NULL;
+    struct qx(DeflatorEigcg) *d_e = NULL;
 #if defined(HAVE_LAPACK)
     char cV = 'V',
          cU = 'U',
@@ -280,12 +280,12 @@ q(df_update1)(
     /* rotate V[:, 0:vmax] space with (Q Z) */
     /* FIXME change dot in V . (QZ) into rotation by Q and by Z 
        to avoid using tmp_V */
-    latmat_c tmp_V = q(latmat_c_submat_col)(d_e->tmp_V, 0, vsize);
-    q(lat_lm_dot_zm)(vsize, vmax, 
+    qx(defl_mat) tmp_V = q(defl_mat_submat_col)(d_e->tmp_V, 0, vsize);
+    q(defl_lm_dot_zm)(vsize, vmax, 
                   d_e->V,
                   d_e->hevecs2, vmax, 
                   tmp_V);
-    q(latmat_c_copy)(tmp_V, q(latmat_c_submat_col)(d_e->V, 0, vsize));
+    qx(defl_mat_copy)(tmp_V, q(defl_mat_submat_col)(d_e->V, 0, vsize));
     
     /* check eig convergence */
     if (resid_norm_sq < d_e->resid_norm_sq_min)
@@ -294,9 +294,9 @@ q(df_update1)(
     
     /* compute new T */
     memset(d_e->T, 0, vmax * vmax * sizeof(d_e->T[0]));
-    q(lat_lmH_dot_lv)(vsize, 
+    qx(defl_lmH_dot_lv)(vsize, 
                       tmp_V, 
-                      q(latvec_c_view)(df->state, A_resid),
+                      qx(defl_vec_view)(df->state, A_resid),
                       d_e->T + vsize * vmax);
     for (i = 0 ; i < vsize ; i++) {
         /* T[i,i] <- hevals[i] + 0*I */
@@ -313,12 +313,12 @@ q(df_update1)(
     }
 
     /* remember the vector ||resid|| */
-    latvec_c cur_r = d_e->work_c_1;
+    qx(defl_vec) cur_r = d_e->work_c_1;
     /* V[:,vsize] <- ||resid|| */
-    q(latvec_c_copy)(q(latvec_c_view)(df->state, resid), 
-                     cur_r);
-    q(lat_c_scal_d)(1. / resid_norm, cur_r);
-    q(latmat_c_insert_col)(d_e->V, d_e->vsize, cur_r);
+    qx(defl_vec_copy)(qx(defl_vec_view)(df->state, resid), 
+                      cur_r);
+    qx(defl_vec_scal)(1. / resid_norm, cur_r);
+    qx(defl_mat_insert_col)(d_e->V, d_e->vsize, cur_r);
 
     d_e->vsize += 1;
 

@@ -6,21 +6,21 @@
 
 
 void 
-q(fini_df_eigcg)(struct q(DeflatorEigcg) *d_e, struct Q(State) *s)
+qx(fini_defl_eigcg)(struct qx(DeflatorEigcg) *d_e, struct Q(State) *s)
 {
     if (NULL == s || NULL == d_e)
         return;
 
     int vmax    = d_e->vmax;
 
-    if (! latmat_c_is_null(&(d_e->V)))           
-        q(latmat_c_free)(s, &(d_e->V));
-    if (! latmat_c_is_null(&(d_e->tmp_V)))       
-        q(latmat_c_free)(s, &(d_e->tmp_V));
-    if (! latvec_c_is_null(&(d_e->work_c_1)))    
-        q(latvec_c_free)(s, &(d_e->work_c_1));
-    if (! latvec_c_is_null(&(d_e->work_c_2)))    
-        q(latvec_c_free)(s, &(d_e->work_c_2));
+    if (! defl_mat_is_null(&(d_e->V)))           
+        qx(defl_mat_free)(s, &(d_e->V));
+    if (! defl_mat_is_null(&(d_e->tmp_V)))       
+        qx(defl_mat_free)(s, &(d_e->tmp_V));
+    if (! defl_vec_is_null(&(d_e->work_c_1)))    
+        qx(defl_vec_free)(s, &(d_e->work_c_1));
+    if (! defl_vec_is_null(&(d_e->work_c_2)))    
+        qx(defl_vec_free)(s, &(d_e->work_c_2));
     if (NULL != d_e->T)             
         { q(free)(s, d_e->T, vmax * vmax * zs);     d_e->T = NULL ; }
     if (NULL != d_e->hevals)        
@@ -80,16 +80,16 @@ q(fini_df_eigcg)(struct q(DeflatorEigcg) *d_e, struct Q(State) *s)
 
 
 void
-q(fini_deflator)(struct Q(Deflator) *df, struct Q(State) *s)
+qx(fini_deflator)(struct QX(Deflator) *df, struct Q(State) *s)
 {
     if (NULL == s || NULL == df)
         return;
     
     int umax = df->umax;
 
-    if (! latmat_c_is_null(&(df->U)))        q(latmat_c_free)(s, &(df->U));
-    if (! latvec_c_is_null(&(df->work_c_1))) q(latvec_c_free)(s, &(df->work_c_1));
-    if (! latvec_c_is_null(&(df->work_c_2))) q(latvec_c_free)(s, &(df->work_c_2));
+    if (! defl_mat_is_null(&(df->U)))        qx(defl_mat_free)(s, &(df->U));
+    if (! defl_vec_is_null(&(df->work_c_1))) qx(defl_vec_free)(s, &(df->work_c_1));
+    if (! defl_vec_is_null(&(df->work_c_2))) qx(defl_vec_free)(s, &(df->work_c_2));
     if (NULL != df->zwork)
         { q(free)(s, df->zwork, umax * zs);         df->zwork = NULL ; }
     if (NULL != df->H)                          
@@ -115,7 +115,7 @@ q(fini_deflator)(struct Q(Deflator) *df, struct Q(State) *s)
 
 
 void
-Q(free_deflator)(struct Q(Deflator) **deflator_ptr)
+QX(free_deflator)(struct QX(Deflator) **deflator_ptr)
 {
     struct Q(State) *s;
 
@@ -123,12 +123,12 @@ Q(free_deflator)(struct Q(Deflator) **deflator_ptr)
         return;
 
     s = (*deflator_ptr)->state;
-    struct Q(Deflator) *d = *deflator_ptr;
+    struct QX(Deflator) *d = *deflator_ptr;
 
     BEGIN_TIMING(s);
 
-    q(fini_deflator)(d, s);
-    q(free)(s, d, sizeof(struct Q(Deflator)));
+    qx(fini_deflator)(d, s);
+    q(free)(s, d, sizeof(struct QX(Deflator)));
 
     END_TIMING(s, 0, 0, 0);
 

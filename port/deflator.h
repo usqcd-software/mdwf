@@ -1,20 +1,13 @@
 #ifndef DEFLATOR_H_bzjvAey3yv1jyafMycej
 #define DEFLATOR_H_bzjvAey3yv1jyafMycej
 
-#include "deflator-la.h"
 
-#if defined(HAVE_LAPACK)
-/* FIXME include LAPACK c-prototypes */
-#elif defined(HAVE_GSL)
-#  include <gsl/gsl_vector.h>
-#  include <gsl/gsl_matrix.h>
-#  include <gsl/gsl_eigen.h>
-#else
-#  error "no linear algebra library"
-#endif
+#include "deflator-la-x.h"
+
+
 
 /* sub-struct of deflator, allocated only for EigCG */
-struct q(DeflatorEigcg) {
+struct qx(DeflatorEigcg) {
     int                 vmax;
     int                 vsize;
     int                 nev;
@@ -23,11 +16,11 @@ struct q(DeflatorEigcg) {
     double              eps;
     double              resid_norm_sq_min;
     
-    latmat_c            V;
-    latmat_c            tmp_V;
+    qx(defl_mat)        V;
+    qx(defl_mat)        tmp_V;
     /* FIXME may be reduced to 1 aux vector */
-    latvec_c            work_c_1;
-    latvec_c            work_c_2;
+    qx(defl_vec)        work_c_1;
+    qx(defl_vec)        work_c_2;
     doublecomplex       *T;
     double              *hevals;
     doublecomplex       *hevecs2;
@@ -60,22 +53,22 @@ struct q(DeflatorEigcg) {
 #endif
 };
 
-struct Q(Deflator) {
+struct QX(Deflator) {
     struct Q(State) *state;
 
     /* non-zero iff the deflator has allocated EigCG workspace */
     int                 do_eigcg;   
-    struct q(DeflatorEigcg) df_eigcg;
+    struct qx(DeflatorEigcg) df_eigcg;
 
     int                 umax;       /* max size of U-space */
     int                 usize;      /* cur size of U-space */
     int                 loading;
 
     /* incr_eig current state */
-    latmat_c            U;          /* deflator space */
+    qx(defl_mat)        U;          /* deflator space */
     /* aux workspace lat.vectors */
-    latvec_c            work_c_1;
-    latvec_c            work_c_2;
+    qx(defl_vec)        work_c_1;
+    qx(defl_vec)        work_c_2;
     doublecomplex       *zwork;
     doublecomplex       *H;         /* op in U-space: U^dag.A.U */
     doublecomplex       *H_ev;      /* wkspace for e.val calculation */ 
@@ -96,18 +89,90 @@ struct Q(Deflator) {
 };
 
 
-int q(init_df_eigcg) (
-        struct q(DeflatorEigcg) *df_eigcg, struct Q(State) *s, 
+int qx(init_defl_eigcg) (
+        struct qx(DeflatorEigcg) *df_eigcg, 
+        struct Q(State) *s, 
         int vmax, int nev, double eps);
-void q(fini_df_eigcg) (struct q(DeflatorEigcg) *df_eigcg, struct Q(State) *s);
-
-int q(init_deflator)(
-        struct Q(Deflator) *df, struct Q(State) *s, 
-        int umax, latmat_c *u, int usize,
+int qx(init_deflator)(
+        struct QX(Deflator) *df, struct Q(State) *s, 
+        int umax, qx(defl_mat) *u, int usize,
         int do_eigcg, int vmax, int nev, double eps);
-void q(fini_deflator)(struct Q(Deflator) *df, struct Q(State) *s);
+int QX(create_deflator)(
+        struct QX(Deflator) **deflator_ptr,
+        struct Q(State) *s,
+        int vmax, int nev,
+        double eps, int umax);
+int QX(create_deflator_inplace)(
+        struct QX(Deflator) **deflator_ptr,
+        const struct Q(Parameters)  *params,
+        const struct QX(Gauge)      *gauge,
+        struct QX(HalfFermionMat) *hfm_ptr,
+        int hfm_nev,    /* take `hfm_nev' first vectors from the matrix */
+        int eigcg_vmax,
+        int eigcg_nev,
+        double eigcg_eps,
+        int eigcg_umax);
 
-int q(deflator_calc_evals)(struct Q(Deflator) *d);
 
+void qx(fini_df_eigcg)(
+        struct qx(DeflatorEigcg) *df_eigcg, 
+        struct Q(State) *s);
+void qx(fini_deflator)(
+        struct QX(Deflator) *df, 
+        struct Q(State) *s);
+void QX(free_deflator)(struct QX(Deflator) **deflator_ptr);
+
+
+int QX(deflator_start_load)(struct QX(Deflator) *df);
+int QX(deflator_stop_load)(struct QX(Deflator) *df);
+void QX(deflator_resume)(struct QX(Deflator) *deflator);
+void QX(deflator_stop)(struct QX(Deflator) *deflator);
+int QX(deflator_is_stopped)(struct QX(Deflator) *deflator);
+int QX(deflator_current_dim)(struct QX(Deflator) *df);
+int QX(deflator_eigen)(double *evals, struct QX(Deflator) *df);
+void QX(deflator_eigcg_reset)(struct QX(Deflator) *deflator);
+const char * QX(deflator_signature)(struct QX(Deflator) *df);
+
+
+int qx(deflator_calc_evals)(struct QX(Deflator) *d);
+int qx(defl_inject)(struct QX(Deflator) *deflator,
+                    struct qx(MxM_workspace) *ws,
+                    int u_lo, int u_hi, int u_pos,
+                    qx(defl_vec) vec);
+int qx(defl_inject_back)(struct QX(Deflator)  *deflator,
+                         struct qx(MxM_workspace) *ws,
+                         qx(defl_vec) vec);
+int qx(defl_recalc_mat)(struct QX(Deflator) *deflator,
+                        struct qx(MxM_workspace) *ws);
+int qx(defl_rebuild)(struct QX(Deflator) *deflator);
+
+
+int qx(defl_preamble)(struct QX(Deflator)       *deflator,
+                      struct Fermion            *psi_e,
+                      struct Fermion            *rho_e,
+                      double                    *rho_norm2,
+                      struct Fermion            *chi_e, /* const ! */
+                      struct qx(MxM_workspace)  *ws,
+                      unsigned int               options);
+int qx(defl_update0)(struct QX(Deflator)      *deflator,
+                     double                    a1,
+                     double                    b1,
+                     double                    a0,
+                     double                    b0,
+                     double                    r,
+                     struct Fermion           *rho,
+                     unsigned int              options);
+int qx(defl_update1)(struct QX(Deflator)      *deflator,
+                     double                    a1,
+                     double                    b1,
+                     double                    a0,
+                     double                    b0,
+                     double                    r,
+                     struct Fermion           *rho,
+                     struct Fermion           *A_rho,
+                     unsigned int              options);
+int qx(defl_postamble)(struct QX(Deflator)       *deflator,
+                       struct qx(MxM_workspace)  *ws,
+                       unsigned int               options);
 
 #endif/*DEFLATOR_H_bzjvAey3yv1jyafMycej*/
