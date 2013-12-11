@@ -149,7 +149,7 @@ q(init_df_eigcg) (
 int
 q(init_deflator)(
         struct Q(Deflator) *df, struct Q(State) *s,
-        int umax,
+        int umax, latmat_c *u, int usize,
         int do_eigcg, int vmax, int nev, double eps)
 {
     int status = 0;
@@ -187,6 +187,7 @@ q(init_deflator)(
 #  error "no linear algebra library"
 #endif
 
+
     /* set all to NULL */
     latmat_c_null(&(df->U));
     latvec_c_null(&(df->work_c_1));
@@ -206,8 +207,29 @@ q(init_deflator)(
 #  error "no linear algebra library"
 #endif
     
-    /* allocate */
-    df->U           = q(latmat_c_alloc)(s, umax);
+    /* allocate (or load external) */
+    if (NULL == u) {
+        df->U       = q(latmat_c_alloc)(s, umax);
+        df->umax    = umax;
+        df->usize   = usize;
+    } else {
+        int u_len = u->len;
+        if (u_len < usize) {
+            q(fini_deflator)(df, s);
+            return q(set_error)(s, 0, "init_deflator(): matrix is smaller than USIZE");
+        }
+        if (u_len < umax) {
+            q(fini_deflator)(df, s);
+            return q(set_error)(s, 0, "init_deflator(): UMAX is larger than provided matrix");
+        }
+        if (umax < usize)
+            umax = usize;
+
+        df->umax    = umax;
+        df->usize   = usize;
+        q(latmat_c_swap)(u, &(df->U));
+    }
+
     df->work_c_1    = q(latvec_c_alloc)(s);
     df->work_c_2    = q(latvec_c_alloc)(s);
     df->zwork       = q(malloc)(s, umax * zs);
@@ -248,8 +270,6 @@ q(init_deflator)(
     }
 
     df->state   = s;
-    df->umax    = umax;
-    df->usize   = 0;
     df->loading = 0;
     return 0;
 }
@@ -275,7 +295,9 @@ Q(create_deflator)(struct Q(Deflator) **deflator_ptr,
         return q(set_error)(s, 0, "allocate_deflator(): not enough memory");
 
     BEGIN_TIMING(s);
-    if (0 != (status = q(init_deflator)(d, s, umax, 1, vmax, nev, eps)))
+    if (0 != (status = q(init_deflator)(d, s, 
+                                        umax, NULL, -1,
+                                        1/*do_eigcg*/, vmax, nev, eps)))
         return status;
     END_TIMING(s, 0, 0, 0);
 
