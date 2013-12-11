@@ -2,9 +2,9 @@
 #include <mdwf.h>
 #include <math.h>
 
+/* XXX uses WK: df->df_eigcg.work_c_1 */
 int
 q(df_update0)(
-        struct Q(State)         *s,
         struct Q(Deflator)      *df,
         double                   alpha, 
         double                   beta, 
@@ -55,12 +55,11 @@ q(df_update0)(
     pT1->i = pT2->i = 0.0;
 
     /* remember the vector ||resid|| */
-#define cur_r   (d_e->work_c_1)
+    latvec_c cur_r = d_e->work_c_1;
     q(latvec_c_copy)(q(latvec_c_view)(df->state, resid),
                      cur_r);
     q(lat_c_scal_d)(1. / resid_norm, cur_r);
     q(latmat_c_insert_col)(d_e->V, d_e->vsize, cur_r);
-#undef cur_r
 
     d_e->vsize += 1;
     

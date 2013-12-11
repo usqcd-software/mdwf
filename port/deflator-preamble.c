@@ -10,9 +10,9 @@
 #  error "no linear algebra library"
 #endif
 
+/* XXX uses WK: df->zwork */
 int
-q(df_solve_in_eigenspace)(
-        struct Q(State)         *s, /*remove; use d->state */
+q(df_solve_in_uspace)(
         struct Q(Deflator)      *df,
         struct FermionF         *x,
         struct FermionF         *b)
@@ -56,9 +56,9 @@ q(df_solve_in_eigenspace)(
     return 0;
 }
 
+/* XXX uses WK: df->work_c_1, df->work_c_2 (children: df->zwork) */
 int
 q(df_preamble)(
-        struct Q(State)           *s,
         struct Q(Deflator)        *df,
         struct FermionF           *x,
         struct FermionF           *r,
@@ -74,23 +74,22 @@ q(df_preamble)(
             || NULL == b)
         return q(set_error)(df->state, 0, "df_preamble(): null pointer");
 
-    latvec_c lv_x = q(latvec_c_view)(s, x);
-    latvec_c lv_b = q(latvec_c_view)(s, b);
-    latvec_c lv_r = q(latvec_c_view)(s, r);
+    latvec_c lv_x = q(latvec_c_view)(df->state, x);
+    latvec_c lv_b = q(latvec_c_view)(df->state, b);
+    latvec_c lv_r = q(latvec_c_view)(df->state, r);
 
-#define cur_r       (df->work_c_1)
-#define cur_Ax      (df->work_c_2)
+    latvec_c ws_vec = df->work_c_1;
 
     if (df->usize <= 0) {
         q(latvec_c_zero)(lv_x);
         q(latvec_c_copy)(lv_b, lv_r);
     } else {
-        if (q(df_solve_in_eigenspace)(s, df, x, b))
+        if (q(df_solve_in_uspace)(df, x, b))
             return 1;
-        /* compute residual */
-        latvec_c_linop(cur_Ax, lv_x, ws);
+        /* compute residual lv_r <- b - A.x */
+        latvec_c_linop(ws_vec, lv_x, ws);
         q(latvec_c_copy)(lv_b, lv_r);
-        q(lat_c_axpy_d)(-1., cur_Ax, lv_r);
+        q(lat_c_axpy_d)(-1., ws_vec, lv_r);
     }
     
     *r_norm2 = q(lat_c_nrm2)(lv_r);
@@ -102,7 +101,7 @@ q(df_preamble)(
 
     Q(deflator_reset)(df);
     if (d_e->vsize != 0) {
-        q(set_error)(s, 0, "df_preamble: deflator in non-initial state");
+        q(set_error)(df->state, 0, "df_preamble: deflator in non-initial state");
         return -1;
     }
 
@@ -110,9 +109,9 @@ q(df_preamble)(
         return 0;
 
     /* save normalized residual as the first vector */
-    q(latvec_c_copy)(lv_r, cur_r);
-    q(lat_c_scal_d)(1. / sqrt(*r_norm2), cur_r);
-    q(latmat_c_insert_col)(d_e->V, 0, cur_r);
+    q(latvec_c_copy)(lv_r, ws_vec);
+    q(lat_c_scal_d)(1. / sqrt(*r_norm2), ws_vec);
+    q(latmat_c_insert_col)(d_e->V, 0, ws_vec);
     
     /* init eigenvalue search: vsize, T, V */
     memset(d_e->T, 0, d_e->vmax * d_e->vmax * sizeof(d_e->T[0]));

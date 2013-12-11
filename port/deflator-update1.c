@@ -17,9 +17,10 @@
 #  error "no linear algebra library"
 #endif
 
+/* XXX uses WK: df->d_e.work_c_1 and many other vars in df->d_e 
+        reserved for update1 */
 int
 q(df_update1)(
-        struct Q(State)         *s,     /* FIXME refactor ; take state from df */
         struct Q(Deflator)      *df,
         double                   alpha, 
         double                   beta, 
@@ -312,7 +313,7 @@ q(df_update1)(
     }
 
     /* remember the vector ||resid|| */
-#define cur_r   (d_e->work_c_1)
+    latvec_c cur_r = d_e->work_c_1;
     /* V[:,vsize] <- ||resid|| */
     q(latvec_c_copy)(q(latvec_c_view)(df->state, resid), 
                      cur_r);

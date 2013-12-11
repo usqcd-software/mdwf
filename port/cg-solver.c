@@ -2,17 +2,17 @@
 
 #if QOP_MDWF_DEFAULT_PRECISION == 'F'
 #define DF_PREAMBLE(psi_e, rho_e, r, chi_e) do {                        \
-        if (q(df_preamble)(state, deflator, psi_e, rho_e, r, chi_e,     \
+        if (q(df_preamble)(deflator, psi_e, rho_e, r, chi_e,     \
                            &ws, options)) {                             \
             q(set_error)(state, 0, "cg_solver() not enough memory");    \
             return CG_NOEMEM;                                           \
         } } while (0)
 #define DF_UPDATE0(a1,b1,a0,b0,r,rho)                           \
-    q(df_update0)(state, deflator, a1, b1, a0, b0, r, rho, options)
+    q(df_update0)(deflator, a1, b1, a0, b0, r, rho, options)
 #define DF_UPDATE1(a1,b1,a0,b0,r,rho,A_rho)                             \
-    q(df_update1)(state, deflator, a1, b1, a0, b0, r, rho, A_rho, options)
+    q(df_update1)(deflator, a1, b1, a0, b0, r, rho, A_rho, options)
 #define DF_POSTAMBLE() \
-    do { q(df_postamble)(state, deflator, &ws, options); } while (0)
+    do { q(df_postamble)(deflator, &ws, options); } while (0)
 #else
 #define DF_PREAMBLE(psi_e, rho_e, r, chi_e) do {        \
         qx(f_zero)(psi_e, e_size, Ls);                  \

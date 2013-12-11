@@ -294,16 +294,14 @@ void Q(deflator_reset)(struct Q(Deflator) *deflator);
 void Q(deflator_stop)(struct Q(Deflator) *deflator);
 void Q(deflator_resume)(struct Q(Deflator) *deflator);
 int Q(deflator_is_stopped)(struct Q(Deflator) *deflator);
-int q(df_preamble)(struct Q(State)           *state,
-                   struct Q(Deflator)        *deflator,
+int q(df_preamble)(struct Q(Deflator)        *deflator,
                    struct FermionF           *psi_e,
                    struct FermionF           *rho_e,
                    double                    *rho_norm2,
                    struct FermionF           *chi_e, /* const ! */
                    struct MxM_workspaceF     *ws,
                    unsigned int              options);
-int q(df_update0)(struct Q(State)          *state,
-                  struct Q(Deflator)       *deflator,
+int q(df_update0)(struct Q(Deflator)       *deflator,
                   double                    a1,
                   double                    b1,
                   double                    a0,
@@ -311,8 +309,7 @@ int q(df_update0)(struct Q(State)          *state,
                   double                    r,
                   struct FermionF          *rho,
                   unsigned int              options);
-int q(df_update1)(struct Q(State)          *state,
-                  struct Q(Deflator)       *deflator,
+int q(df_update1)(struct Q(Deflator)       *deflator,
                   double                    a1,
                   double                    b1,
                   double                    a0,
@@ -321,8 +318,7 @@ int q(df_update1)(struct Q(State)          *state,
                   struct FermionF          *rho,
                   struct FermionF          *A_rho,
                   unsigned int              options);
-int q(df_postamble)(struct Q(State)           *state,
-                    struct Q(Deflator)        *deflator,
+int q(df_postamble)(struct Q(Deflator)        *deflator,
                     struct MxM_workspaceF     *ws,
                     unsigned int               options);
 int q(df_inject)(struct Q(Deflator) *deflator,

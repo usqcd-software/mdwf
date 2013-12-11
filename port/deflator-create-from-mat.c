@@ -10,7 +10,7 @@
 */
 
 int
-Q(create_deflator_inplace_half_fermion_matrix)(
+Q(create_deflator_inplace)(
         struct Q(Deflator) **deflator_ptr,
         struct QX(HalfFermionMat) **hfm_ptr, 
         int hfm_nev,
