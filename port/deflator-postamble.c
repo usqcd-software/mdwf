@@ -31,6 +31,8 @@ q(df_ortho_uspace)(latvec_c vec,
     
     int fl = 0,
         u_len = u_hi - u_lo;
+    if (u_len <= 0)
+        return 0; /* relax */
 
     latmat_c cur_U = q(latmat_c_submat_col)(df->U, u_lo, u_len);
     latvec_c ws_vec = df->work_c_2;
@@ -40,7 +42,7 @@ q(df_ortho_uspace)(latvec_c vec,
     /*fl += */q(lat_lm_dot_zv)(u_len, cur_U,
                            df->zwork, ws_vec);
     /*fl += */q(lat_c_axpy_d)(-1., ws_vec, vec);
-    df->state.flops += fl;
+    df->state->flops += fl;
 
     return 0;
 }
@@ -75,16 +77,18 @@ q(df_inject)(struct Q(Deflator) *df,
     q(latmat_c_insert_col)(df->U, u_pos, vec);
 
     latvec_c ws_vec = df->work_c_2;
-    latmat_c cur_U = q(latmat_c_submat_col)(df->U, u_lo, u_len);
-    
-    /* compute and store (U^H . A . vec) */
     latvec_c_linop(ws_vec, vec, ws);
-    q(lat_lmH_dot_lv)(u_len, cur_U, ws_vec, df->H + u_lo + u_pos * df->umax);
-    for (i = u_lo ; i < u_hi ; i++) {
-        doublecomplex *p1 = df->H + i + u_pos * df->umax,
-                      *p2 = df->H + u_pos + i * df->umax;
-        p2->r =  p1->r;
-        p2->i = -p1->i;
+
+    if (0 < u_len) {
+        /* compute and store (U^H . A . vec) */
+        latmat_c cur_U = q(latmat_c_submat_col)(df->U, u_lo, u_len);
+        q(lat_lmH_dot_lv)(u_len, cur_U, ws_vec, df->H + u_lo + u_pos * df->umax);
+        for (i = u_lo ; i < u_hi ; i++) {
+            doublecomplex *p1 = df->H + i + u_pos * df->umax,
+                          *p2 = df->H + u_pos + i * df->umax;
+            p2->r =  p1->r;
+            p2->i = -p1->i;
+        }
     }
     /* compute and store (vec^H . A . vec) */
     doublecomplex vAv;
@@ -126,10 +130,10 @@ q(df_recalc_mat) (struct Q(Deflator) *df,
 
     latvec_c vec = df->work_c_1;
 
-    for (i = 0 ; i < df->usize ; i++)
+    for (i = 0 ; i < df->usize ; i++) {
         q(latmat_c_get_col)(df->U, i, vec);
         /*increment only if have an indep. vector */
-        u_pos += q(df_inject)(df, ws, u_lo, u_hi, u_pos, vec);
+        u_pos += q(df_inject)(df, ws, 0, u_pos, u_pos, vec);
     }
   
     return u_pos;

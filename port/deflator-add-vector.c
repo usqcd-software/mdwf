@@ -54,7 +54,7 @@ QX(deflator_add_vector)(const struct Q(Parameters)  *params,
   lv = q(latvec_c_view)(state, hfermion->even);
   /* q(df_inject) modifies the injected vector, so copy it */
   q(latvec_c_copy)(lv, cur_v);
-  q(df_inject)(deflator, &ws, cur_v);
+  q(df_inject_back)(deflator, &ws, cur_v);
 
   END_TIMING(state, flops, sent, received);
   if (ptr)

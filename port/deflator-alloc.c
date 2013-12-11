@@ -5,6 +5,7 @@
 #define zs      sizeof(doublecomplex)
 
 
+/* fill & allocate values in `d_e' (`d_e' must be allocated) */
 int 
 q(init_df_eigcg) (
         struct q(DeflatorEigcg) *d_e, 
@@ -146,6 +147,8 @@ q(init_df_eigcg) (
 }
 
 
+/* fill & allocate values in `df' (`df' must be allocated) ;
+   latmat `u' is set to null on return to prevent deallocation or gc */
 int
 q(init_deflator)(
         struct Q(Deflator) *df, struct Q(State) *s,
@@ -211,7 +214,7 @@ q(init_deflator)(
     if (NULL == u) {
         df->U       = q(latmat_c_alloc)(s, umax);
         df->umax    = umax;
-        df->usize   = usize;
+        df->usize   = 0;
     } else {
         int u_len = u->len;
         if (u_len < usize) {
@@ -296,7 +299,7 @@ Q(create_deflator)(struct Q(Deflator) **deflator_ptr,
 
     BEGIN_TIMING(s);
     if (0 != (status = q(init_deflator)(d, s, 
-                                        umax, NULL, -1,
+                                        umax, NULL, 0,
                                         1/*do_eigcg*/, vmax, nev, eps)))
         return status;
     END_TIMING(s, 0, 0, 0);

@@ -350,7 +350,7 @@ latmat_c
 q(latmat_c_submat_col)(latmat_c m, int col, int ncol)
 {
     assert(0 <= col);
-    assert(0 < ncol);
+    assert(0 <= ncol);
     assert(col < m.len);
     assert(col + ncol <= m.len);
     assert(!latmat_c_is_null(&(m)));

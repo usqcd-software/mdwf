@@ -326,7 +326,13 @@ int q(df_postamble)(struct Q(Deflator)        *deflator,
                     unsigned int               options);
 int q(df_inject)(struct Q(Deflator) *deflator,
                  struct MxM_workspaceF *ws,
+                 int u_lo, int u_hi, int u_pos,
                  latvec_c vec);
+int q(df_inject_back)(struct Q(Deflator) *deflator,
+                      struct MxM_workspaceF *ws,
+                      latvec_c vec);
+int q(df_recalc_mat)(struct Q(Deflator) *df,
+                     struct MxM_workspaceF *ws);
 int q(df_rebuild)(struct Q(Deflator) *deflator);
 
 /* layout translation */
