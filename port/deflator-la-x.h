@@ -1,5 +1,5 @@
-#ifndef DEFLATOR_LA_X_H_Qplwonz8vdfqchXt7fyi
-#define DEFLATOR_LA_X_H_Qplwonz8vdfqchXt7fyi
+//#ifndef DEFLATOR_LA_X_H_Qplwonz8vdfqchXt7fyi
+//#define DEFLATOR_LA_X_H_Qplwonz8vdfqchXt7fyi
 
 #if defined(HAVE_LAPACK)
 #  include <f2c_types.h>
@@ -12,11 +12,12 @@
 #  include <gsl/gsl_vector.h>
 #  include <gsl/gsl_matrix.h>
 #  include <gsl/gsl_eigen.h>
-
-    typedef struct {
-        double r, i;
-    } doublecomplex;
-
+#  ifndef DEFLATOR_H_HAVE_DCOMPLEX
+#  define DEFLATOR_H_HAVE_DCOMPLEX
+        typedef struct {
+            double r, i;
+        } doublecomplex;
+#   endif/*DEFLATOR_H_HAVE_DCOMPLEX*/
 #else
 #  error "no linear algebra library"
 #endif 
@@ -115,4 +116,4 @@ int qx(defl_lm_dot_zv)(int n,
                        qx(defl_vec) y);
 
 
-#endif/*DEFLATOR_LA_X_H_Qplwonz8vdfqchXt7fyi*/
+//#endif/*DEFLATOR_LA_X_H_Qplwonz8vdfqchXt7fyi*/

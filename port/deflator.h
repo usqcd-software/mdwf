@@ -1,5 +1,5 @@
-#ifndef DEFLATOR_H_bzjvAey3yv1jyafMycej
-#define DEFLATOR_H_bzjvAey3yv1jyafMycej
+//#ifndef DEFLATOR_H_bzjvAey3yv1jyafMycej
+//#define DEFLATOR_H_bzjvAey3yv1jyafMycej
 
 
 #include "deflator-la-x.h"
@@ -175,4 +175,4 @@ int qx(defl_postamble)(struct QX(Deflator)       *deflator,
                        struct qx(MxM_workspace)  *ws,
                        unsigned int               options);
 
-#endif/*DEFLATOR_H_bzjvAey3yv1jyafMycej*/
+//#endif/*DEFLATOR_H_bzjvAey3yv1jyafMycej*/
