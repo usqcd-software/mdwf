@@ -212,6 +212,9 @@ extern int QDP_is_initialized(void);
 #  define MxM_workspace MxM_workspaceF
 # endif
 
+
+#include "deflator-la-x.h"
+
 /* MDWF types */
 struct QX(Fermion) {
   struct Q(State) *state;

@@ -151,6 +151,7 @@ p.sources = alloc-eo.c \
             solver-mxm.c \
             solver-dxd.c \
             solver-shifted.c \
+	    deflator-la-x.c \
 	    #
 
 x.objects = $(x.sources:%.c=$(LIMPDIR)/%.o)

@@ -103,7 +103,8 @@ void q(fini_df_eigcg) (struct q(DeflatorEigcg) *df_eigcg, struct Q(State) *s);
 
 int q(init_deflator)(
         struct Q(Deflator) *df, struct Q(State) *s, 
-        int umax, int do_eigcg, int vmax, int nev, double eps);
+        int umax, latmat_c *u, int usize,
+        int do_eigcg, int vmax, int nev, double eps);
 void q(fini_deflator)(struct Q(Deflator) *df, struct Q(State) *s);
 
 int q(deflator_calc_evals)(struct Q(Deflator) *d);

@@ -337,6 +337,15 @@ q(latmat_c_copy)(latmat_c m1, latmat_c m2)
                 m2.fv, m2.stride, m2.begin,
                 m1.fv, m1.stride, m1.begin);
 }
+void 
+q(latmat_c_swap)(latmat_c *m1, latmat_c *m2)
+{
+    /* laziness - the engine of progress */
+    latmat_c aux;
+    aux = *m1; 
+    *m1 = *m2;
+    *m2 = aux;
+}
 latmat_c
 q(latmat_c_submat_col)(latmat_c m, int col, int ncol)
 {

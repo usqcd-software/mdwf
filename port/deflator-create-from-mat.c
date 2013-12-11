@@ -20,6 +20,7 @@ Q(create_deflator_inplace)(
     DECLARE_STATE;
     struct Q(Deflator) *d;
     int dim, Ls;
+    int status;
 
     CHECK_ARG0(*hfm_ptr);
 
@@ -35,33 +36,33 @@ Q(create_deflator_inplace)(
         return q(set_error)(state, 0, 
                 "create_deflator_inplace_half_fermion_matrix(): not enough memory");
 
-    /* check data types */
-#if defined(HAVE_LAPACK)
-    {
-        doublecomplex dc;
-        assert( &(dc.r) == (double *)(&dc) &&
-                &(dc.i) == (double *)(&dc) + 1 &&
-                sizeof(dc) == 2 * sizeof(double));
-    }
-#elif defined(HAVE_GSL)
-    {
-        doublecomplex dc;
-        assert( &(dc.r) == (double *)(&dc) &&
-                &(dc.i) == (double *)(&dc) + 1 &&
-                sizeof(dc) == 2 * sizeof(double));
-        gsl_complex *gc = (gsl_complex *)(&dc);
-        assert( &(dc.r) == &(gc->dat[0]) &&
-                &(dc.i) == &(gc->dat[1]) &&
-                sizeof(dc) == sizeof(*gc));
-    }
-#else 
-#  error "no linear algebra library"
-#endif
+    int do_eigcg = (0 < eigcg_vmax) && (0 < eigcg_nev);
+    int umax = hfm_nev;
+    if (do_eigcg && umax < eigcg_umax)
+        umax = eigcg_umax;
 
-    /* TODO copy (*hfm_ptr)->m to d->u */
+    latmat_c *m = &((*hfm_ptr)->m);
+    int m_size = m->len;
+    if (m_size < umax)
+        umax = m_size;
+    if (hfm_nev < umax)
+        hfm_nev = umax;
 
+    if (0 != (status = q(init_deflator)(d, state, umax, m, hfm_nev, do_eigcg,
+                                        eigcg_vmax, eigcg_nev, eigcg_eps)))
+        goto clearerr_1;
+#if 0
     /* TODO set EigCG to "full" condition */
+    if (0 != (status = q(df_recalc_mat)(/*TODO implement and call calc U^H.A.U*/)))
+        goto clearerr_1;
 
-    /* TODO set hfm_ptr->m to "empty" so that it is not destroyed */
+    if (0 != (status = q(df_rebuild)(/*TODO pass params*/)))
+        goto clearerr_1;
+#endif
     return 0;
+
+clearerr_1:
+    q(free)(state, d, sizeof (struct Q(Deflator)));
+clearerr_0:
+    return status;
 }
