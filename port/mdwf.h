@@ -172,6 +172,7 @@ extern int QDP_is_initialized(void);
 #endif /* !defined(MARK_B9BA8123_0F1A_40FD_8827_42266FE32F3E) */
 
 /* ugly but working solution */
+#undef QOP_MDWF_DEFAULT_PRECISION_SAVE__
 #if   QOP_MDWF_DEFAULT_PRECISION=='F'
 # define QOP_MDWF_DEFAULT_PRECISION_SAVE__ 'F'
 #elif QOP_MDWF_DEFAULT_PRECISION=='D'

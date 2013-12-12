@@ -1,6 +1,7 @@
 #define QOP_MDWF_DEFAULT_PRECISION 'F'
-#include <mdwf.h>
+#include <assert.h>
 #include <math.h>
+#include <mdwf.h>
 #include <qmp.h>
 
 #if defined(HAVE_LAPACK)
@@ -20,7 +21,7 @@
 /* XXX uses WK: df->d_e.work_c_1 and many other vars in df->d_e 
         reserved for update1 */
 int
-qx(defl_update1)(
+qx(defl_eigcg_update1)(
         struct QX(Deflator)     *df,
         double                   alpha, 
         double                   beta, 
@@ -31,6 +32,7 @@ qx(defl_update1)(
         struct Fermion          *A_resid,
         unsigned int             options)
 {
+    long long fl = 0;
     int i, j;
     long int vmax, vsize, nev;
     struct qx(DeflatorEigcg) *d_e = NULL;
@@ -90,7 +92,7 @@ qx(defl_update1)(
     if (options & QOP_MDWF_LOG_EIG_UPDATE1) {
         int i;
         for (i = 0; i < vmax; i++)
-            qf(zprint)(df->state, "update1", "T0 %4d %17.9e", i, d_e->hevals[i]);
+            qf(zprint)(df->state, "defl_eigcg_update1", "T0 %4d %17.9e", i, d_e->hevals[i]);
                        
     }
 
@@ -182,7 +184,7 @@ qx(defl_update1)(
         
         for (i = 0; i < d_e->nev; i++) {
             j = d_e->hevals_select1[i];
-            qf(zprint)(df->state, "update1", "T0 %4d %17.9e", i,
+            qf(zprint)(df->state, "defl_eigcg_update1", "T0 %4d %17.9e", i,
                        gsl_vector_get(d_e->gsl_hevals1, j));
         }
     }
@@ -280,12 +282,12 @@ qx(defl_update1)(
     /* rotate V[:, 0:vmax] space with (Q Z) */
     /* FIXME change dot in V . (QZ) into rotation by Q and by Z 
        to avoid using tmp_V */
-    qx(defl_mat) tmp_V = q(defl_mat_submat_col)(d_e->tmp_V, 0, vsize);
-    q(defl_lm_dot_zm)(vsize, vmax, 
-                  d_e->V,
-                  d_e->hevecs2, vmax, 
-                  tmp_V);
-    qx(defl_mat_copy)(tmp_V, q(defl_mat_submat_col)(d_e->V, 0, vsize));
+    qx(defl_mat) tmp_V = qx(defl_mat_submat_col)(d_e->tmp_V, 0, vsize);
+    fl += qx(defl_lm_dot_zm)(vsize, vmax, 
+                             d_e->V,
+                             d_e->hevecs2, vmax, 
+                             tmp_V);
+    qx(defl_mat_copy)(tmp_V, qx(defl_mat_submat_col)(d_e->V, 0, vsize));
     
     /* check eig convergence */
     if (resid_norm_sq < d_e->resid_norm_sq_min)
@@ -294,10 +296,10 @@ qx(defl_update1)(
     
     /* compute new T */
     memset(d_e->T, 0, vmax * vmax * sizeof(d_e->T[0]));
-    qx(defl_lmH_dot_lv)(vsize, 
-                      tmp_V, 
-                      qx(defl_vec_view)(df->state, A_resid),
-                      d_e->T + vsize * vmax);
+    fl += qx(defl_lmH_dot_lv)(vsize, 
+                              tmp_V, 
+                              qx(defl_vec_view)(df->state, A_resid),
+                              d_e->T + vsize * vmax);
     for (i = 0 ; i < vsize ; i++) {
         /* T[i,i] <- hevals[i] + 0*I */
         d_e->T[i * (vmax + 1)].r      = d_e->hevals[i];
@@ -317,10 +319,11 @@ qx(defl_update1)(
     /* V[:,vsize] <- ||resid|| */
     qx(defl_vec_copy)(qx(defl_vec_view)(df->state, resid), 
                       cur_r);
-    qx(defl_vec_scal)(1. / resid_norm, cur_r);
-    qx(defl_mat_insert_col)(d_e->V, d_e->vsize, cur_r);
+    fl += qx(defl_vec_scal)(1. / resid_norm, cur_r);
+    fl += qx(defl_mat_insert_col)(d_e->V, d_e->vsize, cur_r);
 
     d_e->vsize += 1;
 
+    df->state->flops += fl;
     return 0; /* normal */
 }

@@ -1,4 +1,5 @@
 #define QOP_MDWF_DEFAULT_PRECISION 'F'
+#include <assert.h>
 #include <mdwf.h>
 #include <math.h>
 #include <qmp.h>
@@ -30,6 +31,8 @@ qx(defl_solve_in_uspace)(
         struct Fermion         *x,
         struct Fermion         *b)
 {
+    long long fl = 0;
+
     assert(NULL != df &&
             NULL != df->state &&
             NULL != x &&
@@ -41,7 +44,7 @@ qx(defl_solve_in_uspace)(
     }    
     qx(defl_vec) lv_b   = qx(defl_vec_view)(df->state, b);
     qx(defl_mat) cur_U  = qx(defl_mat_submat_col)(df->U, 0, df->usize);
-    qx(defl_lmH_dot_lv)(df->usize, cur_U, lv_b, df->zwork);
+    fl += qx(defl_lmH_dot_lv)(df->usize, cur_U, lv_b, df->zwork);
 
 #if defined(HAVE_LAPACK)
     long int usize  = df->usize,
@@ -64,8 +67,9 @@ qx(defl_solve_in_uspace)(
 #  error "no linear algebra library"
 #endif
 
-    qx(defl_lm_dot_zv)(df->usize, cur_U, df->zwork, lv_x);
+    fl += qx(defl_lm_dot_zv)(df->usize, cur_U, df->zwork, lv_x);
 
+    df->state->flops += fl;
     return 0;
 }
 
@@ -78,21 +82,21 @@ qx(defl_ortho_uspace)(qx(defl_vec) vec,
     if (NULL == df || defl_vec_is_null(&vec))
         return q(set_error)(df->state, 0, "df_ortho_uspace(): null pointer(s)");
     
-    int fl = 0,
-        u_len = u_hi - u_lo;
+    long long fl = 0;
+    int u_len = u_hi - u_lo;
     if (u_len <= 0)
         return 0; /* relax */
 
     qx(defl_mat) cur_U = qx(defl_mat_submat_col)(df->U, u_lo, u_len);
     qx(defl_vec) ws_vec = df->work_c_2;
 
-    /*fl += */qx(defl_lmH_dot_lv)(u_len, cur_U, 
-                            vec, df->zwork);
-    /*fl += */qx(defl_lm_dot_zv)(u_len, cur_U,
-                           df->zwork, ws_vec);
-    /*fl += */qx(defl_vec_axpy)(-1., ws_vec, vec);
-    df->state->flops += fl;
+    fl += qx(defl_lmH_dot_lv)(u_len, cur_U, 
+                              vec, df->zwork);
+    fl += qx(defl_lm_dot_zv)(u_len, cur_U,
+                             df->zwork, ws_vec);
+    fl += qx(defl_vec_axpy)(-1., ws_vec, vec);
 
+    df->state->flops += fl;
     return 0;
 }
 
@@ -106,21 +110,22 @@ qx(defl_inject)(struct QX(Deflator) *df,
              int u_lo, int u_hi, int u_pos,
              qx(defl_vec) vec)
 {
+    long long fl = 0;
     double v_norm2_min = eps_reortho * eps_reortho;
-    int i, //fl = 0, 
-        u_len = u_hi - u_lo;
+    int i, u_len = u_hi - u_lo;
 
     /* reorthogonalize n_reortho times */
     for (i = n_reortho; i--; )
         qx(defl_ortho_uspace)(vec, df, u_lo, u_hi);
 
-    double v_norm2 = q(defl_vec_nrm2)(vec);
+    double v_norm2;
+    fl += qx(defl_vec_nrm2)(&v_norm2, vec);
     if (v_norm2 < v_norm2_min)
         return 0;
 
     /* normalize & insert the vector */
-    qx(defl_c_scal_d)(1. / sqrt(v_norm2), vec);
-    qx(defl_mat_insert_col)(df->U, u_pos, vec);
+    fl += qx(defl_vec_scal)(1. / sqrt(v_norm2), vec);
+    fl += qx(defl_mat_insert_col)(df->U, u_pos, vec);
 
     qx(defl_vec) ws_vec = df->work_c_2;
     qx(defl_vec_linop)(ws_vec, vec, ws);
@@ -128,7 +133,8 @@ qx(defl_inject)(struct QX(Deflator) *df,
     if (0 < u_len) {
         /* compute and store (U^H . A . vec) */
         qx(defl_mat) cur_U = qx(defl_mat_submat_col)(df->U, u_lo, u_len);
-        qx(defl_lmH_dot_lv)(u_len, cur_U, ws_vec, df->H + u_lo + u_pos * df->umax);
+        fl += qx(defl_lmH_dot_lv)(u_len, cur_U, ws_vec, 
+                                  df->H + u_lo + u_pos * df->umax);
         for (i = u_lo ; i < u_hi ; i++) {
             doublecomplex *p1 = df->H + i + u_pos * df->umax,
                           *p2 = df->H + u_pos + i * df->umax;
@@ -138,10 +144,11 @@ qx(defl_inject)(struct QX(Deflator) *df,
     }
     /* compute and store (vec^H . A . vec) */
     doublecomplex vAv;
-    vAv = qx(defl_vec_dotu)(vec, ws_vec);
+    fl += qx(defl_vec_dotu)(&vAv, vec, ws_vec);
     df->H[u_pos * (df->umax + 1)].r = vAv.r;
     df->H[u_pos * (df->umax + 1)].i = 0.;
 
+    df->state->flops += fl;
     /* finished adding one new vector */
     return 1;
 }
@@ -170,17 +177,19 @@ int
 qx(defl_recalc_mat)(struct QX(Deflator) *df,
                     struct qx(MxM_workspace) *ws)
 {
+    long long fl = 0;
     double v_norm2_min = eps_reortho * eps_reortho;
     int i, u_pos;
 
     qx(defl_vec) vec = df->work_c_1;
 
     for (i = 0 ; i < df->usize ; i++) {
-        qx(defl_mat_get_col)(df->U, i, vec);
+        fl += qx(defl_mat_get_col)(df->U, i, vec);
         /*increment only if have an indep. vector */
         u_pos += qx(defl_inject)(df, ws, 0, u_pos, u_pos, vec);
     }
   
+    df->state->flops += fl;
     return u_pos;
 }
 
@@ -216,7 +225,7 @@ qx(defl_rebuild)(struct QX(Deflator) *df)
         QMP_broadcast((void *)(df->C + i * df->umax), 
                       df->usize * sizeof(df->C[0]));
 
-    if (0 != (status = qx(deflr_calc_evals)(df)))
+    if (0 != (status = qx(defl_calc_evals)(df)))
         return status;
 
     return 0;

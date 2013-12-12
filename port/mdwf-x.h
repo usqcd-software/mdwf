@@ -5,7 +5,7 @@ struct QX(VectorFermion);
 struct QX(Gauge);
 struct qx(MxM_workspace);
 
-#include "deflator.h"
+#include "deflator-x.h"
 
 /* MDWF types */
 struct QX(Fermion) {

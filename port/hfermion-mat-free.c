@@ -2,8 +2,7 @@
 #include <mdwf.h>
 
 void
-QX(free_half_fermion_matrix)(
-        struct QX(HalfFermionMat) **hfm_ptr)
+QX(free_half_fermion_matrix)(struct QX(HalfFermionMat) **hfm_ptr)
 {
     struct Q(State) *state;
 

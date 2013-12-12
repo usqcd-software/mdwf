@@ -1,7 +1,6 @@
 #define QOP_MDWF_DEFAULT_PRECISION 'F'
 #include <mdwf.h>
 
-#if QOP_MDWF_DEFAULT_PRECISION == 'F'
 int
 QX(deflator_extract_vector)(struct QX(HalfFermion) *hf,
                             const struct QX(Deflator) *d,
@@ -21,4 +20,3 @@ QX(deflator_extract_vector)(struct QX(HalfFermion) *hf,
 
   return 0;
 }
-#endif /* QOP_MDWF_DEFAULT_PRECISION == 'F' */

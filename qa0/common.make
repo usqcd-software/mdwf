@@ -103,7 +103,12 @@ sources = $(i.sources) \
           $(x.sources:%=%f.c) \
           $(x.sources:%=%d.c)
 
-objects = $(sources:%.c=%.o)
+
+i.objects = $(i.sources:%.c=%.o)
+f.objects = $(x.sources:%=%f.o)
+d.objects = $(x.sources:%=%d.o)
+
+objects   = $(i.objects) $(f.objects) $(d.objects)
 
 all: $(objects)
 	$E AR $@/$(LIMP)
@@ -125,7 +130,18 @@ realclean: clean
 		LIMPDIR=../$(LIMP) -C ../port $@
 	$C$(RM) $(LIBRARY)
 
-$(sources:%.c=%.o): %.o: %.c
+#$(sources:%.c=%.o): %.o: %.c
+#	$E CC $<
+#	$C$(CC) $(COPTS) $(CFLAGS) -I../port -c -o $@ $<
+
+$(i.objects): %.o: %.c
 	$E CC $<
 	$C$(CC) $(COPTS) $(CFLAGS) -I../port -c -o $@ $<
 
+$(f.objects): %.o: %.c
+	$E CC $<
+	$C$(CC) $(COPTS) $(CFLAGS) -DQOP_MDWF_DEFAULT_PRECISION="'F'" -I../port -c -o $@ $<
+
+$(d.objects): %.o: %.c
+	$E CC $<
+	$C$(CC) $(COPTS) $(CFLAGS) -DQOP_MDWF_DEFAULT_PRECISION="'D'" -I../port -c -o $@ $<

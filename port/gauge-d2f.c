@@ -1,7 +1,3 @@
-#define QOP_MDWF_DEFAULT_PRECISION 'F'
-#include <mdwf.h>
-#undef QOP_MDWF_DEFAULT_PRECISION
-#define QOP_MDWF_DEFAULT_PRECISION 'D'
 #include <mdwf.h>
 
 int

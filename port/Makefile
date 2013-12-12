@@ -39,16 +39,17 @@ x.sources = error.c \
             comm-setup.c \
             comm-free.c \
             deflator-alloc.c \
+	    deflator-create-from-mat.c \
             deflator-free.c \
+	    deflator-la-x.c \
+	    deflator-uspace.c \
             deflator-preamble.c \
             deflator-postamble.c \
             deflator-update0.c \
             deflator-update1.c \
+	    deflator-ctrl.c \
             deflator-extract-vector.c \
             deflator-add-vector.c \
-	    deflator-create-from-mat.c \
-	    deflator-ctrl.c \
-	    deflator-uspace.c \
 	    poly-normalize.c \
             hfermion-size.c \
             cg-mixed.c \
@@ -56,8 +57,6 @@ x.sources = error.c \
             solver-dirac-deflated-mixed.c \
 	    hfermion-mat-alloc.c \
 	    hfermion-mat-free.c \
-	    deflator-create-from-mat.c \
-	    deflator-calc-evals.c \
 	    #
 
 p.sources = alloc-eo.c \
@@ -143,7 +142,6 @@ p.sources = alloc-eo.c \
             solver-mxm.c \
             solver-dxd.c \
             solver-shifted.c \
-	    deflator-la-x.c \
 	    #
 
 x.objects = $(x.sources:%.c=$(LIMPDIR)/%.o)
@@ -153,8 +151,8 @@ p.objects = $(p.sources:%.c=$(LIMPDIR)/%f.o) \
 
 objects = $(x.objects) $(p.objects)
 
-headers = mdwf.h \
-	  deflator.h deflator-la-x.h \
+headers = mdwf.h mdwf-x.h \
+	  deflator-x.h deflator-la-x.h \
           $(HDR)
 
 

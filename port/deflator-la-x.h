@@ -46,6 +46,7 @@ qx(defl_vec) qx(defl_vec_view)(struct Q(State) *state, struct Fermion *f);
 void qx(defl_vec_free)(struct Q(State) *state, qx(defl_vec) *v);
 void qx(defl_vec_zero)(qx(defl_vec) x); /* x <- 0 */
 void qx(defl_vec_copy)(qx(defl_vec) x, qx(defl_vec) y); /* y <- x */
+void qx(defl_vec_swap)(qx(defl_vec) *x, qx(defl_vec) *y); /* x <-> y */
 /* return flop count */
 int qx(defl_vec_dotu)(doublecomplex *res, qx(defl_vec) x, qx(defl_vec) y);
 int qx(defl_vec_scal)(double alpha, qx(defl_vec) x);
@@ -86,6 +87,7 @@ void qx(defl_mat_free)(struct Q(State) *state, qx(defl_mat) *m);
 //int qx(defl_mat_convert_to_blas)(qx(defl_mat) *m);
 //int qx(defl_mat_convert_from_blas)(qx(defl_mat) *m);
 void qx(defl_mat_copy)(qx(defl_mat) m1, qx(defl_mat) m2); /* m2 <- m1 */
+void qx(defl_mat_swap)(qx(defl_mat) *m1, qx(defl_mat) *m2); /* m2 <-> m1 */
 /* create a submatrix of subset of columns
    only a 'view' is created, no allocation is performed
    do not try to 'free' submatrix: it may result in memory error */

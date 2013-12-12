@@ -1,7 +1,3 @@
-#define QOP_MDWF_DEFAULT_PRECISION 'F'
-#include <mdwf.h>
-#undef QOP_MDWF_DEFAULT_PRECISION
-#define QOP_MDWF_DEFAULT_PRECISION 'D'
 #include <mdwf.h>
 
 /* Solve
@@ -52,7 +48,7 @@ q(mixed_cg)(struct Q(State)             *state,
             const struct QD(Fermion)    *psi_0,
             const struct QD(Gauge)      *gauge,
             const struct QD(Fermion)    *eta,
-            struct Q(Deflator)          *deflator,
+            struct QF(Deflator)         *deflator,
             int                          f_iter,
             double                       f_epsilon,
             int                          max_iterations,
@@ -92,7 +88,7 @@ q(mixed_cg)(struct Q(State)             *state,
     double scaled_eps;
     int iter_left;
     const char *cg_error = 0;
-    int df_stopped = Q(deflator_is_stopped)(deflator);
+    int df_stopped = QF(deflator_eigcg_is_stopped)(deflator);
 
 #define CG_ERROR(msg) do { cg_error = msg; goto end; } while (0)
 #define CG_ERROR_T(msg) do { \
@@ -196,7 +192,7 @@ q(mixed_cg)(struct Q(State)             *state,
                                   &flops, &sent, &received,
                                   rho_Fe, pi_Fe, zeta_Fe,
                                   t0_Fe, t1_Fe, t2_Fe, t0_Fo);
-        Q(deflator_stop)(deflator);
+        QF(deflator_eigcg_stop)(deflator);
 
         if (q(setup_comm)(state, sizeof (double))) {
             CG_ERROR_T("mixed_D_CG(): communication setup failed");
@@ -220,7 +216,7 @@ q(mixed_cg)(struct Q(State)             *state,
             break;
     }
     if ((df_stopped == 0) && deflator != 0)
-        Q(deflator_resume)(deflator);
+        QF(deflator_eigcg_resume)(deflator);
 
     qx(cg_inflate)(psi->even, psi->odd,
                    state, params, U, eta->odd, xi_e,

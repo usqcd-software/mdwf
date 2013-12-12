@@ -40,7 +40,7 @@ int QX(blas_view_half_fermion_matrix)(
         int *nrow_loc,
         int *ncol,
         REAL **blas_ptr,
-        size_t *blas_ld)
+        int *blas_ld)
 {
     if (NULL == hfm_ptr)
         return q(set_error)(hfm_ptr->state, 0, "blas_view_half_fermion_matrix(): null pointer");

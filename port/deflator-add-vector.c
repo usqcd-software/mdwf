@@ -11,6 +11,7 @@ QX(deflator_add_vector)(const struct Q(Parameters)  *params,
     long long flops = 0;
     long long sent = 0;
     long long received = 0;
+    int status;
     struct qx(MxM_workspace)  ws;
     void *ptr = 0;
     void *temps = 0;
@@ -70,13 +71,13 @@ QX(deflator_add_vector)(const struct Q(Parameters)  *params,
     if (NULL != ptr)
         q(free)(state, ptr, ptr_size);
     if ( ! defl_vec_is_null(&cur_v))
-        qx(defl_vec_free)(&cur_v);
+        qx(defl_vec_free)(state, &cur_v);
     return 0;
 
 clearerr:
     if (NULL != ptr) 
         q(free)(state, ptr, ptr_size);
     if ( ! defl_vec_is_null(&cur_v))
-        qx(defl_vec_free)(&cur_v);
+        qx(defl_vec_free)(state, &cur_v);
     return status;
 }

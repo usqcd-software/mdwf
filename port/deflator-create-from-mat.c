@@ -18,7 +18,7 @@ QX(create_deflator_inplace)(
         struct QX(Deflator)       **deflator_ptr,
         const struct Q(Parameters) *params,
         const struct QX(Gauge)     *gauge,
-        struct QX(HalfFermionMat)  *hfm_ptr, 
+        struct QX(HalfFermionMat) **hfm_ptr, 
         int                         hfm_nev,    
         int                         eigcg_vmax, 
         int                         eigcg_nev,
@@ -29,7 +29,7 @@ QX(create_deflator_inplace)(
     struct QX(Deflator) *df;
     int status;
 
-    CHECK_ARG0(hfm_ptr);
+    CHECK_ARG0(*hfm_ptr);
     CHECK_ARGn(params, "create_deflator_inplace");
     CHECK_ARGn(gauge, "create_deflator_inplace");
 
@@ -73,7 +73,7 @@ QX(create_deflator_inplace)(
 
 
     /* create deflator with existing vectors, leave door open to EigCG */
-    qx(defl_mat) *m = &(hfm_ptr->m);
+    qx(defl_mat) *m = &((*hfm_ptr)->m);
     int umax    = m->len; /* `m' already allocated ; cannot extend */
     int do_eigcg = (0 < eigcg_vmax) && (0 < eigcg_nev);
     if (do_eigcg && eigcg_umax < umax)
@@ -98,13 +98,15 @@ QX(create_deflator_inplace)(
 
     END_TIMING(state, flops, sent, received);
     
+    QX(free_half_fermion_matrix)(hfm_ptr);
     q(free)(state, temps_ptr, temps_size);
     return 0;
 
 clearerr_2:
+    QX(free_half_fermion_matrix)(hfm_ptr);
     q(free)(state, temps_ptr, temps_size);
 clearerr_1:
-    q(free)(state, df, sizeof (struct Q(Deflator)));
+    q(free)(state, df, sizeof (struct QX(Deflator)));
 clearerr_0:
     return status;
 }

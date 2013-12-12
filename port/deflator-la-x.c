@@ -1,6 +1,7 @@
 #include <assert.h>
-#include <mdwf.h>
 #include <qmp.h>
+#define QOP_MDWF_DEFAULT_PRECISION 'F'
+#include <mdwf.h>
 
 /* replace all references to `dim' and `Ls' with these macros */
 #define DEFLATOR_DIM(pstate) ((pstate)->even.full_size)
@@ -39,6 +40,15 @@ qx(defl_vec_copy)(qx(defl_vec) x, qx(defl_vec) y)
     assert(!defl_vec_is_null(&y));
     qx(f_copy)(y.f, y.dim, y.Ls, x.f);
 }
+void 
+qx(defl_vec_swap)(qx(defl_vec) *x, qx(defl_vec) *y)
+{
+    qx(defl_vec) aux;
+    aux = *x;
+    *x  = *y;
+    *y  = aux;
+}
+    
 void
 qx(defl_vec_zero)(qx(defl_vec) x)
 {
@@ -213,6 +223,14 @@ qx(defl_mat_copy)(qx(defl_mat) m1, qx(defl_mat) m2)
     qx(vf_copy)(m1.dim, m1.Ls, m1.len, 
                 m2.fv, m2.stride, m2.begin,
                 m1.fv, m1.stride, m1.begin);
+}
+void 
+qx(defl_mat_swap)(qx(defl_mat) *x, qx(defl_mat) *y)
+{
+    qx(defl_mat) aux;
+    aux = *x;
+    *x  = *y;
+    *y  = aux;
 }
 qx(defl_mat)
 qx(defl_mat_submat_col)(qx(defl_mat) m, int col, int ncol)

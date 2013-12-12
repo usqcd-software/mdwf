@@ -1,7 +1,3 @@
-#define QOP_MDWF_DEFAULT_PRECISION 'F'
-#include <mdwf.h>
-#undef QOP_MDWF_DEFAULT_PRECISION
-#define QOP_MDWF_DEFAULT_PRECISION 'D'
 #include <mdwf.h>
 
 /* Solve
@@ -19,7 +15,7 @@ Q(deflated_mixed_D_CG)(struct QD(Fermion)          *psi,
                        const struct QD(Fermion)    *psi_0,
                        const struct QD(Gauge)      *gauge,
                        const struct QD(Fermion)    *eta,
-                       struct Q(Deflator)          *deflator,
+                       struct QF(Deflator)         *deflator,
                        int                          f_iter,
                        double                       f_epsilon,
                        int                          max_iterations,

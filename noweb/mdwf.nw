@@ -1401,68 +1401,139 @@ Also the default precision macros
 @
 \section{Deflation}
 For delfation solvers, the following interface is provided. Deflators are used
-by the deflation solvers to collect and store the low eigenmode state.
+by the deflation solvers to keep low eigenvalue vector space. Low eigenmode space 
+can be either accumulated while solving Dirac equations (EigCG) or loaded into 
+a deflator. There are two way to load vectors: one by one or as a blas matrix.
+In the latter case, a BLAS matrix must be pre-allocated as 
+[[(...)_HalfFermionMat]] and filled following the site/spin/color conventions 
+compatible with [[(...)_blas_from_half_fermion]]. In practice, such a matrix is 
+allocated and used in Lanczos iterations, and later supplied to create a deflator 
+object; in-place conversion helps to avoid copying vectors and allocating the 
+associated memory twice. Vectors may be exported from the deflator one by one.
+Currently, only single precision deflator is built by default.
 
 The state of the deflator is packaged into an opaque structure:
 <<Interface types>>=
-struct `QOP_MDWF_Deflator;
+struct `QOP_F3_MDWF_Deflator;
 @
 
 The deflators are created with given capacity, size and precision:
 <<Interface functions>>=
-int `QOP_MDWF_create_deflator(struct QOP_MDWF_Deflator **defl_ptr,
-                             struct QOP_MDWF_State *state,
-                             int nev, int vsize, double eps, int umax);
+int `QOP_F3_MDWF_create_deflator(struct QOP_F3_MDWF_Deflator **defl_ptr,
+                                struct QOP_MDWF_State       *state,
+                                int nev, int vsize, double eps, int umax);
 @
+
+Alternatively, one can use a user-filled BLAS matrix (sequence of BLAS vectors),
+from which the first [[hfm_nev]] vectors are used for deflation, and the
+remaining space in the allocated matrix may be filled with additional vectors
+from EigCG (but not to exceed [[eigcg_umax]]). Workspace for EigCG is allocated
+if and only if [[eigcg_vmax]], [[eigcg_nev]] $>0$:
+<<Interface functions>>=
+int `QOP_F3_MDWF_create_deflator_inplace(struct QOP_F3_MDWF_Deflator       **defl_ptr,
+                                        const struct QOP_MDWF_Parameters  *params,
+                                        const struct QOP_F3_MDWF_Gauge    *gauge,
+                                        struct QOP_F3_MDWF_HalfFermionMat **hfm_ptr,
+                                        int                               hfm_nev,
+                                        int                               eigcg_vmax,
+                                        int                               eigcg_nev,
+                                        double                            eigcg_eps,
+                                        int                               eigcg_umax);
+@
+
+The BLAS-like space handler [[hfm_ptr]] has an opaque type
+<<Interface types>>=
+struct `QOP_F3_MDWF_HalfFermionMat;
+@
+and must be preallocated by the function
+<<Interface functions>>=
+int `QOP_F3_MDWF_alloc_half_fermion_matrix(struct QOP_F3_MDWF_HalfFermionMat **hfm_ptr,
+                                           struct QOP_MDWF_State *state,
+                                           int ncol);
+@
+A [[HalfFermionMat]] object is essentially a wrapper for a BLAS-style matrix; 
+to use it as such, the following function provides a raw pointer to the data, 
+together with the number of rows and columns and the ``leading dimension'' 
+of the array:
+<<Interface functions>>=
+int `QOP_F3_MDWF_blas_view_half_fermion_matrix(struct QOP_F3_MDWF_HalfFermionMat *hfm_ptr,
+                                              int        *nrow_loc,
+                                              int        *ncol,
+                                              float      **blas_ptr,
+                                              int        *blas_ld);
+@
+The element order in the matrix conforms to [[FORTRAN]] conventions, that is
+\begin{eqnarray*}
+\mathrm{Re } M_{ij} &=& (*\mathtt{blas\_ptr})[2*i + 2*j*\mathtt{blas\_ld}]\,,\\
+\mathrm{Im } M_{ij} &=& (*\mathtt{blas\_ptr})[2*i + 2*j*\mathtt{blas\_ld} + 1]\,,\\
+& & 0\le i<\mathtt{nrow\_loc},\quad 0\le j<\mathtt{ncol}\,,
+\end{eqnarray*}
+and [[nrow_loc]] is the local vector size (complex numbers per process). 
+The $j$-th column represents the $j$-th vector.
+Once a [[HalfFermionMat]] object is used to create a deflator, it cannot be 
+reused since its allocated memory belongs to the new deflator. For this reason,
+[[create_deflator_inplace]] actually deallocates the associated storage structures
+and sets [[*hfm_ptr]] to [[NULL]]. The following function may be called 
+to manually deallocate a [[HalfFermionMat]] object ([[NULL]] pointer-safe):
+<<Interface functions>>=
+void QOP_F3_MDWF_free_half_fermion_matrix(struct QOP_F3_MDWF_HalfFermionMat **hfm_ptr);
+@
+
 
 Once done, the deflators must be freed with the following functions:
 <<Interface functions>>=
-void `QOP_MDWF_free_deflator(struct QOP_MDWF_Deflator **defl_ptr);
+void `QOP_F3_MDWF_free_deflator(struct QOP_F3_MDWF_Deflator **defl_ptr);
 @
 
-Functions to control the state of the deflator. If one needs to keep the handle
-but purge the accumulated data, there is a [[reset]] operation:
+\textbf{Functions to control the state of the deflator.} 
+If one needs to keep the handle but purge the stored or EigCG-accumulated data, 
+there is a [[eigcg_reset]] operation:
 <<Interface functions>>=
-void `QOP_MDWF_deflator_reset(struct QOP_MDWF_Deflator *defl_ptr);
+int `QOP_F3_MDWF_deflator_eigcg_reset(struct QOP_F3_MDWF_Deflator *defl_ptr);
 @
 
-To control collection of the Krylov space, use [[stop]] and [[resume]]. While
-the deflator is stopped, it can still be used in the deflated solver and
+To control collection of the Krylov space, use [[eigcg_stop]] and [[eigcg_resume]]. 
+While the EigCG is stopped, it can still be used in the deflated solver and
 queried about accumulated eigenvalues.
 <<Interface functions>>=
-void `QOP_MDWF_deflator_stop(struct QOP_MDWF_Deflator *defl_ptr);
-void `QOP_MDWF_deflator_resume(struct QOP_MDWF_Deflator *defl_ptr);
+int `QOP_F3_MDWF_deflator_eigcg_stop(struct QOP_F3_MDWF_Deflator *defl_ptr);
+int `QOP_F3_MDWF_deflator_eigcg_resume(struct QOP_F3_MDWF_Deflator *defl_ptr);
+@
+The following fuction may be used to inquire the state of EigCG:
+<<Interface functions>>=
+int `QOP_F3_MDWF_deflator_eigcg_is_stopped(struct QOP_F3_MDWF_Deflator *defl_ptr);
 @
 
 The current dimension of low space may be requested from the deflator:
 <<Interface functions>>=
-int `QOP_MDWF_deflator_current_dim(struct QOP_MDWF_Deflator *defl_ptr);
+int `QOP_F3_MDWF_deflator_current_dim(struct QOP_F3_MDWF_Deflator *defl_ptr);
 @
 
 Extract a vector from the deflator. If the vector index is out of range, nothing is
 written into memory and a non-zero value is returned.
 <<Interface functions>>=
 int `QOP_F3_MDWF_deflator_extract_vector(struct QOP_F3_MDWF_HalfFermion *hfermion_ptr,
-                                        const struct QOP_MDWF_Deflator *defl_ptr,
+                                        const struct QOP_F3_MDWF_Deflator *defl_ptr,
                                         int idx);
 @
 
-Before adding vectors to the deflator, it must be marked to prevent accidental changes to the deflator state
+Before adding vectors to the deflator, it must be marked to prevent accidental 
+changes to the deflator state
 <<Interface functions>>=
-int `QOP_MDWF_deflator_start_load(struct QOP_MDWF_Deflator *defl_ptr);
+int `QOP_F3_MDWF_deflator_start_load(struct QOP_F3_MDWF_Deflator *defl_ptr);
 @
 
 Manually add a vector to the deflator. Zero value is returned if the insersion was a success.
 <<Interface functions>>=
 int `QOP_F3_MDWF_deflator_add_vector(const struct QOP_MDWF_Parameters *params,
                                     const struct QOP_F3_MDWF_Gauge *gauge,
-                                    struct QOP_MDWF_Deflator *deflator,
+                                    struct QOP_F3_MDWF_Deflator *deflator,
                                     const struct QOP_F3_MDWF_HalfFermion *hfermion);
 @
 
 After a set of vector is loaded, the deflator should be released before using it in an inverter
 <<Interface functions>>=
-int `QOP_MDWF_deflator_stop_load(struct QOP_MDWF_Deflator *defl_ptr);
+int `QOP_F3_MDWF_deflator_stop_load(struct QOP_F3_MDWF_Deflator *defl_ptr);
 @
 
 The deflator can return its current estimate of the eigenvalues if it has it.
@@ -1470,8 +1541,8 @@ There are either [[nev]] eigenmode estimates, or none. If the deflator does
 not have the estimates, [[eigen]] returns [[1]], otherwise it
 returns [[0]].
 <<Interface functions>>=
-int `QOP_MDWF_deflator_eigen(double *eigen_values,
-                            struct QOP_MDWF_Deflator *defl_ptr);
+int `QOP_F3_MDWF_deflator_eigen(int n, double *eigen_values,
+                               struct QOP_F3_MDWF_Deflator *defl_ptr);
 @
 
 \section{Solvers}
@@ -1631,7 +1702,7 @@ int `QOP_MDWF_deflated_mixed_D_CG(struct QOP_D3_MDWF_Fermion *result,
                                  const struct QOP_D3_MDWF_Fermion *chi_0,
                                  const struct QOP_D3_MDWF_Gauge *gauge,
                                  const struct QOP_D3_MDWF_Fermion *rhs,
-                                 struct QOP_MDWF_Deflator *deflator,
+                                 struct QOP_F3_MDWF_Deflator *deflator,
                                  int f_iterations,
                                  double f_epsilon,
                                  int max_iteration,
@@ -1662,7 +1733,7 @@ using the general three-term recurrence relation
 P_0(M^\dagger M)\psi & = & c_0 \psi \\
 P_1(M^\dagger M)\psi & = & a_0 \psi + b_0 M^\dagger M \psi \\
 P_n(M^\dagger M)\psi & = & (a_{n-1} + b_{n-1} M^\dagger M) P_{n-1}(M^\dagger M)\psi 
-	+ c_{n-1} P_{n-2}(M^\dagger M)\psi,\quad n > 1
+        + c_{n-1} P_{n-2}(M^\dagger M)\psi,\quad n > 1
 \end{eqnarray*}
 
 The value of $P_n(M^\dagger M)\psi$ is returned in [[result]], and if

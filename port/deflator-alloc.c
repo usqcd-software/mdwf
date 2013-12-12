@@ -1,5 +1,6 @@
 #define QOP_MDWF_DEFAULT_PRECISION 'F'
 #include <mdwf.h>
+#include <assert.h>
 
 #define ds      sizeof(double)
 #define zs      sizeof(doublecomplex)
@@ -153,7 +154,7 @@ int
 qx(init_deflator)(
         struct QX(Deflator) *df, 
         struct Q(State) *s,
-        int umax, latmat_c *u, int usize,
+        int umax, qx(defl_mat) *u, int usize,
         int do_eigcg, int vmax, int nev, double eps)
 {
     int status = 0;
@@ -294,7 +295,7 @@ QX(create_deflator)(struct QX(Deflator) **deflator_ptr,
         return q(set_error)(s, 0, "create_deflator(): NULL pointer");
   
     *deflator_ptr = NULL;
-    d = q(malloc)(s, sizeof (struct Q(Deflator)));
+    d = q(malloc)(s, sizeof (struct QX(Deflator)));
     if (d == 0)
         return q(set_error)(s, 0, "allocate_deflator(): not enough memory");
 
