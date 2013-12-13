@@ -1,18 +1,35 @@
 #include <mdwf.h>
 
 #if QOP_MDWF_DEFAULT_PRECISION == 'F'
-#define DF_PREAMBLE(psi_e, rho_e, r, chi_e) do {                        \
-        if (qx(defl_eigcg_preamble)(deflator, psi_e, rho_e, r, chi_e,   \
-                                    &ws, options)) {                    \
-            q(set_error)(state, 0, "cg_solver() not enough memory");    \
-            return CG_NOEMEM;                                           \
+#define DF_PREAMBLE(psi_e, rho_e, r, chi_e) do {                \
+        if (NULL != deflator) {                                 \
+           if (0 != (status = qx(defl_eigcg_preamble)(          \
+                           deflator, psi_e, rho_e, r, chi_e,    \
+                           &ws, options)))                      \
+               return status;                                   \
+        } else {                                                \
+            qx(f_zero)(psi_e, e_size, Ls);                      \
+            qx(f_copy)(rho_e, e_size, Ls, chi_e);               \
+            state->flops += qx(f_norm)(r, e_size, Ls, rho_e);   \
+            QMP_sum_double(r);                                  \
+    } } while (0)
+
+#define DF_UPDATE0(a1,b1,a0,b0,r,rho) (NULL != (deflator)       \
+        ? qx(defl_eigcg_update0)(deflator, a1, b1, a0, b0, r,   \
+                                 rho, options)                  \
+        : 0)
+
+#define DF_UPDATE1(a1,b1,a0,b0,r,rho,A_rho) (NULL != (deflator) \
+        ? qx(defl_eigcg_update1)(deflator, a1, b1, a0, b0, r,   \
+                                 rho, A_rho, options)           \
+        : 0)
+
+#define DF_POSTAMBLE() do {                                     \
+        if (NULL != deflator) {                                 \
+            if (0 != (status = qx(defl_eigcg_postamble)(        \
+                            deflator, &ws, options)))           \
+                return status;                                  \
         } } while (0)
-#define DF_UPDATE0(a1,b1,a0,b0,r,rho)                           \
-    qx(defl_eigcg_update0)(deflator, a1, b1, a0, b0, r, rho, options)
-#define DF_UPDATE1(a1,b1,a0,b0,r,rho,A_rho)                             \
-    qx(defl_eigcg_update1)(deflator, a1, b1, a0, b0, r, rho, A_rho, options)
-#define DF_POSTAMBLE() \
-    do { qx(defl_eigcg_postamble)(deflator, &ws, options); } while (0)
 #else
 #define DF_PREAMBLE(psi_e, rho_e, r, chi_e) do {            \
         qx(f_zero)(psi_e, e_size, Ls);                      \
@@ -70,6 +87,7 @@ qx(cg_solver)(struct Fermion              *xi_e,
     int Ls = state->Ls;
     double a, b, g, r, norm_omega;
     int i;
+    int status;
     struct qx(MxM_workspace)  ws;
 
     ws.state     = state;

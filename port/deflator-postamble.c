@@ -14,11 +14,11 @@ qx(defl_eigcg_postamble)(
     int i;
     long long fl = 0;
 
-    if (NULL == df ||
-            NULL == df->state ||
-            df->df_eigcg.frozen || 
-            df->umax <= df->usize ||
-            df->df_eigcg.vsize < df->df_eigcg.nev)
+    if (NULL == df || NULL == df->state) 
+        return 1;
+    if (df->df_eigcg.frozen
+            || df->umax <= df->usize
+            || df->df_eigcg.vsize < df->df_eigcg.nev)
         return 0;
     struct qx(DeflatorEigcg) *d_e = &(df->df_eigcg);
 

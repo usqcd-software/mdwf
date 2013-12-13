@@ -17,10 +17,9 @@ qx(defl_eigcg_preamble)(
 {
     long long fl = 0;
     struct qx(DeflatorEigcg) *d_e = NULL;
-    if (NULL == df
-            || NULL == df->state
-            || NULL == x
-            || NULL == b)
+    if (NULL == df || NULL == df->state)
+        return 1;
+    if (NULL == x || NULL == b)
         return q(set_error)(df->state, 0, "defl_eigcg_preamble(): null pointer");
 
     qx(defl_vec) lv_x = qx(defl_vec_view)(df->state, x);

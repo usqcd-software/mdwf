@@ -111,6 +111,8 @@ qx(fini_deflator)(struct QX(Deflator) *df, struct Q(State) *s)
 #else
 #  error "no linear algebra library"
 #endif
+
+    qx(fini_defl_eigcg)(&(df->df_eigcg), s);
 }
 
 

@@ -87,7 +87,7 @@ struct QX(Deflator) {
 
 };
 
-
+void qx(init_defl_eigcg_set_null)(struct qx(DeflatorEigcg) *d_e);
 int qx(init_defl_eigcg) (
         struct qx(DeflatorEigcg) *df_eigcg, 
         struct Q(State) *s, 

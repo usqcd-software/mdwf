@@ -6,21 +6,11 @@
 #define zs      sizeof(doublecomplex)
 
 
-/* fill & allocate values in `d_e' (`d_e' must be allocated) */
-int 
-qx(init_defl_eigcg) (
-        struct qx(DeflatorEigcg) *d_e, 
-        struct Q(State) *s,
-        int vmax, int nev, double eps)
-{
-    if (s == NULL || s->error_latched)
-        return 1;
-
-    if (d_e == NULL)
-        return q(set_error)(s, 0, "init_df_eigcg(): NULL pointer");
-  
-
-    /* first, set all to null */
+void 
+qx(init_defl_eigcg_set_null)(
+        struct qx(DeflatorEigcg) *d_e) {
+    if (NULL == d_e)
+        return;
     defl_mat_set_null(&(d_e->V));
     defl_mat_set_null(&(d_e->tmp_V));
     defl_vec_set_null(&(d_e->work_c_1));
@@ -55,6 +45,24 @@ qx(init_defl_eigcg) (
 #else
 #  error "no linear algebra library"
 #endif
+}
+
+/* fill & allocate values in `d_e' (`d_e' must be allocated) */
+int 
+qx(init_defl_eigcg) (
+        struct qx(DeflatorEigcg) *d_e, 
+        struct Q(State) *s,
+        int vmax, int nev, double eps)
+{
+    if (s == NULL || s->error_latched)
+        return 1;
+
+    if (d_e == NULL)
+        return q(set_error)(s, 0, "init_df_eigcg(): NULL pointer");
+  
+
+    /* first, set all to null */
+    qx(init_defl_eigcg_set_null)(d_e);
 
     /* allocate */
 #define ds      sizeof(double)
@@ -168,7 +176,10 @@ qx(init_deflator)(
     if (do_eigcg) {
         if (0 != (status = qx(init_defl_eigcg)(&(df->df_eigcg), s, vmax, nev, eps)))
             return status;
+    } else {
+        qx(init_defl_eigcg_set_null)(&(df->df_eigcg));
     }
+
     /* check data types */
 #if defined(HAVE_LAPACK)
     {
