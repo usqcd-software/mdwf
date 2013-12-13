@@ -78,7 +78,7 @@ qx(defl_vec_dotu)(
     assert(!defl_vec_is_null(&y));
     assert(NULL != res);
 
-    double s[0];
+    double s[2];
     int flops = qx(f_dot)(s, s + 1, x.dim, x.Ls, x.f, y.f);
     QMP_sum_double_array(s, 2);
     res->r  = s[0];

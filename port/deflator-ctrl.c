@@ -1,3 +1,4 @@
+#define QOP_MDWF_DEFAULT_PRECISION 'F'
 #include <assert.h>
 #include <string.h>
 #include <mdwf.h>
@@ -6,8 +7,6 @@ int
 QX(deflator_start_load)(struct QX(Deflator) *df)
 {
     if (NULL == df)
-        return 1;
-    if (df->loading == 1)
         return 1;
     df->loading = 1;
 
@@ -34,10 +33,10 @@ QX(deflator_eigcg_resume)(struct QX(Deflator) *df)
     if (NULL == df)
         return 1;
     
-    if ( ! df->do_eigcg)
+    if (!df->do_eigcg)
         return q(set_error)(df->state, 0, 
                             "deflator_resume(): no EigCG workspace allocated");
-    if (df->loading == 0)
+    if (df->loading)
         return q(set_error)(df->state, 0, 
                             "deflator_resume(): in 'loading' state");
 
@@ -52,7 +51,7 @@ QX(deflator_eigcg_stop)(struct QX(Deflator) *df)
 {
     if (NULL == df)
         return 1;
-    if (df->loading != 0 || ! df->do_eigcg)
+    if (!df->loading || !df->do_eigcg)
         return 0;
     
     df->df_eigcg.frozen = 1;
@@ -82,7 +81,7 @@ QX(deflator_eigen)(int n, double *evals,
 {
     int i;
 
-    if ((df == 0) || (evals == 0))
+    if (0 == df || NULL == evals)
         return 1;
 
     if (df->loading)
@@ -102,8 +101,9 @@ QX(deflator_eigcg_reset)(struct QX(Deflator) *df)
 {
     if (NULL == df)
         return 1;
-    if (df->loading != 0 || ! df->do_eigcg)
-        return 0;
+    if (!df->do_eigcg)
+        return q(set_error)(df->state, 0, 
+                            "deflator_eigcg_reset: EigCG not allocated");
 
     struct qx(DeflatorEigcg) *d_e = &(df->df_eigcg);
     d_e->vsize = 0;
