@@ -310,10 +310,11 @@ QX(create_deflator)(struct QX(Deflator) **deflator_ptr,
     if (d == 0)
         return q(set_error)(s, 0, "allocate_deflator(): not enough memory");
 
+    int do_eigcg = (0 < vmax) && (0 < nev);
     BEGIN_TIMING(s);
     if (0 != (status = qx(init_deflator)(d, s, 
                                          umax, NULL, 0,
-                                         1/*do_eigcg*/, vmax, nev, eps)))
+                                         do_eigcg, vmax, nev, eps)))
         return status;
     END_TIMING(s, 0, 0, 0);
 

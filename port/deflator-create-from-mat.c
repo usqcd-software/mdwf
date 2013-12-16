@@ -46,7 +46,7 @@ QX(create_deflator_inplace)(
         return q(set_error)(state, 0, 
                 "create_deflator_inplace(): not enough memory");
     
-    BEGIN_TIMING(state);
+//    BEGIN_TIMING(state);
 
     /* init operator workspace */
     struct qx(MxM_workspace) ws;
@@ -72,22 +72,29 @@ QX(create_deflator_inplace)(
     ws.received  = &received;
 
 
+    int do_eigcg = (0 < eigcg_vmax) && (0 < eigcg_nev);
+    
     /* create deflator with existing vectors, leave door open to EigCG */
     qx(defl_mat) *m = &((*hfm_ptr)->m);
+    /* select umax value = max(hfm_nev, min(m_size, eigcg_umax)) and check */
     int umax    = m->len; /* `m' already allocated ; cannot extend */
-    int do_eigcg = (0 < eigcg_vmax) && (0 < eigcg_nev);
     if (do_eigcg && eigcg_umax < umax)
-        umax = eigcg_umax;  /* limit umax to fill by EigCG */
-    if (hfm_nev < umax)
-        hfm_nev = umax;
+        umax = eigcg_umax;
+    if (umax < hfm_nev)
+        umax = hfm_nev;
+
+    if (m->len < umax) {
+        q(set_error)(state, 0, "incompatible NEV, ncol(matr), EigCG_umax");
+        goto clearerr_2;
+    }
+
 
     if (0 != (status = qx(init_deflator)(df, state, umax, m, hfm_nev, do_eigcg,
                                          eigcg_vmax, eigcg_nev, eigcg_eps)))
         goto clearerr_2;
 
     /* initialize deflator internal matrices */
-    if (0 != (status = qx(defl_recalc_mat)(df, &ws)))
-        goto clearerr_2;
+    qx(defl_recalc_mat)(df, &ws);
 
     if (0 != (status = qx(defl_rebuild)(df)))
         goto clearerr_2;
@@ -96,7 +103,7 @@ QX(create_deflator_inplace)(
     df->loading = 0;            /* set deflator to "ready" */
     *deflator_ptr = df;
 
-    END_TIMING(state, flops, sent, received);
+//    END_TIMING(state, flops, sent, received);
     
     QX(free_half_fermion_matrix)(hfm_ptr);
     q(free)(state, temps_ptr, temps_size);

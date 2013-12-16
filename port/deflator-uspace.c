@@ -183,7 +183,7 @@ qx(defl_recalc_mat)(struct QX(Deflator) *df,
 
     qx(defl_vec) vec = df->work_c_1;
 
-    for (i = 0 ; i < df->usize ; i++) {
+    for (i = 0, u_pos = 0 ; i < df->usize ; i++) {
         fl += qx(defl_mat_get_col)(df->U, i, vec);
         /*increment only if have an indep. vector */
         u_pos += qx(defl_inject)(df, ws, 0, u_pos, u_pos, vec);
