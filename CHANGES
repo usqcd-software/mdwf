@@ -1,7 +1,7 @@
-01/08/2014 -- Version 1.4.XXX
+01/08/2014 -- Version 1.4.0
                 ARPACK used to construct low eigen space for EigCG
          
-05/17/2008 -- Version 1.1.4 XXX
+05/17/2008 -- Version 1.1.4
                 Error handling bug fixed.
                 Samples report performance number even if not converged.
 
