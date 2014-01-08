@@ -1,6 +1,6 @@
 #!/bin/sh -f
 
-targets="bgl/xlc c99-32 c99-64 cee-32 cee-64"
+targets="bgl/xlc bgq/xlc c99-32 c99-64 cee-32 cee-64"
 
 set -e
 make -C noweb
