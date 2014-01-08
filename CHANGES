@@ -1,3 +1,6 @@
+01/08/2014 -- Version 1.4.XXX
+                ARPACK used to construct low eigen space for EigCG
+         
 05/17/2008 -- Version 1.1.4 XXX
                 Error handling bug fixed.
                 Samples report performance number even if not converged.
@@ -11,10 +14,10 @@
                 All solvers set the error string in the state if CG fails to
                 converge.
 05/08/2008 -- Version 1.1.1
-	        Samples now really work.
-		Some cleanup in top Makefile.in
-		Extra defence in port/init.c, but still foolable.
-		Configure error reporting improved.
+                Samples now really work.
+                Some cleanup in top Makefile.in
+                Extra defence in port/init.c, but still foolable.
+                Configure error reporting improved.
 
 05/06/2008 -- Version 1.1.0
                 Shifted multisolver added.
@@ -22,6 +25,6 @@
 
 05/03/2008 -- transitory
                MxM solver added.
-	       Sample codes added.
+               Sample codes added.
 
 05/02/2008 -- Version 1.0.0 original release
